@@ -63,3 +63,5 @@ export const Spacing = {
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
+/** Narrower max width for form/settings layouts so they stay readable on web/tablet. */
+export const MaxFormWidth = 480;

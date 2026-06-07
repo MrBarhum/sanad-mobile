@@ -14,7 +14,7 @@ import { z } from 'zod';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { MaxFormWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { supabase } from '../../../lib/supabase';
@@ -72,48 +72,61 @@ export default function SignInScreen() {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
           <ThemedView style={styles.header}>
-            <ThemedText type="subtitle">{t('auth.signInTitle')}</ThemedText>
+            <ThemedText type="subtitle" accessibilityRole="header">
+              {t('auth.signInTitle')}
+            </ThemedText>
             <ThemedText themeColor="textSecondary">{t('auth.signInSubtitle')}</ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.form}>
-            <ThemedText type="smallBold">{t('auth.email')}</ThemedText>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              inputMode="email"
-              autoComplete="email"
-              placeholder={t('auth.emailPlaceholder')}
-              placeholderTextColor={theme.textSecondary}
-              accessibilityLabel={t('auth.email')}
-              style={inputStyle}
-            />
+            <ThemedView style={styles.field}>
+              <ThemedText type="smallBold">{t('auth.email')}</ThemedText>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                inputMode="email"
+                autoComplete="email"
+                textContentType="emailAddress"
+                placeholder={t('auth.emailPlaceholder')}
+                placeholderTextColor={theme.textSecondary}
+                accessibilityLabel={t('auth.email')}
+                style={inputStyle}
+              />
+            </ThemedView>
 
-            <ThemedText type="smallBold">{t('auth.password')}</ThemedText>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              secureTextEntry
-              autoComplete="current-password"
-              placeholder={t('auth.passwordPlaceholder')}
-              placeholderTextColor={theme.textSecondary}
-              accessibilityLabel={t('auth.password')}
-              style={inputStyle}
-            />
+            <ThemedView style={styles.field}>
+              <ThemedText type="smallBold">{t('auth.password')}</ThemedText>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry
+                autoComplete="current-password"
+                textContentType="password"
+                placeholder={t('auth.passwordPlaceholder')}
+                placeholderTextColor={theme.textSecondary}
+                accessibilityLabel={t('auth.password')}
+                style={inputStyle}
+              />
+            </ThemedView>
 
-            {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+            {error ? (
+              <ThemedText style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
+                {error}
+              </ThemedText>
+            ) : null}
 
             <Pressable
               onPress={onSubmit}
               disabled={submitting}
               accessibilityRole="button"
+              accessibilityState={{ disabled: submitting, busy: submitting }}
               style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
               {submitting ? (
                 <ActivityIndicator color={theme.background} />
@@ -142,12 +155,16 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   safeArea: {
     flex: 1,
+    width: '100%',
+    maxWidth: MaxFormWidth,
+    alignSelf: 'center',
     paddingHorizontal: Spacing.four,
     justifyContent: 'center',
     gap: Spacing.five,
   },
   header: { gap: Spacing.two },
-  form: { gap: Spacing.two },
+  form: { gap: Spacing.three },
+  field: { gap: Spacing.one },
   input: {
     borderWidth: 1,
     borderRadius: Spacing.two,

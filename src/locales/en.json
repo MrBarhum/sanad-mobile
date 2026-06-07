@@ -22,6 +22,25 @@
       }
     }
   },
+  "explore": {
+    "title": "Explore",
+    "subtitle": "Upcoming features to support your care journey",
+    "comingSoon": "Coming soon",
+    "sections": {
+      "guides": {
+        "title": "Guides & tips",
+        "subtitle": "Practical content to support you while caregiving"
+      },
+      "resources": {
+        "title": "Helpful resources",
+        "subtitle": "Trusted links and services in one place"
+      },
+      "community": {
+        "title": "Support community",
+        "subtitle": "Connect with others going through similar journeys"
+      }
+    }
+  },
   "tabs": {
     "home": "Home",
     "explore": "Explore",
@@ -54,6 +73,8 @@
   "account": {
     "title": "Account",
     "signedInAs": "Signed in as",
-    "signOut": "Sign out"
+    "noEmail": "No email address",
+    "signOut": "Sign out",
+    "signOutError": "Could not sign out. Please try again."
   }
 }
