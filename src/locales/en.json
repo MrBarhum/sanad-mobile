@@ -2,5 +2,39 @@
   "appName": "Sanad",
   "loading": "Loading…",
   "retry": "Retry",
-  "error": "Something went wrong"
+  "error": "Something went wrong",
+  "tabs": {
+    "home": "Home",
+    "explore": "Explore",
+    "account": "Account"
+  },
+  "auth": {
+    "signInTitle": "Sign in",
+    "signInSubtitle": "Sign in to continue to Sanad",
+    "signUpTitle": "Create account",
+    "signUpSubtitle": "Create your account to get started",
+    "email": "Email",
+    "emailPlaceholder": "name@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "At least 6 characters",
+    "signInButton": "Sign in",
+    "signUpButton": "Create account",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "signUpLink": "Sign up",
+    "signInLink": "Sign in",
+    "signUpCheckEmail": "Account created. Check your email to confirm your account.",
+    "errors": {
+      "email": "Please enter a valid email",
+      "password": "Password must be at least 6 characters",
+      "generic": "Could not complete the request",
+      "signInFailed": "Invalid login credentials",
+      "signUpFailed": "Could not create the account"
+    }
+  },
+  "account": {
+    "title": "Account",
+    "signedInAs": "Signed in as",
+    "signOut": "Sign out"
+  }
 }
