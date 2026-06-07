@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "sanad-mobile",
+    "name": "Sanad",
     "slug": "sanad-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -40,6 +40,9 @@
       "expo-localization",
       "expo-secure-store"
     ],
+    "extra": {
+      "supportsRTL": true
+    },
     "experiments": {
       "typedRoutes": false,
       "reactCompiler": true

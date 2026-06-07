@@ -3,6 +3,25 @@
   "loading": "Loading…",
   "retry": "Retry",
   "error": "Something went wrong",
+  "home": {
+    "greeting": "Welcome to Sanad",
+    "tagline": "Your space to organize care and stay close to the people you love",
+    "comingSoon": "Coming soon",
+    "sections": {
+      "careCircle": {
+        "title": "Care circle",
+        "subtitle": "Organize family and caregivers in one place"
+      },
+      "tasks": {
+        "title": "Tasks & appointments",
+        "subtitle": "Keep track of daily tasks and appointments"
+      },
+      "reminders": {
+        "title": "Reminders",
+        "subtitle": "Never miss a medication or an important appointment"
+      }
+    }
+  },
   "tabs": {
     "home": "Home",
     "explore": "Explore",
