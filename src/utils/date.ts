@@ -29,3 +29,32 @@ export function approximateAgeYears(birthDateYmd: string | null | undefined): nu
   if (age < 0 || age > 130) return null;
   return age;
 }
+
+/**
+ * Today's date as a local 'YYYY-MM-DD' string. Uses the device's local time (no
+ * timezone handling) — the medication "today's doses" feature deliberately works
+ * in local time for now; this is documented as an assumption.
+ */
+export function todayYmd(): string {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Local day-of-week for a 'YYYY-MM-DD' date: 0 = Sunday .. 6 = Saturday, matching
+ * the `days_of_week` convention stored on medication schedules. Returns null for
+ * malformed input.
+ */
+export function dayOfWeekFromYmd(ymd: string): number | null {
+  if (!isValidYmd(ymd)) return null;
+  const [year, month, day] = ymd.split('-').map(Number);
+  return new Date(year, month - 1, day).getDay();
+}
+
+/** Normalizes a Postgres `time` value ('HH:MM:SS' or 'HH:MM') to 'HH:MM'. */
+export function formatHm(time: string): string {
+  return time.slice(0, 5);
+}

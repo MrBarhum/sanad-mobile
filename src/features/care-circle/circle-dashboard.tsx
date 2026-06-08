@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing, TopTabInset } from '@/constants/theme';
+import { useTodayDoseSummary } from '@/features/medications/hooks';
 
 import type { CircleSummary } from './api';
 
@@ -35,11 +36,6 @@ const ACTIONS = [
 
 /** Roadmap cards that are not yet implemented. */
 const SOON = [
-  {
-    key: 'medications',
-    titleKey: 'careCircle.dashboard.sections.medications.title',
-    subtitleKey: 'careCircle.dashboard.sections.medications.subtitle',
-  },
   {
     key: 'tasks',
     titleKey: 'careCircle.dashboard.sections.tasks.title',
@@ -99,6 +95,8 @@ export function CareCircleDashboard({ summary }: { summary: CircleSummary }) {
           </Pressable>
 
           <View style={styles.cards}>
+            <MedicationsCard circleId={summary.circleId} />
+
             {ACTIONS.map((section) => (
               <Pressable
                 key={section.key}
@@ -134,6 +132,40 @@ export function CareCircleDashboard({ summary }: { summary: CircleSummary }) {
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
+  );
+}
+
+/** Navigable medications card showing today's dose summary. */
+function MedicationsCard({ circleId }: { circleId: string }) {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { summary, isLoading } = useTodayDoseSummary(circleId);
+
+  const subtitle = isLoading
+    ? t('careCircle.dashboard.sections.medications.subtitle')
+    : summary.total === 0
+      ? t('medications.summary.none')
+      : t('medications.summary.counts', {
+          total: summary.total,
+          given: summary.given,
+          remaining: summary.remaining,
+        });
+
+  return (
+    <Pressable
+      onPress={() => router.push('/medications')}
+      accessibilityRole="button"
+      accessibilityLabel={t('careCircle.dashboard.sections.medications.title')}
+      style={({ pressed }) => pressed && styles.pressed}>
+      <ThemedView type="backgroundElement" style={styles.card}>
+        <ThemedText style={styles.cardTitle}>
+          {t('careCircle.dashboard.sections.medications.title')}
+        </ThemedText>
+        <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
+          {subtitle}
+        </ThemedText>
+      </ThemedView>
+    </Pressable>
   );
 }
 

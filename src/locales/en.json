@@ -9,7 +9,9 @@
     "confirmDelete": "Confirm delete",
     "cancel": "Cancel",
     "save": "Save",
-    "close": "Close"
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No"
   },
   "validation": {
     "tooLong": "This text is too long",
@@ -182,6 +184,95 @@
     "noContacts": "No contacts added",
     "noDoctors": "No doctors added",
     "disclaimer": "This information is entered by the family for reference only and is not medical advice or diagnosis."
+  },
+  "medications": {
+    "title": "Medications",
+    "addTitle": "Add medication",
+    "detailTitle": "Medication details",
+    "add": "Add medication",
+    "disclaimer": "The app only records the medication schedules and reminders your family enters. It does not provide medical advice.",
+    "loadError": "Could not load medications",
+    "saveFailed": "Could not save. Please try again.",
+    "saved": "Changes saved",
+    "saveMedication": "Save medication",
+    "todayTitle": "Today's doses",
+    "listTitle": "Medications",
+    "noDosesTitle": "No doses today",
+    "noDosesSubtitle": "No medication times are scheduled for today",
+    "noMedsTitle": "No medications yet",
+    "noMedsSubtitle": "Add a medication and its schedule to get started",
+    "tapToEdit": "Tap to view or edit",
+    "withFoodHint": "Take with food",
+    "scheduleSectionTitle": "Schedule",
+    "notFound": "Medication not found",
+    "readOnly": "View only — you don't have permission to edit",
+    "managersOnly": "Only the admin and primary caregiver can add medications",
+    "activeLabel": "Active",
+    "inactiveLabel": "Inactive",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "deleteMedication": "Delete medication",
+    "addSchedule": "Add schedule",
+    "noSchedules": "No schedules",
+    "addScheduleTitle": "Add schedule",
+    "editScheduleTitle": "Edit schedule",
+    "everyDay": "Every day",
+    "fromDate": "From",
+    "addTime": "Add time",
+    "fields": {
+      "name": "Medication name",
+      "dosage": "Dosage",
+      "form": "Form",
+      "instructions": "Instructions",
+      "withFood": "Take with food",
+      "days": "Days of the week",
+      "times": "Dose times",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "scheduleNotes": "Schedule notes"
+    },
+    "placeholders": {
+      "dosage": "e.g. 500 mg",
+      "form": "e.g. tablet, syrup, injection",
+      "instructions": "e.g. after meals",
+      "endDate": "Optional — YYYY-MM-DD",
+      "scheduleNotes": "Additional notes"
+    },
+    "errors": {
+      "name": "Please enter the medication name",
+      "timeFormat": "Enter the time as HH:MM",
+      "timesRequired": "Add at least one time",
+      "daysRequired": "Choose at least one day",
+      "dateFormat": "Enter the date as YYYY-MM-DD",
+      "endBeforeStart": "End date is before the start date"
+    },
+    "status": {
+      "given": "Given",
+      "missed": "Missed",
+      "postponed": "Postponed"
+    },
+    "weekdays": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    },
+    "weekdaysShort": {
+      "sunday": "Sun",
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat"
+    },
+    "summary": {
+      "none": "No doses today",
+      "counts": "Today's doses: {{total}} • Given: {{given}} • Remaining: {{remaining}}"
+    }
   },
   "explore": {
     "title": "Explore",

@@ -9,7 +9,9 @@
     "confirmDelete": "تأكيد الحذف",
     "cancel": "إلغاء",
     "save": "حفظ",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "yes": "نعم",
+    "no": "لا"
   },
   "validation": {
     "tooLong": "النص طويل جدًا",
@@ -182,6 +184,95 @@
     "noContacts": "لم تتم إضافة جهات اتصال",
     "noDoctors": "لم تتم إضافة أطباء",
     "disclaimer": "هذه المعلومات مُدخلة من العائلة للعرض فقط، وليست نصيحة أو تشخيصًا طبيًا."
+  },
+  "medications": {
+    "title": "الأدوية",
+    "addTitle": "إضافة دواء",
+    "detailTitle": "تفاصيل الدواء",
+    "add": "إضافة دواء",
+    "disclaimer": "يسجّل التطبيق مواعيد الأدوية التي تُدخلها العائلة وتذكيرات بها فقط، ولا يقدّم أي نصيحة طبية.",
+    "loadError": "تعذّر تحميل الأدوية",
+    "saveFailed": "تعذّر الحفظ. حاول مرة أخرى.",
+    "saved": "تم حفظ التغييرات",
+    "saveMedication": "حفظ الدواء",
+    "todayTitle": "جرعات اليوم",
+    "listTitle": "الأدوية",
+    "noDosesTitle": "لا توجد جرعات اليوم",
+    "noDosesSubtitle": "لا توجد مواعيد أدوية مجدولة لهذا اليوم",
+    "noMedsTitle": "لا توجد أدوية بعد",
+    "noMedsSubtitle": "أضف دواءً وموعده للبدء",
+    "tapToEdit": "اضغط للعرض أو التعديل",
+    "withFoodHint": "يؤخذ مع الطعام",
+    "scheduleSectionTitle": "المواعيد",
+    "notFound": "لم يتم العثور على الدواء",
+    "readOnly": "للعرض فقط — لا تملك صلاحية التعديل",
+    "managersOnly": "إضافة الأدوية متاحة للمشرف ومقدّم الرعاية الأساسي فقط",
+    "activeLabel": "الدواء فعّال",
+    "inactiveLabel": "غير فعّال",
+    "deactivate": "إيقاف",
+    "reactivate": "إعادة تفعيل",
+    "deleteMedication": "حذف الدواء",
+    "addSchedule": "إضافة موعد",
+    "noSchedules": "لا توجد مواعيد",
+    "addScheduleTitle": "إضافة موعد",
+    "editScheduleTitle": "تعديل الموعد",
+    "everyDay": "كل الأيام",
+    "fromDate": "من",
+    "addTime": "إضافة وقت",
+    "fields": {
+      "name": "اسم الدواء",
+      "dosage": "الجرعة",
+      "form": "الشكل الدوائي",
+      "instructions": "تعليمات",
+      "withFood": "يؤخذ مع الطعام",
+      "days": "أيام الأسبوع",
+      "times": "أوقات الجرعات",
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء",
+      "scheduleNotes": "ملاحظات الموعد"
+    },
+    "placeholders": {
+      "dosage": "مثال: 500 ملغ",
+      "form": "مثال: حبة، شراب، حقنة",
+      "instructions": "مثال: بعد الأكل",
+      "endDate": "اختياري — YYYY-MM-DD",
+      "scheduleNotes": "ملاحظات إضافية"
+    },
+    "errors": {
+      "name": "يرجى إدخال اسم الدواء",
+      "timeFormat": "أدخل الوقت بصيغة HH:MM",
+      "timesRequired": "أضف وقتًا واحدًا على الأقل",
+      "daysRequired": "اختر يومًا واحدًا على الأقل",
+      "dateFormat": "أدخل التاريخ بصيغة YYYY-MM-DD",
+      "endBeforeStart": "تاريخ الانتهاء قبل تاريخ البدء"
+    },
+    "status": {
+      "given": "أُعطيت",
+      "missed": "لم تُعطَ",
+      "postponed": "مؤجَّلة"
+    },
+    "weekdays": {
+      "sunday": "الأحد",
+      "monday": "الإثنين",
+      "tuesday": "الثلاثاء",
+      "wednesday": "الأربعاء",
+      "thursday": "الخميس",
+      "friday": "الجمعة",
+      "saturday": "السبت"
+    },
+    "weekdaysShort": {
+      "sunday": "أحد",
+      "monday": "إثنين",
+      "tuesday": "ثلاثاء",
+      "wednesday": "أربعاء",
+      "thursday": "خميس",
+      "friday": "جمعة",
+      "saturday": "سبت"
+    },
+    "summary": {
+      "none": "لا توجد جرعات اليوم",
+      "counts": "جرعات اليوم: {{total}} • تم: {{given}} • المتبقّي: {{remaining}}"
+    }
   },
   "explore": {
     "title": "استكشاف",

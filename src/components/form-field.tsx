@@ -8,7 +8,7 @@ import { ThemedText } from './themed-text';
 const DANGER = '#dc2626';
 
 type FormFieldProps = TextInputProps & {
-  label: string;
+  label?: string;
   error?: string | null;
 };
 
@@ -24,7 +24,7 @@ export function FormField({ label, error, style, multiline, ...rest }: FormField
 
   return (
     <View style={styles.field}>
-      <ThemedText type="smallBold">{label}</ThemedText>
+      {label ? <ThemedText type="smallBold">{label}</ThemedText> : null}
       <TextInput
         placeholderTextColor={theme.textSecondary}
         accessibilityLabel={label}

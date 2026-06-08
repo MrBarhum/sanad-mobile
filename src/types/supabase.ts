@@ -232,6 +232,187 @@ export type Database = {
           },
         ]
       }
+      medication_logs: {
+        Row: {
+          circle_id: string
+          created_at: string
+          dose_date: string
+          id: string
+          medication_id: string
+          note: string | null
+          recorded_at: string
+          recorded_by: string | null
+          schedule_id: string | null
+          scheduled_time: string
+          status: Database["public"]["Enums"]["medication_log_status"]
+          updated_at: string
+        }
+        Insert: {
+          circle_id: string
+          created_at?: string
+          dose_date: string
+          id?: string
+          medication_id: string
+          note?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          schedule_id?: string | null
+          scheduled_time: string
+          status: Database["public"]["Enums"]["medication_log_status"]
+          updated_at?: string
+        }
+        Update: {
+          circle_id?: string
+          created_at?: string
+          dose_date?: string
+          id?: string
+          medication_id?: string
+          note?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          schedule_id?: string | null
+          scheduled_time?: string
+          status?: Database["public"]["Enums"]["medication_log_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_logs_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_logs_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_logs_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "medication_schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_logs_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medication_schedules: {
+        Row: {
+          circle_id: string
+          created_at: string
+          days_of_week: number[]
+          end_date: string | null
+          id: string
+          is_active: boolean
+          medication_id: string
+          notes: string | null
+          start_date: string
+          times: string[]
+          updated_at: string
+        }
+        Insert: {
+          circle_id: string
+          created_at?: string
+          days_of_week?: number[]
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          medication_id: string
+          notes?: string | null
+          start_date?: string
+          times: string[]
+          updated_at?: string
+        }
+        Update: {
+          circle_id?: string
+          created_at?: string
+          days_of_week?: number[]
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          medication_id?: string
+          notes?: string | null
+          start_date?: string
+          times?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_schedules_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_schedules_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          circle_id: string
+          created_at: string
+          dosage: string | null
+          form: string | null
+          id: string
+          instructions: string | null
+          is_active: boolean
+          name: string
+          photo_url: string | null
+          updated_at: string
+          with_food: boolean
+        }
+        Insert: {
+          circle_id: string
+          created_at?: string
+          dosage?: string | null
+          form?: string | null
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          name: string
+          photo_url?: string | null
+          updated_at?: string
+          with_food?: boolean
+        }
+        Update: {
+          circle_id?: string
+          created_at?: string
+          dosage?: string | null
+          form?: string | null
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          name?: string
+          photo_url?: string | null
+          updated_at?: string
+          with_food?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medications_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -298,6 +479,7 @@ export type Database = {
         | "caregiver"
         | "remote_member"
         | "elder"
+      medication_log_status: "given" | "missed" | "postponed"
       member_status: "active" | "invited" | "removed"
     }
     CompositeTypes: {
@@ -434,6 +616,7 @@ export const Constants = {
         "remote_member",
         "elder",
       ],
+      medication_log_status: ["given", "missed", "postponed"],
       member_status: ["active", "invited", "removed"],
     },
   },
