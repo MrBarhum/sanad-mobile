@@ -22,6 +22,47 @@
       }
     }
   },
+  "careCircle": {
+    "loadError": "Could not load your care circle",
+    "onboarding": {
+      "title": "Create your care circle",
+      "subtitle": "Start by adding the person you care for",
+      "circleNameLabel": "Care circle name",
+      "circleNameDefault": "Dad's care",
+      "circleNamePlaceholder": "e.g. Dad's care",
+      "recipientNameLabel": "Full name of the person you care for",
+      "recipientNamePlaceholder": "e.g. Mohammed Abdullah",
+      "birthDateLabel": "Birth date (optional)",
+      "birthDatePlaceholder": "YYYY-MM-DD",
+      "submit": "Create care circle",
+      "errors": {
+        "circleName": "Please enter a care circle name",
+        "recipientName": "Please enter the full name",
+        "birthDate": "Enter the date as YYYY-MM-DD",
+        "submitFailed": "Could not create the care circle. Please try again."
+      }
+    },
+    "dashboard": {
+      "circleLabel": "Care circle",
+      "recipientLabel": "Person you care for",
+      "noRecipient": "No details added yet",
+      "comingSoon": "Coming soon",
+      "sections": {
+        "medications": {
+          "title": "Medications",
+          "subtitle": "Track doses and timings"
+        },
+        "tasks": {
+          "title": "Tasks",
+          "subtitle": "Organize daily care tasks"
+        },
+        "emergency": {
+          "title": "Emergency card",
+          "subtitle": "Key information when it's needed"
+        }
+      }
+    }
+  },
   "explore": {
     "title": "Explore",
     "subtitle": "Upcoming features to support your care journey",

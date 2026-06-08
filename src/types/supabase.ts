@@ -182,6 +182,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_care_circle: {
+        Args: {
+          circle_name: string
+          recipient_full_name: string
+          recipient_birth_date?: string
+        }
+        Returns: {
+          circle_id: string
+          recipient_id: string
+        }[]
+      }
       has_circle_role: {
         Args: {
           allowed_roles: Database["public"]["Enums"]["circle_role"][]

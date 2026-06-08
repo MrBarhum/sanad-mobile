@@ -22,6 +22,47 @@
       }
     }
   },
+  "careCircle": {
+    "loadError": "تعذّر تحميل بيانات دائرة الرعاية",
+    "onboarding": {
+      "title": "أنشئ دائرة الرعاية",
+      "subtitle": "ابدأ بإضافة الشخص الذي تعتني به",
+      "circleNameLabel": "اسم دائرة الرعاية",
+      "circleNameDefault": "رعاية الوالد",
+      "circleNamePlaceholder": "مثال: رعاية الوالد",
+      "recipientNameLabel": "الاسم الكامل لمن تعتني به",
+      "recipientNamePlaceholder": "مثال: محمد عبدالله",
+      "birthDateLabel": "تاريخ الميلاد (اختياري)",
+      "birthDatePlaceholder": "YYYY-MM-DD",
+      "submit": "إنشاء دائرة الرعاية",
+      "errors": {
+        "circleName": "يرجى إدخال اسم دائرة الرعاية",
+        "recipientName": "يرجى إدخال الاسم الكامل لمن تعتني به",
+        "birthDate": "أدخل التاريخ بصيغة YYYY-MM-DD",
+        "submitFailed": "تعذّر إنشاء دائرة الرعاية. حاول مرة أخرى."
+      }
+    },
+    "dashboard": {
+      "circleLabel": "دائرة الرعاية",
+      "recipientLabel": "الشخص الذي تعتني به",
+      "noRecipient": "لم تتم إضافة البيانات بعد",
+      "comingSoon": "قريباً",
+      "sections": {
+        "medications": {
+          "title": "الأدوية",
+          "subtitle": "تتبّع الجرعات وأوقاتها"
+        },
+        "tasks": {
+          "title": "المهام",
+          "subtitle": "نظّم مهام الرعاية اليومية"
+        },
+        "emergency": {
+          "title": "بطاقة الطوارئ",
+          "subtitle": "معلومات أساسية سريعة عند الحاجة"
+        }
+      }
+    }
+  },
   "explore": {
     "title": "استكشاف",
     "subtitle": "ميزات قادمة لمساعدتك في رحلة الرعاية",

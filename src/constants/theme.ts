@@ -62,6 +62,13 @@ export const Spacing = {
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
+/**
+ * On web the tab bar floats absolutely at the TOP of every tab screen (see
+ * app-tabs.web.tsx), unlike native where it sits at the bottom. Add this to a
+ * tab screen's top padding so its heading clears the floating web bar. 0 on
+ * native, where the top is handled by the safe-area inset instead.
+ */
+export const TopTabInset = Platform.select({ web: Spacing.five }) ?? 0;
 export const MaxContentWidth = 800;
 /** Narrower max width for form/settings layouts so they stay readable on web/tablet. */
 export const MaxFormWidth = 480;
