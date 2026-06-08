@@ -3,6 +3,18 @@
   "loading": "Loading…",
   "retry": "Retry",
   "error": "Something went wrong",
+  "common": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Confirm delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close"
+  },
+  "validation": {
+    "tooLong": "This text is too long",
+    "generic": "Invalid value"
+  },
   "home": {
     "greeting": "Welcome to Sanad",
     "tagline": "Your space to organize care and stay close to the people you love",
@@ -24,6 +36,7 @@
   },
   "careCircle": {
     "loadError": "Could not load your care circle",
+    "noActiveCircle": "No active care circle",
     "onboarding": {
       "title": "Create your care circle",
       "subtitle": "Start by adding the person you care for",
@@ -48,6 +61,18 @@
       "noRecipient": "No details added yet",
       "comingSoon": "Coming soon",
       "sections": {
+        "recipientProfile": {
+          "title": "Care recipient profile",
+          "subtitle": "Basic and health details"
+        },
+        "emergencyContacts": {
+          "title": "Emergency contacts",
+          "subtitle": "People to reach when needed"
+        },
+        "doctors": {
+          "title": "Doctors",
+          "subtitle": "Treating doctors and clinics"
+        },
         "medications": {
           "title": "Medications",
           "subtitle": "Track doses and timings"
@@ -62,6 +87,101 @@
         }
       }
     }
+  },
+  "recipientProfile": {
+    "title": "Care recipient profile",
+    "loadError": "Could not load the profile",
+    "empty": "No details added yet",
+    "readOnly": "View only — you don't have permission to edit",
+    "saved": "Changes saved",
+    "saveFailed": "Could not save changes. Please try again.",
+    "save": "Save changes",
+    "fields": {
+      "fullName": "Full name",
+      "birthDate": "Birth date",
+      "dialect": "Dialect",
+      "bloodType": "Blood type",
+      "allergies": "Allergies",
+      "chronicConditions": "Chronic conditions",
+      "emergencyNotes": "Emergency notes"
+    },
+    "placeholders": {
+      "dialect": "e.g. Levantine",
+      "bloodType": "e.g. O+",
+      "allergies": "e.g. Penicillin allergy",
+      "chronicConditions": "e.g. Diabetes, hypertension",
+      "emergencyNotes": "Important information in an emergency"
+    },
+    "errors": {
+      "fullName": "Please enter the full name",
+      "birthDate": "Enter the date as YYYY-MM-DD"
+    }
+  },
+  "emergencyContacts": {
+    "title": "Emergency contacts",
+    "add": "Add contact",
+    "addTitle": "Add contact",
+    "editTitle": "Edit contact",
+    "emptyTitle": "No contacts yet",
+    "emptySubtitle": "Add an emergency contact",
+    "primaryBadge": "Primary",
+    "loadError": "Could not load contacts",
+    "saveFailed": "Could not save. Please try again.",
+    "fields": {
+      "name": "Name",
+      "relationship": "Relationship",
+      "phone": "Phone number",
+      "isPrimary": "Primary contact",
+      "notes": "Notes"
+    },
+    "placeholders": {
+      "relationship": "e.g. Son, neighbor, doctor",
+      "notes": "Additional notes"
+    },
+    "errors": {
+      "name": "Please enter a name",
+      "phone": "Please enter a phone number"
+    }
+  },
+  "doctors": {
+    "title": "Doctors",
+    "add": "Add doctor",
+    "addTitle": "Add doctor",
+    "editTitle": "Edit doctor",
+    "emptyTitle": "No doctors yet",
+    "emptySubtitle": "Add a doctor",
+    "loadError": "Could not load doctors",
+    "saveFailed": "Could not save. Please try again.",
+    "fields": {
+      "name": "Name",
+      "specialty": "Specialty",
+      "phone": "Phone number",
+      "clinicName": "Clinic or hospital",
+      "notes": "Notes"
+    },
+    "placeholders": {
+      "specialty": "e.g. Cardiology, internal medicine",
+      "clinicName": "e.g. Al-Shifa Clinic",
+      "notes": "Additional notes"
+    },
+    "errors": {
+      "name": "Please enter the doctor's name"
+    }
+  },
+  "emergencyCard": {
+    "title": "Emergency card",
+    "loadError": "Could not load the emergency card",
+    "recipientLabel": "Person you care for",
+    "noRecipient": "No details added yet",
+    "birthDate": "Birth date",
+    "approxAge": "Approx. age",
+    "notSpecified": "Not specified",
+    "medicalTitle": "Medical information",
+    "contactsTitle": "Emergency contacts",
+    "doctorsTitle": "Doctors",
+    "noContacts": "No contacts added",
+    "noDoctors": "No doctors added",
+    "disclaimer": "This information is entered by the family for reference only and is not medical advice or diagnosis."
   },
   "explore": {
     "title": "Explore",

@@ -1,18 +1,6 @@
 import { z } from 'zod';
 
-const BIRTH_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-/** True when `value` is a real calendar date in strict YYYY-MM-DD form. */
-function isValidYmd(value: string): boolean {
-  if (!BIRTH_DATE_RE.test(value)) return false;
-  const [year, month, day] = value.split('-').map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return (
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day
-  );
-}
+import { isValidYmd } from '@/utils/date';
 
 /**
  * Form validation for creating the first care circle. `birthDate` is optional

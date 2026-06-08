@@ -1,5 +1,6 @@
+import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -8,8 +9,32 @@ import { BottomTabInset, MaxContentWidth, Spacing, TopTabInset } from '@/constan
 
 import type { CircleSummary } from './api';
 
-/** Placeholder feature cards shown on the dashboard (no logic yet). */
-const SECTIONS = [
+const EMERGENCY = '#dc2626';
+
+/** Navigable feature cards on the dashboard. */
+const ACTIONS = [
+  {
+    key: 'recipientProfile',
+    href: '/recipient-profile',
+    titleKey: 'careCircle.dashboard.sections.recipientProfile.title',
+    subtitleKey: 'careCircle.dashboard.sections.recipientProfile.subtitle',
+  },
+  {
+    key: 'emergencyContacts',
+    href: '/emergency-contacts',
+    titleKey: 'careCircle.dashboard.sections.emergencyContacts.title',
+    subtitleKey: 'careCircle.dashboard.sections.emergencyContacts.subtitle',
+  },
+  {
+    key: 'doctors',
+    href: '/doctors',
+    titleKey: 'careCircle.dashboard.sections.doctors.title',
+    subtitleKey: 'careCircle.dashboard.sections.doctors.subtitle',
+  },
+] as const satisfies readonly { key: string; href: Href; titleKey: string; subtitleKey: string }[];
+
+/** Roadmap cards that are not yet implemented. */
+const SOON = [
   {
     key: 'medications',
     titleKey: 'careCircle.dashboard.sections.medications.title',
@@ -20,16 +45,12 @@ const SECTIONS = [
     titleKey: 'careCircle.dashboard.sections.tasks.title',
     subtitleKey: 'careCircle.dashboard.sections.tasks.subtitle',
   },
-  {
-    key: 'emergency',
-    titleKey: 'careCircle.dashboard.sections.emergency.title',
-    subtitleKey: 'careCircle.dashboard.sections.emergency.subtitle',
-  },
 ] as const;
 
 /** Dashboard shown on Home once the user belongs to an active care circle. */
 export function CareCircleDashboard({ summary }: { summary: CircleSummary }) {
   const { t } = useTranslation();
+  const router = useRouter();
 
   return (
     <ThemedView style={styles.container}>
@@ -62,8 +83,39 @@ export function CareCircleDashboard({ summary }: { summary: CircleSummary }) {
             </View>
           </ThemedView>
 
+          <Pressable
+            onPress={() => router.push('/emergency-card')}
+            accessibilityRole="button"
+            accessibilityLabel={t('careCircle.dashboard.sections.emergency.title')}
+            style={({ pressed }) => [styles.emergencyCard, pressed && styles.pressed]}>
+            <ThemedView type="backgroundElement" style={styles.emergencyInner}>
+              <ThemedText style={styles.emergencyTitle}>
+                {t('careCircle.dashboard.sections.emergency.title')}
+              </ThemedText>
+              <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
+                {t('careCircle.dashboard.sections.emergency.subtitle')}
+              </ThemedText>
+            </ThemedView>
+          </Pressable>
+
           <View style={styles.cards}>
-            {SECTIONS.map((section) => (
+            {ACTIONS.map((section) => (
+              <Pressable
+                key={section.key}
+                onPress={() => router.push(section.href)}
+                accessibilityRole="button"
+                accessibilityLabel={t(section.titleKey)}
+                style={({ pressed }) => pressed && styles.pressed}>
+                <ThemedView type="backgroundElement" style={styles.card}>
+                  <ThemedText style={styles.cardTitle}>{t(section.titleKey)}</ThemedText>
+                  <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
+                    {t(section.subtitleKey)}
+                  </ThemedText>
+                </ThemedView>
+              </Pressable>
+            ))}
+
+            {SOON.map((section) => (
               <ThemedView key={section.key} type="backgroundElement" style={styles.card}>
                 <View style={styles.cardHeader}>
                   <ThemedText style={styles.cardTitle}>{t(section.titleKey)}</ThemedText>
@@ -103,8 +155,19 @@ const styles = StyleSheet.create({
   },
   row: { gap: Spacing.one },
   divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
-  circleName: { fontSize: 22, lineHeight: 30, fontWeight: 600 },
-  recipientName: { fontSize: 20, lineHeight: 28, fontWeight: 600 },
+  circleName: { fontSize: 22, lineHeight: 30, fontWeight: '600' },
+  recipientName: { fontSize: 20, lineHeight: 28, fontWeight: '600' },
+  emergencyCard: { borderRadius: Spacing.four },
+  emergencyInner: {
+    borderRadius: Spacing.four,
+    padding: Spacing.four,
+    gap: Spacing.two,
+    borderWidth: 2,
+    borderColor: EMERGENCY,
+    minHeight: 96,
+    justifyContent: 'center',
+  },
+  emergencyTitle: { fontSize: 22, lineHeight: 30, fontWeight: '700', color: EMERGENCY },
   cards: { gap: Spacing.three },
   card: {
     borderRadius: Spacing.four,
@@ -119,11 +182,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  cardTitle: { fontSize: 20, lineHeight: 28, fontWeight: 600, flexShrink: 1 },
+  cardTitle: { fontSize: 20, lineHeight: 28, fontWeight: '600', flexShrink: 1 },
   badge: {
     borderRadius: Spacing.five,
     paddingVertical: Spacing.half,
     paddingHorizontal: Spacing.two,
   },
   cardSubtitle: { fontSize: 16, lineHeight: 24 },
+  pressed: { opacity: 0.7 },
 });

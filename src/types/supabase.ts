@@ -144,6 +144,94 @@ export type Database = {
           },
         ]
       }
+      doctors: {
+        Row: {
+          circle_id: string
+          clinic_name: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          specialty: string | null
+          updated_at: string
+        }
+        Insert: {
+          circle_id: string
+          clinic_name?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          specialty?: string | null
+          updated_at?: string
+        }
+        Update: {
+          circle_id?: string
+          clinic_name?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          specialty?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctors_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_contacts: {
+        Row: {
+          circle_id: string
+          created_at: string
+          id: string
+          is_primary: boolean
+          name: string
+          notes: string | null
+          phone: string
+          relationship: string | null
+          updated_at: string
+        }
+        Insert: {
+          circle_id: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          name: string
+          notes?: string | null
+          phone: string
+          relationship?: string | null
+          updated_at?: string
+        }
+        Update: {
+          circle_id?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string
+          relationship?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

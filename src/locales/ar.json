@@ -3,6 +3,18 @@
   "loading": "جارٍ التحميل…",
   "retry": "إعادة المحاولة",
   "error": "حدث خطأ ما",
+  "common": {
+    "edit": "تعديل",
+    "delete": "حذف",
+    "confirmDelete": "تأكيد الحذف",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "close": "إغلاق"
+  },
+  "validation": {
+    "tooLong": "النص طويل جدًا",
+    "generic": "قيمة غير صحيحة"
+  },
   "home": {
     "greeting": "أهلاً بك في سند",
     "tagline": "مساحتك لتنظيم الرعاية ومتابعة من تحب",
@@ -24,6 +36,7 @@
   },
   "careCircle": {
     "loadError": "تعذّر تحميل بيانات دائرة الرعاية",
+    "noActiveCircle": "لا توجد دائرة رعاية نشطة",
     "onboarding": {
       "title": "أنشئ دائرة الرعاية",
       "subtitle": "ابدأ بإضافة الشخص الذي تعتني به",
@@ -48,6 +61,18 @@
       "noRecipient": "لم تتم إضافة البيانات بعد",
       "comingSoon": "قريباً",
       "sections": {
+        "recipientProfile": {
+          "title": "ملف من تعتني به",
+          "subtitle": "البيانات الأساسية والصحية"
+        },
+        "emergencyContacts": {
+          "title": "جهات اتصال الطوارئ",
+          "subtitle": "أرقام للتواصل عند الحاجة"
+        },
+        "doctors": {
+          "title": "الأطباء",
+          "subtitle": "أطباء ومتابعات من تعتني به"
+        },
         "medications": {
           "title": "الأدوية",
           "subtitle": "تتبّع الجرعات وأوقاتها"
@@ -62,6 +87,101 @@
         }
       }
     }
+  },
+  "recipientProfile": {
+    "title": "ملف من تعتني به",
+    "loadError": "تعذّر تحميل بيانات الملف",
+    "empty": "لم تتم إضافة بيانات بعد",
+    "readOnly": "للعرض فقط — لا تملك صلاحية التعديل",
+    "saved": "تم حفظ التغييرات",
+    "saveFailed": "تعذّر حفظ التغييرات. حاول مرة أخرى.",
+    "save": "حفظ التغييرات",
+    "fields": {
+      "fullName": "الاسم الكامل",
+      "birthDate": "تاريخ الميلاد",
+      "dialect": "اللهجة",
+      "bloodType": "فصيلة الدم",
+      "allergies": "الحساسية",
+      "chronicConditions": "الأمراض المزمنة",
+      "emergencyNotes": "ملاحظات الطوارئ"
+    },
+    "placeholders": {
+      "dialect": "مثال: لهجة شامية",
+      "bloodType": "مثال: O+",
+      "allergies": "مثال: حساسية من البنسلين",
+      "chronicConditions": "مثال: السكري، ضغط الدم",
+      "emergencyNotes": "معلومات مهمة عند الطوارئ"
+    },
+    "errors": {
+      "fullName": "يرجى إدخال الاسم الكامل",
+      "birthDate": "أدخل التاريخ بصيغة YYYY-MM-DD"
+    }
+  },
+  "emergencyContacts": {
+    "title": "جهات اتصال الطوارئ",
+    "add": "إضافة جهة اتصال",
+    "addTitle": "إضافة جهة اتصال",
+    "editTitle": "تعديل جهة الاتصال",
+    "emptyTitle": "لا توجد جهات اتصال",
+    "emptySubtitle": "أضف جهة اتصال للطوارئ",
+    "primaryBadge": "رئيسية",
+    "loadError": "تعذّر تحميل جهات الاتصال",
+    "saveFailed": "تعذّر الحفظ. حاول مرة أخرى.",
+    "fields": {
+      "name": "الاسم",
+      "relationship": "صلة القرابة",
+      "phone": "رقم الهاتف",
+      "isPrimary": "جهة اتصال رئيسية",
+      "notes": "ملاحظات"
+    },
+    "placeholders": {
+      "relationship": "مثال: ابن، جار، طبيب",
+      "notes": "ملاحظات إضافية"
+    },
+    "errors": {
+      "name": "يرجى إدخال الاسم",
+      "phone": "يرجى إدخال رقم الهاتف"
+    }
+  },
+  "doctors": {
+    "title": "الأطباء",
+    "add": "إضافة طبيب",
+    "addTitle": "إضافة طبيب",
+    "editTitle": "تعديل بيانات الطبيب",
+    "emptyTitle": "لا يوجد أطباء",
+    "emptySubtitle": "أضف طبيبًا لمن تعتني به",
+    "loadError": "تعذّر تحميل قائمة الأطباء",
+    "saveFailed": "تعذّر الحفظ. حاول مرة أخرى.",
+    "fields": {
+      "name": "الاسم",
+      "specialty": "التخصص",
+      "phone": "رقم الهاتف",
+      "clinicName": "اسم العيادة أو المستشفى",
+      "notes": "ملاحظات"
+    },
+    "placeholders": {
+      "specialty": "مثال: قلب، باطنية",
+      "clinicName": "مثال: عيادة الشفاء",
+      "notes": "ملاحظات إضافية"
+    },
+    "errors": {
+      "name": "يرجى إدخال اسم الطبيب"
+    }
+  },
+  "emergencyCard": {
+    "title": "بطاقة الطوارئ",
+    "loadError": "تعذّر تحميل بطاقة الطوارئ",
+    "recipientLabel": "الشخص الذي تعتني به",
+    "noRecipient": "لم تتم إضافة البيانات بعد",
+    "birthDate": "تاريخ الميلاد",
+    "approxAge": "العمر التقريبي",
+    "notSpecified": "غير محدد",
+    "medicalTitle": "معلومات طبية",
+    "contactsTitle": "جهات اتصال الطوارئ",
+    "doctorsTitle": "الأطباء",
+    "noContacts": "لم تتم إضافة جهات اتصال",
+    "noDoctors": "لم تتم إضافة أطباء",
+    "disclaimer": "هذه المعلومات مُدخلة من العائلة للعرض فقط، وليست نصيحة أو تشخيصًا طبيًا."
   },
   "explore": {
     "title": "استكشاف",
