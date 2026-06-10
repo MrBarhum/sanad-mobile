@@ -5,6 +5,7 @@
   "error": "حدث خطأ ما",
   "common": {
     "edit": "تعديل",
+    "details": "التفاصيل",
     "delete": "حذف",
     "confirmDelete": "تأكيد الحذف",
     "cancel": "إلغاء",
@@ -82,6 +83,14 @@
         "tasks": {
           "title": "المهام",
           "subtitle": "نظّم مهام الرعاية اليومية"
+        },
+        "appointments": {
+          "title": "المواعيد",
+          "subtitle": "زيارات الأطباء والمواعيد"
+        },
+        "visits": {
+          "title": "الزيارات العائلية",
+          "subtitle": "نظّم زيارات العائلة"
         },
         "emergency": {
           "title": "بطاقة الطوارئ",
@@ -272,6 +281,218 @@
     "summary": {
       "none": "لا توجد جرعات اليوم",
       "counts": "جرعات اليوم: {{total}} • تم: {{given}} • المتبقّي: {{remaining}}"
+    }
+  },
+  "tasks": {
+    "title": "المهام",
+    "addTitle": "إضافة مهمة",
+    "detailTitle": "تفاصيل المهمة",
+    "add": "إضافة مهمة",
+    "disclaimer": "تنظيم وتنسيق مهام الرعاية بين أفراد العائلة فقط، دون أي نصيحة طبية.",
+    "loadError": "تعذّر تحميل المهام",
+    "saveFailed": "تعذّر الحفظ. حاول مرة أخرى.",
+    "saved": "تم حفظ التغييرات",
+    "saveTask": "حفظ المهمة",
+    "notFound": "لم يتم العثور على المهمة",
+    "readOnly": "للعرض فقط — لا تملك صلاحية التعديل",
+    "managersOnly": "إضافة المهام متاحة للمشرف ومقدّم الرعاية الأساسي فقط",
+    "todayTitle": "مهام اليوم",
+    "openTitle": "المهام المفتوحة",
+    "doneTitle": "منجزة وملغاة",
+    "noTodayTitle": "لا مهام لهذا اليوم",
+    "noTodaySubtitle": "لا توجد مهام مستحقّة اليوم",
+    "noOpenTitle": "لا توجد مهام مفتوحة",
+    "noOpenSubtitle": "أضف مهمة لتنظيم الرعاية",
+    "complete": "إنجاز",
+    "cancelTask": "إلغاء",
+    "deleteTask": "حذف المهمة",
+    "dueLabel": "الاستحقاق",
+    "noDueDate": "بدون تاريخ",
+    "assignedToMe": "مُسندة إليك",
+    "unassigned": "غير مُسندة",
+    "assignedToMember": "مُسندة إلى أحد الأعضاء",
+    "completedAt": "اكتملت في",
+    "cancelledAt": "أُلغيت في",
+    "fields": {
+      "title": "عنوان المهمة",
+      "description": "الوصف",
+      "category": "التصنيف",
+      "priority": "الأولوية",
+      "status": "الحالة",
+      "dueDate": "تاريخ الاستحقاق",
+      "dueTime": "وقت الاستحقاق",
+      "assignToMe": "أسندها إليّ",
+      "notes": "ملاحظات"
+    },
+    "placeholders": {
+      "title": "مثال: شراء الدواء",
+      "description": "تفاصيل إضافية",
+      "dueDate": "YYYY-MM-DD",
+      "dueTime": "HH:MM",
+      "notes": "ملاحظات إضافية"
+    },
+    "errors": {
+      "title": "يرجى إدخال عنوان المهمة",
+      "dueDate": "أدخل التاريخ بصيغة YYYY-MM-DD",
+      "dueTime": "أدخل الوقت بصيغة HH:MM",
+      "dueTimeNeedsDate": "حدّد تاريخ الاستحقاق أولاً"
+    },
+    "category": {
+      "general": "عام",
+      "medication": "دواء",
+      "meal": "وجبة",
+      "hygiene": "نظافة",
+      "movement": "حركة",
+      "errand": "مشوار",
+      "appointment": "موعد",
+      "other": "أخرى"
+    },
+    "priority": {
+      "low": "منخفضة",
+      "normal": "عادية",
+      "high": "عالية",
+      "urgent": "عاجلة"
+    },
+    "status": {
+      "open": "مفتوحة",
+      "completed": "منجزة",
+      "cancelled": "ملغاة"
+    },
+    "summary": {
+      "none": "لا مهام اليوم",
+      "counts": "مهام اليوم: {{due}} • منجزة: {{done}}"
+    }
+  },
+  "appointments": {
+    "title": "المواعيد",
+    "addTitle": "إضافة موعد",
+    "detailTitle": "تفاصيل الموعد",
+    "add": "إضافة موعد",
+    "disclaimer": "تنظيم مواعيد الرعاية وتنسيقها بين أفراد العائلة فقط، دون أي نصيحة طبية.",
+    "loadError": "تعذّر تحميل المواعيد",
+    "saveFailed": "تعذّر الحفظ. حاول مرة أخرى.",
+    "saved": "تم حفظ التغييرات",
+    "saveAppointment": "حفظ الموعد",
+    "notFound": "لم يتم العثور على الموعد",
+    "readOnly": "للعرض فقط — لا تملك صلاحية التعديل",
+    "managersOnly": "إضافة المواعيد متاحة للمشرف ومقدّم الرعاية الأساسي فقط",
+    "todayTitle": "مواعيد اليوم",
+    "upcomingTitle": "المواعيد القادمة",
+    "noTodayTitle": "لا مواعيد اليوم",
+    "noTodaySubtitle": "لا توجد مواعيد مجدولة لهذا اليوم",
+    "noUpcomingTitle": "لا مواعيد قادمة",
+    "noUpcomingSubtitle": "أضف موعدًا قادمًا",
+    "markCompleted": "تمّ",
+    "markCancelled": "إلغاء",
+    "reopen": "إعادة كمجدول",
+    "deleteAppointment": "حذف الموعد",
+    "whenLabel": "الموعد",
+    "locationLabel": "المكان",
+    "doctorLabel": "الطبيب",
+    "noDoctor": "بدون طبيب",
+    "fields": {
+      "title": "عنوان الموعد",
+      "type": "النوع",
+      "date": "التاريخ",
+      "startTime": "وقت البدء",
+      "endTime": "وقت الانتهاء",
+      "location": "المكان",
+      "doctor": "الطبيب",
+      "notes": "ملاحظات",
+      "status": "الحالة"
+    },
+    "placeholders": {
+      "title": "مثال: مراجعة طبيب القلب",
+      "date": "YYYY-MM-DD",
+      "startTime": "HH:MM",
+      "endTime": "اختياري — HH:MM",
+      "location": "مثال: مستشفى الملك فهد",
+      "notes": "ملاحظات إضافية"
+    },
+    "errors": {
+      "title": "يرجى إدخال عنوان الموعد",
+      "date": "أدخل التاريخ بصيغة YYYY-MM-DD",
+      "startTime": "أدخل وقت البدء بصيغة HH:MM",
+      "endTime": "أدخل الوقت بصيغة HH:MM",
+      "endBeforeStart": "وقت الانتهاء قبل وقت البدء"
+    },
+    "type": {
+      "doctor": "طبيب",
+      "lab": "تحاليل",
+      "pharmacy": "صيدلية",
+      "therapy": "علاج طبيعي",
+      "home_care": "رعاية منزلية",
+      "family": "عائلي",
+      "general": "عام"
+    },
+    "status": {
+      "scheduled": "مجدول",
+      "completed": "تمّ",
+      "cancelled": "ملغى"
+    },
+    "summary": {
+      "none": "لا مواعيد اليوم",
+      "count": "مواعيد اليوم: {{count}}"
+    }
+  },
+  "visits": {
+    "title": "الزيارات العائلية",
+    "addTitle": "إضافة زيارة",
+    "detailTitle": "تفاصيل الزيارة",
+    "add": "إضافة زيارة",
+    "disclaimer": "تنظيم زيارات العائلة وتنسيقها فقط، دون أي نصيحة طبية.",
+    "loadError": "تعذّر تحميل الزيارات",
+    "saveFailed": "تعذّر الحفظ. حاول مرة أخرى.",
+    "saved": "تم حفظ التغييرات",
+    "saveVisit": "حفظ الزيارة",
+    "notFound": "لم يتم العثور على الزيارة",
+    "readOnly": "للعرض فقط — لا تملك صلاحية التعديل",
+    "cannotAdd": "تسجيل الزيارات متاح لأعضاء دائرة الرعاية النشطين",
+    "ownVisitNote": "ستُسجَّل الزيارة باسم حسابك",
+    "todayTitle": "زيارات اليوم",
+    "upcomingTitle": "الزيارات القادمة",
+    "recentTitle": "زيارات سابقة",
+    "noTodayTitle": "لا زيارات اليوم",
+    "noTodaySubtitle": "لا توجد زيارات مسجّلة لهذا اليوم",
+    "noUpcomingTitle": "لا زيارات قادمة",
+    "noUpcomingSubtitle": "أضف زيارة قادمة",
+    "markCompleted": "تمّت",
+    "markCancelled": "إلغاء",
+    "reopen": "إعادة كمخطّطة",
+    "deleteVisit": "حذف الزيارة",
+    "whenLabel": "الموعد",
+    "mineLabel": "زيارتك",
+    "fields": {
+      "visitorName": "اسم الزائر",
+      "visitDate": "تاريخ الزيارة",
+      "startTime": "وقت البدء",
+      "endTime": "وقت الانتهاء",
+      "status": "الحالة",
+      "notes": "ملاحظات",
+      "linkToMe": "ربط الزيارة بحسابي"
+    },
+    "placeholders": {
+      "visitorName": "مثال: أحمد",
+      "visitDate": "YYYY-MM-DD",
+      "startTime": "HH:MM",
+      "endTime": "اختياري — HH:MM",
+      "notes": "ملاحظات إضافية"
+    },
+    "errors": {
+      "visitorName": "يرجى إدخال اسم الزائر",
+      "visitDate": "أدخل التاريخ بصيغة YYYY-MM-DD",
+      "startTime": "أدخل الوقت بصيغة HH:MM",
+      "endTime": "أدخل الوقت بصيغة HH:MM",
+      "endBeforeStart": "وقت الانتهاء قبل وقت البدء"
+    },
+    "status": {
+      "planned": "مخطّطة",
+      "completed": "تمّت",
+      "cancelled": "ملغاة"
+    },
+    "summary": {
+      "none": "لا زيارات اليوم",
+      "count": "زيارات اليوم: {{count}}"
     }
   },
   "explore": {

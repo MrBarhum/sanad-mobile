@@ -58,3 +58,52 @@ export function dayOfWeekFromYmd(ymd: string): number | null {
 export function formatHm(time: string): string {
   return time.slice(0, 5);
 }
+
+/** Strict 24-hour HH:MM. */
+const HM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** True when `value` is a valid 24-hour HH:MM time string. */
+export function isValidHm(value: string): boolean {
+  return HM_RE.test(value);
+}
+
+/**
+ * Local 'YYYY-MM-DD' for an ISO timestamp (e.g. a Postgres timestamptz string).
+ * Like the rest of this module it works in the device's local calendar — see the
+ * local-time assumption documented in the step report.
+ */
+export function ymdFromInstant(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/** Local 'HH:MM' for an ISO timestamp. */
+export function hmFromInstant(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+/** ISO timestamp for local midnight today — used to fetch upcoming items. */
+export function startOfTodayInstant(): string {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).toISOString();
+}
+
+/**
+ * Combines a local 'YYYY-MM-DD' date and an 'HH:MM' time into an ISO timestamp,
+ * or `null` when either part is malformed. Local-time based, consistent with the
+ * rest of the app.
+ */
+export function combineDateTimeToInstant(ymd: string, hm: string): string | null {
+  if (!isValidYmd(ymd) || !HM_RE.test(hm)) return null;
+  const [year, month, day] = ymd.split('-').map(Number);
+  const [hours, minutes] = hm.split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes, 0, 0).toISOString();
+}

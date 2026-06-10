@@ -6,7 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing, TopTabInset } from '@/constants/theme';
+import { AppointmentsCard } from '@/features/appointments/appointments-card';
 import { useTodayDoseSummary } from '@/features/medications/hooks';
+import { TasksCard } from '@/features/tasks/tasks-card';
+import { VisitsCard } from '@/features/visits/visits-card';
 
 import type { CircleSummary } from './api';
 
@@ -33,15 +36,6 @@ const ACTIONS = [
     subtitleKey: 'careCircle.dashboard.sections.doctors.subtitle',
   },
 ] as const satisfies readonly { key: string; href: Href; titleKey: string; subtitleKey: string }[];
-
-/** Roadmap cards that are not yet implemented. */
-const SOON = [
-  {
-    key: 'tasks',
-    titleKey: 'careCircle.dashboard.sections.tasks.title',
-    subtitleKey: 'careCircle.dashboard.sections.tasks.subtitle',
-  },
-] as const;
 
 /** Dashboard shown on Home once the user belongs to an active care circle. */
 export function CareCircleDashboard({ summary }: { summary: CircleSummary }) {
@@ -96,6 +90,9 @@ export function CareCircleDashboard({ summary }: { summary: CircleSummary }) {
 
           <View style={styles.cards}>
             <MedicationsCard circleId={summary.circleId} />
+            <TasksCard circleId={summary.circleId} />
+            <AppointmentsCard circleId={summary.circleId} />
+            <VisitsCard circleId={summary.circleId} />
 
             {ACTIONS.map((section) => (
               <Pressable
@@ -111,22 +108,6 @@ export function CareCircleDashboard({ summary }: { summary: CircleSummary }) {
                   </ThemedText>
                 </ThemedView>
               </Pressable>
-            ))}
-
-            {SOON.map((section) => (
-              <ThemedView key={section.key} type="backgroundElement" style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <ThemedText style={styles.cardTitle}>{t(section.titleKey)}</ThemedText>
-                  <ThemedView type="backgroundSelected" style={styles.badge}>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {t('careCircle.dashboard.comingSoon')}
-                    </ThemedText>
-                  </ThemedView>
-                </View>
-                <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
-                  {t(section.subtitleKey)}
-                </ThemedText>
-              </ThemedView>
             ))}
           </View>
         </ScrollView>
@@ -208,18 +189,7 @@ const styles = StyleSheet.create({
     minHeight: 96,
     justifyContent: 'center',
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-  },
   cardTitle: { fontSize: 20, lineHeight: 28, fontWeight: '600', flexShrink: 1 },
-  badge: {
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-  },
   cardSubtitle: { fontSize: 16, lineHeight: 24 },
   pressed: { opacity: 0.7 },
 });

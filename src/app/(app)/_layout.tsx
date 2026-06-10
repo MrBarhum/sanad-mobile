@@ -36,6 +36,9 @@ export default function AppLayout() {
       }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="medications" options={{ headerShown: false }} />
+      <Stack.Screen name="tasks" options={{ headerShown: false }} />
+      <Stack.Screen name="appointments" options={{ headerShown: false }} />
+      <Stack.Screen name="visits" options={{ headerShown: false }} />
       <Stack.Screen name="recipient-profile" options={{ title: t('recipientProfile.title') }} />
       <Stack.Screen name="emergency-card" options={{ title: t('emergencyCard.title') }} />
       <Stack.Screen name="emergency-contacts" options={{ title: t('emergencyContacts.title') }} />

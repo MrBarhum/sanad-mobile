@@ -14,6 +14,76 @@ export type Database = {
   }
   public: {
     Tables: {
+      care_appointments: {
+        Row: {
+          appointment_type: Database["public"]["Enums"]["care_appointment_type"]
+          circle_id: string
+          created_at: string
+          created_by: string | null
+          doctor_id: string | null
+          ends_at: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          starts_at: string
+          status: Database["public"]["Enums"]["care_appointment_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_type?: Database["public"]["Enums"]["care_appointment_type"]
+          circle_id: string
+          created_at?: string
+          created_by?: string | null
+          doctor_id?: string | null
+          ends_at?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          starts_at: string
+          status?: Database["public"]["Enums"]["care_appointment_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_type?: Database["public"]["Enums"]["care_appointment_type"]
+          circle_id?: string
+          created_at?: string
+          created_by?: string | null
+          doctor_id?: string | null
+          ends_at?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          starts_at?: string
+          status?: Database["public"]["Enums"]["care_appointment_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_appointments_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_appointments_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_appointments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       care_circles: {
         Row: {
           created_at: string
@@ -95,6 +165,95 @@ export type Database = {
             columns: ["circle_id"]
             isOneToOne: true
             referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      care_tasks: {
+        Row: {
+          assigned_to: string | null
+          cancelled_at: string | null
+          category: Database["public"]["Enums"]["care_task_category"]
+          circle_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          due_time: string | null
+          id: string
+          notes: string | null
+          priority: Database["public"]["Enums"]["care_task_priority"]
+          status: Database["public"]["Enums"]["care_task_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          cancelled_at?: string | null
+          category?: Database["public"]["Enums"]["care_task_category"]
+          circle_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          due_time?: string | null
+          id?: string
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["care_task_priority"]
+          status?: Database["public"]["Enums"]["care_task_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          cancelled_at?: string | null
+          category?: Database["public"]["Enums"]["care_task_category"]
+          circle_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          due_time?: string | null
+          id?: string
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["care_task_priority"]
+          status?: Database["public"]["Enums"]["care_task_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_tasks_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_tasks_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -228,6 +387,73 @@ export type Database = {
             columns: ["circle_id"]
             isOneToOne: false
             referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_visits: {
+        Row: {
+          circle_id: string
+          created_at: string
+          created_by: string | null
+          end_time: string | null
+          id: string
+          notes: string | null
+          start_time: string | null
+          status: Database["public"]["Enums"]["family_visit_status"]
+          updated_at: string
+          visit_date: string
+          visitor_name: string
+          visitor_user_id: string | null
+        }
+        Insert: {
+          circle_id: string
+          created_at?: string
+          created_by?: string | null
+          end_time?: string | null
+          id?: string
+          notes?: string | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["family_visit_status"]
+          updated_at?: string
+          visit_date: string
+          visitor_name: string
+          visitor_user_id?: string | null
+        }
+        Update: {
+          circle_id?: string
+          created_at?: string
+          created_by?: string | null
+          end_time?: string | null
+          id?: string
+          notes?: string | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["family_visit_status"]
+          updated_at?: string
+          visit_date?: string
+          visitor_name?: string
+          visitor_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_visits_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_visits_visitor_user_id_fkey"
+            columns: ["visitor_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_visits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -472,6 +698,26 @@ export type Database = {
       is_circle_member: { Args: { target_circle_id: string }; Returns: boolean }
     }
     Enums: {
+      care_appointment_status: "scheduled" | "completed" | "cancelled"
+      care_appointment_type:
+        | "doctor"
+        | "lab"
+        | "pharmacy"
+        | "therapy"
+        | "home_care"
+        | "family"
+        | "general"
+      care_task_category:
+        | "general"
+        | "medication"
+        | "meal"
+        | "hygiene"
+        | "movement"
+        | "errand"
+        | "appointment"
+        | "other"
+      care_task_priority: "low" | "normal" | "high" | "urgent"
+      care_task_status: "open" | "completed" | "cancelled"
       circle_role:
         | "admin"
         | "primary_caregiver"
@@ -479,6 +725,7 @@ export type Database = {
         | "caregiver"
         | "remote_member"
         | "elder"
+      family_visit_status: "planned" | "completed" | "cancelled"
       medication_log_status: "given" | "missed" | "postponed"
       member_status: "active" | "invited" | "removed"
     }
@@ -608,6 +855,28 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      care_appointment_status: ["scheduled", "completed", "cancelled"],
+      care_appointment_type: [
+        "doctor",
+        "lab",
+        "pharmacy",
+        "therapy",
+        "home_care",
+        "family",
+        "general",
+      ],
+      care_task_category: [
+        "general",
+        "medication",
+        "meal",
+        "hygiene",
+        "movement",
+        "errand",
+        "appointment",
+        "other",
+      ],
+      care_task_priority: ["low", "normal", "high", "urgent"],
+      care_task_status: ["open", "completed", "cancelled"],
       circle_role: [
         "admin",
         "primary_caregiver",
@@ -616,6 +885,7 @@ export const Constants = {
         "remote_member",
         "elder",
       ],
+      family_visit_status: ["planned", "completed", "cancelled"],
       medication_log_status: ["given", "missed", "postponed"],
       member_status: ["active", "invited", "removed"],
     },

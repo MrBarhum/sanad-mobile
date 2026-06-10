@@ -5,6 +5,7 @@
   "error": "Something went wrong",
   "common": {
     "edit": "Edit",
+    "details": "Details",
     "delete": "Delete",
     "confirmDelete": "Confirm delete",
     "cancel": "Cancel",
@@ -82,6 +83,14 @@
         "tasks": {
           "title": "Tasks",
           "subtitle": "Organize daily care tasks"
+        },
+        "appointments": {
+          "title": "Appointments",
+          "subtitle": "Doctor visits and appointments"
+        },
+        "visits": {
+          "title": "Family visits",
+          "subtitle": "Coordinate family visits"
         },
         "emergency": {
           "title": "Emergency card",
@@ -272,6 +281,218 @@
     "summary": {
       "none": "No doses today",
       "counts": "Today's doses: {{total}} • Given: {{given}} • Remaining: {{remaining}}"
+    }
+  },
+  "tasks": {
+    "title": "Tasks",
+    "addTitle": "Add task",
+    "detailTitle": "Task details",
+    "add": "Add task",
+    "disclaimer": "For organizing and coordinating care tasks among the family only. It does not provide medical advice.",
+    "loadError": "Could not load tasks",
+    "saveFailed": "Could not save. Please try again.",
+    "saved": "Changes saved",
+    "saveTask": "Save task",
+    "notFound": "Task not found",
+    "readOnly": "View only — you don't have permission to edit",
+    "managersOnly": "Only the admin and primary caregiver can add tasks",
+    "todayTitle": "Today's tasks",
+    "openTitle": "Open tasks",
+    "doneTitle": "Done & cancelled",
+    "noTodayTitle": "No tasks for today",
+    "noTodaySubtitle": "No tasks are due today",
+    "noOpenTitle": "No open tasks",
+    "noOpenSubtitle": "Add a task to organize care",
+    "complete": "Complete",
+    "cancelTask": "Cancel",
+    "deleteTask": "Delete task",
+    "dueLabel": "Due",
+    "noDueDate": "No date",
+    "assignedToMe": "Assigned to you",
+    "unassigned": "Unassigned",
+    "assignedToMember": "Assigned to a member",
+    "completedAt": "Completed at",
+    "cancelledAt": "Cancelled at",
+    "fields": {
+      "title": "Task title",
+      "description": "Description",
+      "category": "Category",
+      "priority": "Priority",
+      "status": "Status",
+      "dueDate": "Due date",
+      "dueTime": "Due time",
+      "assignToMe": "Assign to me",
+      "notes": "Notes"
+    },
+    "placeholders": {
+      "title": "e.g. Pick up medication",
+      "description": "Additional details",
+      "dueDate": "YYYY-MM-DD",
+      "dueTime": "HH:MM",
+      "notes": "Additional notes"
+    },
+    "errors": {
+      "title": "Please enter a task title",
+      "dueDate": "Enter the date as YYYY-MM-DD",
+      "dueTime": "Enter the time as HH:MM",
+      "dueTimeNeedsDate": "Set a due date first"
+    },
+    "category": {
+      "general": "General",
+      "medication": "Medication",
+      "meal": "Meal",
+      "hygiene": "Hygiene",
+      "movement": "Movement",
+      "errand": "Errand",
+      "appointment": "Appointment",
+      "other": "Other"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "status": {
+      "open": "Open",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "summary": {
+      "none": "No tasks today",
+      "counts": "Today's tasks: {{due}} • Completed: {{done}}"
+    }
+  },
+  "appointments": {
+    "title": "Appointments",
+    "addTitle": "Add appointment",
+    "detailTitle": "Appointment details",
+    "add": "Add appointment",
+    "disclaimer": "For organizing and coordinating care appointments among the family only. It does not provide medical advice.",
+    "loadError": "Could not load appointments",
+    "saveFailed": "Could not save. Please try again.",
+    "saved": "Changes saved",
+    "saveAppointment": "Save appointment",
+    "notFound": "Appointment not found",
+    "readOnly": "View only — you don't have permission to edit",
+    "managersOnly": "Only the admin and primary caregiver can add appointments",
+    "todayTitle": "Today's appointments",
+    "upcomingTitle": "Upcoming appointments",
+    "noTodayTitle": "No appointments today",
+    "noTodaySubtitle": "No appointments are scheduled for today",
+    "noUpcomingTitle": "No upcoming appointments",
+    "noUpcomingSubtitle": "Add an upcoming appointment",
+    "markCompleted": "Done",
+    "markCancelled": "Cancel",
+    "reopen": "Mark as scheduled",
+    "deleteAppointment": "Delete appointment",
+    "whenLabel": "When",
+    "locationLabel": "Location",
+    "doctorLabel": "Doctor",
+    "noDoctor": "No doctor",
+    "fields": {
+      "title": "Appointment title",
+      "type": "Type",
+      "date": "Date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "location": "Location",
+      "doctor": "Doctor",
+      "notes": "Notes",
+      "status": "Status"
+    },
+    "placeholders": {
+      "title": "e.g. Cardiology follow-up",
+      "date": "YYYY-MM-DD",
+      "startTime": "HH:MM",
+      "endTime": "Optional — HH:MM",
+      "location": "e.g. King Fahd Hospital",
+      "notes": "Additional notes"
+    },
+    "errors": {
+      "title": "Please enter an appointment title",
+      "date": "Enter the date as YYYY-MM-DD",
+      "startTime": "Enter the start time as HH:MM",
+      "endTime": "Enter the time as HH:MM",
+      "endBeforeStart": "End time is before the start time"
+    },
+    "type": {
+      "doctor": "Doctor",
+      "lab": "Lab",
+      "pharmacy": "Pharmacy",
+      "therapy": "Therapy",
+      "home_care": "Home care",
+      "family": "Family",
+      "general": "General"
+    },
+    "status": {
+      "scheduled": "Scheduled",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "summary": {
+      "none": "No appointments today",
+      "count": "Today's appointments: {{count}}"
+    }
+  },
+  "visits": {
+    "title": "Family visits",
+    "addTitle": "Add visit",
+    "detailTitle": "Visit details",
+    "add": "Add visit",
+    "disclaimer": "For organizing and coordinating family visits only. It does not provide medical advice.",
+    "loadError": "Could not load visits",
+    "saveFailed": "Could not save. Please try again.",
+    "saved": "Changes saved",
+    "saveVisit": "Save visit",
+    "notFound": "Visit not found",
+    "readOnly": "View only — you don't have permission to edit",
+    "cannotAdd": "Recording visits is available to active care circle members",
+    "ownVisitNote": "This visit will be recorded under your account",
+    "todayTitle": "Today's visits",
+    "upcomingTitle": "Upcoming visits",
+    "recentTitle": "Recent visits",
+    "noTodayTitle": "No visits today",
+    "noTodaySubtitle": "No visits are recorded for today",
+    "noUpcomingTitle": "No upcoming visits",
+    "noUpcomingSubtitle": "Add an upcoming visit",
+    "markCompleted": "Done",
+    "markCancelled": "Cancel",
+    "reopen": "Mark as planned",
+    "deleteVisit": "Delete visit",
+    "whenLabel": "When",
+    "mineLabel": "Your visit",
+    "fields": {
+      "visitorName": "Visitor name",
+      "visitDate": "Visit date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "status": "Status",
+      "notes": "Notes",
+      "linkToMe": "Link this visit to my account"
+    },
+    "placeholders": {
+      "visitorName": "e.g. Ahmed",
+      "visitDate": "YYYY-MM-DD",
+      "startTime": "HH:MM",
+      "endTime": "Optional — HH:MM",
+      "notes": "Additional notes"
+    },
+    "errors": {
+      "visitorName": "Please enter the visitor's name",
+      "visitDate": "Enter the date as YYYY-MM-DD",
+      "startTime": "Enter the time as HH:MM",
+      "endTime": "Enter the time as HH:MM",
+      "endBeforeStart": "End time is before the start time"
+    },
+    "status": {
+      "planned": "Planned",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "summary": {
+      "none": "No visits today",
+      "count": "Today's visits: {{count}}"
     }
   },
   "explore": {
