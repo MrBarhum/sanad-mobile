@@ -4,8 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { DateField } from '@/components/date-field';
 import { FormField } from '@/components/form-field';
 import { OptionSelect, type SelectOption } from '@/components/option-select';
+import { TimeField } from '@/components/time-field';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -214,26 +216,24 @@ function TaskFields({ circleId, initial }: { circleId: string; initial: CareTask
         }}
       />
 
-      <FormField
+      <DateField
         label={t('tasks.fields.dueDate')}
         value={dueDate}
-        onChangeText={(v) => {
+        onChange={(v) => {
           setDueDate(v);
           touch();
         }}
-        placeholder={t('tasks.placeholders.dueDate')}
-        autoCapitalize="none"
+        clearable
         error={fieldError(errors.due_date)}
       />
-      <FormField
+      <TimeField
         label={t('tasks.fields.dueTime')}
         value={dueTime}
-        onChangeText={(v) => {
+        onChange={(v) => {
           setDueTime(v);
           touch();
         }}
-        placeholder={t('tasks.placeholders.dueTime')}
-        autoCapitalize="none"
+        clearable
         error={fieldError(errors.due_time)}
       />
 

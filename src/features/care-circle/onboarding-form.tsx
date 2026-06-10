@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DateField } from '@/components/date-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxFormWidth, Spacing, TopTabInset } from '@/constants/theme';
@@ -118,19 +119,12 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
                 />
               </ThemedView>
 
-              <ThemedView style={styles.field}>
-                <ThemedText type="smallBold">{t('careCircle.onboarding.birthDateLabel')}</ThemedText>
-                <TextInput
-                  value={birthDate}
-                  onChangeText={setBirthDate}
-                  placeholder={t('careCircle.onboarding.birthDatePlaceholder')}
-                  placeholderTextColor={theme.textSecondary}
-                  accessibilityLabel={t('careCircle.onboarding.birthDateLabel')}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={inputStyle}
-                />
-              </ThemedView>
+              <DateField
+                label={t('careCircle.onboarding.birthDateLabel')}
+                value={birthDate}
+                onChange={setBirthDate}
+                clearable
+              />
 
               {error ? (
                 <ThemedText

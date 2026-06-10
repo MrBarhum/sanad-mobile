@@ -95,6 +95,14 @@
         "emergency": {
           "title": "Emergency card",
           "subtitle": "Key information when it's needed"
+        },
+        "dailyLogs": {
+          "title": "Daily logs",
+          "subtitle": "Daily condition observations"
+        },
+        "vitals": {
+          "title": "Vital readings",
+          "subtitle": "Blood pressure, sugar, temperature and more"
         }
       }
     }
@@ -494,6 +502,168 @@
       "none": "No visits today",
       "count": "Today's visits: {{count}}"
     }
+  },
+  "dailyLogs": {
+    "title": "Daily logs",
+    "addTitle": "Add daily log",
+    "detailTitle": "Log details",
+    "add": "Add log",
+    "disclaimer": "Daily observations recorded by the family to follow the condition only. They are not a diagnosis or medical advice.",
+    "loadError": "Could not load logs",
+    "saveFailed": "Could not save. Please try again.",
+    "saved": "Changes saved",
+    "saveLog": "Save log",
+    "notFound": "Log not found",
+    "readOnly": "View only — you don't have permission to edit",
+    "cannotAdd": "Recording logs is available to active care circle members",
+    "todayTitle": "Today's logs",
+    "recentTitle": "Recent logs",
+    "noTodayTitle": "No logs for today",
+    "noTodaySubtitle": "Add a log to track today's condition",
+    "deleteLog": "Delete log",
+    "mineLabel": "Your log",
+    "notesOnly": "Notes only",
+    "noteCount": "Notes: {{count}}",
+    "unset": "Not set",
+    "painNone": "None",
+    "painValue": "{{value}} of 10",
+    "fields": {
+      "logDate": "Date",
+      "mood": "Mood",
+      "sleepQuality": "Sleep quality",
+      "appetite": "Appetite",
+      "hydration": "Hydration",
+      "painLevel": "Pain level",
+      "mobility": "Mobility",
+      "bathroomNotes": "Bathroom notes",
+      "foodNotes": "Food notes",
+      "activityNotes": "Activity notes",
+      "generalNotes": "General notes"
+    },
+    "placeholders": {
+      "bathroomNotes": "Additional notes",
+      "foodNotes": "Additional notes",
+      "activityNotes": "Additional notes",
+      "generalNotes": "Additional notes"
+    },
+    "errors": {
+      "logDate": "Choose a valid date",
+      "alreadyLoggedToday": "You already have a log for this date. Edit the existing log instead of creating a new one."
+    },
+    "mood": {
+      "great": "Great",
+      "good": "Good",
+      "okay": "Okay",
+      "sad": "Sad",
+      "anxious": "Anxious",
+      "angry": "Angry",
+      "confused": "Confused",
+      "tired": "Tired"
+    },
+    "sleepQuality": {
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor",
+      "unknown": "Unknown"
+    },
+    "appetite": {
+      "good": "Good",
+      "normal": "Normal",
+      "low": "Low",
+      "none": "None",
+      "unknown": "Unknown"
+    },
+    "hydration": {
+      "good": "Good",
+      "normal": "Normal",
+      "low": "Low",
+      "unknown": "Unknown"
+    },
+    "mobility": {
+      "normal": "Normal",
+      "limited": "Limited",
+      "needs_help": "Needs help",
+      "bedbound": "Bedbound",
+      "unknown": "Unknown"
+    },
+    "summary": {
+      "none": "No logs today",
+      "counts": "Today's logs: {{count}}",
+      "countsMood": "Today's logs: {{count}} • Mood: {{mood}}"
+    }
+  },
+  "vitals": {
+    "title": "Vital readings",
+    "addTitle": "Add reading",
+    "detailTitle": "Reading details",
+    "add": "Add reading",
+    "disclaimer": "Readings entered by the family for recording and tracking only. They are not a diagnosis or medical advice, and the app does not interpret the values.",
+    "loadError": "Could not load readings",
+    "saveFailed": "Could not save. Please try again.",
+    "saved": "Changes saved",
+    "saveReading": "Save reading",
+    "notFound": "Reading not found",
+    "readOnly": "View only — you don't have permission to edit",
+    "cannotAdd": "Recording readings is available to active care circle members",
+    "todayTitle": "Today's readings",
+    "recentTitle": "Recent readings",
+    "noTodayTitle": "No readings today",
+    "noTodaySubtitle": "Add a new reading",
+    "deleteReading": "Delete reading",
+    "mineLabel": "Your reading",
+    "valueLabel": "Value",
+    "fields": {
+      "type": "Type",
+      "readingAt": "Reading time",
+      "date": "Date",
+      "time": "Time",
+      "systolic": "Systolic",
+      "diastolic": "Diastolic",
+      "value": "Value",
+      "valueOptional": "Value (optional)",
+      "unit": "Unit",
+      "notes": "Notes"
+    },
+    "placeholders": {
+      "systolic": "e.g. 120",
+      "diastolic": "e.g. 80",
+      "value": "e.g. 37.5",
+      "unit": "e.g. mmHg",
+      "notes": "Additional notes"
+    },
+    "errors": {
+      "date": "Choose a valid date",
+      "time": "Choose a valid time",
+      "systolic": "Enter a valid systolic value",
+      "diastolic": "Enter a valid diastolic value",
+      "value": "Enter a valid value"
+    },
+    "type": {
+      "blood_pressure": "Blood pressure",
+      "heart_rate": "Heart rate",
+      "temperature": "Temperature",
+      "blood_sugar": "Blood sugar",
+      "oxygen_saturation": "Oxygen saturation",
+      "weight": "Weight",
+      "other": "Other"
+    },
+    "summary": {
+      "none": "No readings yet",
+      "counts": "Today: {{today}} • Total: {{total}}"
+    }
+  },
+  "pickers": {
+    "setDate": "Choose date",
+    "setTime": "Choose time",
+    "selectDate": "Select date",
+    "selectTime": "Select time",
+    "year": "Year",
+    "month": "Month",
+    "day": "Day",
+    "hour": "Hour",
+    "minute": "Minute",
+    "done": "Done",
+    "clear": "Clear"
   },
   "explore": {
     "title": "Explore",

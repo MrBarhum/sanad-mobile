@@ -1,8 +1,10 @@
 import { ymdFromInstant } from '@/utils/date';
 
 import type { CareAppointment } from '@/features/appointments/api';
+import type { DailyCareLog, DailyMood } from '@/features/daily-logs/api';
 import type { CareTask } from '@/features/tasks/api';
 import type { FamilyVisit } from '@/features/visits/api';
+import type { VitalReading, VitalReadingType } from '@/features/vitals/api';
 
 /**
  * Deterministic, client-side "today's activity" summaries shared by the
@@ -53,4 +55,55 @@ export function countAppointmentsToday(appointments: CareAppointment[], today: s
 /** Number of non-cancelled visits scheduled for today. */
 export function countVisitsToday(visits: FamilyVisit[], today: string): number {
   return visits.filter((visit) => visit.status !== 'cancelled' && visit.visit_date === today).length;
+}
+
+export type DailyLogTodaySummary = {
+  /** Logs filed for today (across all members). */
+  todayCount: number;
+  /** Mood from the most-recently-recorded of today's logs, if any captured one. */
+  latestMood: DailyMood | null;
+};
+
+/** Counts for the daily-logs dashboard card / today section. */
+export function summarizeTodayLogs(logs: DailyCareLog[], today: string): DailyLogTodaySummary {
+  let todayCount = 0;
+  let latestMood: DailyMood | null = null;
+  let latestMoodAt = '';
+
+  for (const log of logs) {
+    if (log.log_date !== today) continue;
+    todayCount += 1;
+    if (log.mood && log.created_at > latestMoodAt) {
+      latestMood = log.mood;
+      latestMoodAt = log.created_at;
+    }
+  }
+
+  return { todayCount, latestMood };
+}
+
+export type VitalsTodaySummary = {
+  /** Total readings recorded for the circle. */
+  totalCount: number;
+  /** Readings recorded today. */
+  todayCount: number;
+  /** The most-recent reading's type, if any. */
+  latestType: VitalReadingType | null;
+};
+
+/** Counts for the vitals dashboard card / today section. */
+export function summarizeVitals(readings: VitalReading[], today: string): VitalsTodaySummary {
+  let todayCount = 0;
+  let latestType: VitalReadingType | null = null;
+  let latestAt = '';
+
+  for (const reading of readings) {
+    if (ymdFromInstant(reading.reading_at) === today) todayCount += 1;
+    if (reading.reading_at > latestAt) {
+      latestAt = reading.reading_at;
+      latestType = reading.reading_type;
+    }
+  }
+
+  return { totalCount: readings.length, todayCount, latestType };
 }

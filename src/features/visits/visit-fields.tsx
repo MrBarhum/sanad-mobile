@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { DateField } from '@/components/date-field';
 import { FormField } from '@/components/form-field';
+import { TimeField } from '@/components/time-field';
 import { Spacing } from '@/constants/theme';
 import { fieldErrors } from '@/utils/form';
 
@@ -110,28 +112,24 @@ export function VisitFieldset({
         placeholder={t('visits.placeholders.visitorName')}
         error={fieldError(errors.visitor_name)}
       />
-      <FormField
+      <DateField
         label={t('visits.fields.visitDate')}
         value={draft.visitDate}
-        onChangeText={(value) => onChange({ visitDate: value })}
-        placeholder={t('visits.placeholders.visitDate')}
-        autoCapitalize="none"
+        onChange={(value) => onChange({ visitDate: value })}
         error={fieldError(errors.visit_date)}
       />
-      <FormField
+      <TimeField
         label={t('visits.fields.startTime')}
         value={draft.startTime}
-        onChangeText={(value) => onChange({ startTime: value })}
-        placeholder={t('visits.placeholders.startTime')}
-        autoCapitalize="none"
+        onChange={(value) => onChange({ startTime: value })}
+        clearable
         error={fieldError(errors.start_time)}
       />
-      <FormField
+      <TimeField
         label={t('visits.fields.endTime')}
         value={draft.endTime}
-        onChangeText={(value) => onChange({ endTime: value })}
-        placeholder={t('visits.placeholders.endTime')}
-        autoCapitalize="none"
+        onChange={(value) => onChange({ endTime: value })}
+        clearable
         error={fieldError(errors.end_time)}
       />
       <FormField

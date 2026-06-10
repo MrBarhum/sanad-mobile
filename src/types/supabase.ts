@@ -303,6 +303,78 @@ export type Database = {
           },
         ]
       }
+      daily_care_logs: {
+        Row: {
+          activity_notes: string | null
+          appetite: Database["public"]["Enums"]["appetite_level"] | null
+          bathroom_notes: string | null
+          circle_id: string
+          created_at: string
+          food_notes: string | null
+          general_notes: string | null
+          hydration: Database["public"]["Enums"]["hydration_level"] | null
+          id: string
+          log_date: string
+          mobility: Database["public"]["Enums"]["mobility_level"] | null
+          mood: Database["public"]["Enums"]["daily_mood"] | null
+          pain_level: number | null
+          recorded_by: string | null
+          sleep_quality: Database["public"]["Enums"]["sleep_quality"] | null
+          updated_at: string
+        }
+        Insert: {
+          activity_notes?: string | null
+          appetite?: Database["public"]["Enums"]["appetite_level"] | null
+          bathroom_notes?: string | null
+          circle_id: string
+          created_at?: string
+          food_notes?: string | null
+          general_notes?: string | null
+          hydration?: Database["public"]["Enums"]["hydration_level"] | null
+          id?: string
+          log_date?: string
+          mobility?: Database["public"]["Enums"]["mobility_level"] | null
+          mood?: Database["public"]["Enums"]["daily_mood"] | null
+          pain_level?: number | null
+          recorded_by?: string | null
+          sleep_quality?: Database["public"]["Enums"]["sleep_quality"] | null
+          updated_at?: string
+        }
+        Update: {
+          activity_notes?: string | null
+          appetite?: Database["public"]["Enums"]["appetite_level"] | null
+          bathroom_notes?: string | null
+          circle_id?: string
+          created_at?: string
+          food_notes?: string | null
+          general_notes?: string | null
+          hydration?: Database["public"]["Enums"]["hydration_level"] | null
+          id?: string
+          log_date?: string
+          mobility?: Database["public"]["Enums"]["mobility_level"] | null
+          mood?: Database["public"]["Enums"]["daily_mood"] | null
+          pain_level?: number | null
+          recorded_by?: string | null
+          sleep_quality?: Database["public"]["Enums"]["sleep_quality"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_care_logs_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_care_logs_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctors: {
         Row: {
           circle_id: string
@@ -672,6 +744,66 @@ export type Database = {
         }
         Relationships: []
       }
+      vital_readings: {
+        Row: {
+          circle_id: string
+          created_at: string
+          diastolic: number | null
+          id: string
+          notes: string | null
+          numeric_value: number | null
+          reading_at: string
+          reading_type: Database["public"]["Enums"]["vital_reading_type"]
+          recorded_by: string | null
+          systolic: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          circle_id: string
+          created_at?: string
+          diastolic?: number | null
+          id?: string
+          notes?: string | null
+          numeric_value?: number | null
+          reading_at?: string
+          reading_type: Database["public"]["Enums"]["vital_reading_type"]
+          recorded_by?: string | null
+          systolic?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          circle_id?: string
+          created_at?: string
+          diastolic?: number | null
+          id?: string
+          notes?: string | null
+          numeric_value?: number | null
+          reading_at?: string
+          reading_type?: Database["public"]["Enums"]["vital_reading_type"]
+          recorded_by?: string | null
+          systolic?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vital_readings_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vital_readings_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -698,6 +830,7 @@ export type Database = {
       is_circle_member: { Args: { target_circle_id: string }; Returns: boolean }
     }
     Enums: {
+      appetite_level: "good" | "normal" | "low" | "none" | "unknown"
       care_appointment_status: "scheduled" | "completed" | "cancelled"
       care_appointment_type:
         | "doctor"
@@ -725,9 +858,29 @@ export type Database = {
         | "caregiver"
         | "remote_member"
         | "elder"
+      daily_mood:
+        | "great"
+        | "good"
+        | "okay"
+        | "sad"
+        | "anxious"
+        | "angry"
+        | "confused"
+        | "tired"
       family_visit_status: "planned" | "completed" | "cancelled"
+      hydration_level: "good" | "normal" | "low" | "unknown"
       medication_log_status: "given" | "missed" | "postponed"
       member_status: "active" | "invited" | "removed"
+      mobility_level: "normal" | "limited" | "needs_help" | "bedbound" | "unknown"
+      sleep_quality: "good" | "fair" | "poor" | "unknown"
+      vital_reading_type:
+        | "blood_pressure"
+        | "heart_rate"
+        | "temperature"
+        | "blood_sugar"
+        | "oxygen_saturation"
+        | "weight"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -855,6 +1008,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      appetite_level: ["good", "normal", "low", "none", "unknown"],
       care_appointment_status: ["scheduled", "completed", "cancelled"],
       care_appointment_type: [
         "doctor",
@@ -885,9 +1039,31 @@ export const Constants = {
         "remote_member",
         "elder",
       ],
+      daily_mood: [
+        "great",
+        "good",
+        "okay",
+        "sad",
+        "anxious",
+        "angry",
+        "confused",
+        "tired",
+      ],
       family_visit_status: ["planned", "completed", "cancelled"],
+      hydration_level: ["good", "normal", "low", "unknown"],
       medication_log_status: ["given", "missed", "postponed"],
       member_status: ["active", "invited", "removed"],
+      mobility_level: ["normal", "limited", "needs_help", "bedbound", "unknown"],
+      sleep_quality: ["good", "fair", "poor", "unknown"],
+      vital_reading_type: [
+        "blood_pressure",
+        "heart_rate",
+        "temperature",
+        "blood_sugar",
+        "oxygen_saturation",
+        "weight",
+        "other",
+      ],
     },
   },
 } as const

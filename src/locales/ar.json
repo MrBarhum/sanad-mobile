@@ -95,6 +95,14 @@
         "emergency": {
           "title": "بطاقة الطوارئ",
           "subtitle": "معلومات أساسية سريعة عند الحاجة"
+        },
+        "dailyLogs": {
+          "title": "السجلات اليومية",
+          "subtitle": "ملاحظات الحالة اليومية"
+        },
+        "vitals": {
+          "title": "القياسات الحيوية",
+          "subtitle": "ضغط الدم والسكر والحرارة وغيرها"
         }
       }
     }
@@ -494,6 +502,168 @@
       "none": "لا زيارات اليوم",
       "count": "زيارات اليوم: {{count}}"
     }
+  },
+  "dailyLogs": {
+    "title": "السجلات اليومية",
+    "addTitle": "إضافة سجل يومي",
+    "detailTitle": "تفاصيل السجل",
+    "add": "إضافة سجل",
+    "disclaimer": "ملاحظات يومية تُدخلها العائلة لمتابعة الحالة فقط، وليست تشخيصًا أو نصيحة طبية.",
+    "loadError": "تعذّر تحميل السجلات",
+    "saveFailed": "تعذّر الحفظ. حاول مرة أخرى.",
+    "saved": "تم حفظ التغييرات",
+    "saveLog": "حفظ السجل",
+    "notFound": "لم يتم العثور على السجل",
+    "readOnly": "للعرض فقط — لا تملك صلاحية التعديل",
+    "cannotAdd": "إضافة السجلات متاحة لأعضاء دائرة الرعاية النشطين",
+    "todayTitle": "سجلات اليوم",
+    "recentTitle": "سجلات سابقة",
+    "noTodayTitle": "لا سجلات لهذا اليوم",
+    "noTodaySubtitle": "أضف سجلاً لمتابعة حالة اليوم",
+    "deleteLog": "حذف السجل",
+    "mineLabel": "سجلك",
+    "notesOnly": "ملاحظات فقط",
+    "noteCount": "ملاحظات: {{count}}",
+    "unset": "غير محدّد",
+    "painNone": "بدون",
+    "painValue": "{{value}} من 10",
+    "fields": {
+      "logDate": "التاريخ",
+      "mood": "المزاج",
+      "sleepQuality": "جودة النوم",
+      "appetite": "الشهية",
+      "hydration": "الترطيب",
+      "painLevel": "مستوى الألم",
+      "mobility": "الحركة",
+      "bathroomNotes": "ملاحظات دورة المياه",
+      "foodNotes": "ملاحظات الطعام",
+      "activityNotes": "ملاحظات النشاط",
+      "generalNotes": "ملاحظات عامة"
+    },
+    "placeholders": {
+      "bathroomNotes": "ملاحظات إضافية",
+      "foodNotes": "ملاحظات إضافية",
+      "activityNotes": "ملاحظات إضافية",
+      "generalNotes": "ملاحظات إضافية"
+    },
+    "errors": {
+      "logDate": "اختر تاريخًا صحيحًا",
+      "alreadyLoggedToday": "لديك سجل لهذا التاريخ بالفعل. عدّل السجل الموجود بدلاً من إنشاء سجل جديد."
+    },
+    "mood": {
+      "great": "ممتاز",
+      "good": "جيد",
+      "okay": "مقبول",
+      "sad": "حزين",
+      "anxious": "قلِق",
+      "angry": "غاضب",
+      "confused": "مشوّش",
+      "tired": "متعب"
+    },
+    "sleepQuality": {
+      "good": "جيدة",
+      "fair": "متوسطة",
+      "poor": "سيئة",
+      "unknown": "غير معروفة"
+    },
+    "appetite": {
+      "good": "جيدة",
+      "normal": "عادية",
+      "low": "منخفضة",
+      "none": "منعدمة",
+      "unknown": "غير معروفة"
+    },
+    "hydration": {
+      "good": "جيد",
+      "normal": "عادي",
+      "low": "منخفض",
+      "unknown": "غير معروف"
+    },
+    "mobility": {
+      "normal": "طبيعية",
+      "limited": "محدودة",
+      "needs_help": "تحتاج مساعدة",
+      "bedbound": "ملازم للسرير",
+      "unknown": "غير معروفة"
+    },
+    "summary": {
+      "none": "لا سجلات اليوم",
+      "counts": "سجلات اليوم: {{count}}",
+      "countsMood": "سجلات اليوم: {{count}} • المزاج: {{mood}}"
+    }
+  },
+  "vitals": {
+    "title": "القياسات الحيوية",
+    "addTitle": "إضافة قياس",
+    "detailTitle": "تفاصيل القياس",
+    "add": "إضافة قياس",
+    "disclaimer": "قياسات تُدخلها العائلة للحفظ والمتابعة فقط، وليست تشخيصًا أو نصيحة طبية، ولا يُفسّر التطبيق القيم.",
+    "loadError": "تعذّر تحميل القياسات",
+    "saveFailed": "تعذّر الحفظ. حاول مرة أخرى.",
+    "saved": "تم حفظ التغييرات",
+    "saveReading": "حفظ القياس",
+    "notFound": "لم يتم العثور على القياس",
+    "readOnly": "للعرض فقط — لا تملك صلاحية التعديل",
+    "cannotAdd": "إضافة القياسات متاحة لأعضاء دائرة الرعاية النشطين",
+    "todayTitle": "قياسات اليوم",
+    "recentTitle": "قياسات سابقة",
+    "noTodayTitle": "لا قياسات اليوم",
+    "noTodaySubtitle": "أضف قياسًا جديدًا",
+    "deleteReading": "حذف القياس",
+    "mineLabel": "قياسك",
+    "valueLabel": "القيمة",
+    "fields": {
+      "type": "النوع",
+      "readingAt": "وقت القياس",
+      "date": "التاريخ",
+      "time": "الوقت",
+      "systolic": "الانقباضي",
+      "diastolic": "الانبساطي",
+      "value": "القيمة",
+      "valueOptional": "القيمة (اختياري)",
+      "unit": "الوحدة",
+      "notes": "ملاحظات"
+    },
+    "placeholders": {
+      "systolic": "مثال: 120",
+      "diastolic": "مثال: 80",
+      "value": "مثال: 37.5",
+      "unit": "مثال: mmHg",
+      "notes": "ملاحظات إضافية"
+    },
+    "errors": {
+      "date": "اختر تاريخًا صحيحًا",
+      "time": "اختر وقتًا صحيحًا",
+      "systolic": "أدخل قيمة انقباضي صحيحة",
+      "diastolic": "أدخل قيمة انبساطي صحيحة",
+      "value": "أدخل قيمة صحيحة"
+    },
+    "type": {
+      "blood_pressure": "ضغط الدم",
+      "heart_rate": "النبض",
+      "temperature": "الحرارة",
+      "blood_sugar": "سكر الدم",
+      "oxygen_saturation": "تشبّع الأكسجين",
+      "weight": "الوزن",
+      "other": "أخرى"
+    },
+    "summary": {
+      "none": "لا قياسات بعد",
+      "counts": "اليوم: {{today}} • الإجمالي: {{total}}"
+    }
+  },
+  "pickers": {
+    "setDate": "اختر التاريخ",
+    "setTime": "اختر الوقت",
+    "selectDate": "اختيار التاريخ",
+    "selectTime": "اختيار الوقت",
+    "year": "السنة",
+    "month": "الشهر",
+    "day": "اليوم",
+    "hour": "الساعة",
+    "minute": "الدقيقة",
+    "done": "تم",
+    "clear": "مسح"
   },
   "explore": {
     "title": "استكشاف",

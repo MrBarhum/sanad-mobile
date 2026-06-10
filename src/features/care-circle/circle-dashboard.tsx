@@ -7,9 +7,11 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing, TopTabInset } from '@/constants/theme';
 import { AppointmentsCard } from '@/features/appointments/appointments-card';
+import { DailyLogsCard } from '@/features/daily-logs/daily-logs-card';
 import { useTodayDoseSummary } from '@/features/medications/hooks';
 import { TasksCard } from '@/features/tasks/tasks-card';
 import { VisitsCard } from '@/features/visits/visits-card';
+import { VitalsCard } from '@/features/vitals/vitals-card';
 
 import type { CircleSummary } from './api';
 
@@ -90,6 +92,8 @@ export function CareCircleDashboard({ summary }: { summary: CircleSummary }) {
 
           <View style={styles.cards}>
             <MedicationsCard circleId={summary.circleId} />
+            <DailyLogsCard circleId={summary.circleId} />
+            <VitalsCard circleId={summary.circleId} />
             <TasksCard circleId={summary.circleId} />
             <AppointmentsCard circleId={summary.circleId} />
             <VisitsCard circleId={summary.circleId} />

@@ -1,8 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { DateField } from '@/components/date-field';
 import { FormField } from '@/components/form-field';
 import { OptionSelect, type SelectOption } from '@/components/option-select';
+import { TimeField } from '@/components/time-field';
 import { Spacing } from '@/constants/theme';
 import type { Doctor } from '@/features/doctors/api';
 import { combineDateTimeToInstant, hmFromInstant, ymdFromInstant } from '@/utils/date';
@@ -150,28 +152,23 @@ export function AppointmentFieldset({
         onChange={(value) => onChange({ type: value })}
       />
 
-      <FormField
+      <DateField
         label={t('appointments.fields.date')}
         value={draft.date}
-        onChangeText={(value) => onChange({ date: value })}
-        placeholder={t('appointments.placeholders.date')}
-        autoCapitalize="none"
+        onChange={(value) => onChange({ date: value })}
         error={fieldError(errors.date)}
       />
-      <FormField
+      <TimeField
         label={t('appointments.fields.startTime')}
         value={draft.startTime}
-        onChangeText={(value) => onChange({ startTime: value })}
-        placeholder={t('appointments.placeholders.startTime')}
-        autoCapitalize="none"
+        onChange={(value) => onChange({ startTime: value })}
         error={fieldError(errors.start_time)}
       />
-      <FormField
+      <TimeField
         label={t('appointments.fields.endTime')}
         value={draft.endTime}
-        onChangeText={(value) => onChange({ endTime: value })}
-        placeholder={t('appointments.placeholders.endTime')}
-        autoCapitalize="none"
+        onChange={(value) => onChange({ endTime: value })}
+        clearable
         error={fieldError(errors.end_time)}
       />
 

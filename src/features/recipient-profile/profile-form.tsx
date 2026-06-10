@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
+import { DateField } from '@/components/date-field';
 import { FormField } from '@/components/form-field';
 import { ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
@@ -162,14 +163,12 @@ function RecipientFields({
             editable={canManage}
             error={fieldError(errors.full_name)}
           />
-          <FormField
+          <DateField
             label={t('recipientProfile.fields.birthDate')}
             value={birthDate}
-            onChangeText={bind(setBirthDate)}
-            editable={canManage}
-            placeholder="YYYY-MM-DD"
-            autoCapitalize="none"
-            autoCorrect={false}
+            onChange={bind(setBirthDate)}
+            disabled={!canManage}
+            clearable
             error={fieldError(errors.birth_date)}
           />
           <FormField

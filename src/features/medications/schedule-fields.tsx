@@ -2,9 +2,11 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { DateField } from '@/components/date-field';
 import { FormField } from '@/components/form-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TimeField } from '@/components/time-field';
 import { Spacing } from '@/constants/theme';
 import { formatHm, todayYmd } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
@@ -180,13 +182,9 @@ export function ScheduleFields({
         {value.times.map((time, index) => (
           <View key={index} style={styles.timeRow}>
             <View style={styles.timeInput}>
-              <FormField
+              <TimeField
                 value={time}
-                onChangeText={(next) => setTime(index, next)}
-                placeholder="HH:MM"
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="numbers-and-punctuation"
+                onChange={(next) => setTime(index, next)}
                 accessibilityLabel={`${t('medications.fields.times')} ${index + 1}`}
               />
             </View>
@@ -213,22 +211,17 @@ export function ScheduleFields({
         ) : null}
       </View>
 
-      <FormField
+      <DateField
         label={t('medications.fields.startDate')}
         value={value.start_date}
-        onChangeText={(next) => onChange({ ...value, start_date: next })}
-        placeholder="YYYY-MM-DD"
-        autoCapitalize="none"
-        autoCorrect={false}
+        onChange={(next) => onChange({ ...value, start_date: next })}
         error={dateError(errors?.start_date)}
       />
-      <FormField
+      <DateField
         label={t('medications.fields.endDate')}
         value={value.end_date}
-        onChangeText={(next) => onChange({ ...value, end_date: next })}
-        placeholder={t('medications.placeholders.endDate')}
-        autoCapitalize="none"
-        autoCorrect={false}
+        onChange={(next) => onChange({ ...value, end_date: next })}
+        clearable
         error={dateError(errors?.end_date)}
       />
       <FormField
