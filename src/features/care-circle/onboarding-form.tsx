@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -27,6 +28,7 @@ import { createCircleSchema } from './schema';
 export function CareCircleOnboarding({ userId }: { userId: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const router = useRouter();
   const createCircle = useCreateCareCircle(userId);
 
   const [circleName, setCircleName] = useState(() => t('careCircle.onboarding.circleNameDefault'));
@@ -149,6 +151,16 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
                   </ThemedText>
                 )}
               </Pressable>
+
+              <Pressable
+                onPress={() => router.push('/join-circle')}
+                accessibilityRole="button"
+                disabled={submitting}
+                style={({ pressed }) => [styles.joinLink, pressed && styles.pressed]}>
+                <ThemedText themeColor="textSecondary" style={styles.joinLabel}>
+                  {t('careCircle.onboarding.joinWithCode')}
+                </ThemedText>
+              </Pressable>
             </ThemedView>
           </ScrollView>
         </SafeAreaView>
@@ -194,4 +206,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   buttonLabel: { fontSize: 16, fontWeight: '600' },
+  joinLink: { alignItems: 'center', paddingVertical: Spacing.three, minHeight: 44, justifyContent: 'center' },
+  joinLabel: { fontSize: 16, fontWeight: '600', textDecorationLine: 'underline' },
+  pressed: { opacity: 0.7 },
 });

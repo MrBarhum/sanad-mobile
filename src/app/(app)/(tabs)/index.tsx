@@ -6,28 +6,28 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { CareCircleDashboard } from '@/features/care-circle/circle-dashboard';
-import { useCircleSummary } from '@/features/care-circle/hooks';
 import { CareCircleOnboarding } from '@/features/care-circle/onboarding-form';
+import { useCircleSelection } from '@/features/circle-selection/provider';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 
 /**
  * Home decides what the authenticated user sees:
- *   - loading  → spinner
- *   - error    → message + retry
- *   - no circle → onboarding (create the first care circle)
- *   - has circle → dashboard
+ *   - loading   → spinner
+ *   - error     → message + retry
+ *   - no circle → onboarding (create the first circle / join with a code)
+ *   - has circle → dashboard for the active circle
  */
 export default function HomeScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { user } = useAuth();
-  const summary = useCircleSummary(user?.id);
+  const { activeCircle, hasNoCircles, isLoading, isError, refetch } = useCircleSelection();
 
   // Home is behind the (app) auth guard, but keep the types honest.
   if (!user) return null;
 
-  if (summary.isLoading) {
+  if (isLoading) {
     return (
       <ThemedView style={styles.centered}>
         <ActivityIndicator color={theme.text} />
@@ -35,7 +35,7 @@ export default function HomeScreen() {
     );
   }
 
-  if (summary.isError) {
+  if (isError) {
     return (
       <ThemedView style={styles.container}>
         <SafeAreaView style={styles.centeredSafe} edges={['top', 'left', 'right']}>
@@ -43,7 +43,7 @@ export default function HomeScreen() {
             {t('careCircle.loadError')}
           </ThemedText>
           <Pressable
-            onPress={() => summary.refetch()}
+            onPress={() => refetch()}
             accessibilityRole="button"
             style={[styles.retry, { backgroundColor: theme.text }]}>
             <ThemedText style={[styles.retryLabel, { color: theme.background }]}>
@@ -55,11 +55,11 @@ export default function HomeScreen() {
     );
   }
 
-  return summary.data ? (
-    <CareCircleDashboard summary={summary.data} />
-  ) : (
-    <CareCircleOnboarding userId={user.id} />
-  );
+  if (hasNoCircles || !activeCircle) {
+    return <CareCircleOnboarding userId={user.id} />;
+  }
+
+  return <CareCircleDashboard circle={activeCircle} />;
 }
 
 const styles = StyleSheet.create({

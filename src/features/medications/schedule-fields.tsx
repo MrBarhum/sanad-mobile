@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
 import { FormField } from '@/components/form-field';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { TimeField } from '@/components/time-field';
+import { WeekdaySelector } from '@/components/weekday-selector';
 import { Spacing } from '@/constants/theme';
 import { formatHm, todayYmd } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
@@ -36,7 +36,9 @@ export const WEEKDAY_KEYS = [
 
 export function defaultScheduleDraft(): ScheduleDraft {
   return {
-    days_of_week: [0, 1, 2, 3, 4, 5, 6],
+    // No days pre-selected: a new schedule starts empty and the user opts in by
+    // tapping days (or "Every day"). At least one day is required to save.
+    days_of_week: [],
     times: ['08:00'],
     start_date: todayYmd(),
     end_date: '',
@@ -104,12 +106,9 @@ export function ScheduleFields({
 }) {
   const { t } = useTranslation();
 
-  function toggleDay(day: number) {
-    const set = new Set(value.days_of_week);
-    if (set.has(day)) set.delete(day);
-    else set.add(day);
-    onChange({ ...value, days_of_week: [...set].sort((a, b) => a - b) });
-  }
+  // Short chip labels + full names indexed 0 (Sun)..6 (Sat), matching WEEKDAY_KEYS.
+  const dayLabels = WEEKDAY_KEYS.map((key) => t(`medications.weekdaysShort.${key}`));
+  const dayFullLabels = WEEKDAY_KEYS.map((key) => t(`medications.weekdays.${key}`));
 
   function setTime(index: number, next: string) {
     const times = value.times.slice();
@@ -147,35 +146,15 @@ export function ScheduleFields({
 
   return (
     <View style={styles.container}>
-      <View style={styles.section}>
-        <ThemedText type="smallBold">{t('medications.fields.days')}</ThemedText>
-        <View style={styles.days}>
-          {WEEKDAY_KEYS.map((key, index) => {
-            const selected = value.days_of_week.includes(index);
-            return (
-              <Pressable
-                key={key}
-                onPress={() => toggleDay(index)}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: selected }}
-                accessibilityLabel={t(`medications.weekdays.${key}`)}>
-                <ThemedView
-                  type={selected ? 'backgroundSelected' : 'backgroundElement'}
-                  style={styles.dayChip}>
-                  <ThemedText type="small" themeColor={selected ? 'text' : 'textSecondary'}>
-                    {t(`medications.weekdaysShort.${key}`)}
-                  </ThemedText>
-                </ThemedView>
-              </Pressable>
-            );
-          })}
-        </View>
-        {errors?.days_of_week ? (
-          <ThemedText type="small" style={styles.error} accessibilityRole="alert">
-            {t('medications.errors.daysRequired')}
-          </ThemedText>
-        ) : null}
-      </View>
+      <WeekdaySelector
+        label={t('medications.fields.days')}
+        value={value.days_of_week}
+        onChange={(days) => onChange({ ...value, days_of_week: days })}
+        dayLabels={dayLabels}
+        accessibilityDayLabels={dayFullLabels}
+        everyDayLabel={t('medications.everyDay')}
+        error={errors?.days_of_week ? t('medications.errors.daysRequired') : undefined}
+      />
 
       <View style={styles.section}>
         <ThemedText type="smallBold">{t('medications.fields.times')}</ThemedText>
@@ -239,15 +218,6 @@ export function ScheduleFields({
 const styles = StyleSheet.create({
   container: { gap: Spacing.three },
   section: { gap: Spacing.two },
-  days: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  dayChip: {
-    minHeight: 40,
-    minWidth: 44,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Spacing.three,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   timeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
   timeInput: { flex: 1 },
   error: { color: '#dc2626' },

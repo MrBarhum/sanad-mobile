@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { careCircleKeys } from '@/features/care-circle/api';
+import { circleSelectionKeys } from '@/features/circle-selection/api';
 
 import {
   fetchRecipient,
@@ -20,7 +20,7 @@ export function useRecipient(circleId: string | undefined) {
 
 /**
  * Updates the recipient profile and invalidates both the recipient query and the
- * care-circle summary (the dashboard shows the recipient's name), so every
+ * circle list (the dashboard / switcher show the recipient's name), so every
  * surface refreshes after a save.
  */
 export function useUpdateRecipient(circleId: string) {
@@ -30,7 +30,7 @@ export function useUpdateRecipient(circleId: string) {
     mutationFn: (patch: RecipientUpdateInput) => updateRecipient(circleId, patch),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: recipientKeys.byCircle(circleId) });
-      queryClient.invalidateQueries({ queryKey: careCircleKeys.all });
+      queryClient.invalidateQueries({ queryKey: circleSelectionKeys.all });
     },
   });
 }

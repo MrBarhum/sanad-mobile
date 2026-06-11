@@ -35,6 +35,8 @@ export default function AppLayout() {
         contentStyle: { backgroundColor: theme.background },
       }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="circle-members" options={{ headerShown: false }} />
+      <Stack.Screen name="join-circle" options={{ title: t('joinCircle.title') }} />
       <Stack.Screen name="medications" options={{ headerShown: false }} />
       <Stack.Screen name="tasks" options={{ headerShown: false }} />
       <Stack.Screen name="appointments" options={{ headerShown: false }} />

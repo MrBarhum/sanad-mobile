@@ -51,6 +51,7 @@
       "birthDateLabel": "Birth date (optional)",
       "birthDatePlaceholder": "YYYY-MM-DD",
       "submit": "Create care circle",
+      "joinWithCode": "Join with an invitation code",
       "errors": {
         "circleName": "Please enter a care circle name",
         "recipientName": "Please enter the full name",
@@ -105,6 +106,112 @@
           "subtitle": "Blood pressure, sugar, temperature and more"
         }
       }
+    }
+  },
+  "circleSwitcher": {
+    "switch": "Switch",
+    "chooseTitle": "Choose a care circle",
+    "current": "Current"
+  },
+  "circleMembers": {
+    "title": "Members",
+    "subtitle": "Family and caregivers in this circle",
+    "loadError": "Could not load members",
+    "activeTitle": "Active members",
+    "inactiveTitle": "Inactive",
+    "you": "You",
+    "unnamed": "Member",
+    "changeRole": "Change role",
+    "changeRoleTitle": "Change role",
+    "changeRoleHint": "Choose the new role for this member.",
+    "remove": "Remove",
+    "confirmRemove": "Confirm removal",
+    "reactivate": "Reactivate",
+    "leave": "Leave circle",
+    "owner": "Owner",
+    "ownerNote": "The owner can't be removed or demoted. Transfer ownership to another member first.",
+    "makeOwner": "Make owner",
+    "confirmMakeOwner": "Confirm transfer",
+    "lastAdminNote": "The last administrator can't be removed or demoted. Add another admin first.",
+    "roles": {
+      "admin": "Administrator",
+      "primary_caregiver": "Primary caregiver",
+      "family_member": "Family member",
+      "caregiver": "Caregiver",
+      "remote_member": "Remote member",
+      "elder": "Care recipient"
+    },
+    "status": {
+      "active": "Active",
+      "invited": "Invited",
+      "removed": "Removed"
+    },
+    "errors": {
+      "lastAdmin": "This would leave the circle without an administrator.",
+      "owner": "Transfer ownership to another member before this can be done.",
+      "notAllowed": "You don't have permission to do that.",
+      "generic": "Could not complete the change. Please try again."
+    }
+  },
+  "invitations": {
+    "invite": "Invite member",
+    "inviteTitle": "Invite a member",
+    "manageTitle": "Invitations",
+    "create": "Create invitation",
+    "createFailed": "Could not create the invitation. Please try again.",
+    "createdTitle": "Invitation ready",
+    "createdSubtitle": "Share this code with the person you're inviting. It works once.",
+    "codeOnceWarning": "This code is shown only now and can't be retrieved later. If it's lost, revoke it and create a new one.",
+    "warning": "Anyone with this code can join the circle and see sensitive care information. Share it only with people you trust.",
+    "copy": "Copy code",
+    "copied": "Code copied",
+    "share": "Share",
+    "shared": "Opened share",
+    "createAnother": "Create another",
+    "roleLabel": "Role: {{role}}",
+    "expiresLabel": "Expires: {{date}}",
+    "acceptedByLabel": "Joined by {{name}} on {{date}}",
+    "createdByLabel": "Created by {{name}}",
+    "shareMessage": "Join our care circle on Sanad with this code: {{code}}",
+    "loadError": "Could not load invitations",
+    "emptyTitle": "No invitations",
+    "emptySubtitle": "Create an invitation to add a family member or caregiver.",
+    "revoke": "Revoke",
+    "confirmRevoke": "Confirm revoke",
+    "revokeFailed": "Could not revoke. Please try again.",
+    "managersOnly": "Only the admin and primary caregiver can manage invitations",
+    "fields": {
+      "role": "Role",
+      "invitedName": "Person's name (optional)"
+    },
+    "placeholders": {
+      "invitedName": "e.g. Sara — for your reference"
+    },
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "revoked": "Revoked",
+      "expired": "Expired"
+    }
+  },
+  "joinCircle": {
+    "title": "Join a care circle",
+    "subtitle": "Enter the invitation code you received.",
+    "codeLabel": "Invitation code",
+    "codePlaceholder": "e.g. ABCDE-FGHJK",
+    "submit": "Join circle",
+    "continue": "Continue",
+    "warning": "Only enter a code you received from someone you trust. It gives access to sensitive care information.",
+    "successTitle": "You're in",
+    "successSubtitle": "You've joined the care circle and it's now selected.",
+    "errors": {
+      "required": "Please enter the invitation code",
+      "alreadyMember": "You're already a member of this circle.",
+      "expired": "This invitation has expired.",
+      "revoked": "This invitation has been revoked.",
+      "used": "This invitation has already been used.",
+      "invalid": "This invitation code is not valid.",
+      "generic": "Could not join. Please check the code and try again."
     }
   },
   "recipientProfile": {
@@ -717,6 +824,9 @@
     "title": "Account",
     "signedInAs": "Signed in as",
     "noEmail": "No email address",
+    "circleSectionTitle": "Care circles",
+    "joinAnother": "Join another circle",
+    "joinAnotherSubtitle": "Enter an invitation code to join",
     "signOut": "Sign out",
     "signOutError": "Could not sign out. Please try again."
   }

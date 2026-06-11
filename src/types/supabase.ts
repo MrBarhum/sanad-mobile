@@ -258,6 +258,76 @@ export type Database = {
           },
         ]
       }
+      circle_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          circle_id: string
+          code_hash: string
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          invited_email: string | null
+          invited_name: string | null
+          role: Database["public"]["Enums"]["circle_role"]
+          status: Database["public"]["Enums"]["invitation_status"]
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          circle_id: string
+          code_hash: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          invited_email?: string | null
+          invited_name?: string | null
+          role: Database["public"]["Enums"]["circle_role"]
+          status?: Database["public"]["Enums"]["invitation_status"]
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          circle_id?: string
+          code_hash?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          invited_email?: string | null
+          invited_name?: string | null
+          role?: Database["public"]["Enums"]["circle_role"]
+          status?: Database["public"]["Enums"]["invitation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circle_invitations_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "circle_invitations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "circle_invitations_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       circle_members: {
         Row: {
           circle_id: string
@@ -809,6 +879,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_circle_invitation: {
+        Args: { p_code: string }
+        Returns: {
+          circle_id: string
+          membership_id: string
+          role: Database["public"]["Enums"]["circle_role"]
+        }[]
+      }
+      active_circle_member_role: {
+        Args: { p_circle_id: string }
+        Returns: Database["public"]["Enums"]["circle_role"]
+      }
       create_care_circle: {
         Args: {
           circle_name: string
@@ -820,6 +902,20 @@ export type Database = {
           recipient_id: string
         }[]
       }
+      create_circle_invitation: {
+        Args: {
+          p_circle_id: string
+          p_role: Database["public"]["Enums"]["circle_role"]
+          p_invited_name?: string
+          p_invited_email?: string
+        }
+        Returns: {
+          invitation_id: string
+          code: string
+          role: Database["public"]["Enums"]["circle_role"]
+          expires_at: string
+        }[]
+      }
       has_circle_role: {
         Args: {
           allowed_roles: Database["public"]["Enums"]["circle_role"][]
@@ -828,6 +924,80 @@ export type Database = {
         Returns: boolean
       }
       is_circle_member: { Args: { target_circle_id: string }; Returns: boolean }
+      leave_care_circle: {
+        Args: { p_circle_id: string }
+        Returns: {
+          circle_id: string
+          membership_id: string
+        }[]
+      }
+      list_circle_invitations: {
+        Args: { p_circle_id: string }
+        Returns: {
+          id: string
+          role: Database["public"]["Enums"]["circle_role"]
+          status: Database["public"]["Enums"]["invitation_status"]
+          invited_name: string | null
+          invited_email: string | null
+          created_by: string | null
+          created_by_name: string | null
+          accepted_by: string | null
+          accepted_by_name: string | null
+          accepted_at: string | null
+          expires_at: string
+          created_at: string
+        }[]
+      }
+      list_circle_members: {
+        Args: { p_circle_id: string }
+        Returns: {
+          member_id: string
+          user_id: string
+          role: Database["public"]["Enums"]["circle_role"]
+          status: Database["public"]["Enums"]["member_status"]
+          full_name: string | null
+          email: string | null
+          is_self: boolean
+          is_owner: boolean
+          created_at: string
+        }[]
+      }
+      revoke_circle_invitation: {
+        Args: { p_invitation_id: string }
+        Returns: {
+          invitation_id: string
+          status: Database["public"]["Enums"]["invitation_status"]
+        }[]
+      }
+      transfer_circle_ownership: {
+        Args: { p_circle_id: string; p_new_owner_user_id: string }
+        Returns: {
+          circle_id: string
+          owner_id: string
+        }[]
+      }
+      update_circle_member_role: {
+        Args: {
+          p_member_id: string
+          p_role: Database["public"]["Enums"]["circle_role"]
+        }
+        Returns: {
+          member_id: string
+          role: Database["public"]["Enums"]["circle_role"]
+          status: Database["public"]["Enums"]["member_status"]
+        }[]
+      }
+      update_circle_member_status: {
+        Args: {
+          p_member_id: string
+          p_status: Database["public"]["Enums"]["member_status"]
+        }
+        Returns: {
+          member_id: string
+          role: Database["public"]["Enums"]["circle_role"]
+          status: Database["public"]["Enums"]["member_status"]
+        }[]
+      }
     }
     Enums: {
       appetite_level: "good" | "normal" | "low" | "none" | "unknown"
@@ -869,6 +1039,7 @@ export type Database = {
         | "tired"
       family_visit_status: "planned" | "completed" | "cancelled"
       hydration_level: "good" | "normal" | "low" | "unknown"
+      invitation_status: "pending" | "accepted" | "revoked" | "expired"
       medication_log_status: "given" | "missed" | "postponed"
       member_status: "active" | "invited" | "removed"
       mobility_level: "normal" | "limited" | "needs_help" | "bedbound" | "unknown"
@@ -1051,6 +1222,7 @@ export const Constants = {
       ],
       family_visit_status: ["planned", "completed", "cancelled"],
       hydration_level: ["good", "normal", "low", "unknown"],
+      invitation_status: ["pending", "accepted", "revoked", "expired"],
       medication_log_status: ["given", "missed", "postponed"],
       member_status: ["active", "invited", "removed"],
       mobility_level: ["normal", "limited", "needs_help", "bedbound", "unknown"],
