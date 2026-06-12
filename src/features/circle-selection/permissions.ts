@@ -25,6 +25,8 @@ export type ActiveCircle = {
   circleName: string;
   recipientName: string | null;
   role: CircleRole;
+  /** Canonical IANA zone for the circle's scheduled care events. */
+  timezone: string;
   /** True for admin / primary_caregiver — they may mutate circle data. */
   canManage: boolean;
   /** True for any caregiving role — they may record care activity. */
@@ -38,6 +40,7 @@ export function toActiveCircle(summary: CircleSummary): ActiveCircle {
     circleName: summary.circleName,
     recipientName: summary.recipientName,
     role: summary.role,
+    timezone: summary.circleTimezone,
     canManage: canManageCircle(summary.role),
     canLogDoses: canLogDoses(summary.role),
   };

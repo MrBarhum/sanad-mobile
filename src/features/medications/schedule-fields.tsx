@@ -13,6 +13,7 @@ import { fieldErrors } from '@/utils/form';
 
 import type { MedicationSchedule, ScheduleInput } from './api';
 import { scheduleSchema } from './schema';
+import { duplicateTimesInDraft } from './schedule-validation';
 
 /** Form state for a single schedule (mirrors scheduleSchema input shape). */
 export type ScheduleDraft = {
@@ -130,6 +131,8 @@ export function ScheduleFields({
     return code === 'time' ? t('medications.errors.timeFormat') : t('medications.errors.timesRequired');
   }
 
+  const hasDuplicateTimes = duplicateTimesInDraft(value).length > 0;
+
   function dateError(code?: string): string | undefined {
     switch (code) {
       case undefined:
@@ -180,12 +183,20 @@ export function ScheduleFields({
         <Button
           size="sm"
           variant="secondary"
-          label={t('medications.addTime')}
+          label={t('medications.addTimeToSchedule')}
           onPress={addTime}
         />
+        <ThemedText type="small" themeColor="textSecondary">
+          {t('medications.helpSameDays')}
+        </ThemedText>
         {timesError() ? (
           <ThemedText type="small" style={styles.error} accessibilityRole="alert">
             {timesError()}
+          </ThemedText>
+        ) : null}
+        {hasDuplicateTimes ? (
+          <ThemedText type="small" style={styles.error} accessibilityRole="alert">
+            {t('medications.errors.duplicateTime')}
           </ThemedText>
         ) : null}
       </View>

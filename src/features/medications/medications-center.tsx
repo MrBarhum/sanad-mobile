@@ -8,6 +8,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { ReminderNotice } from '@/features/notifications/reminder-notice';
 import { formatHm, todayYmd } from '@/utils/date';
 
 import type { Medication, MedicationLogStatus } from './api';
@@ -69,6 +70,8 @@ export function MedicationsCenter({
         <ThemedText type="small" themeColor="textSecondary">
           {t('medications.disclaimer')}
         </ThemedText>
+
+        <ReminderNotice messageKey="medications.reminderNotice" />
 
         {canManage ? (
           <Button label={t('medications.add')} onPress={() => router.push('/medications/new')} />

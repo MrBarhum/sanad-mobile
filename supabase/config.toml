@@ -385,6 +385,26 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# ── Scheduled notification Edge Functions ─────────────────────────────────────
+# These four functions are invoked by the scheduler (pg_cron + pg_net), which
+# sends only the high-entropy `x-cron-secret` header — NOT a Supabase JWT. Platform
+# JWT verification would reject those requests before the handler runs, so it is
+# disabled here. The endpoints are NOT public in practice: every handler calls
+# authorizeScheduledRequest() and FAILS CLOSED (401) for any request that does not
+# present the correct NOTIFICATIONS_CRON_SECRET. The secret lives only in the
+# function environment (never in Git).
+[functions.enqueue-due-reminders]
+verify_jwt = false
+
+[functions.check-missed-doses]
+verify_jwt = false
+
+[functions.process-notification-outbox]
+verify_jwt = false
+
+[functions.check-push-receipts]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

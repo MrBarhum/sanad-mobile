@@ -2,21 +2,20 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 
-import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
+import { FormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
 import { ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { fieldErrors } from '@/utils/form';
 
 import type { Recipient } from './api';
 import { useRecipient, useUpdateRecipient } from './hooks';
 import { recipientProfileSchema } from './schema';
-
-const SUCCESS = '#16a34a';
-const DANGER = '#dc2626';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
@@ -81,6 +80,15 @@ function RecipientFields({
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
+  const { dirty, markSaved } = useUnsavedChanges({
+    fullName,
+    birthDate,
+    dialect,
+    bloodType,
+    allergies,
+    chronic,
+    notes,
+  });
   const submitting = update.isPending;
 
   function bind(setter: (value: string) => void) {
@@ -133,6 +141,7 @@ function RecipientFields({
         chronic_conditions: nullify(parsed.data.chronic_conditions),
         emergency_notes: nullify(parsed.data.emergency_notes),
       });
+      markSaved();
       setStatus('saved');
     } catch {
       setStatus('error');
@@ -148,6 +157,7 @@ function RecipientFields({
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
+          <UnsavedChangesGuard when={canManage && dirty} />
           {!canManage ? (
             <ThemedView type="backgroundElement" style={styles.notice}>
               <ThemedText type="small" themeColor="textSecondary">
@@ -216,30 +226,15 @@ function RecipientFields({
             error={fieldError(errors.emergency_notes)}
           />
 
-          {status === 'saved' ? (
-            <ThemedText
-              style={[styles.statusText, { color: SUCCESS }]}
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite">
-              {t('recipientProfile.saved')}
-            </ThemedText>
-          ) : null}
-          {status === 'error' ? (
-            <ThemedText
-              style={[styles.statusText, { color: DANGER }]}
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite">
-              {t('recipientProfile.saveFailed')}
-            </ThemedText>
-          ) : null}
-
           {canManage ? (
-            <Button
-              label={t('recipientProfile.save')}
-              onPress={onSubmit}
-              loading={submitting}
-              disabled={submitting}
-              style={styles.save}
+            <FormActions
+              saveLabel={t('recipientProfile.save')}
+              onSave={onSubmit}
+              saving={submitting}
+              disabled={!dirty}
+              status={status}
+              savedLabel={t('recipientProfile.saved')}
+              errorLabel={t('recipientProfile.saveFailed')}
             />
           ) : null}
         </ScrollView>
@@ -261,8 +256,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   notice: { borderRadius: Spacing.two, padding: Spacing.three },
-  statusText: { fontSize: 14, fontWeight: '600' },
-  save: { marginTop: Spacing.two },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.four },
   centeredText: { textAlign: 'center' },
 });

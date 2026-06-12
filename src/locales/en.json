@@ -10,9 +10,14 @@
     "confirmDelete": "Confirm delete",
     "cancel": "Cancel",
     "save": "Save",
+    "saveChanges": "Save changes",
     "close": "Close",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "unsavedTitle": "Unsaved changes",
+    "unsavedMessage": "You have unsaved changes. Leave without saving?",
+    "discardChanges": "Discard changes",
+    "keepEditing": "Keep editing"
   },
   "validation": {
     "tooLong": "This text is too long",
@@ -133,6 +138,21 @@
     "makeOwner": "Make owner",
     "confirmMakeOwner": "Confirm transfer",
     "lastAdminNote": "The last administrator can't be removed or demoted. Add another admin first.",
+    "current": "Current",
+    "saveRole": "Save role change",
+    "confirmRoleTitle": "Confirm role change",
+    "confirmChange": "Confirm change",
+    "back": "Back",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "canDo": "Can do",
+    "cannotDo": "Cannot do",
+    "roleChangeSummary": "{{from}} → {{to}}",
+    "direction": {
+      "increase": "This gives the member more access than they have now.",
+      "decrease": "This reduces the member's access.",
+      "lateral": "This changes the member's role without raising or lowering their access."
+    },
     "roles": {
       "admin": "Administrator",
       "primary_caregiver": "Primary caregiver",
@@ -151,6 +171,64 @@
       "owner": "Transfer ownership to another member before this can be done.",
       "notAllowed": "You don't have permission to do that.",
       "generic": "Could not complete the change. Please try again."
+    },
+    "capabilities": {
+      "admin": {
+        "summary": "Full administration of the circle.",
+        "can": [
+          "Manage members and invitations",
+          "Manage all care records (medications, tasks, appointments, logs)",
+          "Grant administrative roles, according to server rules"
+        ],
+        "cannot": [
+          "Override the owner — ownership is a separate state shown as a badge",
+          "Remove or demote the owner without an ownership transfer"
+        ]
+      },
+      "primary_caregiver": {
+        "summary": "Manages day-to-day care.",
+        "can": [
+          "Manage day-to-day care records",
+          "Manage supported members and invitations within the permitted hierarchy"
+        ],
+        "cannot": [
+          "Transfer ownership",
+          "Demote or remove the owner",
+          "Grant or change admin privileges unless server rules allow it"
+        ]
+      },
+      "family_member": {
+        "summary": "A family member with broad visibility.",
+        "can": [
+          "See the circle's care information",
+          "Record permitted care activity and dose/task actions"
+        ],
+        "cannot": [
+          "Manage membership, ownership or core circle settings",
+          "Edit manager-only records"
+        ]
+      },
+      "remote_member": {
+        "summary": "Follows along and keeps in touch from a distance.",
+        "can": [
+          "View and follow up on the circle's care",
+          "Receive the follow-up alerts they enable (such as missed doses)"
+        ],
+        "cannot": [
+          "Manage the circle",
+          "Record sensitive care actions unless the current rules allow it"
+        ]
+      },
+      "caregiver": {
+        "summary": "Not available yet.",
+        "can": [],
+        "cannot": ["Be assigned until its dedicated least-privilege role is implemented"]
+      },
+      "elder": {
+        "summary": "Not available yet.",
+        "can": [],
+        "cannot": ["Be assigned until its dedicated least-privilege role is implemented"]
+      }
     }
   },
   "invitations": {
@@ -315,10 +393,24 @@
     "detailTitle": "Medication details",
     "add": "Add medication",
     "disclaimer": "The app only records the medication schedules and reminders your family enters. It does not provide medical advice.",
+    "reminderNotice": "Reminders for these medications come from your notification settings.",
     "loadError": "Could not load medications",
     "saveFailed": "Could not save. Please try again.",
     "saved": "Changes saved",
     "saveMedication": "Save medication",
+    "medicationInfoTitle": "Medication information",
+    "dosesSectionTitle": "Dose schedules",
+    "firstScheduleTitle": "Dose schedule",
+    "scheduleNumber": "Schedule {{number}}",
+    "scheduleGroupsHelp": "A medication can have more than one schedule — for example every day at 08:00, plus Sunday, Tuesday and Thursday at 23:00.",
+    "helpSameDays": "Add another time to a schedule when the days are the same.",
+    "helpDifferentDays": "Create a new schedule when the days are different.",
+    "addScheduleAtMed": "Add a new dose schedule",
+    "addScheduleSubmit": "Add dose schedule",
+    "saveScheduleChanges": "Save schedule changes",
+    "addTimeToSchedule": "Add another time to this schedule",
+    "scheduleActiveLabel": "Active",
+    "scheduleStoppedLabel": "Stopped",
     "todayTitle": "Today's doses",
     "listTitle": "Medications",
     "noDosesTitle": "No doses today",
@@ -336,10 +428,10 @@
     "deactivate": "Deactivate",
     "reactivate": "Reactivate",
     "deleteMedication": "Delete medication",
-    "addSchedule": "Add schedule",
-    "noSchedules": "No schedules",
-    "addScheduleTitle": "Add schedule",
-    "editScheduleTitle": "Edit schedule",
+    "addSchedule": "Add dose schedule",
+    "noSchedules": "No dose schedules yet",
+    "addScheduleTitle": "Add dose schedule",
+    "editScheduleTitle": "Edit dose schedule",
     "everyDay": "Every day",
     "fromDate": "From",
     "addTime": "Add time",
@@ -368,7 +460,9 @@
       "timesRequired": "Add at least one time",
       "daysRequired": "Choose at least one day",
       "dateFormat": "Enter the date as YYYY-MM-DD",
-      "endBeforeStart": "End date is before the start date"
+      "endBeforeStart": "End date is before the start date",
+      "duplicateTime": "This time is already in this schedule.",
+      "conflict": "{{day}} at {{time}} is already in another active schedule."
     },
     "status": {
       "given": "Given",
@@ -395,7 +489,12 @@
     },
     "summary": {
       "none": "No doses today",
-      "counts": "Today's doses: {{total}} • Given: {{given}} • Remaining: {{remaining}}"
+      "counts": "Today's doses: {{total}} • Given: {{given}} • Remaining: {{remaining}}",
+      "weeklyTitle": "Weekly summary",
+      "line": "{{days}}: {{times}}",
+      "showPerDay": "Show doses per day",
+      "hidePerDay": "Hide doses per day",
+      "perDayNone": "—"
     }
   },
   "tasks": {
@@ -404,6 +503,7 @@
     "detailTitle": "Task details",
     "add": "Add task",
     "disclaimer": "For organizing and coordinating care tasks among the family only. It does not provide medical advice.",
+    "reminderNotice": "Reminders for tasks come from your notification settings.",
     "loadError": "Could not load tasks",
     "saveFailed": "Could not save. Please try again.",
     "saved": "Changes saved",
@@ -484,6 +584,7 @@
     "detailTitle": "Appointment details",
     "add": "Add appointment",
     "disclaimer": "For organizing and coordinating care appointments among the family only. It does not provide medical advice.",
+    "reminderNotice": "Reminders for appointments come from your notification settings.",
     "loadError": "Could not load appointments",
     "saveFailed": "Could not save. Please try again.",
     "saved": "Changes saved",
@@ -825,9 +926,147 @@
     "signedInAs": "Signed in as",
     "noEmail": "No email address",
     "circleSectionTitle": "Care circles",
+    "notificationsSectionTitle": "Notifications",
     "joinAnother": "Join another circle",
     "joinAnotherSubtitle": "Enter an invitation code to join",
     "signOut": "Sign out",
     "signOutError": "Could not sign out. Please try again."
+  },
+  "circleTimezone": {
+    "title": "Care circle timezone",
+    "explain": "Medication and task times follow the cared-for person's location, so reminders fire at the right local time for everyone.",
+    "confirmPrompt": "Please confirm the correct timezone for this circle.",
+    "managerOnly": "Only an admin or primary caregiver can change the timezone.",
+    "fieldLabel": "IANA timezone",
+    "useDevice": "Use this device's timezone ({{tz}})",
+    "save": "Save timezone",
+    "confirm": "Confirm change",
+    "confirmChange": "Change from {{from}} to {{to}}?",
+    "invalid": "That timezone isn't recognized. Use an IANA name like Asia/Riyadh.",
+    "error": "Could not update the timezone. Please try again.",
+    "select": "Choose timezone",
+    "change": "Change timezone",
+    "pickerTitle": "Choose timezone",
+    "searchPlaceholder": "Search by city or country",
+    "noResults": "No matching timezones",
+    "currentLabel": "Current",
+    "deviceSection": "This device",
+    "otherSection": "All timezones",
+    "impact": "Reminders for medications and tasks will fire at the local time in {{tz}}.",
+    "selected": "Selected: {{tz}}"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "openCenter": "Open notifications",
+    "openCenterWithCount": "Open notifications, {{count}} unread",
+    "markAllRead": "Mark all read",
+    "markRead": "Mark read",
+    "markUnread": "Mark unread",
+    "loadError": "Could not load notifications",
+    "emptyTitle": "No notifications",
+    "emptySubtitle": "Reminders and updates will appear here.",
+    "loadMore": "Load more",
+    "enablePrompt": "Turn on notifications to get reminders on this device.",
+    "enableAction": "Notification settings",
+    "manageLink": "Manage notification settings",
+    "filters": {
+      "all": "All circles"
+    },
+    "types": {
+      "medication_due": "Medication",
+      "medication_missed": "Missed dose",
+      "task_due": "Task",
+      "appointment_upcoming": "Appointment",
+      "visit_update": "Visit",
+      "care_update": "Care update",
+      "emergency": "Emergency",
+      "system": "Update"
+    }
+  },
+  "notificationSettings": {
+    "title": "Notification settings",
+    "subtitle": "Choose what you're notified about",
+    "save": "Save settings",
+    "saved": "Settings saved",
+    "saveError": "Could not save settings. Please try again.",
+    "scope": {
+      "title": "These settings apply to",
+      "global": "All circles (default)",
+      "circle": "This circle",
+      "globalHint": "Your default for every circle, unless a circle has its own settings.",
+      "circleHint": "Settings just for {{circle}}. They override your defaults for this circle."
+    },
+    "toggles": {
+      "medicationReminders": {
+        "label": "Medication reminders",
+        "description": "When a scheduled dose is due."
+      },
+      "missedDoseAlerts": {
+        "label": "Missed dose alerts",
+        "description": "When a scheduled dose hasn't been recorded."
+      },
+      "taskReminders": {
+        "label": "Task reminders",
+        "description": "When a care task is due."
+      },
+      "appointmentReminders": {
+        "label": "Appointment reminders",
+        "description": "Before an upcoming appointment."
+      },
+      "visitUpdates": {
+        "label": "Visit updates",
+        "description": "Updates about family visits."
+      },
+      "careUpdates": {
+        "label": "Care updates",
+        "description": "Daily logs and other care notes."
+      },
+      "emergencyAlerts": {
+        "label": "Emergency alerts",
+        "description": "Important emergency notifications."
+      },
+      "remoteSummary": {
+        "label": "Follow-up summaries",
+        "description": "Summaries for remote members following along."
+      }
+    },
+    "quietHours": {
+      "label": "Quiet hours",
+      "description": "Pause non-urgent notifications during these hours.",
+      "start": "From",
+      "end": "To",
+      "note": "Quiet hours can cross midnight. Normal reminders are delivered after quiet hours end; emergency alerts may still arrive.",
+      "invalid": "Set both a start and end time for quiet hours."
+    },
+    "timezone": {
+      "label": "Timezone",
+      "hint": "Your device timezone, used for your quiet hours and display. Scheduled medication and task times follow the care circle's timezone."
+    },
+    "test": {
+      "sectionTitle": "Test on this device",
+      "description": "Schedule a local test notification a few seconds from now. It shows only on this device and doesn't notify anyone else.",
+      "action": "Send a test notification",
+      "title": "Sanad test",
+      "body": "This is a local test notification.",
+      "scheduled": "Test notification scheduled.",
+      "failed": "Could not schedule the test notification."
+    },
+    "push": {
+      "explainTitle": "Stay on top of care",
+      "explainBody": "Sanad can remind you about medication doses, care tasks and upcoming appointments so nothing is missed.",
+      "privacy": "Notifications are tied to your account on this device only. We never share your device token or include sensitive health details in them.",
+      "enable": "Enable notifications",
+      "granted": "Notifications are on for this device.",
+      "disable": "Turn off on this device",
+      "web": "On the web the in-app notification center works, but device push notifications aren't available — open Sanad on your phone to enable them.",
+      "noDevice": "Push notifications need a physical device. Try this on your phone.",
+      "results": {
+        "denied": "Notifications are turned off. You can enable them for Sanad in your device settings.",
+        "unsupported": "Push notifications aren't available here.",
+        "no-device": "Push notifications need a physical device.",
+        "project-id-missing": "Notifications aren't fully configured in this build yet. Please try again after the next update.",
+        "error": "Could not enable notifications. Please try again."
+      }
+    }
   }
 }

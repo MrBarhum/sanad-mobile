@@ -4,19 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { FormActions } from '@/components/form-actions';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 import { formatHm } from '@/utils/date';
 
 import type { FamilyVisit, VisitStatus } from './api';
 import { useDeleteVisit, useSetVisitStatus, useUpdateVisit, useVisit } from './hooks';
 import { VisitFieldset, prepareVisit, visitDraftFromRow, type VisitDraft } from './visit-fields';
-
-const SUCCESS = '#16a34a';
-const DANGER = '#dc2626';
 
 /** Loads a visit, then renders the view/edit screen with status + delete. */
 export function VisitEditor({
@@ -81,6 +81,7 @@ function VisitEditFields({ circleId, initial }: { circleId: string; initial: Fam
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
+  const { dirty, markSaved } = useUnsavedChanges(draft);
   const submitting = update.isPending;
 
   function patch(part: Partial<VisitDraft>) {
@@ -101,6 +102,7 @@ function VisitEditFields({ circleId, initial }: { circleId: string; initial: Fam
         id: initial.id,
         patch: { ...prepared.value, visitor_user_id: initial.visitor_user_id },
       });
+      markSaved();
       setStatus('saved');
     } catch {
       setStatus('error');
@@ -109,24 +111,17 @@ function VisitEditFields({ circleId, initial }: { circleId: string; initial: Fam
 
   return (
     <View style={styles.fields}>
+      <UnsavedChangesGuard when={dirty} />
       <VisitFieldset draft={draft} onChange={patch} errors={errors} />
 
-      {status === 'saved' ? (
-        <ThemedText style={[styles.statusText, { color: SUCCESS }]} accessibilityRole="alert">
-          {t('visits.saved')}
-        </ThemedText>
-      ) : null}
-      {status === 'error' ? (
-        <ThemedText style={[styles.statusText, { color: DANGER }]} accessibilityRole="alert">
-          {t('visits.saveFailed')}
-        </ThemedText>
-      ) : null}
-
-      <Button
-        label={t('visits.saveVisit')}
-        onPress={onSubmit}
-        loading={submitting}
-        disabled={submitting}
+      <FormActions
+        saveLabel={t('common.saveChanges')}
+        onSave={onSubmit}
+        saving={submitting}
+        disabled={!dirty}
+        status={status}
+        savedLabel={t('visits.saved')}
+        errorLabel={t('visits.saveFailed')}
       />
     </View>
   );
@@ -286,7 +281,6 @@ const styles = StyleSheet.create({
   readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
   infoValue: { fontSize: 16, lineHeight: 24 },
-  statusText: { fontSize: 14, fontWeight: '600' },
   statusCard: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },

@@ -4,14 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { FormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
-import { FormModal } from '@/components/form-modal';
 import { ItemActions } from '@/components/item-actions';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { formatHm } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
 
@@ -26,15 +28,9 @@ import {
   useUpdateMedication,
 } from './hooks';
 import { medicationSchema } from './schema';
-import {
-  ScheduleFields,
-  WEEKDAY_KEYS,
-  defaultScheduleDraft,
-  prepareSchedule,
-  scheduleToDraft,
-  type ScheduleDraft,
-} from './schedule-fields';
+import { WEEKDAY_KEYS } from './schedule-fields';
 import { ScheduleModalHost } from './schedule-modal-host';
+import { ScheduleSummary } from './schedule-summary';
 
 const SUCCESS = '#16a34a';
 const DANGER = '#dc2626';
@@ -78,6 +74,10 @@ export function MedicationEditor({
   return (
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Section A — Medication information */}
+        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
+          {t('medications.medicationInfoTitle')}
+        </ThemedText>
         {canManage ? (
           <MedicationFields key={medication.data.id} circleId={circleId} initial={medication.data} />
         ) : (
@@ -88,6 +88,7 @@ export function MedicationEditor({
 
         <ThemedView type="backgroundSelected" style={styles.divider} />
 
+        {/* Section B — Dose schedules */}
         <SchedulesManager
           circleId={circleId}
           medicationId={medication.data.id}
@@ -114,6 +115,7 @@ function MedicationFields({ circleId, initial }: { circleId: string; initial: Me
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
+  const { dirty, markSaved } = useUnsavedChanges({ name, dosage, medForm, instructions, withFood });
   const submitting = update.isPending;
 
   function touch() {
@@ -158,6 +160,7 @@ function MedicationFields({ circleId, initial }: { circleId: string; initial: Me
           with_food: parsed.data.with_food,
         },
       });
+      markSaved();
       setStatus('saved');
     } catch {
       setStatus('error');
@@ -166,6 +169,7 @@ function MedicationFields({ circleId, initial }: { circleId: string; initial: Me
 
   return (
     <View style={styles.fields}>
+      <UnsavedChangesGuard when={dirty} />
       <FormField
         label={t('medications.fields.name')}
         value={name}
@@ -219,22 +223,14 @@ function MedicationFields({ circleId, initial }: { circleId: string; initial: Me
         />
       </View>
 
-      {status === 'saved' ? (
-        <ThemedText style={[styles.statusText, { color: SUCCESS }]} accessibilityRole="alert">
-          {t('medications.saved')}
-        </ThemedText>
-      ) : null}
-      {status === 'error' ? (
-        <ThemedText style={[styles.statusText, { color: DANGER }]} accessibilityRole="alert">
-          {t('medications.saveFailed')}
-        </ThemedText>
-      ) : null}
-
-      <Button
-        label={t('medications.saveMedication')}
-        onPress={onSubmit}
-        loading={submitting}
-        disabled={submitting}
+      <FormActions
+        saveLabel={t('common.saveChanges')}
+        onSave={onSubmit}
+        saving={submitting}
+        disabled={!dirty}
+        status={status}
+        savedLabel={t('medications.saved')}
+        errorLabel={t('medications.saveFailed')}
       />
     </View>
   );
@@ -391,20 +387,23 @@ function SchedulesManager({
   return (
     <View style={styles.fields}>
       <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-        {t('medications.scheduleSectionTitle')}
+        {t('medications.dosesSectionTitle')}
       </ThemedText>
 
-      {canManage ? (
-        <Button variant="secondary" label={t('medications.addSchedule')} onPress={() => setAdding(true)} />
-      ) : null}
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('medications.scheduleGroupsHelp')}
+      </ThemedText>
+
+      {schedules.length > 0 ? <ScheduleSummary schedules={schedules} /> : null}
 
       {schedules.length === 0 ? (
         <EmptyState title={t('medications.noSchedules')} />
       ) : (
         <View style={styles.list}>
-          {schedules.map((schedule) => (
+          {schedules.map((schedule, index) => (
             <ScheduleCard
               key={schedule.id}
+              number={index + 1}
               schedule={schedule}
               canManage={canManage}
               deleting={deletingId === schedule.id}
@@ -417,12 +416,26 @@ function SchedulesManager({
         </View>
       )}
 
+      {canManage ? (
+        <>
+          <Button
+            variant="secondary"
+            label={t('medications.addScheduleAtMed')}
+            onPress={() => setAdding(true)}
+          />
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('medications.helpDifferentDays')}
+          </ThemedText>
+        </>
+      ) : null}
+
       {modalOpen ? (
         <ScheduleModalHost
           key={editing?.id ?? 'new'}
           circleId={circleId}
           medicationId={medicationId}
           initial={editing}
+          existing={schedules}
           onClose={closeModal}
         />
       ) : null}
@@ -431,6 +444,7 @@ function SchedulesManager({
 }
 
 function ScheduleCard({
+  number,
   schedule,
   canManage,
   deleting,
@@ -439,6 +453,7 @@ function ScheduleCard({
   onDelete,
   onToggleActive,
 }: {
+  number: number;
   schedule: MedicationSchedule;
   canManage: boolean;
   deleting: boolean;
@@ -456,7 +471,7 @@ function ScheduleCard({
           .sort((a, b) => a - b)
           .map((day) => t(`medications.weekdaysShort.${WEEKDAY_KEYS[day]}`))
           .join('، ');
-  const timesText = schedule.times.map(formatHm).join('، ');
+  const timesText = [...schedule.times].map(formatHm).sort().join('، ');
   const rangeText = schedule.end_date
     ? `${schedule.start_date} — ${schedule.end_date}`
     : `${t('medications.fromDate')} ${schedule.start_date}`;
@@ -464,25 +479,23 @@ function ScheduleCard({
   return (
     <ThemedView type="backgroundElement" style={styles.scheduleCard}>
       <View style={styles.scheduleHeader}>
-        <ThemedText style={styles.scheduleTimes}>{timesText}</ThemedText>
-        {!schedule.is_active ? (
-          <ThemedView type="backgroundSelected" style={styles.badge}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('medications.inactiveLabel')}
-            </ThemedText>
-          </ThemedView>
-        ) : null}
+        <ThemedText type="smallBold">{t('medications.scheduleNumber', { number })}</ThemedText>
+        <ThemedView
+          type={schedule.is_active ? 'backgroundElement' : 'backgroundSelected'}
+          style={styles.badge}>
+          <ThemedText type="small" themeColor={schedule.is_active ? 'text' : 'textSecondary'}>
+            {schedule.is_active
+              ? t('medications.scheduleActiveLabel')
+              : t('medications.scheduleStoppedLabel')}
+          </ThemedText>
+        </ThemedView>
       </View>
-      <ThemedText type="small" themeColor="textSecondary">
-        {daysText}
-      </ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        {rangeText}
-      </ThemedText>
+
+      <InfoRow label={t('medications.fields.days')} value={daysText} />
+      <InfoRow label={t('medications.fields.times')} value={timesText} />
+      <InfoRow label={t('medications.fields.startDate')} value={rangeText} />
       {schedule.notes ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {schedule.notes}
-        </ThemedText>
+        <InfoRow label={t('medications.fields.scheduleNotes')} value={schedule.notes} />
       ) : null}
 
       {canManage ? (
@@ -535,7 +548,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.three,
   },
-  statusText: { fontSize: 14, fontWeight: '600' },
   activationCard: {
     borderRadius: Spacing.four,
     padding: Spacing.four,
@@ -551,7 +563,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  scheduleTimes: { fontSize: 18, fontWeight: '600' },
   badge: {
     borderRadius: Spacing.five,
     paddingVertical: Spacing.half,

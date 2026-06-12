@@ -1,17 +1,19 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
-import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
+import { StickyFormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
 import { OptionSelect, type SelectOption } from '@/components/option-select';
 import { TimeField } from '@/components/time-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 import { fieldErrors } from '@/utils/form';
 
@@ -19,7 +21,6 @@ import type { TaskCategory, TaskPriority } from './api';
 import { useCreateTask } from './hooks';
 import { TASK_CATEGORIES, TASK_PRIORITIES, taskSchema } from './schema';
 
-const DANGER = '#dc2626';
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
 /** Add-task form. Title is required; everything else is optional. */
@@ -40,8 +41,23 @@ export function TaskForm({ circleId }: { circleId: string }) {
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
+  const { dirty } = useUnsavedChanges({
+    title,
+    description,
+    category,
+    priority,
+    dueDate,
+    dueTime,
+    assignToMe,
+    notes,
+  });
   const submitting = create.isPending;
+
+  useEffect(() => {
+    if (submitted) router.back();
+  }, [submitted, router]);
 
   const categoryOptions: SelectOption<TaskCategory>[] = TASK_CATEGORIES.map((value) => ({
     value,
@@ -94,7 +110,7 @@ export function TaskForm({ circleId }: { circleId: string }) {
         assigned_to: assignToMe ? (user?.id ?? null) : null,
         notes: nullify(parsed.data.notes),
       });
-      router.back();
+      setSubmitted(true);
     } catch {
       setSubmitError(t('tasks.saveFailed'));
     }
@@ -102,10 +118,12 @@ export function TaskForm({ circleId }: { circleId: string }) {
 
   return (
     <ThemedView style={styles.container}>
+      <UnsavedChangesGuard when={dirty && !submitted} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
+          style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
@@ -175,21 +193,16 @@ export function TaskForm({ circleId }: { circleId: string }) {
             multiline
             error={fieldError(errors.notes)}
           />
-
-          {submitError ? (
-            <ThemedText style={styles.submitError} accessibilityRole="alert">
-              {submitError}
-            </ThemedText>
-          ) : null}
-
-          <Button
-            label={t('tasks.saveTask')}
-            onPress={onSubmit}
-            loading={submitting}
-            disabled={submitting}
-            style={styles.save}
-          />
         </ScrollView>
+
+        <StickyFormActions
+          saveLabel={t('tasks.add')}
+          onSave={onSubmit}
+          saving={submitting}
+          disabled={!dirty}
+          status={submitError ? 'error' : 'idle'}
+          errorLabel={submitError ?? undefined}
+        />
       </KeyboardAvoidingView>
     </ThemedView>
   );
@@ -198,13 +211,14 @@ export function TaskForm({ circleId }: { circleId: string }) {
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center' },
   flex: { flex: 1, width: '100%' },
+  scroll: { flex: 1, width: '100%' },
   content: {
     width: '100%',
     maxWidth: MaxFormWidth,
     alignSelf: 'center',
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
+    paddingBottom: Spacing.five,
     gap: Spacing.three,
   },
   switchRow: {
@@ -213,6 +227,4 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.three,
   },
-  submitError: { color: DANGER },
-  save: { marginTop: Spacing.two },
 });

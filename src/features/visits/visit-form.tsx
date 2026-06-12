@@ -1,19 +1,19 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
-import { Button } from '@/components/button';
+import { StickyFormActions } from '@/components/form-actions';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 
 import { useCreateVisit } from './hooks';
 import { VisitFieldset, defaultVisitDraft, prepareVisit, type VisitDraft } from './visit-fields';
-
-const DANGER = '#dc2626';
 
 /**
  * Add-visit form. Managers may record any visitor and optionally link the visit
@@ -31,8 +31,14 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
   const [linkToSelf, setLinkToSelf] = useState(!canManage);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
+  const { dirty } = useUnsavedChanges({ draft, linkToSelf });
   const submitting = create.isPending;
+
+  useEffect(() => {
+    if (submitted) router.back();
+  }, [submitted, router]);
   // Collaborators always record their own visit; managers may opt in.
   const visitorUserId = (canManage ? linkToSelf : true) ? (user?.id ?? null) : null;
 
@@ -48,7 +54,7 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
     setSubmitError(null);
     try {
       await create.mutateAsync({ ...prepared.value, visitor_user_id: visitorUserId });
-      router.back();
+      setSubmitted(true);
     } catch {
       setSubmitError(t('visits.saveFailed'));
     }
@@ -56,10 +62,12 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
 
   return (
     <ThemedView style={styles.container}>
+      <UnsavedChangesGuard when={dirty && !submitted} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
+          style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
@@ -84,21 +92,16 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
               {t('visits.ownVisitNote')}
             </ThemedText>
           )}
-
-          {submitError ? (
-            <ThemedText style={styles.submitError} accessibilityRole="alert">
-              {submitError}
-            </ThemedText>
-          ) : null}
-
-          <Button
-            label={t('visits.saveVisit')}
-            onPress={onSubmit}
-            loading={submitting}
-            disabled={submitting}
-            style={styles.save}
-          />
         </ScrollView>
+
+        <StickyFormActions
+          saveLabel={t('visits.add')}
+          onSave={onSubmit}
+          saving={submitting}
+          disabled={!dirty}
+          status={submitError ? 'error' : 'idle'}
+          errorLabel={submitError ?? undefined}
+        />
       </KeyboardAvoidingView>
     </ThemedView>
   );
@@ -107,13 +110,14 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center' },
   flex: { flex: 1, width: '100%' },
+  scroll: { flex: 1, width: '100%' },
   content: {
     width: '100%',
     maxWidth: MaxFormWidth,
     alignSelf: 'center',
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
+    paddingBottom: Spacing.five,
     gap: Spacing.three,
   },
   switchRow: {
@@ -122,6 +126,4 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.three,
   },
-  submitError: { color: DANGER },
-  save: { marginTop: Spacing.two },
 });

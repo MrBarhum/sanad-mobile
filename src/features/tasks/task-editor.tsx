@@ -5,14 +5,17 @@ import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
+import { FormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
 import { OptionSelect, type SelectOption } from '@/components/option-select';
 import { TimeField } from '@/components/time-field';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 import { formatHm, hmFromInstant, ymdFromInstant } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
@@ -27,8 +30,6 @@ import {
 } from './hooks';
 import { TASK_CATEGORIES, TASK_PRIORITIES, taskSchema } from './schema';
 
-const SUCCESS = '#16a34a';
-const DANGER = '#dc2626';
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
 /** Loads a task, then renders the view/edit screen with status + delete actions. */
@@ -106,6 +107,16 @@ function TaskFields({ circleId, initial }: { circleId: string; initial: CareTask
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
+  const { dirty, markSaved } = useUnsavedChanges({
+    title,
+    description,
+    category,
+    priority,
+    dueDate,
+    dueTime,
+    assignToMe,
+    notes,
+  });
   const submitting = update.isPending;
 
   const categoryOptions: SelectOption<TaskCategory>[] = TASK_CATEGORIES.map((value) => ({
@@ -168,6 +179,7 @@ function TaskFields({ circleId, initial }: { circleId: string; initial: CareTask
           notes: nullify(parsed.data.notes),
         },
       });
+      markSaved();
       setStatus('saved');
     } catch {
       setStatus('error');
@@ -176,6 +188,7 @@ function TaskFields({ circleId, initial }: { circleId: string; initial: CareTask
 
   return (
     <View style={styles.fields}>
+      <UnsavedChangesGuard when={dirty} />
       <FormField
         label={t('tasks.fields.title')}
         value={title}
@@ -262,22 +275,14 @@ function TaskFields({ circleId, initial }: { circleId: string; initial: CareTask
         error={fieldError(errors.notes)}
       />
 
-      {status === 'saved' ? (
-        <ThemedText style={[styles.statusText, { color: SUCCESS }]} accessibilityRole="alert">
-          {t('tasks.saved')}
-        </ThemedText>
-      ) : null}
-      {status === 'error' ? (
-        <ThemedText style={[styles.statusText, { color: DANGER }]} accessibilityRole="alert">
-          {t('tasks.saveFailed')}
-        </ThemedText>
-      ) : null}
-
-      <Button
-        label={t('tasks.saveTask')}
-        onPress={onSubmit}
-        loading={submitting}
-        disabled={submitting}
+      <FormActions
+        saveLabel={t('common.saveChanges')}
+        onSave={onSubmit}
+        saving={submitting}
+        disabled={!dirty}
+        status={status}
+        savedLabel={t('tasks.saved')}
+        errorLabel={t('tasks.saveFailed')}
       />
     </View>
   );
@@ -457,7 +462,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.three,
   },
-  statusText: { fontSize: 14, fontWeight: '600' },
   statusCard: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },

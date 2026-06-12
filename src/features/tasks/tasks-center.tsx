@@ -8,6 +8,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { ReminderNotice } from '@/features/notifications/reminder-notice';
 import { useAuth } from '@/providers';
 import { formatHm, todayYmd } from '@/utils/date';
 
@@ -110,6 +111,8 @@ export function TasksCenter({
         <ThemedText type="small" themeColor="textSecondary">
           {t('tasks.disclaimer')}
         </ThemedText>
+
+        <ReminderNotice messageKey="tasks.reminderNotice" />
 
         {canManage ? (
           <Button label={t('tasks.add')} onPress={() => router.push('/tasks/new')} />

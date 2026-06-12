@@ -11,6 +11,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { confirmDiscard } from '@/utils/confirm';
 import { fieldErrors } from '@/utils/form';
 
 import type { EmergencyContact } from './api';
@@ -191,7 +193,24 @@ function ContactFormModal({
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const { dirty } = useUnsavedChanges({ name, relationship, phone, isPrimary, notes });
   const submitting = create.isPending || update.isPending;
+
+  function requestClose() {
+    if (!dirty) {
+      onClose();
+      return;
+    }
+    confirmDiscard(
+      {
+        title: t('common.unsavedTitle'),
+        message: t('common.unsavedMessage'),
+        confirm: t('common.discardChanges'),
+        cancel: t('common.keepEditing'),
+      },
+      onClose,
+    );
+  }
 
   function fieldError(code?: string): string | undefined {
     switch (code) {
@@ -248,13 +267,14 @@ function ContactFormModal({
     <FormModal
       visible
       title={initial ? t('emergencyContacts.editTitle') : t('emergencyContacts.addTitle')}
-      submitLabel={t('common.save')}
+      submitLabel={initial ? t('common.saveChanges') : t('emergencyContacts.add')}
       cancelLabel={t('common.cancel')}
       closeLabel={t('common.close')}
       submitting={submitting}
+      submitDisabled={!dirty}
       error={submitError}
       onSubmit={onSubmit}
-      onClose={onClose}>
+      onClose={requestClose}>
       <FormField
         label={t('emergencyContacts.fields.name')}
         value={name}

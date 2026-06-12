@@ -16,6 +16,8 @@ type FormModalProps = {
   cancelLabel: string;
   closeLabel: string;
   submitting?: boolean;
+  /** Disable the submit button (e.g. no changes yet, or validation failing). */
+  submitDisabled?: boolean;
   error?: string | null;
   onSubmit: () => void;
   onClose: () => void;
@@ -36,6 +38,7 @@ export function FormModal({
   cancelLabel,
   closeLabel,
   submitting = false,
+  submitDisabled = false,
   error,
   onSubmit,
   onClose,
@@ -80,7 +83,7 @@ export function FormModal({
                 label={submitLabel}
                 onPress={onSubmit}
                 loading={submitting}
-                disabled={submitting}
+                disabled={submitting || submitDisabled}
                 style={styles.action}
               />
               <Button

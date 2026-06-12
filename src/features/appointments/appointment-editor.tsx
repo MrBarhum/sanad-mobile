@@ -4,12 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { FormActions } from '@/components/form-actions';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import type { Doctor } from '@/features/doctors/api';
 import { useDoctors } from '@/features/doctors/hooks';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
 import type { AppointmentStatus, CareAppointment } from './api';
@@ -25,9 +28,6 @@ import {
   useSetAppointmentStatus,
   useUpdateAppointment,
 } from './hooks';
-
-const SUCCESS = '#16a34a';
-const DANGER = '#dc2626';
 
 /** Loads an appointment, then renders the view/edit screen. */
 export function AppointmentEditor({
@@ -105,6 +105,7 @@ function AppointmentEditFields({
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
+  const { dirty, markSaved } = useUnsavedChanges(draft);
   const submitting = update.isPending;
 
   function patch(part: Partial<AppointmentDraft>) {
@@ -121,6 +122,7 @@ function AppointmentEditFields({
     }
     try {
       await update.mutateAsync({ id: initial.id, patch: prepared.input });
+      markSaved();
       setStatus('saved');
     } catch {
       setStatus('error');
@@ -129,24 +131,17 @@ function AppointmentEditFields({
 
   return (
     <View style={styles.fields}>
+      <UnsavedChangesGuard when={dirty} />
       <AppointmentFieldset draft={draft} onChange={patch} errors={errors} doctors={doctors} />
 
-      {status === 'saved' ? (
-        <ThemedText style={[styles.statusText, { color: SUCCESS }]} accessibilityRole="alert">
-          {t('appointments.saved')}
-        </ThemedText>
-      ) : null}
-      {status === 'error' ? (
-        <ThemedText style={[styles.statusText, { color: DANGER }]} accessibilityRole="alert">
-          {t('appointments.saveFailed')}
-        </ThemedText>
-      ) : null}
-
-      <Button
-        label={t('appointments.saveAppointment')}
-        onPress={onSubmit}
-        loading={submitting}
-        disabled={submitting}
+      <FormActions
+        saveLabel={t('common.saveChanges')}
+        onSave={onSubmit}
+        saving={submitting}
+        disabled={!dirty}
+        status={status}
+        savedLabel={t('appointments.saved')}
+        errorLabel={t('appointments.saveFailed')}
       />
     </View>
   );
@@ -327,7 +322,6 @@ const styles = StyleSheet.create({
   readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
   infoValue: { fontSize: 16, lineHeight: 24 },
-  statusText: { fontSize: 14, fontWeight: '600' },
   statusCard: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },

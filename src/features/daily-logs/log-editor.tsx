@@ -4,10 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { FormActions } from '@/components/form-actions';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 
 import type { DailyCareLog } from './api';
@@ -19,9 +22,6 @@ import {
   prepareDailyLog,
   type DailyLogDraft,
 } from './log-fields';
-
-const SUCCESS = '#16a34a';
-const DANGER = '#dc2626';
 
 /** Loads a daily log, then renders the view/edit screen with a delete action. */
 export function DailyLogEditor({
@@ -84,6 +84,7 @@ function DailyLogEditFields({ circleId, initial }: { circleId: string; initial: 
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
+  const { dirty, markSaved } = useUnsavedChanges(draft);
   const submitting = update.isPending;
 
   function patch(part: Partial<DailyLogDraft>) {
@@ -100,6 +101,7 @@ function DailyLogEditFields({ circleId, initial }: { circleId: string; initial: 
     }
     try {
       await update.mutateAsync({ id: initial.id, patch: prepared.input });
+      markSaved();
       setStatus('saved');
     } catch {
       setStatus('error');
@@ -108,24 +110,17 @@ function DailyLogEditFields({ circleId, initial }: { circleId: string; initial: 
 
   return (
     <View style={styles.fields}>
+      <UnsavedChangesGuard when={dirty} />
       <DailyLogFieldset draft={draft} onChange={patch} errors={errors} />
 
-      {status === 'saved' ? (
-        <ThemedText style={[styles.statusText, { color: SUCCESS }]} accessibilityRole="alert">
-          {t('dailyLogs.saved')}
-        </ThemedText>
-      ) : null}
-      {status === 'error' ? (
-        <ThemedText style={[styles.statusText, { color: DANGER }]} accessibilityRole="alert">
-          {t('dailyLogs.saveFailed')}
-        </ThemedText>
-      ) : null}
-
-      <Button
-        label={t('dailyLogs.saveLog')}
-        onPress={onSubmit}
-        loading={submitting}
-        disabled={submitting}
+      <FormActions
+        saveLabel={t('common.saveChanges')}
+        onSave={onSubmit}
+        saving={submitting}
+        disabled={!dirty}
+        status={status}
+        savedLabel={t('dailyLogs.saved')}
+        errorLabel={t('dailyLogs.saveFailed')}
       />
     </View>
   );
@@ -228,6 +223,5 @@ const styles = StyleSheet.create({
   readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
   infoValue: { fontSize: 16, lineHeight: 24 },
-  statusText: { fontSize: 14, fontWeight: '600' },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
 });

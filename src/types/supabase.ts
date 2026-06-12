@@ -90,6 +90,7 @@ export type Database = {
           id: string
           name: string
           owner_id: string
+          timezone: string
           updated_at: string
         }
         Insert: {
@@ -97,6 +98,7 @@ export type Database = {
           id?: string
           name: string
           owner_id: string
+          timezone?: string
           updated_at?: string
         }
         Update: {
@@ -104,6 +106,7 @@ export type Database = {
           id?: string
           name?: string
           owner_id?: string
+          timezone?: string
           updated_at?: string
         }
         Relationships: [
@@ -874,6 +877,314 @@ export type Database = {
           },
         ]
       }
+      notification_outbox: {
+        Row: {
+          attempt_count: number
+          available_at: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          id: string
+          last_error: string | null
+          notification_id: string
+          status: Database["public"]["Enums"]["notification_outbox_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempt_count?: number
+          available_at?: string
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          notification_id: string
+          status?: Database["public"]["Enums"]["notification_outbox_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempt_count?: number
+          available_at?: string
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          notification_id?: string
+          status?: Database["public"]["Enums"]["notification_outbox_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_outbox_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_outbox_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_push_deliveries: {
+        Row: {
+          attempt_count: number
+          available_at: string
+          claim_token: string | null
+          created_at: string
+          error_code: string | null
+          expo_ticket_id: string | null
+          id: string
+          last_error: string | null
+          locked_at: string | null
+          outbox_id: string
+          push_token_id: string
+          receipt_id: string | null
+          receipt_status: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notification_delivery_status"]
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          available_at?: string
+          claim_token?: string | null
+          created_at?: string
+          error_code?: string | null
+          expo_ticket_id?: string | null
+          id?: string
+          last_error?: string | null
+          locked_at?: string | null
+          outbox_id: string
+          push_token_id: string
+          receipt_id?: string | null
+          receipt_status?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_delivery_status"]
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          available_at?: string
+          claim_token?: string | null
+          created_at?: string
+          error_code?: string | null
+          expo_ticket_id?: string | null
+          id?: string
+          last_error?: string | null
+          locked_at?: string | null
+          outbox_id?: string
+          push_token_id?: string
+          receipt_id?: string | null
+          receipt_status?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_delivery_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_push_deliveries_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "notification_outbox"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_push_deliveries_push_token_id_fkey"
+            columns: ["push_token_id"]
+            isOneToOne: false
+            referencedRelation: "push_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          appointment_reminders: boolean
+          care_updates: boolean
+          circle_id: string | null
+          created_at: string
+          emergency_alerts: boolean
+          id: string
+          medication_reminders: boolean
+          missed_dose_alerts: boolean
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          remote_summary: boolean
+          task_reminders: boolean
+          timezone: string | null
+          updated_at: string
+          user_id: string
+          visit_updates: boolean
+        }
+        Insert: {
+          appointment_reminders?: boolean
+          care_updates?: boolean
+          circle_id?: string | null
+          created_at?: string
+          emergency_alerts?: boolean
+          id?: string
+          medication_reminders?: boolean
+          missed_dose_alerts?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          remote_summary?: boolean
+          task_reminders?: boolean
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+          visit_updates?: boolean
+        }
+        Update: {
+          appointment_reminders?: boolean
+          care_updates?: boolean
+          circle_id?: string | null
+          created_at?: string
+          emergency_alerts?: boolean
+          id?: string
+          medication_reminders?: boolean
+          missed_dose_alerts?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          remote_summary?: boolean
+          task_reminders?: boolean
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+          visit_updates?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string
+          circle_id: string | null
+          created_at: string
+          data: Json
+          dedupe_key: string | null
+          deep_link: string | null
+          expires_at: string | null
+          id: string
+          read_at: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          body: string
+          circle_id?: string | null
+          created_at?: string
+          data?: Json
+          dedupe_key?: string | null
+          deep_link?: string | null
+          expires_at?: string | null
+          id?: string
+          read_at?: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          body?: string
+          circle_id?: string | null
+          created_at?: string
+          data?: Json
+          dedupe_key?: string | null
+          deep_link?: string | null
+          expires_at?: string | null
+          id?: string
+          read_at?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_tokens: {
+        Row: {
+          app_version: string | null
+          created_at: string
+          device_id: string | null
+          expo_push_token: string
+          id: string
+          is_active: boolean
+          last_seen_at: string
+          platform: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app_version?: string | null
+          created_at?: string
+          device_id?: string | null
+          expo_push_token: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string
+          platform: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app_version?: string | null
+          created_at?: string
+          device_id?: string | null
+          expo_push_token?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string
+          platform?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -998,6 +1309,193 @@ export type Database = {
           status: Database["public"]["Enums"]["member_status"]
         }[]
       }
+      register_push_token: {
+        Args: {
+          p_token: string
+          p_platform: string
+          p_device_id?: string
+          p_app_version?: string
+        }
+        Returns: string
+      }
+      deactivate_push_token: {
+        Args: { p_token: string }
+        Returns: undefined
+      }
+      deactivate_push_token_value: {
+        Args: { p_token: string }
+        Returns: undefined
+      }
+      is_valid_timezone: {
+        Args: { p_tz: string }
+        Returns: boolean
+      }
+      notification_defer_until: {
+        Args: {
+          p_now: string
+          p_timezone: string
+          p_quiet_hours_enabled: boolean
+          p_quiet_hours_start: string
+          p_quiet_hours_end: string
+          p_is_emergency: boolean
+        }
+        Returns: string
+      }
+      effective_notification_prefs: {
+        Args: { p_user_id: string; p_circle_id: string }
+        Returns: {
+          medication_reminders: boolean
+          missed_dose_alerts: boolean
+          task_reminders: boolean
+          appointment_reminders: boolean
+          visit_updates: boolean
+          care_updates: boolean
+          emergency_alerts: boolean
+          remote_summary: boolean
+          quiet_hours_enabled: boolean
+          quiet_hours_start: string | null
+          quiet_hours_end: string | null
+          timezone: string
+        }[]
+      }
+      circle_notification_recipients: {
+        Args: {
+          p_circle_id: string
+          p_type: Database["public"]["Enums"]["notification_type"]
+        }
+        Returns: {
+          user_id: string
+          timezone: string
+          quiet_hours_enabled: boolean
+          quiet_hours_start: string | null
+          quiet_hours_end: string | null
+        }[]
+      }
+      enqueue_notification: {
+        Args: {
+          p_user_id: string
+          p_type: Database["public"]["Enums"]["notification_type"]
+          p_title: string
+          p_body: string
+          p_circle_id?: string
+          p_data?: Json
+          p_deep_link?: string
+          p_dedupe_key?: string
+          p_expires_at?: string
+          p_timezone?: string
+          p_quiet_hours_enabled?: boolean
+          p_quiet_hours_start?: string
+          p_quiet_hours_end?: string
+        }
+        Returns: string
+      }
+      upsert_notification_preferences: {
+        Args: {
+          p_circle_id: string | null
+          p_medication_reminders: boolean
+          p_missed_dose_alerts: boolean
+          p_task_reminders: boolean
+          p_appointment_reminders: boolean
+          p_visit_updates: boolean
+          p_care_updates: boolean
+          p_emergency_alerts: boolean
+          p_remote_summary: boolean
+          p_quiet_hours_enabled: boolean
+          p_quiet_hours_start: string | null
+          p_quiet_hours_end: string | null
+          p_timezone: string | null
+        }
+        Returns: Database["public"]["Tables"]["notification_preferences"]["Row"]
+      }
+      set_notification_read: {
+        Args: { p_notification_id: string; p_read: boolean }
+        Returns: undefined
+      }
+      mark_all_notifications_read: {
+        Args: { p_circle_id?: string }
+        Returns: number
+      }
+      notification_recipient_eligible: {
+        Args: {
+          p_user_id: string
+          p_circle_id: string
+          p_type: Database["public"]["Enums"]["notification_type"]
+        }
+        Returns: boolean
+      }
+      notification_source_validity: {
+        Args: { p_notification_id: string }
+        Returns: {
+          valid: boolean
+          reason: string
+        }[]
+      }
+      fanout_due_notifications: {
+        Args: { p_limit?: number; p_max_attempts?: number }
+        Returns: {
+          fanned: number
+          skipped: number
+          deferred: number
+        }[]
+      }
+      claim_push_deliveries: {
+        Args: {
+          p_limit?: number
+          p_lock_timeout_seconds?: number
+          p_max_attempts?: number
+        }
+        Returns: {
+          delivery_id: string
+          claim_token: string
+          token: string
+          push_token_id: string
+          notification_id: string
+          circle_id: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+          deep_link: string | null
+          attempt_count: number
+        }[]
+      }
+      mark_delivery_sent: {
+        Args: { p_delivery_id: string; p_claim_token: string; p_ticket_id?: string }
+        Returns: boolean
+      }
+      mark_delivery_failed: {
+        Args: {
+          p_delivery_id: string
+          p_claim_token: string
+          p_error?: string
+          p_retry_at?: string
+        }
+        Returns: boolean
+      }
+      mark_delivery_skipped: {
+        Args: { p_delivery_id: string; p_claim_token: string; p_reason?: string }
+        Returns: boolean
+      }
+      record_delivery_receipt: {
+        Args: {
+          p_delivery_id: string
+          p_expected_ticket: string
+          p_receipt_id: string
+          p_status: string
+          p_error_code: string
+          p_details: string
+        }
+        Returns: boolean
+      }
+      mark_stale_receipts_unchecked: {
+        Args: { p_cutoff: string; p_limit?: number }
+        Returns: number
+      }
+      deactivate_push_token_by_id: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      set_circle_timezone: {
+        Args: { p_circle_id: string; p_timezone: string }
+        Returns: string
+      }
     }
     Enums: {
       appetite_level: "good" | "normal" | "low" | "none" | "unknown"
@@ -1043,6 +1541,23 @@ export type Database = {
       medication_log_status: "given" | "missed" | "postponed"
       member_status: "active" | "invited" | "removed"
       mobility_level: "normal" | "limited" | "needs_help" | "bedbound" | "unknown"
+      notification_channel: "push"
+      notification_delivery_status:
+        | "pending"
+        | "processing"
+        | "sent"
+        | "failed"
+        | "skipped"
+      notification_outbox_status: "pending" | "fanned" | "skipped" | "failed"
+      notification_type:
+        | "medication_due"
+        | "medication_missed"
+        | "task_due"
+        | "appointment_upcoming"
+        | "visit_update"
+        | "care_update"
+        | "emergency"
+        | "system"
       sleep_quality: "good" | "fair" | "poor" | "unknown"
       vital_reading_type:
         | "blood_pressure"
@@ -1226,6 +1741,25 @@ export const Constants = {
       medication_log_status: ["given", "missed", "postponed"],
       member_status: ["active", "invited", "removed"],
       mobility_level: ["normal", "limited", "needs_help", "bedbound", "unknown"],
+      notification_channel: ["push"],
+      notification_delivery_status: [
+        "pending",
+        "processing",
+        "sent",
+        "failed",
+        "skipped",
+      ],
+      notification_outbox_status: ["pending", "fanned", "skipped", "failed"],
+      notification_type: [
+        "medication_due",
+        "medication_missed",
+        "task_due",
+        "appointment_upcoming",
+        "visit_update",
+        "care_update",
+        "emergency",
+        "system",
+      ],
       sleep_quality: ["good", "fair", "poor", "unknown"],
       vital_reading_type: [
         "blood_pressure",

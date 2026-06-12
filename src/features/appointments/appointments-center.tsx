@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useDoctors } from '@/features/doctors/hooks';
+import { ReminderNotice } from '@/features/notifications/reminder-notice';
 import { hmFromInstant, todayYmd, ymdFromInstant } from '@/utils/date';
 
 import type { AppointmentStatus, CareAppointment } from './api';
@@ -85,6 +86,8 @@ export function AppointmentsCenter({
         <ThemedText type="small" themeColor="textSecondary">
           {t('appointments.disclaimer')}
         </ThemedText>
+
+        <ReminderNotice messageKey="appointments.reminderNotice" />
 
         {canManage ? (
           <Button label={t('appointments.add')} onPress={() => router.push('/appointments/new')} />

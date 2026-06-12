@@ -12,6 +12,8 @@ export type CircleSummary = {
   recipientName: string | null;
   recipientBirthDate: string | null;
   role: CircleRole;
+  /** Canonical IANA zone for the circle's scheduled care events (default 'UTC'). */
+  circleTimezone: string;
 };
 
 export const circleSelectionKeys = {
@@ -41,7 +43,7 @@ export async function fetchUserCircles(userId: string): Promise<CircleSummary[]>
 
   const [{ data: circles, error: circlesError }, { data: recipients, error: recipientsError }] =
     await Promise.all([
-      supabase.from('care_circles').select('id, name').in('id', ids),
+      supabase.from('care_circles').select('id, name, timezone').in('id', ids),
       supabase
         .from('care_recipients')
         .select('circle_id, full_name, birth_date')
@@ -51,19 +53,30 @@ export async function fetchUserCircles(userId: string): Promise<CircleSummary[]>
   if (circlesError) throw circlesError;
   if (recipientsError) throw recipientsError;
 
-  const nameById = new Map((circles ?? []).map((c) => [c.id, c.name]));
+  const circleById = new Map((circles ?? []).map((c) => [c.id, c]));
   const recipientByCircle = new Map((recipients ?? []).map((r) => [r.circle_id, r]));
 
   return memberships
-    .filter((m) => nameById.has(m.circle_id))
+    .filter((m) => circleById.has(m.circle_id))
     .map((m) => {
+      const circle = circleById.get(m.circle_id);
       const recipient = recipientByCircle.get(m.circle_id);
       return {
         circleId: m.circle_id,
-        circleName: nameById.get(m.circle_id) as string,
+        circleName: (circle?.name ?? '') as string,
         recipientName: recipient?.full_name ?? null,
         recipientBirthDate: recipient?.birth_date ?? null,
         role: m.role,
+        circleTimezone: circle?.timezone ?? 'UTC',
       };
     });
+}
+
+/** Manager-only: set the circle's canonical timezone (validated server-side). */
+export async function setCircleTimezone(circleId: string, timezone: string): Promise<void> {
+  const { error } = await supabase.rpc('set_circle_timezone', {
+    p_circle_id: circleId,
+    p_timezone: timezone,
+  });
+  if (error) throw error;
 }

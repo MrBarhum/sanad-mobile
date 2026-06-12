@@ -1,5 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 
+import { getDeviceTimezone } from '@/features/notifications/device';
+
 import { supabase } from '../../../lib/supabase';
 
 // The canonical circle summary + multi-circle fetching now live in the
@@ -36,7 +38,7 @@ function logCreateError(error: PostgrestError): void {
  * so no user id is passed from the client.
  */
 export async function createCareCircle(input: CreateCircleInput): Promise<void> {
-  const { error } = await supabase.rpc('create_care_circle', {
+  const { data, error } = await supabase.rpc('create_care_circle', {
     circle_name: input.circleName,
     recipient_full_name: input.recipientName,
     recipient_birth_date: input.birthDate ?? undefined,
@@ -44,5 +46,21 @@ export async function createCareCircle(input: CreateCircleInput): Promise<void> 
   if (error) {
     logCreateError(error);
     throw error;
+  }
+
+  // Initialize the circle's canonical timezone from the creator's device, so
+  // scheduled medication/task wall-clock times are anchored to a real zone from
+  // the start. Best-effort: a manager can confirm/change it later in settings, so
+  // a failure here must not fail circle creation.
+  const circleId = data?.[0]?.circle_id;
+  if (circleId) {
+    try {
+      await supabase.rpc('set_circle_timezone', {
+        p_circle_id: circleId,
+        p_timezone: getDeviceTimezone(),
+      });
+    } catch {
+      // ignore — circle defaults to 'UTC' and the UI prompts to confirm it
+    }
   }
 }

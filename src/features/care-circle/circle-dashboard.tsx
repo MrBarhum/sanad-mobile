@@ -11,6 +11,7 @@ import { CircleSwitcher } from '@/features/circle-selection/circle-switcher';
 import type { ActiveCircle } from '@/features/circle-selection/permissions';
 import { DailyLogsCard } from '@/features/daily-logs/daily-logs-card';
 import { useTodayDoseSummary } from '@/features/medications/hooks';
+import { NotificationBell } from '@/features/notifications/notification-bell';
 import { TasksCard } from '@/features/tasks/tasks-card';
 import { VisitsCard } from '@/features/visits/visits-card';
 import { VitalsCard } from '@/features/vitals/vitals-card';
@@ -55,9 +56,12 @@ export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <ThemedView style={styles.header}>
-            <ThemedText type="title" accessibilityRole="header">
-              {t('home.greeting')}
-            </ThemedText>
+            <View style={styles.headerTop}>
+              <ThemedText type="title" accessibilityRole="header" style={styles.headerTitle}>
+                {t('home.greeting')}
+              </ThemedText>
+              <NotificationBell />
+            </View>
             <ThemedText themeColor="textSecondary" style={styles.tagline}>
               {t('home.tagline')}
             </ThemedText>
@@ -154,6 +158,13 @@ const styles = StyleSheet.create({
     gap: Spacing.five,
   },
   header: { gap: Spacing.two },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  headerTitle: { flexShrink: 1 },
   tagline: { fontSize: 18, lineHeight: 28 },
   emergencyCard: { borderRadius: Spacing.four },
   emergencyInner: {

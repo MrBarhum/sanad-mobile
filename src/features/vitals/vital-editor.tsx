@@ -4,10 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { FormActions } from '@/components/form-actions';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
@@ -15,9 +18,6 @@ import type { VitalReading } from './api';
 import { formatVitalValue } from './describe';
 import { useDeleteVital, useUpdateVital, useVital } from './hooks';
 import { VitalFieldset, prepareVital, vitalDraftFromRow, type VitalDraft } from './vital-fields';
-
-const SUCCESS = '#16a34a';
-const DANGER = '#dc2626';
 
 /** Loads a reading, then renders the view/edit screen with a delete action. */
 export function VitalEditor({
@@ -80,6 +80,7 @@ function VitalEditFields({ circleId, initial }: { circleId: string; initial: Vit
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
+  const { dirty, markSaved } = useUnsavedChanges(draft);
   const submitting = update.isPending;
 
   function patch(part: Partial<VitalDraft>) {
@@ -96,6 +97,7 @@ function VitalEditFields({ circleId, initial }: { circleId: string; initial: Vit
     }
     try {
       await update.mutateAsync({ id: initial.id, patch: prepared.input });
+      markSaved();
       setStatus('saved');
     } catch {
       setStatus('error');
@@ -104,24 +106,17 @@ function VitalEditFields({ circleId, initial }: { circleId: string; initial: Vit
 
   return (
     <View style={styles.fields}>
+      <UnsavedChangesGuard when={dirty} />
       <VitalFieldset draft={draft} onChange={patch} errors={errors} />
 
-      {status === 'saved' ? (
-        <ThemedText style={[styles.statusText, { color: SUCCESS }]} accessibilityRole="alert">
-          {t('vitals.saved')}
-        </ThemedText>
-      ) : null}
-      {status === 'error' ? (
-        <ThemedText style={[styles.statusText, { color: DANGER }]} accessibilityRole="alert">
-          {t('vitals.saveFailed')}
-        </ThemedText>
-      ) : null}
-
-      <Button
-        label={t('vitals.saveReading')}
-        onPress={onSubmit}
-        loading={submitting}
-        disabled={submitting}
+      <FormActions
+        saveLabel={t('common.saveChanges')}
+        onSave={onSubmit}
+        saving={submitting}
+        disabled={!dirty}
+        status={status}
+        savedLabel={t('vitals.saved')}
+        errorLabel={t('vitals.saveFailed')}
       />
     </View>
   );
@@ -216,6 +211,5 @@ const styles = StyleSheet.create({
   readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
   infoValue: { fontSize: 16, lineHeight: 24 },
-  statusText: { fontSize: 14, fontWeight: '600' },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
 });

@@ -1,3 +1,6 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { circleSelectionKeys, setCircleTimezone } from './api';
 import { useCircleSelection } from './provider';
 
 /**
@@ -9,4 +12,13 @@ import { useCircleSelection } from './provider';
 export function useActiveCircle() {
   const { activeCircle, isLoading, isError, refetch } = useCircleSelection();
   return { circle: activeCircle, isLoading, isError, refetch };
+}
+
+/** Manager-only mutation to set the active circle's canonical timezone. */
+export function useSetCircleTimezone() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, { circleId: string; timezone: string }>({
+    mutationFn: ({ circleId, timezone }) => setCircleTimezone(circleId, timezone),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: circleSelectionKeys.all }),
+  });
 }

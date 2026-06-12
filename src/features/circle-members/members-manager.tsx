@@ -1,11 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
-import { FormModal } from '@/components/form-modal';
-import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -24,6 +23,7 @@ import {
   isLastActiveAdmin,
   isManagerRole,
 } from './permissions';
+import { RoleModal } from './role-modal';
 
 const DANGER = '#dc2626';
 
@@ -49,8 +49,15 @@ export function MembersManager({
 
   const [editingRole, setEditingRole] = useState<CircleMember | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // The role modal surfaces its own error so it can stay open for a retry.
+  const [roleError, setRoleError] = useState<string | null>(null);
 
   const canManage = isManagerRole(actorRole);
+
+  function openRoleEditor(member: CircleMember) {
+    setRoleError(null);
+    setEditingRole(member);
+  }
 
   async function changeStatus(member: CircleMember, next: 'active' | 'removed') {
     setActionError(null);
@@ -127,7 +134,7 @@ export function MembersManager({
               actorRole={actorRole}
               viewerIsOwner={viewerIsOwner}
               busy={busy}
-              onEditRole={() => setEditingRole(member)}
+              onEditRole={() => openRoleEditor(member)}
               onRemove={() => changeStatus(member, 'removed')}
               onReactivate={() => changeStatus(member, 'active')}
               onLeave={onLeave}
@@ -150,7 +157,7 @@ export function MembersManager({
                   actorRole={actorRole}
                   viewerIsOwner={viewerIsOwner}
                   busy={busy}
-                  onEditRole={() => setEditingRole(member)}
+                  onEditRole={() => openRoleEditor(member)}
                   onRemove={() => changeStatus(member, 'removed')}
                   onReactivate={() => changeStatus(member, 'active')}
                   onLeave={onLeave}
@@ -168,15 +175,19 @@ export function MembersManager({
           member={editingRole}
           actorRole={actorRole}
           submitting={updateRole.isPending}
-          onClose={() => setEditingRole(null)}
-          onSelect={async (role) => {
-            setActionError(null);
+          error={roleError}
+          onClose={() => {
+            setEditingRole(null);
+            setRoleError(null);
+          }}
+          onSave={async (role) => {
+            setRoleError(null);
             try {
               await updateRole.mutateAsync({ memberId: editingRole.memberId, role });
               setEditingRole(null);
             } catch (error) {
-              setActionError(t(memberErrorKey(error)));
-              setEditingRole(null);
+              // Keep the modal open so the manager can adjust and retry.
+              setRoleError(t(memberErrorKey(error)));
             }
           }}
         />
@@ -359,59 +370,6 @@ function MemberCard({
   );
 }
 
-function RoleModal({
-  member,
-  actorRole,
-  submitting,
-  onClose,
-  onSelect,
-}: {
-  member: CircleMember;
-  actorRole: CircleRole;
-  submitting: boolean;
-  onClose: () => void;
-  onSelect: (role: CircleRole) => void;
-}) {
-  const { t } = useTranslation();
-  const roles = assignableRolesFor(actorRole, member);
-
-  return (
-    <FormModal
-      visible
-      title={t('circleMembers.changeRoleTitle')}
-      submitLabel={t('common.close')}
-      cancelLabel={t('common.cancel')}
-      closeLabel={t('common.close')}
-      submitting={submitting}
-      onSubmit={onClose}
-      onClose={onClose}>
-      <ThemedText type="small" themeColor="textSecondary">
-        {t('circleMembers.changeRoleHint')}
-      </ThemedText>
-      <View style={styles.roleOptions}>
-        {roles.map((role) => {
-          const current = role === member.role;
-          return (
-            <Pressable
-              key={role}
-              onPress={() => !submitting && onSelect(role)}
-              accessibilityRole="button"
-              accessibilityState={{ selected: current, disabled: submitting }}
-              style={({ pressed }) => [pressed && styles.pressed]}>
-              <ThemedView
-                type={current ? 'backgroundSelected' : 'backgroundElement'}
-                style={styles.roleOption}>
-                <ThemedText style={styles.roleLabel}>{t(`circleMembers.roles.${role}`)}</ThemedText>
-                {current ? <ThemedText type="small">✓</ThemedText> : null}
-              </ThemedView>
-            </Pressable>
-          );
-        })}
-      </View>
-    </FormModal>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center' },
   content: {
@@ -439,16 +397,5 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center', flexWrap: 'wrap' },
   note: { fontStyle: 'italic' },
   cardActions: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap', marginTop: Spacing.one },
-  roleOptions: { gap: Spacing.two },
-  roleOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-    minHeight: 52,
-  },
-  roleLabel: { fontSize: 16, fontWeight: '600' },
-  pressed: { opacity: 0.7 },
   error: { color: DANGER },
 });

@@ -1,17 +1,17 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 
-import { Button } from '@/components/button';
+import { StickyFormActions } from '@/components/form-actions';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
 import { useCreateVital } from './hooks';
 import { VitalFieldset, defaultVitalDraft, prepareVital, type VitalDraft } from './vital-fields';
-
-const DANGER = '#dc2626';
 
 /** Add-vital-reading form (caregiving roles only). */
 export function VitalForm({ circleId }: { circleId: string }) {
@@ -22,8 +22,14 @@ export function VitalForm({ circleId }: { circleId: string }) {
   const [draft, setDraft] = useState<VitalDraft>(() => defaultVitalDraft());
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
+  const { dirty } = useUnsavedChanges(draft);
   const submitting = create.isPending;
+
+  useEffect(() => {
+    if (submitted) router.back();
+  }, [submitted, router]);
 
   function patch(part: Partial<VitalDraft>) {
     setDraft((current) => ({ ...current, ...part }));
@@ -37,7 +43,7 @@ export function VitalForm({ circleId }: { circleId: string }) {
     setSubmitError(null);
     try {
       await create.mutateAsync(prepared.input);
-      router.back();
+      setSubmitted(true);
     } catch {
       setSubmitError(t('vitals.saveFailed'));
     }
@@ -45,10 +51,12 @@ export function VitalForm({ circleId }: { circleId: string }) {
 
   return (
     <ThemedView style={styles.container}>
+      <UnsavedChangesGuard when={dirty && !submitted} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
+          style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
@@ -57,21 +65,16 @@ export function VitalForm({ circleId }: { circleId: string }) {
           </ThemedText>
 
           <VitalFieldset draft={draft} onChange={patch} errors={errors} />
-
-          {submitError ? (
-            <ThemedText style={styles.submitError} accessibilityRole="alert">
-              {submitError}
-            </ThemedText>
-          ) : null}
-
-          <Button
-            label={t('vitals.saveReading')}
-            onPress={onSubmit}
-            loading={submitting}
-            disabled={submitting}
-            style={styles.save}
-          />
         </ScrollView>
+
+        <StickyFormActions
+          saveLabel={t('vitals.add')}
+          onSave={onSubmit}
+          saving={submitting}
+          disabled={!dirty}
+          status={submitError ? 'error' : 'idle'}
+          errorLabel={submitError ?? undefined}
+        />
       </KeyboardAvoidingView>
     </ThemedView>
   );
@@ -80,15 +83,14 @@ export function VitalForm({ circleId }: { circleId: string }) {
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center' },
   flex: { flex: 1, width: '100%' },
+  scroll: { flex: 1, width: '100%' },
   content: {
     width: '100%',
     maxWidth: MaxFormWidth,
     alignSelf: 'center',
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
+    paddingBottom: Spacing.five,
     gap: Spacing.three,
   },
-  submitError: { color: DANGER },
-  save: { marginTop: Spacing.two },
 });

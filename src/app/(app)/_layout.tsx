@@ -1,6 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { NotificationObserver } from '@/features/notifications/notification-observer';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 
@@ -25,28 +26,37 @@ export default function AppLayout() {
   if (!session) return <Redirect href="/sign-in" />;
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: true,
-        headerStyle: { backgroundColor: theme.background },
-        headerTintColor: theme.text,
-        headerTitleStyle: { color: theme.text },
-        headerShadowVisible: false,
-        contentStyle: { backgroundColor: theme.background },
-      }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="circle-members" options={{ headerShown: false }} />
-      <Stack.Screen name="join-circle" options={{ title: t('joinCircle.title') }} />
-      <Stack.Screen name="medications" options={{ headerShown: false }} />
-      <Stack.Screen name="tasks" options={{ headerShown: false }} />
-      <Stack.Screen name="appointments" options={{ headerShown: false }} />
-      <Stack.Screen name="visits" options={{ headerShown: false }} />
-      <Stack.Screen name="daily-logs" options={{ headerShown: false }} />
-      <Stack.Screen name="vitals" options={{ headerShown: false }} />
-      <Stack.Screen name="recipient-profile" options={{ title: t('recipientProfile.title') }} />
-      <Stack.Screen name="emergency-card" options={{ title: t('emergencyCard.title') }} />
-      <Stack.Screen name="emergency-contacts" options={{ title: t('emergencyContacts.title') }} />
-      <Stack.Screen name="doctors" options={{ title: t('doctors.title') }} />
-    </Stack>
+    <>
+      {/* Headless: notification handler, listeners, token refresh, tap routing. */}
+      <NotificationObserver />
+      <Stack
+        screenOptions={{
+          headerShown: true,
+          headerStyle: { backgroundColor: theme.background },
+          headerTintColor: theme.text,
+          headerTitleStyle: { color: theme.text },
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: theme.background },
+        }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="circle-members" options={{ headerShown: false }} />
+        <Stack.Screen name="join-circle" options={{ title: t('joinCircle.title') }} />
+        <Stack.Screen name="notifications" options={{ title: t('notifications.title') }} />
+        <Stack.Screen
+          name="notification-settings"
+          options={{ title: t('notificationSettings.title') }}
+        />
+        <Stack.Screen name="medications" options={{ headerShown: false }} />
+        <Stack.Screen name="tasks" options={{ headerShown: false }} />
+        <Stack.Screen name="appointments" options={{ headerShown: false }} />
+        <Stack.Screen name="visits" options={{ headerShown: false }} />
+        <Stack.Screen name="daily-logs" options={{ headerShown: false }} />
+        <Stack.Screen name="vitals" options={{ headerShown: false }} />
+        <Stack.Screen name="recipient-profile" options={{ title: t('recipientProfile.title') }} />
+        <Stack.Screen name="emergency-card" options={{ title: t('emergencyCard.title') }} />
+        <Stack.Screen name="emergency-contacts" options={{ title: t('emergencyContacts.title') }} />
+        <Stack.Screen name="doctors" options={{ title: t('doctors.title') }} />
+      </Stack>
+    </>
   );
 }

@@ -10,6 +10,8 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { confirmDiscard } from '@/utils/confirm';
 import { fieldErrors } from '@/utils/form';
 
 import type { Doctor } from './api';
@@ -175,7 +177,24 @@ function DoctorFormModal({
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const { dirty } = useUnsavedChanges({ name, specialty, phone, clinicName, notes });
   const submitting = create.isPending || update.isPending;
+
+  function requestClose() {
+    if (!dirty) {
+      onClose();
+      return;
+    }
+    confirmDiscard(
+      {
+        title: t('common.unsavedTitle'),
+        message: t('common.unsavedMessage'),
+        confirm: t('common.discardChanges'),
+        cancel: t('common.keepEditing'),
+      },
+      onClose,
+    );
+  }
 
   function fieldError(code?: string): string | undefined {
     switch (code) {
@@ -224,13 +243,14 @@ function DoctorFormModal({
     <FormModal
       visible
       title={initial ? t('doctors.editTitle') : t('doctors.addTitle')}
-      submitLabel={t('common.save')}
+      submitLabel={initial ? t('common.saveChanges') : t('doctors.add')}
       cancelLabel={t('common.cancel')}
       closeLabel={t('common.close')}
       submitting={submitting}
+      submitDisabled={!dirty}
       error={submitError}
       onSubmit={onSubmit}
-      onClose={onClose}>
+      onClose={requestClose}>
       <FormField
         label={t('doctors.fields.name')}
         value={name}
