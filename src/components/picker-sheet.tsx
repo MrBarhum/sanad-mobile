@@ -1,22 +1,25 @@
 import { useRef, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Button } from './button';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
-const ROW_HEIGHT = 44;
+const ROW_HEIGHT = TouchTarget.min; // 48 — large, easy targets for older users
 const VISIBLE_ROWS = 5;
 
 /**
- * Bottom-sheet chrome for the native date / time pickers. Holds a title, the
- * picker body (`children` — usually a row of `WheelColumn`s) and Done / Clear /
- * Cancel actions. Tapping the backdrop cancels (discards the in-progress
- * selection); the caller commits only on Done. Cross-platform-safe, but only the
- * native field variants import it — the web variants use real HTML inputs.
+ * Bottom-sheet chrome for the native date / time pickers. Holds a title, a close
+ * affordance, the picker body (`children` — a row of `WheelColumn`s) and
+ * Done / Clear / Cancel actions. Tapping the backdrop or the close icon cancels
+ * (discards the in-progress selection); the caller commits only on Done. The sheet
+ * caps its height and honors the bottom safe-area inset so the actions are always
+ * reachable on short and tall devices. Cross-platform-safe, but only the native
+ * field variants import it — the web variants use real HTML inputs.
  */
 export function PickerSheet({
   visible,
@@ -24,6 +27,7 @@ export function PickerSheet({
   doneLabel,
   cancelLabel,
   clearLabel,
+  closeLabel,
   onDone,
   onCancel,
   onClear,
@@ -34,43 +38,49 @@ export function PickerSheet({
   doneLabel: string;
   cancelLabel: string;
   clearLabel: string;
+  /** Accessible label for the header close icon (defaults to the cancel label). */
+  closeLabel?: string;
   onDone: () => void;
   onCancel: () => void;
   /** When provided, a Clear action is shown (for optional fields). */
   onClear?: () => void;
   children: ReactNode;
 }) {
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
-      <Pressable
-        style={styles.backdrop}
-        accessibilityLabel={cancelLabel}
-        onPress={onCancel}>
+      <Pressable style={styles.backdrop} accessibilityLabel={cancelLabel} onPress={onCancel}>
         {/* Swallow taps inside the sheet so they don't reach the backdrop. */}
         <Pressable style={styles.sheetWrap} onPress={() => {}}>
-          <ThemedView style={styles.sheet}>
-            <ThemedText type="subtitle" style={styles.title} accessibilityRole="header">
-              {title}
-            </ThemedText>
+          <ThemedView
+            style={[
+              styles.sheet,
+              { borderColor: theme.border, paddingBottom: Spacing.four + insets.bottom },
+            ]}>
+            <View style={styles.header}>
+              <ThemedText type="sectionTitle" accessibilityRole="header" style={styles.title}>
+                {title}
+              </ThemedText>
+              <Pressable
+                onPress={onCancel}
+                accessibilityRole="button"
+                accessibilityLabel={closeLabel ?? cancelLabel}
+                hitSlop={Spacing.two}
+                style={styles.close}>
+                <ThemedText style={styles.closeGlyph}>✕</ThemedText>
+              </Pressable>
+            </View>
 
             <View style={styles.body}>{children}</View>
 
             <View style={styles.actions}>
               <Button label={doneLabel} onPress={onDone} style={styles.action} />
               {onClear ? (
-                <Button
-                  label={clearLabel}
-                  variant="secondary"
-                  onPress={onClear}
-                  style={styles.action}
-                />
+                <Button label={clearLabel} variant="secondary" onPress={onClear} style={styles.action} />
               ) : null}
-              <Button
-                label={cancelLabel}
-                variant="secondary"
-                onPress={onCancel}
-                style={styles.action}
-              />
+              <Button label={cancelLabel} variant="secondary" onPress={onCancel} style={styles.action} />
             </View>
           </ThemedView>
         </Pressable>
@@ -81,8 +91,9 @@ export function PickerSheet({
 
 /**
  * A single scrollable selection column (year, month, day, hour or minute). Taps
- * select a value; the selected row is highlighted. On mount it scrolls the
- * selected value into view. Numbers only — formatting (e.g. zero-padding) is via
+ * select a value; the selected row is highlighted (filled + bold + a check) so
+ * the choice is never communicated by color alone. On mount it scrolls the
+ * selected value into view. Numbers only — formatting (e.g. zero-padding) via
  * `formatValue`.
  */
 export function WheelColumn({
@@ -123,24 +134,25 @@ export function WheelColumn({
       ) : null}
       <ScrollView
         ref={ref}
-        style={styles.columnScroll}
+        style={[styles.columnScroll, { borderColor: theme.border, backgroundColor: theme.background }]}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled
         onContentSizeChange={maybeScrollToSelected}
         accessibilityLabel={accessibilityLabel}>
         {values.map((value) => {
           const isSelected = value === selected;
+          const text = formatValue ? formatValue(value) : String(value);
           return (
             <Pressable
               key={value}
               onPress={() => onSelect(value)}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              style={[styles.row, isSelected && { backgroundColor: theme.backgroundSelected }]}>
+              style={[styles.row, isSelected && { backgroundColor: theme.primaryBg }]}>
               <ThemedText
-                themeColor={isSelected ? 'text' : 'textSecondary'}
+                themeColor={isSelected ? 'primaryText' : 'text'}
                 style={[styles.rowText, isSelected && styles.rowTextSelected]}>
-                {formatValue ? formatValue(value) : String(value)}
+                {isSelected ? `✓ ${text}` : text}
               </ThemedText>
             </Pressable>
           );
@@ -155,23 +167,35 @@ const styles = StyleSheet.create({
   sheetWrap: { width: '100%', maxWidth: MaxFormWidth, alignSelf: 'center' },
   sheet: {
     width: '100%',
-    borderTopLeftRadius: Spacing.four,
-    borderTopRightRadius: Spacing.four,
+    maxHeight: '92%',
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
+    borderWidth: StyleSheet.hairlineWidth,
     paddingTop: Spacing.four,
     paddingHorizontal: Spacing.four,
-    paddingBottom: Spacing.five,
-    gap: Spacing.three,
+    gap: Spacing.four,
   },
-  title: { fontSize: 22, lineHeight: 30 },
-  body: { flexDirection: 'row', gap: Spacing.two, justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.three },
+  title: { flexShrink: 1 },
+  close: { minWidth: TouchTarget.min, minHeight: TouchTarget.min, alignItems: 'center', justifyContent: 'center' },
+  closeGlyph: { fontSize: 20, fontWeight: '600' },
+  // A plain full-width block (column direction): the child wheel-row (the field's
+  // own `columns` View) stretches to the full width, which is what keeps its
+  // flex:1 WheelColumns from collapsing to zero width — the cause of the blank
+  // Android picker. Do NOT make this a row.
+  body: { width: '100%' },
   actions: { gap: Spacing.two },
   action: { width: '100%' },
-  column: { flex: 1, gap: Spacing.one, alignItems: 'stretch' },
+  column: { flex: 1, gap: Spacing.one },
   columnLabel: { textAlign: 'center' },
-  columnScroll: { height: ROW_HEIGHT * VISIBLE_ROWS },
+  columnScroll: {
+    height: ROW_HEIGHT * VISIBLE_ROWS,
+    borderRadius: Radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
   row: {
     height: ROW_HEIGHT,
-    borderRadius: Spacing.two,
     alignItems: 'center',
     justifyContent: 'center',
   },

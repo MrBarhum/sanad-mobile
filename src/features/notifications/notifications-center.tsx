@@ -1,14 +1,17 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { isolateLtr } from '@/components/ltr-text';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
@@ -22,13 +25,12 @@ import {
   usePushRegistration,
 } from './hooks';
 
-const ACCENT = '#208AEF';
-
 /** The /notifications screen body: a global, recent-first inbox with an optional
  * per-circle filter, mark-read controls and graceful empty/error states. */
 export function NotificationsCenter() {
   const { t } = useTranslation();
   const router = useRouter();
+  const theme = useTheme();
   const { circles } = useCircleSelection();
   const { support, permission, hasActiveDeviceToken } = usePushRegistration();
 
@@ -56,94 +58,94 @@ export function NotificationsCenter() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={list.isRefetching} onRefresh={() => list.refetch()} />
-          }>
-          {hasUnread ? (
-            <View style={styles.headerRow}>
-              <Button
-                size="sm"
-                variant="secondary"
-                label={t('notifications.markAllRead')}
-                loading={markAll.isPending}
-                onPress={() => markAll.mutate(filter)}
-              />
-            </View>
-          ) : null}
+    <Screen
+      refreshControl={
+        <RefreshControl
+          refreshing={list.isRefetching}
+          onRefresh={() => list.refetch()}
+          tintColor={theme.primary}
+          colors={[theme.primary]}
+        />
+      }>
+      {hasUnread ? (
+        <View style={styles.headerRow}>
+          <Button
+            size="sm"
+            variant="secondary"
+            label={t('notifications.markAllRead')}
+            loading={markAll.isPending}
+            onPress={() => markAll.mutate(filter)}
+          />
+        </View>
+      ) : null}
 
-          {showEnablePrompt ? (
-            <ThemedView type="backgroundElement" style={styles.enableBanner}>
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('notifications.enablePrompt')}
-              </ThemedText>
-              <Button
-                size="sm"
-                label={t('notifications.enableAction')}
-                onPress={() => router.push('/notification-settings')}
-              />
-            </ThemedView>
-          ) : null}
+      {showEnablePrompt ? (
+        <Surface tone="info" style={styles.enableBanner}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('notifications.enablePrompt')}
+          </ThemedText>
+          <Button
+            size="sm"
+            label={t('notifications.enableAction')}
+            onPress={() => router.push('/notification-settings')}
+          />
+        </Surface>
+      ) : null}
 
-          {circles.length > 1 ? (
-            <View style={styles.chips}>
-              <FilterChip
-                label={t('notifications.filters.all')}
-                active={filter === null}
-                onPress={() => setFilter(null)}
-              />
-              {circles.map((c) => (
-                <FilterChip
-                  key={c.circleId}
-                  label={c.circleName}
-                  active={filter === c.circleId}
-                  onPress={() => setFilter(c.circleId)}
-                />
-              ))}
-            </View>
-          ) : null}
-
-          {list.isLoading ? (
-            <LoadingState />
-          ) : list.isError ? (
-            <ErrorState
-              message={t('notifications.loadError')}
-              retryLabel={t('retry')}
-              onRetry={() => list.refetch()}
+      {circles.length > 1 ? (
+        <View style={styles.chips}>
+          <FilterChip
+            label={t('notifications.filters.all')}
+            active={filter === null}
+            onPress={() => setFilter(null)}
+          />
+          {circles.map((c) => (
+            <FilterChip
+              key={c.circleId}
+              label={c.circleName}
+              active={filter === c.circleId}
+              onPress={() => setFilter(c.circleId)}
             />
-          ) : items.length === 0 ? (
-            <EmptyState
-              title={t('notifications.emptyTitle')}
-              subtitle={t('notifications.emptySubtitle')}
-            />
-          ) : (
-            <View style={styles.list}>
-              {items.map((n) => (
-                <NotificationRow
-                  key={n.id}
-                  n={n}
-                  circleName={n.circle_id ? circleName.get(n.circle_id) ?? null : null}
-                  onOpen={() => onOpen(n)}
-                  onToggleRead={() => markRead.mutate({ id: n.id, read: !n.read_at })}
-                />
-              ))}
+          ))}
+        </View>
+      ) : null}
 
-              {items.length >= limit ? (
-                <Button
-                  variant="secondary"
-                  label={t('notifications.loadMore')}
-                  onPress={() => setLimit((v) => v + NOTIFICATIONS_PAGE_SIZE)}
-                />
-              ) : null}
-            </View>
-          )}
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+      {list.isLoading ? (
+        <LoadingState />
+      ) : list.isError ? (
+        <ErrorState
+          message={t('notifications.loadError')}
+          retryLabel={t('retry')}
+          onRetry={() => list.refetch()}
+        />
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon="🔔"
+          title={t('notifications.emptyTitle')}
+          subtitle={t('notifications.emptySubtitle')}
+        />
+      ) : (
+        <View style={styles.list}>
+          {items.map((n) => (
+            <NotificationRow
+              key={n.id}
+              n={n}
+              circleName={n.circle_id ? circleName.get(n.circle_id) ?? null : null}
+              onOpen={() => onOpen(n)}
+              onToggleRead={() => markRead.mutate({ id: n.id, read: !n.read_at })}
+            />
+          ))}
+
+          {items.length >= limit ? (
+            <Button
+              variant="secondary"
+              label={t('notifications.loadMore')}
+              onPress={() => setLimit((v) => v + NOTIFICATIONS_PAGE_SIZE)}
+            />
+          ) : null}
+        </View>
+      )}
+    </Screen>
   );
 }
 
@@ -181,17 +183,18 @@ function NotificationRow({
   onToggleRead: () => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const unread = !n.read_at;
   const meta = notificationMeta(n.type);
   const stamp = `${ymdFromInstant(n.created_at)} ${hmFromInstant(n.created_at)}`.trim();
 
   return (
-    <ThemedView type="backgroundElement" style={styles.row}>
+    <Surface style={styles.row}>
       <Pressable onPress={onOpen} accessibilityRole="button" style={styles.rowMain}>
         <ThemedText style={styles.icon}>{meta.icon}</ThemedText>
         <View style={styles.rowBody}>
           <View style={styles.rowTitleLine}>
-            {unread ? <View style={styles.dot} /> : null}
+            {unread ? <View style={[styles.dot, { backgroundColor: theme.primary }]} /> : null}
             <ThemedText style={[styles.rowTitle, unread && styles.rowTitleUnread]}>
               {n.title}
             </ThemedText>
@@ -202,7 +205,7 @@ function NotificationRow({
           <ThemedText type="small" themeColor="textSecondary" style={styles.meta}>
             {t(meta.labelKey)}
             {circleName ? ` · ${circleName}` : ''}
-            {stamp ? ` · ${stamp}` : ''}
+            {stamp ? ` · ${isolateLtr(stamp)}` : ''}
           </ThemedText>
         </View>
       </Pressable>
@@ -215,38 +218,26 @@ function NotificationRow({
           {unread ? t('notifications.markRead') : t('notifications.markUnread')}
         </ThemedText>
       </Pressable>
-    </ThemedView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  safeArea: { flex: 1, width: '100%', maxWidth: MaxContentWidth },
-  content: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
   headerRow: { flexDirection: 'row', justifyContent: 'flex-end' },
-  enableBanner: {
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-    gap: Spacing.two,
-  },
+  enableBanner: { gap: Spacing.two },
   chips: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
   chip: {
-    borderRadius: Spacing.five,
+    borderRadius: Radius.pill,
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.three,
   },
   list: { gap: Spacing.three },
-  row: { borderRadius: Spacing.four, padding: Spacing.three, gap: Spacing.two },
+  row: { gap: Spacing.two },
   rowMain: { flexDirection: 'row', gap: Spacing.three, alignItems: 'flex-start' },
   icon: { fontSize: 22, marginTop: 2 },
   rowBody: { flex: 1, gap: Spacing.half },
   rowTitleLine: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: ACCENT },
+  dot: { width: 8, height: 8, borderRadius: 4 },
   rowTitle: { fontSize: 16, flexShrink: 1 },
   rowTitleUnread: { fontWeight: '700' },
   meta: { marginTop: Spacing.half },

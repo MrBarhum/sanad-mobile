@@ -1,17 +1,20 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
 import { ItemActions } from '@/components/item-actions';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge } from '@/components/status-badge';
+import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { formatHm } from '@/utils/date';
@@ -32,8 +35,6 @@ import { WEEKDAY_KEYS } from './schedule-fields';
 import { ScheduleModalHost } from './schedule-modal-host';
 import { ScheduleSummary } from './schedule-summary';
 
-const SUCCESS = '#16a34a';
-const DANGER = '#dc2626';
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
 /** Loads a medication + its schedules, then renders the view/edit screen. */
@@ -65,19 +66,16 @@ export function MedicationEditor({
   }
   if (!medication.data) {
     return (
-      <ThemedView style={styles.centered}>
-        <EmptyState title={t('medications.notFound')} />
-      </ThemedView>
+      <Screen scroll={false} center>
+        <EmptyState icon="💊" title={t('medications.notFound')} />
+      </Screen>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Section A — Medication information */}
-        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-          {t('medications.medicationInfoTitle')}
-        </ThemedText>
+    <Screen>
+      {/* Section A — Medication information */}
+      <Section title={t('medications.medicationInfoTitle')}>
         {canManage ? (
           <MedicationFields key={medication.data.id} circleId={circleId} initial={medication.data} />
         ) : (
@@ -85,20 +83,20 @@ export function MedicationEditor({
         )}
 
         {canManage ? <ActivationRow circleId={circleId} medication={medication.data} /> : null}
+      </Section>
 
-        <ThemedView type="backgroundSelected" style={styles.divider} />
+      <ThemedView type="border" style={styles.divider} />
 
-        {/* Section B — Dose schedules */}
-        <SchedulesManager
-          circleId={circleId}
-          medicationId={medication.data.id}
-          schedules={schedules.data ?? []}
-          canManage={canManage}
-        />
+      {/* Section B — Dose schedules */}
+      <SchedulesManager
+        circleId={circleId}
+        medicationId={medication.data.id}
+        schedules={schedules.data ?? []}
+        canManage={canManage}
+      />
 
-        {canManage ? <DeleteMedicationRow circleId={circleId} id={medication.data.id} /> : null}
-      </ScrollView>
-    </ThemedView>
+      {canManage ? <DeleteMedicationRow circleId={circleId} id={medication.data.id} /> : null}
+    </Screen>
   );
 }
 
@@ -218,7 +216,7 @@ function MedicationFields({ circleId, initial }: { circleId: string; initial: Me
             setWithFood(v);
             touch();
           }}
-          trackColor={{ true: theme.text, false: theme.backgroundSelected }}
+          trackColor={{ true: theme.primary, false: theme.backgroundSelected }}
           accessibilityLabel={t('medications.fields.withFood')}
         />
       </View>
@@ -240,11 +238,11 @@ function ReadOnlyMedication({ medication }: { medication: Medication }) {
   const { t } = useTranslation();
   return (
     <View style={styles.fields}>
-      <ThemedView type="backgroundElement" style={styles.notice}>
-        <ThemedText type="small" themeColor="textSecondary">
+      <Surface tone="info" style={styles.notice}>
+        <ThemedText type="small" themeColor="infoFg">
           {t('medications.readOnly')}
         </ThemedText>
-      </ThemedView>
+      </Surface>
       <ThemedText style={styles.readName}>{medication.name}</ThemedText>
       {medication.dosage ? <InfoRow label={t('medications.fields.dosage')} value={medication.dosage} /> : null}
       {medication.form ? <InfoRow label={t('medications.fields.form')} value={medication.form} /> : null}
@@ -285,7 +283,7 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
   }
 
   return (
-    <ThemedView type="backgroundElement" style={styles.activationCard}>
+    <Surface style={styles.activationCard}>
       <ThemedText type="smallBold">
         {medication.is_active ? t('medications.activeLabel') : t('medications.inactiveLabel')}
       </ThemedText>
@@ -296,7 +294,7 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
         disabled={pending}
         onPress={toggle}
       />
-    </ThemedView>
+    </Surface>
   );
 }
 
@@ -386,7 +384,7 @@ function SchedulesManager({
 
   return (
     <View style={styles.fields}>
-      <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
+      <ThemedText type="sectionTitle" accessibilityRole="header">
         {t('medications.dosesSectionTitle')}
       </ThemedText>
 
@@ -477,18 +475,17 @@ function ScheduleCard({
     : `${t('medications.fromDate')} ${schedule.start_date}`;
 
   return (
-    <ThemedView type="backgroundElement" style={styles.scheduleCard}>
+    <Surface style={styles.scheduleCard}>
       <View style={styles.scheduleHeader}>
         <ThemedText type="smallBold">{t('medications.scheduleNumber', { number })}</ThemedText>
-        <ThemedView
-          type={schedule.is_active ? 'backgroundElement' : 'backgroundSelected'}
-          style={styles.badge}>
-          <ThemedText type="small" themeColor={schedule.is_active ? 'text' : 'textSecondary'}>
-            {schedule.is_active
+        <StatusBadge
+          tone={schedule.is_active ? 'success' : 'neutral'}
+          label={
+            schedule.is_active
               ? t('medications.scheduleActiveLabel')
-              : t('medications.scheduleStoppedLabel')}
-          </ThemedText>
-        </ThemedView>
+              : t('medications.scheduleStoppedLabel')
+          }
+        />
       </View>
 
       <InfoRow label={t('medications.fields.days')} value={daysText} />
@@ -521,24 +518,13 @@ function ScheduleCard({
           />
         </View>
       ) : null}
-    </ThemedView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   fields: { gap: Spacing.three },
-  notice: { borderRadius: Spacing.two, padding: Spacing.three },
+  notice: { padding: Spacing.three },
   readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
   infoValue: { fontSize: 16, lineHeight: 24 },
@@ -548,25 +534,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.three,
   },
-  activationCard: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
-    gap: Spacing.two,
-  },
+  activationCard: { gap: Spacing.two },
   divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
-  sectionTitle: { fontSize: 22, lineHeight: 30 },
   list: { gap: Spacing.three },
-  scheduleCard: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  scheduleCard: { gap: Spacing.two },
   scheduleHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
-  },
-  badge: {
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
   },
   scheduleActions: { gap: Spacing.two, marginTop: Spacing.one },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },

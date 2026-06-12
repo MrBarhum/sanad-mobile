@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "257478439049",
+    "project_id": "sanad-care-4dbbc",
+    "storage_bucket": "sanad-care-4dbbc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:257478439049:android:336841a54a11c9b8a0d658",
+        "android_client_info": {
+          "package_name": "com.mrbarhum.sanadcare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEX26qiLfre4de4JgMvjCQTrCoSnucxvA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

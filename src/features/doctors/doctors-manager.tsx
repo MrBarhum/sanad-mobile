@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { ContactCard } from '@/components/contact-card';
 import { FormField } from '@/components/form-field';
 import { FormModal } from '@/components/form-modal';
 import { ItemActions } from '@/components/item-actions';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { confirmDiscard } from '@/utils/confirm';
 import { fieldErrors } from '@/utils/form';
@@ -59,12 +59,13 @@ export function DoctorsManager({ circleId, canManage }: { circleId: string; canM
   const items = doctors.data ?? [];
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <>
+      <Screen>
         {canManage ? <Button label={t('doctors.add')} onPress={() => setAdding(true)} /> : null}
 
         {items.length === 0 ? (
           <EmptyState
+            icon="🩺"
             title={t('doctors.emptyTitle')}
             subtitle={canManage ? t('doctors.emptySubtitle') : undefined}
           />
@@ -82,7 +83,7 @@ export function DoctorsManager({ circleId, canManage }: { circleId: string; canM
             ))}
           </View>
         )}
-      </ScrollView>
+      </Screen>
 
       {modalOpen ? (
         <DoctorFormModal
@@ -92,7 +93,7 @@ export function DoctorsManager({ circleId, canManage }: { circleId: string; canM
           onClose={closeModal}
         />
       ) : null}
-    </ThemedView>
+    </>
   );
 }
 
@@ -112,33 +113,13 @@ function DoctorCard({
   const { t } = useTranslation();
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText style={styles.cardName}>{doctor.name}</ThemedText>
-
-      {doctor.specialty ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {doctor.specialty}
-        </ThemedText>
-      ) : null}
-
-      {doctor.clinic_name ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {doctor.clinic_name}
-        </ThemedText>
-      ) : null}
-
-      {doctor.phone ? (
-        <ThemedText style={styles.phone} selectable>
-          {doctor.phone}
-        </ThemedText>
-      ) : null}
-
-      {doctor.notes ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {doctor.notes}
-        </ThemedText>
-      ) : null}
-
+    <ContactCard
+      name={doctor.name}
+      subtitle={doctor.specialty}
+      details={[doctor.clinic_name]}
+      phone={doctor.phone}
+      callLabel={doctor.phone ? `${t('common.call')} ${doctor.name}` : undefined}
+      notes={doctor.notes}>
       {canManage ? (
         <ItemActions
           deleting={deleting}
@@ -152,7 +133,7 @@ function DoctorCard({
           }}
         />
       ) : null}
-    </ThemedView>
+    </ContactCard>
   );
 }
 
@@ -292,18 +273,5 @@ function DoctorFormModal({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
   list: { gap: Spacing.three },
-  card: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
-  cardName: { fontSize: 18, fontWeight: '600' },
-  phone: { fontSize: 16 },
 });

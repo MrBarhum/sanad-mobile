@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { TimeField } from '@/components/time-field';
 import { WeekdaySelector } from '@/components/weekday-selector';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { formatHm, todayYmd } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
 
@@ -106,6 +107,7 @@ export function ScheduleFields({
   errors?: Partial<Record<string, string>>;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   // Short chip labels + full names indexed 0 (Sun)..6 (Sat), matching WEEKDAY_KEYS.
   const dayLabels = WEEKDAY_KEYS.map((key) => t(`medications.weekdaysShort.${key}`));
@@ -190,12 +192,12 @@ export function ScheduleFields({
           {t('medications.helpSameDays')}
         </ThemedText>
         {timesError() ? (
-          <ThemedText type="small" style={styles.error} accessibilityRole="alert">
+          <ThemedText type="small" style={{ color: theme.errorFg }} accessibilityRole="alert">
             {timesError()}
           </ThemedText>
         ) : null}
         {hasDuplicateTimes ? (
-          <ThemedText type="small" style={styles.error} accessibilityRole="alert">
+          <ThemedText type="small" style={{ color: theme.errorFg }} accessibilityRole="alert">
             {t('medications.errors.duplicateTime')}
           </ThemedText>
         ) : null}
@@ -231,5 +233,4 @@ const styles = StyleSheet.create({
   section: { gap: Spacing.two },
   timeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
   timeInput: { flex: 1 },
-  error: { color: '#dc2626' },
 });

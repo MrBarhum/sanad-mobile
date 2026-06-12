@@ -1,11 +1,12 @@
 import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 
+import { Screen } from '@/components/screen';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing, TopTabInset } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { AppointmentsCard } from '@/features/appointments/appointments-card';
 import { CircleSwitcher } from '@/features/circle-selection/circle-switcher';
 import type { ActiveCircle } from '@/features/circle-selection/permissions';
@@ -15,8 +16,6 @@ import { NotificationBell } from '@/features/notifications/notification-bell';
 import { TasksCard } from '@/features/tasks/tasks-card';
 import { VisitsCard } from '@/features/visits/visits-card';
 import { VitalsCard } from '@/features/vitals/vitals-card';
-
-const EMERGENCY = '#dc2626';
 
 /** Navigable feature cards on the dashboard. */
 const ACTIONS = [
@@ -52,65 +51,61 @@ export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
   const router = useRouter();
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <ThemedView style={styles.header}>
-            <View style={styles.headerTop}>
-              <ThemedText type="title" accessibilityRole="header" style={styles.headerTitle}>
-                {t('home.greeting')}
-              </ThemedText>
-              <NotificationBell />
-            </View>
-            <ThemedText themeColor="textSecondary" style={styles.tagline}>
-              {t('home.tagline')}
+    <Screen edges={{ top: true }}>
+      <ThemedView style={styles.header}>
+        <View style={styles.headerTop}>
+          <ThemedText type="title" accessibilityRole="header" style={styles.headerTitle}>
+            {t('home.greeting')}
+          </ThemedText>
+          <NotificationBell />
+        </View>
+        <ThemedText themeColor="textSecondary" style={styles.tagline}>
+          {t('home.tagline')}
+        </ThemedText>
+      </ThemedView>
+
+      <CircleSwitcher />
+
+      <Surface
+        tone="error"
+        onPress={() => router.push('/emergency-card')}
+        accessibilityLabel={t('careCircle.dashboard.sections.emergency.title')}
+        style={styles.emergencyCard}>
+        <View style={styles.emergencyRow}>
+          <ThemedText style={styles.emergencyGlyph} accessibilityElementsHidden importantForAccessibility="no">
+            🆘
+          </ThemedText>
+          <View style={styles.emergencyText}>
+            <ThemedText type="sectionTitle" themeColor="errorFg">
+              {t('careCircle.dashboard.sections.emergency.title')}
             </ThemedText>
-          </ThemedView>
-
-          <CircleSwitcher />
-
-          <Pressable
-            onPress={() => router.push('/emergency-card')}
-            accessibilityRole="button"
-            accessibilityLabel={t('careCircle.dashboard.sections.emergency.title')}
-            style={({ pressed }) => [styles.emergencyCard, pressed && styles.pressed]}>
-            <ThemedView type="backgroundElement" style={styles.emergencyInner}>
-              <ThemedText style={styles.emergencyTitle}>
-                {t('careCircle.dashboard.sections.emergency.title')}
-              </ThemedText>
-              <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
-                {t('careCircle.dashboard.sections.emergency.subtitle')}
-              </ThemedText>
-            </ThemedView>
-          </Pressable>
-
-          <View style={styles.cards}>
-            <MedicationsCard circleId={circle.circleId} />
-            <DailyLogsCard circleId={circle.circleId} />
-            <VitalsCard circleId={circle.circleId} />
-            <TasksCard circleId={circle.circleId} />
-            <AppointmentsCard circleId={circle.circleId} />
-            <VisitsCard circleId={circle.circleId} />
-
-            {ACTIONS.map((section) => (
-              <Pressable
-                key={section.key}
-                onPress={() => router.push(section.href)}
-                accessibilityRole="button"
-                accessibilityLabel={t(section.titleKey)}
-                style={({ pressed }) => pressed && styles.pressed}>
-                <ThemedView type="backgroundElement" style={styles.card}>
-                  <ThemedText style={styles.cardTitle}>{t(section.titleKey)}</ThemedText>
-                  <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
-                    {t(section.subtitleKey)}
-                  </ThemedText>
-                </ThemedView>
-              </Pressable>
-            ))}
+            <ThemedText themeColor="textSecondary">
+              {t('careCircle.dashboard.sections.emergency.subtitle')}
+            </ThemedText>
           </View>
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+        </View>
+      </Surface>
+
+      <View style={styles.cards}>
+        <MedicationsCard circleId={circle.circleId} />
+        <DailyLogsCard circleId={circle.circleId} />
+        <VitalsCard circleId={circle.circleId} />
+        <TasksCard circleId={circle.circleId} />
+        <AppointmentsCard circleId={circle.circleId} />
+        <VisitsCard circleId={circle.circleId} />
+
+        {ACTIONS.map((section) => (
+          <Surface
+            key={section.key}
+            onPress={() => router.push(section.href)}
+            accessibilityLabel={t(section.titleKey)}
+            style={styles.card}>
+            <ThemedText type="cardTitle">{t(section.titleKey)}</ThemedText>
+            <ThemedText themeColor="textSecondary">{t(section.subtitleKey)}</ThemedText>
+          </Surface>
+        ))}
+      </View>
+    </Screen>
   );
 }
 
@@ -131,32 +126,19 @@ function MedicationsCard({ circleId }: { circleId: string }) {
         });
 
   return (
-    <Pressable
+    <Surface
       onPress={() => router.push('/medications')}
-      accessibilityRole="button"
       accessibilityLabel={t('careCircle.dashboard.sections.medications.title')}
-      style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView type="backgroundElement" style={styles.card}>
-        <ThemedText style={styles.cardTitle}>
-          {t('careCircle.dashboard.sections.medications.title')}
-        </ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
-          {subtitle}
-        </ThemedText>
-      </ThemedView>
-    </Pressable>
+      style={styles.card}>
+      <ThemedText type="cardTitle">
+        {t('careCircle.dashboard.sections.medications.title')}
+      </ThemedText>
+      <ThemedText themeColor="textSecondary">{subtitle}</ThemedText>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  safeArea: { flex: 1, width: '100%', maxWidth: MaxContentWidth },
-  content: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: TopTabInset + Spacing.five,
-    paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.five,
-  },
   header: { gap: Spacing.two },
   headerTop: {
     flexDirection: 'row',
@@ -166,26 +148,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: { flexShrink: 1 },
   tagline: { fontSize: 18, lineHeight: 28 },
-  emergencyCard: { borderRadius: Spacing.four },
-  emergencyInner: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
-    gap: Spacing.two,
-    borderWidth: 2,
-    borderColor: EMERGENCY,
-    minHeight: 96,
-    justifyContent: 'center',
-  },
-  emergencyTitle: { fontSize: 22, lineHeight: 30, fontWeight: '700', color: EMERGENCY },
+  emergencyCard: { minHeight: 96, justifyContent: 'center' },
+  emergencyRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  emergencyGlyph: { fontSize: 32, lineHeight: 38 },
+  emergencyText: { flex: 1, gap: Spacing.two },
   cards: { gap: Spacing.three },
-  card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
-    gap: Spacing.two,
-    minHeight: 96,
-    justifyContent: 'center',
-  },
-  cardTitle: { fontSize: 20, lineHeight: 28, fontWeight: '600', flexShrink: 1 },
-  cardSubtitle: { fontSize: 16, lineHeight: 24 },
-  pressed: { opacity: 0.7 },
+  card: { gap: Spacing.two, minHeight: 96, justifyContent: 'center' },
 });

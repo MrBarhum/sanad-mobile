@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import { Button } from './button';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
-
-const DANGER = '#dc2626';
 
 type FormModalProps = {
   visible: boolean;
@@ -44,34 +44,37 @@ export function FormModal({
   onClose,
   children,
 }: FormModalProps) {
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.backdrop}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ThemedView style={styles.sheet}>
+        <ThemedView style={[styles.sheet, { borderColor: theme.border }]}>
           <View style={styles.header}>
-            <ThemedText type="subtitle" style={styles.title} accessibilityRole="header">
+            <ThemedText type="sectionTitle" style={styles.title} accessibilityRole="header">
               {title}
             </ThemedText>
             <Pressable
               onPress={onClose}
               accessibilityRole="button"
               accessibilityLabel={closeLabel}
-              hitSlop={Spacing.two}>
+              hitSlop={Spacing.two}
+              style={styles.closeButton}>
               <ThemedText style={styles.close}>✕</ThemedText>
             </Pressable>
           </View>
 
           <ScrollView
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[styles.content, { paddingBottom: Spacing.five + insets.bottom }]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled">
             {children}
 
             {error ? (
               <ThemedText
-                style={styles.error}
+                style={{ color: theme.errorFg }}
                 accessibilityRole="alert"
                 accessibilityLiveRegion="polite">
                 {error}
@@ -107,9 +110,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MaxFormWidth,
     alignSelf: 'center',
-    borderTopLeftRadius: Spacing.four,
-    borderTopRightRadius: Spacing.four,
-    maxHeight: '90%',
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
+    borderWidth: StyleSheet.hairlineWidth,
+    maxHeight: '92%',
     paddingTop: Spacing.four,
   },
   header: {
@@ -119,15 +123,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     gap: Spacing.three,
   },
-  title: { fontSize: 24, lineHeight: 32, flexShrink: 1 },
-  close: { fontSize: 20, fontWeight: '600', padding: Spacing.one },
+  title: { flexShrink: 1 },
+  closeButton: {
+    minWidth: TouchTarget.min,
+    minHeight: TouchTarget.min,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  close: { fontSize: 20, fontWeight: '600' },
   content: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
-    paddingBottom: Spacing.five,
     gap: Spacing.three,
   },
-  error: { color: DANGER },
   actions: { gap: Spacing.two, marginTop: Spacing.two },
   action: { width: '100%' },
 });

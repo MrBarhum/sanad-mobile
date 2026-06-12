@@ -1,15 +1,18 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FormActions } from '@/components/form-actions';
+import { isolateLtr } from '@/components/ltr-text';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 import { formatHm } from '@/utils/date';
@@ -17,6 +20,12 @@ import { formatHm } from '@/utils/date';
 import type { FamilyVisit, VisitStatus } from './api';
 import { useDeleteVisit, useSetVisitStatus, useUpdateVisit, useVisit } from './hooks';
 import { VisitFieldset, prepareVisit, visitDraftFromRow, type VisitDraft } from './visit-fields';
+
+const STATUS_TONE: Record<VisitStatus, StatusTone> = {
+  planned: 'info',
+  completed: 'success',
+  cancelled: 'error',
+};
 
 /** Loads a visit, then renders the view/edit screen with status + delete. */
 export function VisitEditor({
@@ -47,9 +56,9 @@ export function VisitEditor({
   }
   if (!visit.data) {
     return (
-      <ThemedView style={styles.centered}>
+      <Screen scroll={false} center>
         <EmptyState title={t('visits.notFound')} />
-      </ThemedView>
+      </Screen>
     );
   }
 
@@ -57,19 +66,17 @@ export function VisitEditor({
   const canEdit = canManage || (canCollaborate && isOwner);
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {canEdit ? (
-          <VisitEditFields key={visit.data.id} circleId={circleId} initial={visit.data} />
-        ) : (
-          <ReadOnlyVisit visit={visit.data} />
-        )}
+    <Screen>
+      {canEdit ? (
+        <VisitEditFields key={visit.data.id} circleId={circleId} initial={visit.data} />
+      ) : (
+        <ReadOnlyVisit visit={visit.data} />
+      )}
 
-        <StatusSection circleId={circleId} visit={visit.data} canAct={canEdit} />
+      <StatusSection circleId={circleId} visit={visit.data} canAct={canEdit} />
 
-        {canEdit ? <DeleteVisitRow circleId={circleId} id={visit.data.id} /> : null}
-      </ScrollView>
-    </ThemedView>
+      {canEdit ? <DeleteVisitRow circleId={circleId} id={visit.data.id} /> : null}
+    </Screen>
   );
 }
 
@@ -130,19 +137,19 @@ function VisitEditFields({ circleId, initial }: { circleId: string; initial: Fam
 function ReadOnlyVisit({ visit }: { visit: FamilyVisit }) {
   const { t } = useTranslation();
   const timeParts = [];
-  if (visit.start_time) timeParts.push(formatHm(visit.start_time));
-  if (visit.end_time) timeParts.push(formatHm(visit.end_time));
+  if (visit.start_time) timeParts.push(isolateLtr(formatHm(visit.start_time)));
+  if (visit.end_time) timeParts.push(isolateLtr(formatHm(visit.end_time)));
   const when =
     timeParts.length > 0 ? `${visit.visit_date} ${timeParts.join(' – ')}` : visit.visit_date;
 
   return (
     <View style={styles.fields}>
-      <ThemedView type="backgroundElement" style={styles.notice}>
+      <Surface tone="sunken">
         <ThemedText type="small" themeColor="textSecondary">
           {t('visits.readOnly')}
         </ThemedText>
-      </ThemedView>
-      <ThemedText style={styles.readName}>{visit.visitor_name}</ThemedText>
+      </Surface>
+      <ThemedText type="sectionTitle">{visit.visitor_name}</ThemedText>
       <InfoRow label={t('visits.whenLabel')} value={when} />
       {visit.notes ? <InfoRow label={t('visits.fields.notes')} value={visit.notes} /> : null}
     </View>
@@ -183,10 +190,11 @@ function StatusSection({
   }
 
   return (
-    <ThemedView type="backgroundElement" style={styles.statusCard}>
-      <ThemedText type="smallBold">
-        {t('visits.fields.status')}: {t(`visits.status.${visit.status}`)}
-      </ThemedText>
+    <Surface style={styles.statusCard}>
+      <View style={styles.statusRow}>
+        <ThemedText type="smallBold">{t('visits.fields.status')}</ThemedText>
+        <StatusBadge tone={STATUS_TONE[visit.status]} label={t(`visits.status.${visit.status}`)} />
+      </View>
 
       {canAct ? (
         <View style={styles.actions}>
@@ -219,7 +227,7 @@ function StatusSection({
           )}
         </View>
       ) : null}
-    </ThemedView>
+    </Surface>
   );
 }
 
@@ -265,23 +273,16 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   fields: { gap: Spacing.three },
-  notice: { borderRadius: Spacing.two, padding: Spacing.three },
-  readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
   infoValue: { fontSize: 16, lineHeight: 24 },
-  statusCard: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  statusCard: { gap: Spacing.two },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
 });

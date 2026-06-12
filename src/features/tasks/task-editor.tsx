@@ -1,26 +1,29 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
 import { FormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
+import { LtrText } from '@/components/ltr-text';
 import { OptionSelect, type SelectOption } from '@/components/option-select';
-import { TimeField } from '@/components/time-field';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { TimeField } from '@/components/time-field';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 import { formatHm, hmFromInstant, ymdFromInstant } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
 
-import type { CareTask, TaskCategory, TaskPriority } from './api';
+import type { CareTask, TaskCategory, TaskPriority, TaskStatus } from './api';
 import {
   useCancelTask,
   useCompleteTask,
@@ -31,6 +34,13 @@ import {
 import { TASK_CATEGORIES, TASK_PRIORITIES, taskSchema } from './schema';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
+
+/** Task status → badge tone (color + a distinct glyph, never color alone). */
+const STATUS_TONE: Record<TaskStatus, StatusTone> = {
+  open: 'info',
+  completed: 'success',
+  cancelled: 'error',
+};
 
 /** Loads a task, then renders the view/edit screen with status + delete actions. */
 export function TaskEditor({
@@ -59,31 +69,29 @@ export function TaskEditor({
   }
   if (!task.data) {
     return (
-      <ThemedView style={styles.centered}>
+      <Screen scroll={false} center>
         <EmptyState title={t('tasks.notFound')} />
-      </ThemedView>
+      </Screen>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {canManage ? (
-          <TaskFields key={task.data.id} circleId={circleId} initial={task.data} />
-        ) : (
-          <ReadOnlyTask task={task.data} />
-        )}
+    <Screen>
+      {canManage ? (
+        <TaskFields key={task.data.id} circleId={circleId} initial={task.data} />
+      ) : (
+        <ReadOnlyTask task={task.data} />
+      )}
 
-        <StatusSection
-          circleId={circleId}
-          task={task.data}
-          canManage={canManage}
-          canCollaborate={canCollaborate}
-        />
+      <StatusSection
+        circleId={circleId}
+        task={task.data}
+        canManage={canManage}
+        canCollaborate={canCollaborate}
+      />
 
-        {canManage ? <DeleteTaskRow circleId={circleId} id={task.data.id} /> : null}
-      </ScrollView>
-    </ThemedView>
+      {canManage ? <DeleteTaskRow circleId={circleId} id={task.data.id} /> : null}
+    </Screen>
   );
 }
 
@@ -258,7 +266,7 @@ function TaskFields({ circleId, initial }: { circleId: string; initial: CareTask
             setAssignToMe(v);
             touch();
           }}
-          trackColor={{ true: theme.text, false: theme.backgroundSelected }}
+          trackColor={{ true: theme.primary, false: theme.backgroundSelected }}
           accessibilityLabel={t('tasks.fields.assignToMe')}
         />
       </View>
@@ -298,11 +306,11 @@ function ReadOnlyTask({ task }: { task: CareTask }) {
 
   return (
     <View style={styles.fields}>
-      <ThemedView type="backgroundElement" style={styles.notice}>
-        <ThemedText type="small" themeColor="textSecondary">
+      <Surface tone="info" style={styles.notice}>
+        <ThemedText type="small" themeColor="infoFg">
           {t('tasks.readOnly')}
         </ThemedText>
-      </ThemedView>
+      </Surface>
       <ThemedText style={styles.readName}>{task.title}</ThemedText>
       <InfoRow label={t('tasks.fields.category')} value={t(`tasks.category.${task.category}`)} />
       <InfoRow label={t('tasks.fields.priority')} value={t(`tasks.priority.${task.priority}`)} />
@@ -359,20 +367,25 @@ function StatusSection({
   }
 
   return (
-    <ThemedView type="backgroundElement" style={styles.statusCard}>
-      <ThemedText type="smallBold">
-        {t('tasks.fields.status')}: {t(`tasks.status.${task.status}`)}
-      </ThemedText>
+    <Surface style={styles.statusCard}>
+      <View style={styles.statusHeader}>
+        <ThemedText type="smallBold">{t('tasks.fields.status')}</ThemedText>
+        <StatusBadge tone={STATUS_TONE[task.status]} label={t(`tasks.status.${task.status}`)} />
+      </View>
       {task.status === 'completed' && task.completed_at ? (
         <ThemedText type="small" themeColor="textSecondary">
-          {t('tasks.completedAt')}: {ymdFromInstant(task.completed_at)}{' '}
-          {hmFromInstant(task.completed_at)}
+          {t('tasks.completedAt')}:{' '}
+          <LtrText type="small" themeColor="textSecondary">
+            {`${ymdFromInstant(task.completed_at)} ${hmFromInstant(task.completed_at)}`}
+          </LtrText>
         </ThemedText>
       ) : null}
       {task.status === 'cancelled' && task.cancelled_at ? (
         <ThemedText type="small" themeColor="textSecondary">
-          {t('tasks.cancelledAt')}: {ymdFromInstant(task.cancelled_at)}{' '}
-          {hmFromInstant(task.cancelled_at)}
+          {t('tasks.cancelledAt')}:{' '}
+          <LtrText type="small" themeColor="textSecondary">
+            {`${ymdFromInstant(task.cancelled_at)} ${hmFromInstant(task.cancelled_at)}`}
+          </LtrText>
         </ThemedText>
       ) : null}
 
@@ -394,7 +407,7 @@ function StatusSection({
           />
         </View>
       ) : null}
-    </ThemedView>
+    </Surface>
   );
 }
 
@@ -440,19 +453,8 @@ function DeleteTaskRow({ circleId, id }: { circleId: string; id: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   fields: { gap: Spacing.three },
-  notice: { borderRadius: Spacing.two, padding: Spacing.three },
+  notice: { padding: Spacing.three },
   readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
   infoValue: { fontSize: 16, lineHeight: 24 },
@@ -462,7 +464,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.three,
   },
-  statusCard: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  statusCard: { gap: Spacing.two },
+  statusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
 });

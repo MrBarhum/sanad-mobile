@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { StatusBadge } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 
 import { usePushRegistration, type EnableResult } from './hooks';
@@ -30,8 +31,8 @@ export function PushStatusCard() {
   const enabled = support === 'supported' && permission === 'granted' && hasActiveDeviceToken;
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText style={styles.title}>{t('notificationSettings.push.explainTitle')}</ThemedText>
+    <Surface style={styles.card}>
+      <ThemedText type="cardTitle">{t('notificationSettings.push.explainTitle')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         {t('notificationSettings.push.explainBody')}
       </ThemedText>
@@ -49,9 +50,7 @@ export function PushStatusCard() {
         </ThemedText>
       ) : enabled ? (
         <View style={styles.statusRow}>
-          <ThemedText type="small" style={styles.ok}>
-            {t('notificationSettings.push.granted')}
-          </ThemedText>
+          <StatusBadge tone="success" label={t('notificationSettings.push.granted')} />
           <Button
             size="sm"
             variant="secondary"
@@ -64,31 +63,27 @@ export function PushStatusCard() {
           />
         </View>
       ) : (
-        <View style={styles.actions}>
-          <Button
-            label={t('notificationSettings.push.enable')}
-            loading={isWorking}
-            onPress={onEnable}
-          />
-        </View>
+        <Button
+          label={t('notificationSettings.push.enable')}
+          loading={isWorking}
+          onPress={onEnable}
+        />
       )}
 
       {result && result !== 'enabled' ? (
         <ThemedText
           type="small"
           themeColor="textSecondary"
-          style={styles.resultMsg}
           accessibilityLiveRegion="polite">
           {t(`notificationSettings.push.results.${result}`)}
         </ThemedText>
       ) : null}
-    </ThemedView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: Spacing.three, padding: Spacing.four, gap: Spacing.two },
-  title: { fontSize: 18, fontWeight: '600' },
+  card: { gap: Spacing.two },
   note: { marginTop: Spacing.one },
   statusRow: {
     flexDirection: 'row',
@@ -98,7 +93,4 @@ const styles = StyleSheet.create({
     marginTop: Spacing.one,
     flexWrap: 'wrap',
   },
-  ok: { color: '#16a34a', fontWeight: '600' },
-  actions: { marginTop: Spacing.two },
-  resultMsg: { marginTop: Spacing.one },
 });

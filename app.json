@@ -17,7 +17,9 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.mrbarhum.sanadcare",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -38,14 +40,20 @@
       ],
       "expo-sqlite",
       "expo-localization",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-notifications",
+      "expo-image"
     ],
     "extra": {
-      "supportsRTL": true
+      "supportsRTL": true,
+      "eas": {
+        "projectId": "64d5dd55-2fc6-4f15-805b-534a3444b410"
+      }
     },
     "experiments": {
       "typedRoutes": false,
       "reactCompiler": true
-    }
+    },
+    "owner": "mrbarhum"
   }
 }

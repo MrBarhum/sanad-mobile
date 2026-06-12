@@ -1,13 +1,15 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { ReminderNotice } from '@/features/notifications/reminder-notice';
 import { useAuth } from '@/providers';
 import { formatHm, todayYmd } from '@/utils/date';
@@ -15,16 +17,18 @@ import { formatHm, todayYmd } from '@/utils/date';
 import type { CareTask, TaskPriority, TaskStatus } from './api';
 import { useCancelTask, useCompleteTask, useTasks } from './hooks';
 
-const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  low: '#60646C',
-  normal: '#60646C',
-  high: '#d97706',
-  urgent: '#dc2626',
+/** Priority → badge tone (color + a distinct glyph, never color alone). */
+const PRIORITY_TONE: Record<TaskPriority, StatusTone> = {
+  low: 'neutral',
+  normal: 'neutral',
+  high: 'warning',
+  urgent: 'error',
 };
 
-const DONE_COLORS: Record<Exclude<TaskStatus, 'open'>, string> = {
-  completed: '#16a34a',
-  cancelled: '#dc2626',
+/** Done/cancelled status → badge tone. */
+const DONE_TONE: Record<Exclude<TaskStatus, 'open'>, StatusTone> = {
+  completed: 'success',
+  cancelled: 'error',
 };
 
 function dueSortKey(task: CareTask): string {
@@ -106,30 +110,26 @@ export function TasksCenter({
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('tasks.disclaimer')}
-        </ThemedText>
+    <Screen>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('tasks.disclaimer')}
+      </ThemedText>
 
-        <ReminderNotice messageKey="tasks.reminderNotice" />
+      <ReminderNotice messageKey="tasks.reminderNotice" />
 
-        {canManage ? (
-          <Button label={t('tasks.add')} onPress={() => router.push('/tasks/new')} />
-        ) : null}
+      {canManage ? (
+        <Button label={t('tasks.add')} onPress={() => router.push('/tasks/new')} />
+      ) : null}
 
-        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-          {t('tasks.todayTitle')}
-        </ThemedText>
+      <Section title={t('tasks.todayTitle')}>
         {todayTasks.length === 0 ? (
           <EmptyState title={t('tasks.noTodayTitle')} subtitle={t('tasks.noTodaySubtitle')} />
         ) : (
           <View style={styles.list}>{todayTasks.map(renderRow)}</View>
         )}
+      </Section>
 
-        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-          {t('tasks.openTitle')}
-        </ThemedText>
+      <Section title={t('tasks.openTitle')}>
         {otherOpen.length === 0 ? (
           <EmptyState
             title={t('tasks.noOpenTitle')}
@@ -138,17 +138,14 @@ export function TasksCenter({
         ) : (
           <View style={styles.list}>{otherOpen.map(renderRow)}</View>
         )}
+      </Section>
 
-        {doneTasks.length > 0 ? (
-          <>
-            <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-              {t('tasks.doneTitle')}
-            </ThemedText>
-            <View style={styles.list}>{doneTasks.map(renderRow)}</View>
-          </>
-        ) : null}
-      </ScrollView>
-    </ThemedView>
+      {doneTasks.length > 0 ? (
+        <Section title={t('tasks.doneTitle')}>
+          <View style={styles.list}>{doneTasks.map(renderRow)}</View>
+        </Section>
+      ) : null}
+    </Screen>
   );
 }
 
@@ -186,15 +183,16 @@ function TaskRow({
   const showPriority = task.priority === 'high' || task.priority === 'urgent';
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
+    <Surface style={styles.card}>
       <View style={styles.cardHeader}>
-        <ThemedText style={styles.cardTitle}>{task.title}</ThemedText>
+        <ThemedText type="cardTitle" style={styles.cardTitle}>
+          {task.title}
+        </ThemedText>
         {showPriority ? (
-          <View style={[styles.badge, { borderColor: PRIORITY_COLORS[task.priority] }]}>
-            <ThemedText type="small" style={{ color: PRIORITY_COLORS[task.priority] }}>
-              {t(`tasks.priority.${task.priority}`)}
-            </ThemedText>
-          </View>
+          <StatusBadge
+            tone={PRIORITY_TONE[task.priority]}
+            label={t(`tasks.priority.${task.priority}`)}
+          />
         ) : null}
       </View>
 
@@ -206,11 +204,7 @@ function TaskRow({
       </ThemedText>
 
       {task.status !== 'open' ? (
-        <View style={[styles.badge, { borderColor: DONE_COLORS[task.status] }]}>
-          <ThemedText type="small" style={{ color: DONE_COLORS[task.status] }}>
-            {t(`tasks.status.${task.status}`)}
-          </ThemedText>
-        </View>
+        <StatusBadge tone={DONE_TONE[task.status]} label={t(`tasks.status.${task.status}`)} />
       ) : null}
 
       <View style={styles.actions}>
@@ -233,37 +227,19 @@ function TaskRow({
         ) : null}
         <Button size="sm" variant="secondary" label={t('common.details')} onPress={onOpen} />
       </View>
-    </ThemedView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  sectionTitle: { fontSize: 22, lineHeight: 30, marginTop: Spacing.two },
   list: { gap: Spacing.three },
-  card: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  card: { gap: Spacing.two },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  cardTitle: { fontSize: 18, fontWeight: '600', flexShrink: 1 },
-  badge: {
-    borderWidth: 1,
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-    alignSelf: 'flex-start',
-  },
+  cardTitle: { flexShrink: 1 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
 });

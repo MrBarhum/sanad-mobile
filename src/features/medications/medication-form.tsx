@@ -1,10 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 
-import { FormField } from '@/components/form-field';
 import { StickyFormActions } from '@/components/form-actions';
+import { FormField } from '@/components/form-field';
+import { Screen } from '@/components/screen';
+import { Section } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
@@ -97,66 +99,10 @@ export function MedicationForm({ circleId }: { circleId: string }) {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <UnsavedChangesGuard when={dirty && !submitted} />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('medications.disclaimer')}
-          </ThemedText>
-
-          <FormField
-            label={t('medications.fields.name')}
-            value={name}
-            onChangeText={setName}
-            error={medFieldError(medErrors.name)}
-          />
-          <FormField
-            label={t('medications.fields.dosage')}
-            value={dosage}
-            onChangeText={setDosage}
-            placeholder={t('medications.placeholders.dosage')}
-            error={medFieldError(medErrors.dosage)}
-          />
-          <FormField
-            label={t('medications.fields.form')}
-            value={medForm}
-            onChangeText={setMedForm}
-            placeholder={t('medications.placeholders.form')}
-            error={medFieldError(medErrors.form)}
-          />
-          <FormField
-            label={t('medications.fields.instructions')}
-            value={instructions}
-            onChangeText={setInstructions}
-            placeholder={t('medications.placeholders.instructions')}
-            multiline
-            error={medFieldError(medErrors.instructions)}
-          />
-          <View style={styles.switchRow}>
-            <ThemedText type="smallBold">{t('medications.fields.withFood')}</ThemedText>
-            <Switch
-              value={withFood}
-              onValueChange={setWithFood}
-              trackColor={{ true: theme.text, false: theme.backgroundSelected }}
-              accessibilityLabel={t('medications.fields.withFood')}
-            />
-          </View>
-
-          <ThemedView type="backgroundSelected" style={styles.divider} />
-          <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-            {t('medications.firstScheduleTitle')}
-          </ThemedText>
-
-          <ScheduleFields value={schedule} onChange={setSchedule} errors={scheduleErrors} />
-        </ScrollView>
-
+    <Screen
+      maxWidth={MaxFormWidth}
+      keyboardAvoiding
+      footer={
         <StickyFormActions
           saveLabel={t('medications.add')}
           onSave={onSubmit}
@@ -165,30 +111,65 @@ export function MedicationForm({ circleId }: { circleId: string }) {
           status={submitError ? 'error' : 'idle'}
           errorLabel={submitError ?? undefined}
         />
-      </KeyboardAvoidingView>
-    </ThemedView>
+      }>
+      <UnsavedChangesGuard when={dirty && !submitted} />
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('medications.disclaimer')}
+      </ThemedText>
+
+      <FormField
+        label={t('medications.fields.name')}
+        value={name}
+        onChangeText={setName}
+        error={medFieldError(medErrors.name)}
+      />
+      <FormField
+        label={t('medications.fields.dosage')}
+        value={dosage}
+        onChangeText={setDosage}
+        placeholder={t('medications.placeholders.dosage')}
+        error={medFieldError(medErrors.dosage)}
+      />
+      <FormField
+        label={t('medications.fields.form')}
+        value={medForm}
+        onChangeText={setMedForm}
+        placeholder={t('medications.placeholders.form')}
+        error={medFieldError(medErrors.form)}
+      />
+      <FormField
+        label={t('medications.fields.instructions')}
+        value={instructions}
+        onChangeText={setInstructions}
+        placeholder={t('medications.placeholders.instructions')}
+        multiline
+        error={medFieldError(medErrors.instructions)}
+      />
+      <View style={styles.switchRow}>
+        <ThemedText type="smallBold">{t('medications.fields.withFood')}</ThemedText>
+        <Switch
+          value={withFood}
+          onValueChange={setWithFood}
+          trackColor={{ true: theme.primary, false: theme.backgroundSelected }}
+          accessibilityLabel={t('medications.fields.withFood')}
+        />
+      </View>
+
+      <ThemedView type="border" style={styles.divider} />
+
+      <Section title={t('medications.firstScheduleTitle')}>
+        <ScheduleFields value={schedule} onChange={setSchedule} errors={scheduleErrors} />
+      </Section>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  flex: { flex: 1, width: '100%' },
-  scroll: { flex: 1, width: '100%' },
-  content: {
-    width: '100%',
-    maxWidth: MaxFormWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.five,
-    gap: Spacing.three,
-  },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.three,
   },
-  divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch', marginVertical: Spacing.one },
-  sectionTitle: { fontSize: 22, lineHeight: 30 },
+  divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch', marginTop: Spacing.one },
 });

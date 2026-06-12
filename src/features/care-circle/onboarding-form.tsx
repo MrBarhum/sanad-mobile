@@ -1,21 +1,14 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, TextInput } from 'react-native';
 
+import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxFormWidth, Spacing, TopTabInset } from '@/constants/theme';
+import { MaxFormWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { useCreateCareCircle } from './hooks';
@@ -76,114 +69,79 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
   ];
 
   return (
-    <ThemedView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-          <ScrollView
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled">
-            <ThemedView style={styles.header}>
-              <ThemedText type="title" accessibilityRole="header">
-                {t('careCircle.onboarding.title')}
-              </ThemedText>
-              <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-                {t('careCircle.onboarding.subtitle')}
-              </ThemedText>
-            </ThemedView>
+    <Screen maxWidth={MaxFormWidth} edges={{ top: true }} keyboardAvoiding>
+      <ThemedView style={styles.header}>
+        <ThemedText type="title" accessibilityRole="header">
+          {t('careCircle.onboarding.title')}
+        </ThemedText>
+        <ThemedText themeColor="textSecondary" style={styles.subtitle}>
+          {t('careCircle.onboarding.subtitle')}
+        </ThemedText>
+      </ThemedView>
 
-            <ThemedView style={styles.form}>
-              <ThemedView style={styles.field}>
-                <ThemedText type="smallBold">{t('careCircle.onboarding.circleNameLabel')}</ThemedText>
-                <TextInput
-                  value={circleName}
-                  onChangeText={setCircleName}
-                  placeholder={t('careCircle.onboarding.circleNamePlaceholder')}
-                  placeholderTextColor={theme.textSecondary}
-                  accessibilityLabel={t('careCircle.onboarding.circleNameLabel')}
-                  style={inputStyle}
-                />
-              </ThemedView>
+      <ThemedView style={styles.form}>
+        <ThemedView style={styles.field}>
+          <ThemedText type="smallBold">{t('careCircle.onboarding.circleNameLabel')}</ThemedText>
+          <TextInput
+            value={circleName}
+            onChangeText={setCircleName}
+            placeholder={t('careCircle.onboarding.circleNamePlaceholder')}
+            placeholderTextColor={theme.textSecondary}
+            accessibilityLabel={t('careCircle.onboarding.circleNameLabel')}
+            style={inputStyle}
+          />
+        </ThemedView>
 
-              <ThemedView style={styles.field}>
-                <ThemedText type="smallBold">
-                  {t('careCircle.onboarding.recipientNameLabel')}
-                </ThemedText>
-                <TextInput
-                  value={recipientName}
-                  onChangeText={setRecipientName}
-                  placeholder={t('careCircle.onboarding.recipientNamePlaceholder')}
-                  placeholderTextColor={theme.textSecondary}
-                  accessibilityLabel={t('careCircle.onboarding.recipientNameLabel')}
-                  style={inputStyle}
-                />
-              </ThemedView>
+        <ThemedView style={styles.field}>
+          <ThemedText type="smallBold">
+            {t('careCircle.onboarding.recipientNameLabel')}
+          </ThemedText>
+          <TextInput
+            value={recipientName}
+            onChangeText={setRecipientName}
+            placeholder={t('careCircle.onboarding.recipientNamePlaceholder')}
+            placeholderTextColor={theme.textSecondary}
+            accessibilityLabel={t('careCircle.onboarding.recipientNameLabel')}
+            style={inputStyle}
+          />
+        </ThemedView>
 
-              <DateField
-                label={t('careCircle.onboarding.birthDateLabel')}
-                value={birthDate}
-                onChange={setBirthDate}
-                clearable
-              />
+        <DateField
+          label={t('careCircle.onboarding.birthDateLabel')}
+          value={birthDate}
+          onChange={setBirthDate}
+          clearable
+        />
 
-              {error ? (
-                <ThemedText
-                  style={styles.error}
-                  accessibilityRole="alert"
-                  accessibilityLiveRegion="polite">
-                  {error}
-                </ThemedText>
-              ) : null}
+        {error ? (
+          <ThemedText
+            style={{ color: theme.errorFg }}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite">
+            {error}
+          </ThemedText>
+        ) : null}
 
-              <Pressable
-                onPress={onSubmit}
-                disabled={submitting}
-                accessibilityRole="button"
-                accessibilityState={{ disabled: submitting, busy: submitting }}
-                style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
-                {submitting ? (
-                  <ActivityIndicator color={theme.background} />
-                ) : (
-                  <ThemedText style={[styles.buttonLabel, { color: theme.background }]}>
-                    {t('careCircle.onboarding.submit')}
-                  </ThemedText>
-                )}
-              </Pressable>
+        <Button
+          label={t('careCircle.onboarding.submit')}
+          onPress={onSubmit}
+          loading={submitting}
+          disabled={submitting}
+          style={styles.submit}
+        />
 
-              <Pressable
-                onPress={() => router.push('/join-circle')}
-                accessibilityRole="button"
-                disabled={submitting}
-                style={({ pressed }) => [styles.joinLink, pressed && styles.pressed]}>
-                <ThemedText themeColor="textSecondary" style={styles.joinLabel}>
-                  {t('careCircle.onboarding.joinWithCode')}
-                </ThemedText>
-              </Pressable>
-            </ThemedView>
-          </ScrollView>
-        </SafeAreaView>
-      </KeyboardAvoidingView>
-    </ThemedView>
+        <Button
+          label={t('careCircle.onboarding.joinWithCode')}
+          onPress={() => router.push('/join-circle')}
+          variant="plain"
+          disabled={submitting}
+        />
+      </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  flex: { flex: 1, width: '100%' },
-  safeArea: {
-    flex: 1,
-    width: '100%',
-    maxWidth: MaxFormWidth,
-    alignSelf: 'center',
-  },
-  content: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: TopTabInset + Spacing.five,
-    paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.five,
-  },
   header: { gap: Spacing.two },
   subtitle: { fontSize: 18, lineHeight: 28 },
   form: { gap: Spacing.three },
@@ -196,17 +154,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 52,
   },
-  error: { color: '#dc2626' },
-  button: {
-    marginTop: Spacing.two,
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 52,
-  },
-  buttonLabel: { fontSize: 16, fontWeight: '600' },
-  joinLink: { alignItems: 'center', paddingVertical: Spacing.three, minHeight: 44, justifyContent: 'center' },
-  joinLabel: { fontSize: 16, fontWeight: '600', textDecorationLine: 'underline' },
-  pressed: { opacity: 0.7 },
+  submit: { marginTop: Spacing.two },
 });

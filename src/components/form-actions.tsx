@@ -8,9 +8,6 @@ import { Button } from './button';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
-const SUCCESS = '#16a34a';
-const DANGER = '#dc2626';
-
 export type FormActionsStatus = 'idle' | 'saved' | 'error';
 
 type SharedProps = {
@@ -44,11 +41,12 @@ function ActionsBody({
   onSecondary,
   saveAccessibilityHint,
 }: SharedProps) {
+  const theme = useTheme();
   return (
     <View style={styles.body}>
       {status === 'saved' && savedLabel ? (
         <ThemedText
-          style={[styles.status, { color: SUCCESS }]}
+          style={[styles.status, { color: theme.successFg }]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {savedLabel}
@@ -56,7 +54,7 @@ function ActionsBody({
       ) : null}
       {status === 'error' && errorLabel ? (
         <ThemedText
-          style={[styles.status, { color: DANGER }]}
+          style={[styles.status, { color: theme.errorFg }]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {errorLabel}

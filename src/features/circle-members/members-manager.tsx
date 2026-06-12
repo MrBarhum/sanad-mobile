@@ -1,13 +1,17 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { LtrText } from '@/components/ltr-text';
+import { Screen } from '@/components/screen';
 import { ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge } from '@/components/status-badge';
+import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import { memberErrorKey, type CircleMember, type CircleRole } from './api';
 import {
@@ -25,8 +29,6 @@ import {
 } from './permissions';
 import { RoleModal } from './role-modal';
 
-const DANGER = '#dc2626';
-
 /**
  * Circle roster with manager controls. Any active member sees the list; only
  * managers see role/status actions, and the UI hides controls the RPC would
@@ -40,6 +42,7 @@ export function MembersManager({
   actorRole: CircleRole;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const router = useRouter();
   const members = useCircleMembers(circleId);
   const updateRole = useUpdateMemberRole(circleId);
@@ -105,8 +108,8 @@ export function MembersManager({
   const busy = updateStatus.isPending || leave.isPending || transfer.isPending;
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <>
+      <Screen>
         {canManage ? (
           <View style={styles.actionsRow}>
             <Button label={t('invitations.invite')} onPress={() => router.push('/circle-members/invite')} />
@@ -119,35 +122,36 @@ export function MembersManager({
         ) : null}
 
         {actionError ? (
-          <ThemedText style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          <ThemedText
+            style={{ color: theme.errorFg }}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite">
             {actionError}
           </ThemedText>
         ) : null}
 
-        <ThemedText type="smallBold">{t('circleMembers.activeTitle')}</ThemedText>
-        <View style={styles.list}>
-          {active.map((member) => (
-            <MemberCard
-              key={member.memberId}
-              member={member}
-              members={all}
-              actorRole={actorRole}
-              viewerIsOwner={viewerIsOwner}
-              busy={busy}
-              onEditRole={() => openRoleEditor(member)}
-              onRemove={() => changeStatus(member, 'removed')}
-              onReactivate={() => changeStatus(member, 'active')}
-              onLeave={onLeave}
-              onMakeOwner={() => onMakeOwner(member)}
-            />
-          ))}
-        </View>
+        <Section title={t('circleMembers.activeTitle')}>
+          <View style={styles.list}>
+            {active.map((member) => (
+              <MemberCard
+                key={member.memberId}
+                member={member}
+                members={all}
+                actorRole={actorRole}
+                viewerIsOwner={viewerIsOwner}
+                busy={busy}
+                onEditRole={() => openRoleEditor(member)}
+                onRemove={() => changeStatus(member, 'removed')}
+                onReactivate={() => changeStatus(member, 'active')}
+                onLeave={onLeave}
+                onMakeOwner={() => onMakeOwner(member)}
+              />
+            ))}
+          </View>
+        </Section>
 
         {inactive.length > 0 ? (
-          <>
-            <ThemedText type="smallBold" style={styles.inactiveHeading}>
-              {t('circleMembers.inactiveTitle')}
-            </ThemedText>
+          <Section title={t('circleMembers.inactiveTitle')}>
             <View style={styles.list}>
               {inactive.map((member) => (
                 <MemberCard
@@ -165,9 +169,9 @@ export function MembersManager({
                 />
               ))}
             </View>
-          </>
+          </Section>
         ) : null}
-      </ScrollView>
+      </Screen>
 
       {editingRole ? (
         <RoleModal
@@ -192,7 +196,7 @@ export function MembersManager({
           }}
         />
       ) : null}
-    </ThemedView>
+    </>
   );
 }
 
@@ -234,31 +238,25 @@ function MemberCard({
     viewerIsOwner && !member.isOwner && !member.isSelf && member.status === 'active';
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
+    <Surface style={styles.card}>
       <View style={styles.cardHeader}>
-        <ThemedText style={styles.cardName}>{displayName}</ThemedText>
+        <ThemedText type="cardTitle" style={styles.cardName}>
+          {displayName}
+        </ThemedText>
         <View style={styles.badges}>
           {member.isOwner ? (
-            <ThemedView type="backgroundSelected" style={styles.badge}>
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('circleMembers.owner')}
-              </ThemedText>
-            </ThemedView>
+            <StatusBadge tone="info" label={t('circleMembers.owner')} />
           ) : null}
           {member.isSelf ? (
-            <ThemedView type="backgroundSelected" style={styles.badge}>
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('circleMembers.you')}
-              </ThemedText>
-            </ThemedView>
+            <StatusBadge tone="neutral" label={t('circleMembers.you')} />
           ) : null}
         </View>
       </View>
 
       {member.email && member.fullName ? (
-        <ThemedText type="small" themeColor="textSecondary" selectable>
+        <LtrText type="small" themeColor="textSecondary" selectable>
           {member.email}
-        </ThemedText>
+        </LtrText>
       ) : null}
 
       <View style={styles.metaRow}>
@@ -366,36 +364,23 @@ function MemberCard({
           )
         ) : null}
       </View>
-    </ThemedView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
   actionsRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
   list: { gap: Spacing.three },
-  inactiveHeading: { marginTop: Spacing.three },
-  card: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  card: { gap: Spacing.two },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  cardName: { fontSize: 18, fontWeight: '600', flexShrink: 1 },
+  cardName: { flexShrink: 1 },
   badges: { flexDirection: 'row', gap: Spacing.one, flexShrink: 0 },
-  badge: { borderRadius: Spacing.five, paddingVertical: Spacing.half, paddingHorizontal: Spacing.two },
   metaRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center', flexWrap: 'wrap' },
   note: { fontStyle: 'italic' },
   cardActions: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap', marginTop: Spacing.one },
-  error: { color: DANGER },
 });

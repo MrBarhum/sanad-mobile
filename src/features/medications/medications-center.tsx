@@ -1,13 +1,16 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { LtrText } from '@/components/ltr-text';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { ReminderNotice } from '@/features/notifications/reminder-notice';
 import { formatHm, todayYmd } from '@/utils/date';
 
@@ -15,10 +18,11 @@ import type { Medication, MedicationLogStatus } from './api';
 import { useActiveMedications, useLogDose, useTodayDoses } from './hooks';
 import type { DoseItem } from './today';
 
-const STATUS_COLORS: Record<MedicationLogStatus, string> = {
-  given: '#16a34a',
-  missed: '#dc2626',
-  postponed: '#d97706',
+/** Status → badge tone (color + a distinct glyph, never color alone). */
+const STATUS_TONE: Record<MedicationLogStatus, StatusTone> = {
+  given: 'success',
+  postponed: 'warning',
+  missed: 'error',
 };
 
 const STATUS_ORDER: MedicationLogStatus[] = ['given', 'postponed', 'missed'];
@@ -65,23 +69,24 @@ export function MedicationsCenter({
   const meds = medications.data ?? [];
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('medications.disclaimer')}
-        </ThemedText>
+    <Screen>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('medications.disclaimer')}
+      </ThemedText>
 
-        <ReminderNotice messageKey="medications.reminderNotice" />
+      <ReminderNotice messageKey="medications.reminderNotice" />
 
-        {canManage ? (
-          <Button label={t('medications.add')} onPress={() => router.push('/medications/new')} />
-        ) : null}
+      {canManage ? (
+        <Button label={t('medications.add')} onPress={() => router.push('/medications/new')} />
+      ) : null}
 
-        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-          {t('medications.todayTitle')}
-        </ThemedText>
+      <Section title={t('medications.todayTitle')}>
         {today.doses.length === 0 ? (
-          <EmptyState title={t('medications.noDosesTitle')} subtitle={t('medications.noDosesSubtitle')} />
+          <EmptyState
+            icon="💊"
+            title={t('medications.noDosesTitle')}
+            subtitle={t('medications.noDosesSubtitle')}
+          />
         ) : (
           <View style={styles.list}>
             {today.doses.map((dose) => (
@@ -95,12 +100,12 @@ export function MedicationsCenter({
             ))}
           </View>
         )}
+      </Section>
 
-        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-          {t('medications.listTitle')}
-        </ThemedText>
+      <Section title={t('medications.listTitle')}>
         {meds.length === 0 ? (
           <EmptyState
+            icon="💊"
             title={t('medications.noMedsTitle')}
             subtitle={canManage ? t('medications.noMedsSubtitle') : undefined}
           />
@@ -115,8 +120,8 @@ export function MedicationsCenter({
             ))}
           </View>
         )}
-      </ScrollView>
-    </ThemedView>
+      </Section>
+    </Screen>
   );
 }
 
@@ -132,27 +137,20 @@ function DoseCard({
   onSetStatus: (status: MedicationLogStatus) => void;
 }) {
   const { t } = useTranslation();
-
   const subtitleParts = [dose.dosage, dose.form].filter(Boolean) as string[];
 
   return (
-    <ThemedView type="backgroundElement" style={styles.doseCard}>
+    <Surface style={styles.doseCard}>
       <View style={styles.doseHeader}>
-        <ThemedText style={styles.doseTime}>{formatHm(dose.scheduledTime)}</ThemedText>
+        <LtrText style={styles.doseTime}>{formatHm(dose.scheduledTime)}</LtrText>
         {dose.status ? (
-          <View style={[styles.statusBadge, { borderColor: STATUS_COLORS[dose.status] }]}>
-            <ThemedText type="small" style={{ color: STATUS_COLORS[dose.status] }}>
-              {t(`medications.status.${dose.status}`)}
-            </ThemedText>
-          </View>
+          <StatusBadge tone={STATUS_TONE[dose.status]} label={t(`medications.status.${dose.status}`)} />
         ) : null}
       </View>
 
-      <ThemedText style={styles.doseName}>{dose.medicationName}</ThemedText>
+      <ThemedText type="cardTitle">{dose.medicationName}</ThemedText>
       {subtitleParts.length > 0 ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {subtitleParts.join(' • ')}
-        </ThemedText>
+        <ThemedText themeColor="textSecondary">{subtitleParts.join(' • ')}</ThemedText>
       ) : null}
       {dose.withFood ? (
         <ThemedText type="small" themeColor="textSecondary">
@@ -170,80 +168,49 @@ function DoseCard({
           {STATUS_ORDER.map((status) => (
             <Button
               key={status}
-              size="sm"
               variant={dose.status === status ? 'primary' : 'secondary'}
               label={t(`medications.status.${status}`)}
               disabled={pending}
               onPress={() => onSetStatus(status)}
+              style={styles.doseAction}
             />
           ))}
         </View>
       ) : null}
-    </ThemedView>
+    </Surface>
   );
 }
 
-function MedicationRow({
-  medication,
-  onPress,
-}: {
-  medication: Medication;
-  onPress: () => void;
-}) {
+function MedicationRow({ medication, onPress }: { medication: Medication; onPress: () => void }) {
   const { t } = useTranslation();
   const subtitleParts = [medication.dosage, medication.form].filter(Boolean) as string[];
 
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={medication.name}
-      style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView type="backgroundElement" style={styles.medCard}>
-        <ThemedText style={styles.medName}>{medication.name}</ThemedText>
-        {subtitleParts.length > 0 ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {subtitleParts.join(' • ')}
-          </ThemedText>
-        ) : null}
+    <Surface onPress={onPress} accessibilityLabel={medication.name} accessibilityHint={t('medications.tapToEdit')} style={styles.medCard}>
+      <ThemedText type="cardTitle">{medication.name}</ThemedText>
+      {subtitleParts.length > 0 ? (
         <ThemedText type="small" themeColor="textSecondary">
-          {t('medications.tapToEdit')}
+          {subtitleParts.join(' • ')}
         </ThemedText>
-      </ThemedView>
-    </Pressable>
+      ) : null}
+      <ThemedText type="small" themeColor="primaryText">
+        {t('medications.tapToEdit')} ›
+      </ThemedText>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  sectionTitle: { fontSize: 22, lineHeight: 30, marginTop: Spacing.two },
   list: { gap: Spacing.three },
-  doseCard: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  doseCard: { gap: Spacing.two },
   doseHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  doseTime: { fontSize: 20, fontWeight: '700' },
-  statusBadge: {
-    borderWidth: 1,
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-  },
-  doseName: { fontSize: 18, fontWeight: '600' },
-  doseActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
-  medCard: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.one },
-  medName: { fontSize: 18, fontWeight: '600' },
-  pressed: { opacity: 0.7 },
+  doseTime: { fontSize: 24, fontWeight: '800' },
+  doseActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.two },
+  doseAction: { flexGrow: 1, flexBasis: 96 },
+  medCard: { gap: Spacing.one },
 });

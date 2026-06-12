@@ -1,11 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 
+import { LtrText } from '@/components/ltr-text';
+import { Button } from '@/components/button';
+import { Screen } from '@/components/screen';
+import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
 import { CircleSwitcher } from '@/features/circle-selection/circle-switcher';
 import { CircleTimezoneCard } from '@/features/circle-selection/circle-timezone-card';
@@ -13,7 +15,6 @@ import { useCircleSelection } from '@/features/circle-selection/provider';
 import { deactivatePushToken } from '@/features/notifications/api';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { getRememberedToken } from '@/features/notifications/hooks';
-import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 
 import { supabase } from '../../../../lib/supabase';
@@ -22,7 +23,6 @@ export default function AccountScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const router = useRouter();
-  const theme = useTheme();
   const { activeCircle } = useCircleSelection();
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,80 +50,72 @@ export default function AccountScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.headerRow}>
-            <ThemedText type="subtitle" accessibilityRole="header">
-              {t('account.title')}
-            </ThemedText>
-            <NotificationBell />
-          </View>
+    <Screen edges={{ top: true }} maxWidth={MaxFormWidth}>
+      <View style={styles.headerRow}>
+        <ThemedText type="subtitle" accessibilityRole="header">
+          {t('account.title')}
+        </ThemedText>
+        <NotificationBell />
+      </View>
 
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('account.signedInAs')}
-            </ThemedText>
-            <ThemedText style={styles.email} selectable>
-              {user?.email ?? t('account.noEmail')}
-            </ThemedText>
-          </ThemedView>
+      <Surface style={styles.cardGap}>
+        <ThemedText type="small" themeColor="textSecondary">
+          {t('account.signedInAs')}
+        </ThemedText>
+        {user?.email ? (
+          <LtrText style={styles.email} selectable>
+            {user.email}
+          </LtrText>
+        ) : (
+          <ThemedText style={styles.email}>{t('account.noEmail')}</ThemedText>
+        )}
+      </Surface>
 
-          <ThemedText type="smallBold" style={styles.sectionTitle}>
-            {t('account.circleSectionTitle')}
-          </ThemedText>
+      <Section title={t('account.circleSectionTitle')}>
+        <CircleSwitcher />
 
-          <CircleSwitcher />
-
-          {activeCircle ? (
-            <LinkCard
-              title={t('circleMembers.title')}
-              subtitle={t('circleMembers.subtitle')}
-              onPress={() => router.push('/circle-members')}
-            />
-          ) : null}
-
-          {activeCircle ? <CircleTimezoneCard /> : null}
-
-          <ThemedText type="smallBold" style={styles.sectionTitle}>
-            {t('account.notificationsSectionTitle')}
-          </ThemedText>
-
+        {activeCircle ? (
           <LinkCard
-            title={t('notificationSettings.title')}
-            subtitle={t('notificationSettings.subtitle')}
-            onPress={() => router.push('/notification-settings')}
+            title={t('circleMembers.title')}
+            subtitle={t('circleMembers.subtitle')}
+            onPress={() => router.push('/circle-members')}
           />
+        ) : null}
 
-          <LinkCard
-            title={t('account.joinAnother')}
-            subtitle={t('account.joinAnotherSubtitle')}
-            onPress={() => router.push('/join-circle')}
-          />
+        {activeCircle ? <CircleTimezoneCard /> : null}
+      </Section>
 
-          {error ? (
-            <ThemedText style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
-              {error}
-            </ThemedText>
-          ) : null}
+      <Section title={t('account.notificationsSectionTitle')}>
+        <LinkCard
+          title={t('notificationSettings.title')}
+          subtitle={t('notificationSettings.subtitle')}
+          onPress={() => router.push('/notification-settings')}
+        />
 
-          <Pressable
-            onPress={onSignOut}
-            disabled={signingOut}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: signingOut, busy: signingOut }}
-            style={[styles.button, { backgroundColor: theme.text, opacity: signingOut ? 0.6 : 1 }]}>
-            {signingOut ? (
-              <ActivityIndicator color={theme.background} />
-            ) : (
-              <ThemedText style={[styles.buttonLabel, { color: theme.background }]}>
-                {t('account.signOut')}
-              </ThemedText>
-            )}
-          </Pressable>
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+        <LinkCard
+          title={t('account.joinAnother')}
+          subtitle={t('account.joinAnotherSubtitle')}
+          onPress={() => router.push('/join-circle')}
+        />
+      </Section>
+
+      {error ? (
+        <ThemedText
+          themeColor="errorFg"
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite">
+          {error}
+        </ThemedText>
+      ) : null}
+
+      <Button
+        variant="danger"
+        label={t('account.signOut')}
+        loading={signingOut}
+        disabled={signingOut}
+        onPress={onSignOut}
+      />
+    </Screen>
   );
 }
 
@@ -137,71 +129,32 @@ function LinkCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <Surface
       onPress={onPress}
-      accessibilityRole="button"
       accessibilityLabel={title}
-      style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView type="backgroundElement" style={styles.linkCard}>
-        <ThemedText style={styles.linkTitle}>{title}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {subtitle}
-        </ThemedText>
-      </ThemedView>
-    </Pressable>
+      style={styles.linkCard}>
+      <ThemedText type="cardTitle">{title}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {subtitle}
+      </ThemedText>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  safeArea: {
-    flex: 1,
-    width: '100%',
-    maxWidth: MaxFormWidth,
-  },
-  content: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.six,
-    paddingBottom: Spacing.six,
-    gap: Spacing.four,
-  },
-  card: {
-    borderRadius: Spacing.three,
-    padding: Spacing.four,
-    gap: Spacing.one,
-  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  sectionTitle: { marginTop: Spacing.two },
+  cardGap: { gap: Spacing.one },
   linkCard: {
-    borderRadius: Spacing.three,
-    padding: Spacing.four,
     gap: Spacing.one,
     minHeight: 72,
     justifyContent: 'center',
   },
-  linkTitle: { fontSize: 18, fontWeight: '600' },
   email: {
     fontSize: 16,
   },
-  error: {
-    color: '#dc2626',
-  },
-  button: {
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 52,
-    marginTop: Spacing.two,
-  },
-  buttonLabel: { fontSize: 16, fontWeight: '600' },
-  pressed: { opacity: 0.7 },
 });

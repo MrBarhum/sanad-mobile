@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { DateField } from '@/components/date-field';
 import { FormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
+import { Screen } from '@/components/screen';
 import { ErrorState, LoadingState } from '@/components/states';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { MaxFormWidth } from '@/constants/theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { fieldErrors } from '@/utils/form';
 
@@ -42,9 +43,9 @@ export function RecipientProfileForm({
   }
   if (!recipient.data) {
     return (
-      <ThemedView style={styles.centered}>
+      <Screen scroll={false} center maxWidth={MaxFormWidth}>
         <ThemedText style={styles.centeredText}>{t('recipientProfile.empty')}</ThemedText>
-      </ThemedView>
+      </Screen>
     );
   }
 
@@ -149,113 +150,91 @@ function RecipientFields({
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
-          <UnsavedChangesGuard when={canManage && dirty} />
-          {!canManage ? (
-            <ThemedView type="backgroundElement" style={styles.notice}>
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('recipientProfile.readOnly')}
-              </ThemedText>
-            </ThemedView>
-          ) : null}
+    <Screen maxWidth={MaxFormWidth} keyboardAvoiding>
+      <UnsavedChangesGuard when={canManage && dirty} />
+      {!canManage ? (
+        <Surface>
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('recipientProfile.readOnly')}
+          </ThemedText>
+        </Surface>
+      ) : null}
 
-          <FormField
-            label={t('recipientProfile.fields.fullName')}
-            value={fullName}
-            onChangeText={bind(setFullName)}
-            editable={canManage}
-            error={fieldError(errors.full_name)}
-          />
-          <DateField
-            label={t('recipientProfile.fields.birthDate')}
-            value={birthDate}
-            onChange={bind(setBirthDate)}
-            disabled={!canManage}
-            clearable
-            error={fieldError(errors.birth_date)}
-          />
-          <FormField
-            label={t('recipientProfile.fields.dialect')}
-            value={dialect}
-            onChangeText={bind(setDialect)}
-            editable={canManage}
-            placeholder={t('recipientProfile.placeholders.dialect')}
-            error={fieldError(errors.dialect)}
-          />
-          <FormField
-            label={t('recipientProfile.fields.bloodType')}
-            value={bloodType}
-            onChangeText={bind(setBloodType)}
-            editable={canManage}
-            placeholder={t('recipientProfile.placeholders.bloodType')}
-            autoCapitalize="characters"
-            error={fieldError(errors.blood_type)}
-          />
-          <FormField
-            label={t('recipientProfile.fields.allergies')}
-            value={allergies}
-            onChangeText={bind(setAllergies)}
-            editable={canManage}
-            placeholder={t('recipientProfile.placeholders.allergies')}
-            multiline
-            error={fieldError(errors.allergies)}
-          />
-          <FormField
-            label={t('recipientProfile.fields.chronicConditions')}
-            value={chronic}
-            onChangeText={bind(setChronic)}
-            editable={canManage}
-            placeholder={t('recipientProfile.placeholders.chronicConditions')}
-            multiline
-            error={fieldError(errors.chronic_conditions)}
-          />
-          <FormField
-            label={t('recipientProfile.fields.emergencyNotes')}
-            value={notes}
-            onChangeText={bind(setNotes)}
-            editable={canManage}
-            placeholder={t('recipientProfile.placeholders.emergencyNotes')}
-            multiline
-            error={fieldError(errors.emergency_notes)}
-          />
+      <FormField
+        label={t('recipientProfile.fields.fullName')}
+        value={fullName}
+        onChangeText={bind(setFullName)}
+        editable={canManage}
+        error={fieldError(errors.full_name)}
+      />
+      <DateField
+        label={t('recipientProfile.fields.birthDate')}
+        value={birthDate}
+        onChange={bind(setBirthDate)}
+        disabled={!canManage}
+        clearable
+        error={fieldError(errors.birth_date)}
+      />
+      <FormField
+        label={t('recipientProfile.fields.dialect')}
+        value={dialect}
+        onChangeText={bind(setDialect)}
+        editable={canManage}
+        placeholder={t('recipientProfile.placeholders.dialect')}
+        error={fieldError(errors.dialect)}
+      />
+      <FormField
+        label={t('recipientProfile.fields.bloodType')}
+        value={bloodType}
+        onChangeText={bind(setBloodType)}
+        editable={canManage}
+        placeholder={t('recipientProfile.placeholders.bloodType')}
+        autoCapitalize="characters"
+        error={fieldError(errors.blood_type)}
+      />
+      <FormField
+        label={t('recipientProfile.fields.allergies')}
+        value={allergies}
+        onChangeText={bind(setAllergies)}
+        editable={canManage}
+        placeholder={t('recipientProfile.placeholders.allergies')}
+        multiline
+        error={fieldError(errors.allergies)}
+      />
+      <FormField
+        label={t('recipientProfile.fields.chronicConditions')}
+        value={chronic}
+        onChangeText={bind(setChronic)}
+        editable={canManage}
+        placeholder={t('recipientProfile.placeholders.chronicConditions')}
+        multiline
+        error={fieldError(errors.chronic_conditions)}
+      />
+      <FormField
+        label={t('recipientProfile.fields.emergencyNotes')}
+        value={notes}
+        onChangeText={bind(setNotes)}
+        editable={canManage}
+        placeholder={t('recipientProfile.placeholders.emergencyNotes')}
+        multiline
+        error={fieldError(errors.emergency_notes)}
+      />
 
-          {canManage ? (
-            <FormActions
-              saveLabel={t('recipientProfile.save')}
-              onSave={onSubmit}
-              saving={submitting}
-              disabled={!dirty}
-              status={status}
-              savedLabel={t('recipientProfile.saved')}
-              errorLabel={t('recipientProfile.saveFailed')}
-            />
-          ) : null}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </ThemedView>
+      {canManage ? (
+        <FormActions
+          saveLabel={t('recipientProfile.save')}
+          onSave={onSubmit}
+          saving={submitting}
+          disabled={!dirty}
+          status={status}
+          savedLabel={t('recipientProfile.saved')}
+          errorLabel={t('recipientProfile.saveFailed')}
+        />
+      ) : null}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  flex: { flex: 1, width: '100%' },
-  content: {
-    width: '100%',
-    maxWidth: MaxFormWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  notice: { borderRadius: Spacing.two, padding: Spacing.three },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.four },
   centeredText: { textAlign: 'center' },
 });

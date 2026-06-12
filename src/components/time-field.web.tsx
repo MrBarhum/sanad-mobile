@@ -1,12 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { TimeFieldProps } from './date-time-shared';
 import { ThemedText } from './themed-text';
-
-const DANGER = '#dc2626';
 
 /**
  * Web time field: a real `<input type="time">` so the browser's accessible time
@@ -38,16 +36,16 @@ export function TimeField({
         style={{
           color: theme.text,
           backgroundColor: theme.backgroundElement,
-          borderColor: error ? DANGER : theme.backgroundSelected,
+          borderColor: error ? theme.errorFg : theme.border,
           borderWidth: 1,
           borderStyle: 'solid',
-          borderRadius: Spacing.two,
+          borderRadius: Radius.md,
           paddingTop: Spacing.three,
           paddingBottom: Spacing.three,
           paddingLeft: Spacing.three,
           paddingRight: Spacing.three,
           fontSize: 16,
-          minHeight: 52,
+          minHeight: TouchTarget.comfortable,
           width: '100%',
           boxSizing: 'border-box',
           fontFamily: 'inherit',
@@ -57,7 +55,7 @@ export function TimeField({
       {error ? (
         <ThemedText
           type="small"
-          style={styles.error}
+          style={{ color: theme.errorFg }}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {error}
@@ -69,5 +67,4 @@ export function TimeField({
 
 const styles = StyleSheet.create({
   field: { gap: Spacing.one },
-  error: { color: DANGER },
 });

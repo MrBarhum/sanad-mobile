@@ -1,11 +1,9 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import { ThemedText } from './themed-text';
-import { ThemedView } from './themed-view';
-
-const DANGER = '#dc2626';
 
 /** Days of the week, 0 = Sunday .. 6 = Saturday (matches the DB convention). */
 const DAY_INDEXES = [0, 1, 2, 3, 4, 5, 6] as const;
@@ -41,6 +39,7 @@ export function WeekdaySelector({
   label,
   error,
 }: WeekdaySelectorProps) {
+  const theme = useTheme();
   const selected = new Set(value);
   const allSelected = DAY_INDEXES.every((day) => selected.has(day));
 
@@ -74,7 +73,7 @@ export function WeekdaySelector({
       </View>
 
       {error ? (
-        <ThemedText type="small" style={styles.error} accessibilityRole="alert">
+        <ThemedText type="small" style={{ color: theme.errorFg }} accessibilityRole="alert">
           {error}
         </ThemedText>
       ) : null}
@@ -95,23 +94,28 @@ function Chip({
   onPress: () => void;
   fullWidth?: boolean;
 }) {
+  const theme = useTheme();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
       accessibilityLabel={accessibilityLabel ?? label}
-      style={({ pressed }) => [fullWidth && styles.chipFull, pressed && styles.pressed]}>
-      <ThemedView
-        type={selected ? 'backgroundSelected' : 'backgroundElement'}
-        style={[styles.chipWrap, fullWidth && styles.chipFull]}>
-        <ThemedText
-          type="small"
-          themeColor={selected ? 'text' : 'textSecondary'}
-          style={[styles.chip, selected && styles.chipSelectedText, fullWidth && styles.chipFullText]}>
-          {selected ? `✓ ${label}` : label}
-        </ThemedText>
-      </ThemedView>
+      style={({ pressed }) => [
+        styles.chipWrap,
+        fullWidth && styles.chipFull,
+        {
+          backgroundColor: selected ? theme.primaryBg : theme.backgroundElement,
+          borderColor: selected ? theme.primary : theme.border,
+        },
+        pressed && styles.pressed,
+      ]}>
+      <ThemedText
+        type="small"
+        themeColor={selected ? 'primaryText' : 'textSecondary'}
+        style={[styles.chip, selected && styles.chipSelectedText, fullWidth && styles.chipFullText]}>
+        {selected ? `✓ ${label}` : label}
+      </ThemedText>
     </Pressable>
   );
 }
@@ -120,9 +124,10 @@ const styles = StyleSheet.create({
   section: { gap: Spacing.two },
   days: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   chipWrap: {
-    minHeight: 44,
-    minWidth: 48,
-    borderRadius: Spacing.three,
+    minHeight: TouchTarget.min,
+    minWidth: TouchTarget.min,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
     justifyContent: 'center',
   },
   chipFull: { alignSelf: 'stretch' },
@@ -134,5 +139,4 @@ const styles = StyleSheet.create({
   chipSelectedText: { fontWeight: '700' },
   chipFullText: { paddingVertical: Spacing.three },
   pressed: { opacity: 0.7 },
-  error: { color: DANGER },
 });

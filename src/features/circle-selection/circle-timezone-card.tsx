@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { LtrText } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { TimezonePicker } from '@/components/timezone-picker';
 import { findTimezoneOption } from '@/constants/timezones';
 import { Spacing } from '@/constants/theme';
@@ -12,8 +13,6 @@ import { getDeviceTimezone } from '@/features/notifications/device';
 
 import { useSetCircleTimezone } from './hooks';
 import { useCircleSelection } from './provider';
-
-const DANGER = '#dc2626';
 
 /**
  * Care-circle timezone settings. The circle's timezone is the canonical zone for
@@ -69,20 +68,20 @@ export function CircleTimezoneCard() {
   const friendlyCurrent = friendlyLabel(current);
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText type="smallBold">{t('circleTimezone.title')}</ThemedText>
+    <Surface style={styles.card}>
+      <ThemedText type="cardTitle">{t('circleTimezone.title')}</ThemedText>
       <ThemedText style={styles.current}>{friendlyCurrent}</ThemedText>
       {friendlyCurrent !== current ? (
-        <ThemedText type="small" themeColor="textSecondary">
+        <LtrText type="small" themeColor="textSecondary">
           {current}
-        </ThemedText>
+        </LtrText>
       ) : null}
       <ThemedText type="small" themeColor="textSecondary">
         {t('circleTimezone.explain')}
       </ThemedText>
 
       {current === 'UTC' && activeCircle.canManage ? (
-        <ThemedText type="small" style={styles.prompt}>
+        <ThemedText type="small" themeColor="warningFg">
           {t('circleTimezone.confirmPrompt')}
         </ThemedText>
       ) : null}
@@ -128,7 +127,7 @@ export function CircleTimezoneCard() {
       )}
 
       {error ? (
-        <ThemedText type="small" style={styles.error} accessibilityRole="alert">
+        <ThemedText type="small" themeColor="errorFg" accessibilityRole="alert">
           {error}
         </ThemedText>
       ) : null}
@@ -140,14 +139,12 @@ export function CircleTimezoneCard() {
         onSelect={onPick}
         onClose={() => setPickerOpen(false)}
       />
-    </ThemedView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: Spacing.three, padding: Spacing.four, gap: Spacing.two },
+  card: { gap: Spacing.two },
   current: { fontSize: 16, fontWeight: '600' },
-  prompt: { color: '#d97706' },
   actions: { gap: Spacing.two, marginTop: Spacing.one },
-  error: { color: DANGER },
 });

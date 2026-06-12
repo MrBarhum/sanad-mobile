@@ -1,12 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { DateFieldProps } from './date-time-shared';
 import { ThemedText } from './themed-text';
-
-const DANGER = '#dc2626';
 
 /**
  * Web date field: a real `<input type="date">` so the browser's accessible date
@@ -37,16 +35,16 @@ export function DateField({
         style={{
           color: theme.text,
           backgroundColor: theme.backgroundElement,
-          borderColor: error ? DANGER : theme.backgroundSelected,
+          borderColor: error ? theme.errorFg : theme.border,
           borderWidth: 1,
           borderStyle: 'solid',
-          borderRadius: Spacing.two,
+          borderRadius: Radius.md,
           paddingTop: Spacing.three,
           paddingBottom: Spacing.three,
           paddingLeft: Spacing.three,
           paddingRight: Spacing.three,
           fontSize: 16,
-          minHeight: 52,
+          minHeight: TouchTarget.comfortable,
           width: '100%',
           boxSizing: 'border-box',
           fontFamily: 'inherit',
@@ -56,7 +54,7 @@ export function DateField({
       {error ? (
         <ThemedText
           type="small"
-          style={styles.error}
+          style={{ color: theme.errorFg }}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {error}
@@ -68,5 +66,4 @@ export function DateField({
 
 const styles = StyleSheet.create({
   field: { gap: Spacing.one },
-  error: { color: DANGER },
 });

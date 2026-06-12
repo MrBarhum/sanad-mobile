@@ -1,17 +1,11 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  TextInput,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, TextInput } from 'react-native';
 import { z } from 'zod';
 
+import { Button } from '@/components/button';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
@@ -68,100 +62,79 @@ export default function SignInScreen() {
   ];
 
   return (
-    <ThemedView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
-          <ThemedView style={styles.header}>
-            <ThemedText type="subtitle" accessibilityRole="header">
-              {t('auth.signInTitle')}
-            </ThemedText>
-            <ThemedText themeColor="textSecondary">{t('auth.signInSubtitle')}</ThemedText>
-          </ThemedView>
+    <Screen edges={{ top: true }} maxWidth={MaxFormWidth} center keyboardAvoiding gap={Spacing.five}>
+      <ThemedView style={styles.header}>
+        <ThemedText type="sectionTitle" accessibilityRole="header">
+          {t('auth.signInTitle')}
+        </ThemedText>
+        <ThemedText themeColor="textSecondary">{t('auth.signInSubtitle')}</ThemedText>
+      </ThemedView>
 
-          <ThemedView style={styles.form}>
-            <ThemedView style={styles.field}>
-              <ThemedText type="smallBold">{t('auth.email')}</ThemedText>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                inputMode="email"
-                autoComplete="email"
-                textContentType="emailAddress"
-                placeholder={t('auth.emailPlaceholder')}
-                placeholderTextColor={theme.textSecondary}
-                accessibilityLabel={t('auth.email')}
-                style={inputStyle}
-              />
-            </ThemedView>
+      <ThemedView style={styles.form}>
+        <ThemedView style={styles.field}>
+          <ThemedText type="smallBold">{t('auth.email')}</ThemedText>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            inputMode="email"
+            autoComplete="email"
+            textContentType="emailAddress"
+            placeholder={t('auth.emailPlaceholder')}
+            placeholderTextColor={theme.textSecondary}
+            accessibilityLabel={t('auth.email')}
+            style={inputStyle}
+          />
+        </ThemedView>
 
-            <ThemedView style={styles.field}>
-              <ThemedText type="smallBold">{t('auth.password')}</ThemedText>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-                secureTextEntry
-                autoComplete="current-password"
-                textContentType="password"
-                placeholder={t('auth.passwordPlaceholder')}
-                placeholderTextColor={theme.textSecondary}
-                accessibilityLabel={t('auth.password')}
-                style={inputStyle}
-              />
-            </ThemedView>
+        <ThemedView style={styles.field}>
+          <ThemedText type="smallBold">{t('auth.password')}</ThemedText>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+            secureTextEntry
+            autoComplete="current-password"
+            textContentType="password"
+            placeholder={t('auth.passwordPlaceholder')}
+            placeholderTextColor={theme.textSecondary}
+            accessibilityLabel={t('auth.password')}
+            style={inputStyle}
+          />
+        </ThemedView>
 
-            {error ? (
-              <ThemedText style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
-                {error}
-              </ThemedText>
-            ) : null}
+        {error ? (
+          <ThemedText
+            style={{ color: theme.errorFg }}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite">
+            {error}
+          </ThemedText>
+        ) : null}
 
-            <Pressable
-              onPress={onSubmit}
-              disabled={submitting}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: submitting, busy: submitting }}
-              style={[styles.button, { backgroundColor: theme.text, opacity: submitting ? 0.6 : 1 }]}>
-              {submitting ? (
-                <ActivityIndicator color={theme.background} />
-              ) : (
-                <ThemedText style={[styles.buttonLabel, { color: theme.background }]}>
-                  {t('auth.signInButton')}
-                </ThemedText>
-              )}
-            </Pressable>
-          </ThemedView>
+        <Button
+          label={t('auth.signInButton')}
+          onPress={onSubmit}
+          loading={submitting}
+          disabled={submitting}
+          style={styles.button}
+        />
+      </ThemedView>
 
-          <ThemedView style={styles.footer}>
-            <ThemedText themeColor="textSecondary">{t('auth.noAccount')}</ThemedText>
-            <Link href="/sign-up">
-              <ThemedText type="link">{t('auth.signUpLink')}</ThemedText>
-            </Link>
-          </ThemedView>
-        </SafeAreaView>
-      </KeyboardAvoidingView>
-    </ThemedView>
+      <ThemedView style={styles.footer}>
+        <ThemedText themeColor="textSecondary">{t('auth.noAccount')}</ThemedText>
+        <Link href="/sign-up">
+          <ThemedText type="link">{t('auth.signUpLink')}</ThemedText>
+        </Link>
+      </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  flex: { flex: 1 },
-  safeArea: {
-    flex: 1,
-    width: '100%',
-    maxWidth: MaxFormWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    justifyContent: 'center',
-    gap: Spacing.five,
-  },
   header: { gap: Spacing.two },
   form: { gap: Spacing.three },
   field: { gap: Spacing.one },
@@ -173,15 +146,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 52,
   },
-  error: { color: '#dc2626' },
-  button: {
-    marginTop: Spacing.two,
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 52,
-  },
-  buttonLabel: { fontSize: 16, fontWeight: '600' },
+  button: { marginTop: Spacing.two },
   footer: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
 });

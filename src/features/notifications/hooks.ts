@@ -208,6 +208,7 @@ export function usePushRegistration() {
     if (support === 'no-device') return 'no-device';
     setIsWorking(true);
     try {
+      await ensureAndroidChannel();
       const perm = await requestPermission();
       setPermission(perm);
       if (perm !== 'granted') return 'denied';

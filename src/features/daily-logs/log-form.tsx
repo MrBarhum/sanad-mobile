@@ -1,13 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 
 import { StickyFormActions } from '@/components/form-actions';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { MaxFormWidth } from '@/constants/theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
 import { useCreateDailyLog } from './hooks';
@@ -63,23 +62,10 @@ export function DailyLogForm({ circleId }: { circleId: string }) {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <UnsavedChangesGuard when={dirty && !submitted} />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('dailyLogs.disclaimer')}
-          </ThemedText>
-
-          <DailyLogFieldset draft={draft} onChange={patch} errors={errors} />
-        </ScrollView>
-
+    <Screen
+      maxWidth={MaxFormWidth}
+      keyboardAvoiding
+      footer={
         <StickyFormActions
           saveLabel={t('dailyLogs.add')}
           onSave={onSubmit}
@@ -88,22 +74,13 @@ export function DailyLogForm({ circleId }: { circleId: string }) {
           status={submitError ? 'error' : 'idle'}
           errorLabel={submitError ?? undefined}
         />
-      </KeyboardAvoidingView>
-    </ThemedView>
+      }>
+      <UnsavedChangesGuard when={dirty && !submitted} />
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('dailyLogs.disclaimer')}
+      </ThemedText>
+
+      <DailyLogFieldset draft={draft} onChange={patch} errors={errors} />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  flex: { flex: 1, width: '100%' },
-  scroll: { flex: 1, width: '100%' },
-  content: {
-    width: '100%',
-    maxWidth: MaxFormWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.five,
-    gap: Spacing.three,
-  },
-});

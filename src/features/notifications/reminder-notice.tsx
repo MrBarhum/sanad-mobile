@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 /**
  * Small tappable hint that explains reminders come from notification settings and
@@ -15,24 +16,33 @@ import { Spacing } from '@/constants/theme';
 export function ReminderNotice({ messageKey }: { messageKey: string }) {
   const { t } = useTranslation();
   const router = useRouter();
+  const theme = useTheme();
   return (
-    <Pressable
+    <Surface
+      tone="info"
       onPress={() => router.push('/notification-settings')}
-      accessibilityRole="button"
-      accessibilityLabel={t('notifications.manageLink')}>
-      <ThemedView type="backgroundElement" style={styles.card}>
-        <ThemedText type="small" themeColor="textSecondary">
-          🔔 {t(messageKey)}
+      accessibilityLabel={t('notifications.manageLink')}
+      style={styles.card}>
+      <View style={styles.row}>
+        <ThemedText style={styles.bell} accessibilityElementsHidden>
+          🔔
         </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.link}>
-          {t('notifications.manageLink')}
-        </ThemedText>
-      </ThemedView>
-    </Pressable>
+        <View style={styles.text}>
+          <ThemedText type="small" themeColor="infoFg">
+            {t(messageKey)}
+          </ThemedText>
+          <ThemedText type="smallBold" style={{ color: theme.infoFg }}>
+            {t('notifications.manageLink')} ›
+          </ThemedText>
+        </View>
+      </View>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: Spacing.three, padding: Spacing.three, gap: Spacing.half },
-  link: { fontWeight: '600' },
+  card: { padding: Spacing.three },
+  row: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start' },
+  bell: { fontSize: 18, lineHeight: 22 },
+  text: { flex: 1, gap: Spacing.half },
 });

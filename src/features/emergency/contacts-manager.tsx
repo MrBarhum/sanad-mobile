@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { ContactCard } from '@/components/contact-card';
 import { FormField } from '@/components/form-field';
 import { FormModal } from '@/components/form-modal';
 import { ItemActions } from '@/components/item-actions';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { confirmDiscard } from '@/utils/confirm';
@@ -71,8 +73,8 @@ export function EmergencyContactsManager({
   const items = contacts.data ?? [];
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <>
+      <Screen>
         {canManage ? (
           <Button label={t('emergencyContacts.add')} onPress={() => setAdding(true)} />
         ) : null}
@@ -85,7 +87,7 @@ export function EmergencyContactsManager({
         ) : (
           <View style={styles.list}>
             {items.map((contact) => (
-              <ContactCard
+              <ContactRow
                 key={contact.id}
                 contact={contact}
                 canManage={canManage}
@@ -96,7 +98,7 @@ export function EmergencyContactsManager({
             ))}
           </View>
         )}
-      </ScrollView>
+      </Screen>
 
       {modalOpen ? (
         <ContactFormModal
@@ -106,11 +108,11 @@ export function EmergencyContactsManager({
           onClose={closeModal}
         />
       ) : null}
-    </ThemedView>
+    </>
   );
 }
 
-function ContactCard({
+function ContactRow({
   contact,
   canManage,
   deleting,
@@ -126,34 +128,15 @@ function ContactCard({
   const { t } = useTranslation();
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <View style={styles.cardHeader}>
-        <ThemedText style={styles.cardName}>{contact.name}</ThemedText>
-        {contact.is_primary ? (
-          <ThemedView type="backgroundSelected" style={styles.badge}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('emergencyContacts.primaryBadge')}
-            </ThemedText>
-          </ThemedView>
-        ) : null}
-      </View>
-
-      {contact.relationship ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {contact.relationship}
-        </ThemedText>
+    <ContactCard
+      name={contact.name}
+      subtitle={contact.relationship}
+      phone={contact.phone}
+      callLabel={`${t('common.call')} ${contact.name}`}
+      notes={contact.notes}>
+      {contact.is_primary ? (
+        <StatusBadge tone="info" label={t('emergencyContacts.primaryBadge')} />
       ) : null}
-
-      <ThemedText style={styles.phone} selectable>
-        {contact.phone}
-      </ThemedText>
-
-      {contact.notes ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {contact.notes}
-        </ThemedText>
-      ) : null}
-
       {canManage ? (
         <ItemActions
           deleting={deleting}
@@ -167,7 +150,7 @@ function ContactCard({
           }}
         />
       ) : null}
-    </ThemedView>
+    </ContactCard>
   );
 }
 
@@ -301,7 +284,7 @@ function ContactFormModal({
         <Switch
           value={isPrimary}
           onValueChange={setIsPrimary}
-          trackColor={{ true: theme.text, false: theme.backgroundSelected }}
+          trackColor={{ true: theme.primary, false: theme.backgroundSelected }}
           accessibilityLabel={t('emergencyContacts.fields.isPrimary')}
         />
       </View>
@@ -318,31 +301,7 @@ function ContactFormModal({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
   list: { gap: Spacing.three },
-  card: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-  },
-  cardName: { fontSize: 18, fontWeight: '600', flexShrink: 1 },
-  badge: {
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-  },
-  phone: { fontSize: 16 },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',

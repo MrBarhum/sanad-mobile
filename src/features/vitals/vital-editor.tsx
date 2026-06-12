@@ -1,13 +1,15 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FormActions } from '@/components/form-actions';
+import { isolateLtr } from '@/components/ltr-text';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -48,9 +50,9 @@ export function VitalEditor({
   }
   if (!vital.data) {
     return (
-      <ThemedView style={styles.centered}>
+      <Screen scroll={false} center>
         <EmptyState title={t('vitals.notFound')} />
-      </ThemedView>
+      </Screen>
     );
   }
 
@@ -58,17 +60,15 @@ export function VitalEditor({
   const canEdit = canManage || (canCollaborate && isOwner);
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {canEdit ? (
-          <VitalEditFields key={vital.data.id} circleId={circleId} initial={vital.data} />
-        ) : (
-          <ReadOnlyVital reading={vital.data} />
-        )}
+    <Screen maxWidth={MaxContentWidth}>
+      {canEdit ? (
+        <VitalEditFields key={vital.data.id} circleId={circleId} initial={vital.data} />
+      ) : (
+        <ReadOnlyVital reading={vital.data} />
+      )}
 
-        {canEdit ? <DeleteVitalRow circleId={circleId} id={vital.data.id} /> : null}
-      </ScrollView>
-    </ThemedView>
+      {canEdit ? <DeleteVitalRow circleId={circleId} id={vital.data.id} /> : null}
+    </Screen>
   );
 }
 
@@ -125,16 +125,16 @@ function VitalEditFields({ circleId, initial }: { circleId: string; initial: Vit
 function ReadOnlyVital({ reading }: { reading: VitalReading }) {
   const { t } = useTranslation();
   const value = formatVitalValue(reading);
-  const when = `${ymdFromInstant(reading.reading_at)} ${hmFromInstant(reading.reading_at)}`;
+  const when = isolateLtr(`${ymdFromInstant(reading.reading_at)} ${hmFromInstant(reading.reading_at)}`);
 
   return (
     <View style={styles.fields}>
-      <ThemedView type="backgroundElement" style={styles.notice}>
+      <Surface tone="sunken">
         <ThemedText type="small" themeColor="textSecondary">
           {t('vitals.readOnly')}
         </ThemedText>
-      </ThemedView>
-      <ThemedText style={styles.readName}>{t(`vitals.type.${reading.reading_type}`)}</ThemedText>
+      </Surface>
+      <ThemedText type="sectionTitle">{t(`vitals.type.${reading.reading_type}`)}</ThemedText>
       <InfoRow label={t('vitals.fields.readingAt')} value={when} />
       {value ? <InfoRow label={t('vitals.valueLabel')} value={value} /> : null}
       {reading.notes ? <InfoRow label={t('vitals.fields.notes')} value={reading.notes} /> : null}
@@ -195,20 +195,7 @@ function DeleteVitalRow({ circleId, id }: { circleId: string; id: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   fields: { gap: Spacing.three },
-  notice: { borderRadius: Spacing.two, padding: Spacing.three },
-  readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
   infoValue: { fontSize: 16, lineHeight: 24 },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },

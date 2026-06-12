@@ -1,15 +1,15 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
 import { StickyFormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
 import { OptionSelect, type SelectOption } from '@/components/option-select';
+import { Screen } from '@/components/screen';
 import { TimeField } from '@/components/time-field';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -117,84 +117,10 @@ export function TaskForm({ circleId }: { circleId: string }) {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <UnsavedChangesGuard when={dirty && !submitted} />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('tasks.disclaimer')}
-          </ThemedText>
-
-          <FormField
-            label={t('tasks.fields.title')}
-            value={title}
-            onChangeText={setTitle}
-            placeholder={t('tasks.placeholders.title')}
-            error={fieldError(errors.title)}
-          />
-          <FormField
-            label={t('tasks.fields.description')}
-            value={description}
-            onChangeText={setDescription}
-            placeholder={t('tasks.placeholders.description')}
-            multiline
-            error={fieldError(errors.description)}
-          />
-
-          <OptionSelect
-            label={t('tasks.fields.category')}
-            value={category}
-            options={categoryOptions}
-            onChange={setCategory}
-          />
-          <OptionSelect
-            label={t('tasks.fields.priority')}
-            value={priority}
-            options={priorityOptions}
-            onChange={setPriority}
-          />
-
-          <DateField
-            label={t('tasks.fields.dueDate')}
-            value={dueDate}
-            onChange={setDueDate}
-            clearable
-            error={fieldError(errors.due_date)}
-          />
-          <TimeField
-            label={t('tasks.fields.dueTime')}
-            value={dueTime}
-            onChange={setDueTime}
-            clearable
-            error={fieldError(errors.due_time)}
-          />
-
-          <View style={styles.switchRow}>
-            <ThemedText type="smallBold">{t('tasks.fields.assignToMe')}</ThemedText>
-            <Switch
-              value={assignToMe}
-              onValueChange={setAssignToMe}
-              trackColor={{ true: theme.text, false: theme.backgroundSelected }}
-              accessibilityLabel={t('tasks.fields.assignToMe')}
-            />
-          </View>
-
-          <FormField
-            label={t('tasks.fields.notes')}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder={t('tasks.placeholders.notes')}
-            multiline
-            error={fieldError(errors.notes)}
-          />
-        </ScrollView>
-
+    <Screen
+      maxWidth={MaxFormWidth}
+      keyboardAvoiding
+      footer={
         <StickyFormActions
           saveLabel={t('tasks.add')}
           onSave={onSubmit}
@@ -203,24 +129,79 @@ export function TaskForm({ circleId }: { circleId: string }) {
           status={submitError ? 'error' : 'idle'}
           errorLabel={submitError ?? undefined}
         />
-      </KeyboardAvoidingView>
-    </ThemedView>
+      }>
+      <UnsavedChangesGuard when={dirty && !submitted} />
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('tasks.disclaimer')}
+      </ThemedText>
+
+      <FormField
+        label={t('tasks.fields.title')}
+        value={title}
+        onChangeText={setTitle}
+        placeholder={t('tasks.placeholders.title')}
+        error={fieldError(errors.title)}
+      />
+      <FormField
+        label={t('tasks.fields.description')}
+        value={description}
+        onChangeText={setDescription}
+        placeholder={t('tasks.placeholders.description')}
+        multiline
+        error={fieldError(errors.description)}
+      />
+
+      <OptionSelect
+        label={t('tasks.fields.category')}
+        value={category}
+        options={categoryOptions}
+        onChange={setCategory}
+      />
+      <OptionSelect
+        label={t('tasks.fields.priority')}
+        value={priority}
+        options={priorityOptions}
+        onChange={setPriority}
+      />
+
+      <DateField
+        label={t('tasks.fields.dueDate')}
+        value={dueDate}
+        onChange={setDueDate}
+        clearable
+        error={fieldError(errors.due_date)}
+      />
+      <TimeField
+        label={t('tasks.fields.dueTime')}
+        value={dueTime}
+        onChange={setDueTime}
+        clearable
+        error={fieldError(errors.due_time)}
+      />
+
+      <View style={styles.switchRow}>
+        <ThemedText type="smallBold">{t('tasks.fields.assignToMe')}</ThemedText>
+        <Switch
+          value={assignToMe}
+          onValueChange={setAssignToMe}
+          trackColor={{ true: theme.primary, false: theme.backgroundSelected }}
+          accessibilityLabel={t('tasks.fields.assignToMe')}
+        />
+      </View>
+
+      <FormField
+        label={t('tasks.fields.notes')}
+        value={notes}
+        onChangeText={setNotes}
+        placeholder={t('tasks.placeholders.notes')}
+        multiline
+        error={fieldError(errors.notes)}
+      />
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  flex: { flex: 1, width: '100%' },
-  scroll: { flex: 1, width: '100%' },
-  content: {
-    width: '100%',
-    maxWidth: MaxFormWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.five,
-    gap: Spacing.three,
-  },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -17,7 +17,6 @@ import {
 import { PickerSheet, WheelColumn } from './picker-sheet';
 import { ThemedText } from './themed-text';
 
-const DANGER = '#dc2626';
 const MIN_YEAR_OFFSET = 120;
 const MAX_YEAR_OFFSET = 5;
 
@@ -85,7 +84,7 @@ export function DateField({
           styles.trigger,
           {
             backgroundColor: theme.backgroundElement,
-            borderColor: error ? DANGER : theme.backgroundSelected,
+            borderColor: error ? theme.errorFg : theme.border,
             opacity: disabled ? 0.6 : 1,
           },
         ]}>
@@ -97,7 +96,7 @@ export function DateField({
       {error ? (
         <ThemedText
           type="small"
-          style={styles.error}
+          style={{ color: theme.errorFg }}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {error}
@@ -155,6 +154,5 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   triggerText: { fontSize: 16 },
-  error: { color: DANGER },
   columns: { flexDirection: 'row', gap: Spacing.two },
 });

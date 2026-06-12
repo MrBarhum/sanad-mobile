@@ -1,15 +1,17 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FormActions } from '@/components/form-actions';
+import { LtrText } from '@/components/ltr-text';
+import { Screen } from '@/components/screen';
+import { Surface } from '@/components/surface';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 
@@ -52,9 +54,9 @@ export function DailyLogEditor({
   }
   if (!log.data) {
     return (
-      <ThemedView style={styles.centered}>
+      <Screen scroll={false} center>
         <EmptyState title={t('dailyLogs.notFound')} />
-      </ThemedView>
+      </Screen>
     );
   }
 
@@ -62,17 +64,15 @@ export function DailyLogEditor({
   const canEdit = canManage || (canCollaborate && isOwner);
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {canEdit ? (
-          <DailyLogEditFields key={log.data.id} circleId={circleId} initial={log.data} />
-        ) : (
-          <ReadOnlyLog log={log.data} />
-        )}
+    <Screen>
+      {canEdit ? (
+        <DailyLogEditFields key={log.data.id} circleId={circleId} initial={log.data} />
+      ) : (
+        <ReadOnlyLog log={log.data} />
+      )}
 
-        {canEdit ? <DeleteLogRow circleId={circleId} id={log.data.id} /> : null}
-      </ScrollView>
-    </ThemedView>
+      {canEdit ? <DeleteLogRow circleId={circleId} id={log.data.id} /> : null}
+    </Screen>
   );
 }
 
@@ -133,12 +133,12 @@ function ReadOnlyLog({ log }: { log: DailyCareLog }) {
 
   return (
     <View style={styles.fields}>
-      <ThemedView type="backgroundElement" style={styles.notice}>
+      <Surface tone="sunken">
         <ThemedText type="small" themeColor="textSecondary">
           {t('dailyLogs.readOnly')}
         </ThemedText>
-      </ThemedView>
-      <ThemedText style={styles.readName}>{log.log_date}</ThemedText>
+      </Surface>
+      <LtrText type="sectionTitle">{log.log_date}</LtrText>
       {details.map((detail) => (
         <InfoRow key={detail.key} label={detail.label} value={detail.value} />
       ))}
@@ -207,20 +207,7 @@ function DeleteLogRow({ circleId, id }: { circleId: string; id: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   fields: { gap: Spacing.three },
-  notice: { borderRadius: Spacing.two, padding: Spacing.three },
-  readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
   infoValue: { fontSize: 16, lineHeight: 24 },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },

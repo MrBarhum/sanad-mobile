@@ -1,15 +1,18 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FormActions } from '@/components/form-actions';
+import { Screen } from '@/components/screen';
+import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import type { Doctor } from '@/features/doctors/api';
 import { useDoctors } from '@/features/doctors/hooks';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -28,6 +31,12 @@ import {
   useSetAppointmentStatus,
   useUpdateAppointment,
 } from './hooks';
+
+const STATUS_TONE: Record<AppointmentStatus, StatusTone> = {
+  scheduled: 'info',
+  completed: 'success',
+  cancelled: 'error',
+};
 
 /** Loads an appointment, then renders the view/edit screen. */
 export function AppointmentEditor({
@@ -55,37 +64,31 @@ export function AppointmentEditor({
   }
   if (!appointment.data) {
     return (
-      <ThemedView style={styles.centered}>
+      <Screen scroll={false} center>
         <EmptyState title={t('appointments.notFound')} />
-      </ThemedView>
+      </Screen>
     );
   }
 
   const doctors = doctorsQuery.data ?? [];
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {canManage ? (
-          <AppointmentEditFields
-            key={appointment.data.id}
-            circleId={circleId}
-            initial={appointment.data}
-            doctors={doctors}
-          />
-        ) : (
-          <ReadOnlyAppointment appointment={appointment.data} doctors={doctors} />
-        )}
-
-        <StatusSection
+    <Screen>
+      {canManage ? (
+        <AppointmentEditFields
+          key={appointment.data.id}
           circleId={circleId}
-          appointment={appointment.data}
-          canManage={canManage}
+          initial={appointment.data}
+          doctors={doctors}
         />
+      ) : (
+        <ReadOnlyAppointment appointment={appointment.data} doctors={doctors} />
+      )}
 
-        {canManage ? <DeleteAppointmentRow circleId={circleId} id={appointment.data.id} /> : null}
-      </ScrollView>
-    </ThemedView>
+      <StatusSection circleId={circleId} appointment={appointment.data} canManage={canManage} />
+
+      {canManage ? <DeleteAppointmentRow circleId={circleId} id={appointment.data.id} /> : null}
+    </Screen>
   );
 }
 
@@ -156,20 +159,22 @@ function ReadOnlyAppointment({
 }) {
   const { t } = useTranslation();
   const when = appointment.ends_at
-    ? `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} – ${hmFromInstant(appointment.ends_at)}`
-    : `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)}`;
+    ? isolateLtr(
+        `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} – ${hmFromInstant(appointment.ends_at)}`,
+      )
+    : isolateLtr(`${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)}`);
   const doctorName = appointment.doctor_id
     ? (doctors.find((doctor) => doctor.id === appointment.doctor_id)?.name ?? null)
     : null;
 
   return (
     <View style={styles.fields}>
-      <ThemedView type="backgroundElement" style={styles.notice}>
+      <Surface tone="sunken">
         <ThemedText type="small" themeColor="textSecondary">
           {t('appointments.readOnly')}
         </ThemedText>
-      </ThemedView>
-      <ThemedText style={styles.readName}>{appointment.title}</ThemedText>
+      </Surface>
+      <ThemedText type="sectionTitle">{appointment.title}</ThemedText>
       <InfoRow
         label={t('appointments.fields.type')}
         value={t(`appointments.type.${appointment.appointment_type}`)}
@@ -220,10 +225,14 @@ function StatusSection({
   }
 
   return (
-    <ThemedView type="backgroundElement" style={styles.statusCard}>
-      <ThemedText type="smallBold">
-        {t('appointments.fields.status')}: {t(`appointments.status.${appointment.status}`)}
-      </ThemedText>
+    <Surface style={styles.statusCard}>
+      <View style={styles.statusHeader}>
+        <ThemedText type="smallBold">{t('appointments.fields.status')}</ThemedText>
+        <StatusBadge
+          tone={STATUS_TONE[appointment.status]}
+          label={t(`appointments.status.${appointment.status}`)}
+        />
+      </View>
 
       {canManage ? (
         <View style={styles.actions}>
@@ -256,7 +265,7 @@ function StatusSection({
           )}
         </View>
       ) : null}
-    </ThemedView>
+    </Surface>
   );
 }
 
@@ -306,23 +315,16 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   fields: { gap: Spacing.three },
-  notice: { borderRadius: Spacing.two, padding: Spacing.three },
-  readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
   infoValue: { fontSize: 16, lineHeight: 24 },
-  statusCard: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  statusCard: { gap: Spacing.two },
+  statusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
 });

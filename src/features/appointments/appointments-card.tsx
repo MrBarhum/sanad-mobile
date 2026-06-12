@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 
 import { useTodayAppointmentSummary } from './hooks';
@@ -21,32 +21,21 @@ export function AppointmentsCard({ circleId }: { circleId: string }) {
       : t('appointments.summary.count', { count });
 
   return (
-    <Pressable
+    <Surface
       onPress={() => router.push('/appointments')}
-      accessibilityRole="button"
       accessibilityLabel={t('careCircle.dashboard.sections.appointments.title')}
-      style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView type="backgroundElement" style={styles.card}>
-        <ThemedText style={styles.cardTitle}>
-          {t('careCircle.dashboard.sections.appointments.title')}
-        </ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
-          {subtitle}
-        </ThemedText>
-      </ThemedView>
-    </Pressable>
+      style={styles.card}>
+      <ThemedText type="cardTitle">
+        {t('careCircle.dashboard.sections.appointments.title')}
+      </ThemedText>
+      <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
+        {subtitle}
+      </ThemedText>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
-    gap: Spacing.two,
-    minHeight: 96,
-    justifyContent: 'center',
-  },
-  cardTitle: { fontSize: 20, lineHeight: 28, fontWeight: '600', flexShrink: 1 },
+  card: { gap: Spacing.two, minHeight: 96, justifyContent: 'center' },
   cardSubtitle: { fontSize: 16, lineHeight: 24 },
-  pressed: { opacity: 0.7 },
 });

@@ -1,23 +1,32 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { ymdFromInstant } from '@/utils/date';
 
-import type { InvitationListItem } from './api';
+import type { InvitationListItem, InvitationStatus } from './api';
 import { useCircleInvitations, useRevokeInvitation } from './hooks';
 
-const DANGER = '#dc2626';
+const STATUS_TONE: Record<InvitationStatus, StatusTone> = {
+  pending: 'info',
+  accepted: 'success',
+  revoked: 'error',
+  expired: 'warning',
+};
 
 /** Manager view of a circle's invitations with revoke for pending ones. */
 export function InvitationsList({ circleId }: { circleId: string }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const router = useRouter();
   const invitations = useCircleInvitations(circleId);
   const revoke = useRevokeInvitation(circleId);
@@ -46,35 +55,36 @@ export function InvitationsList({ circleId }: { circleId: string }) {
   const items = invitations.data ?? [];
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Button label={t('invitations.invite')} onPress={() => router.push('/circle-members/invite')} />
+    <Screen>
+      <Button label={t('invitations.invite')} onPress={() => router.push('/circle-members/invite')} />
 
-        {error ? (
-          <ThemedText style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
-            {error}
-          </ThemedText>
-        ) : null}
+      {error ? (
+        <ThemedText
+          style={{ color: theme.errorFg }}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite">
+          {error}
+        </ThemedText>
+      ) : null}
 
-        {items.length === 0 ? (
-          <EmptyState
-            title={t('invitations.emptyTitle')}
-            subtitle={t('invitations.emptySubtitle')}
-          />
-        ) : (
-          <View style={styles.list}>
-            {items.map((item) => (
-              <InvitationCard
-                key={item.id}
-                item={item}
-                revoking={revoke.isPending}
-                onRevoke={() => onRevoke(item.id)}
-              />
-            ))}
-          </View>
-        )}
-      </ScrollView>
-    </ThemedView>
+      {items.length === 0 ? (
+        <EmptyState
+          title={t('invitations.emptyTitle')}
+          subtitle={t('invitations.emptySubtitle')}
+        />
+      ) : (
+        <View style={styles.list}>
+          {items.map((item) => (
+            <InvitationCard
+              key={item.id}
+              item={item}
+              revoking={revoke.isPending}
+              onRevoke={() => onRevoke(item.id)}
+            />
+          ))}
+        </View>
+      )}
+    </Screen>
   );
 }
 
@@ -91,16 +101,12 @@ function InvitationCard({
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
+    <Surface style={styles.card}>
       <View style={styles.cardHeader}>
-        <ThemedText style={styles.cardTitle}>
+        <ThemedText type="cardTitle" style={styles.cardTitle}>
           {item.invitedName?.trim() || t(`circleMembers.roles.${item.role}`)}
         </ThemedText>
-        <ThemedView type="backgroundSelected" style={styles.badge}>
-          <ThemedText type="small" themeColor="textSecondary">
-            {t(`invitations.status.${item.status}`)}
-          </ThemedText>
-        </ThemedView>
+        <StatusBadge tone={STATUS_TONE[item.status]} label={t(`invitations.status.${item.status}`)} />
       </View>
 
       <ThemedText type="small" themeColor="textSecondary">
@@ -158,31 +164,19 @@ function InvitationCard({
           </View>
         )
       ) : null}
-    </ThemedView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
   list: { gap: Spacing.three },
-  card: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  card: { gap: Spacing.two },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  cardTitle: { fontSize: 18, fontWeight: '600', flexShrink: 1 },
-  badge: { borderRadius: Spacing.five, paddingVertical: Spacing.half, paddingHorizontal: Spacing.two },
+  cardTitle: { flexShrink: 1 },
   actions: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap', marginTop: Spacing.one },
-  error: { color: DANGER },
 });

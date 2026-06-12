@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { LtrText, isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { formatHm } from '@/utils/date';
 
@@ -62,14 +63,14 @@ export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[]
   }
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText type="smallBold">{t('medications.summary.weeklyTitle')}</ThemedText>
+    <Surface style={styles.card}>
+      <ThemedText type="cardTitle">{t('medications.summary.weeklyTitle')}</ThemedText>
 
       {groups.map((group, index) => (
         <ThemedText key={index} type="small">
           {t('medications.summary.line', {
             days: daysLabel(group.days),
-            times: group.times.join('، '),
+            times: isolateLtr(group.times.join('، ')),
           })}
         </ThemedText>
       ))}
@@ -90,19 +91,25 @@ export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[]
               <ThemedText type="small" style={styles.perDayName}>
                 {t(`medications.weekdays.${WEEKDAY_KEYS[day]}`)}
               </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.perDayTimes}>
-                {times.length ? times.join('، ') : t('medications.summary.perDayNone')}
-              </ThemedText>
+              {times.length ? (
+                <LtrText type="small" themeColor="textSecondary" style={styles.perDayTimes}>
+                  {times.join('، ')}
+                </LtrText>
+              ) : (
+                <ThemedText type="small" themeColor="textSecondary" style={styles.perDayTimes}>
+                  {t('medications.summary.perDayNone')}
+                </ThemedText>
+              )}
             </View>
           ))}
         </View>
       ) : null}
-    </ThemedView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: Spacing.three, padding: Spacing.four, gap: Spacing.two },
+  card: { gap: Spacing.two },
   toggle: { textDecorationLine: 'underline', marginTop: Spacing.one },
   perDay: { gap: Spacing.one, marginTop: Spacing.one },
   perDayRow: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.three },

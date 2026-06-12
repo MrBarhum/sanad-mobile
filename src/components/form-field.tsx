@@ -1,11 +1,9 @@
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { ThemedText } from './themed-text';
-
-const DANGER = '#dc2626';
 
 type FormFieldProps = TextInputProps & {
   label?: string;
@@ -35,7 +33,7 @@ export function FormField({ label, error, style, multiline, ...rest }: FormField
           {
             color: theme.text,
             backgroundColor: theme.backgroundElement,
-            borderColor: error ? DANGER : theme.backgroundSelected,
+            borderColor: error ? theme.errorFg : theme.border,
           },
           style,
         ]}
@@ -44,7 +42,7 @@ export function FormField({ label, error, style, multiline, ...rest }: FormField
       {error ? (
         <ThemedText
           type="small"
-          style={styles.error}
+          style={{ color: theme.errorFg }}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {error}
@@ -58,12 +56,11 @@ const styles = StyleSheet.create({
   field: { gap: Spacing.one },
   input: {
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     fontSize: 16,
-    minHeight: 52,
+    minHeight: TouchTarget.comfortable,
   },
   multiline: { minHeight: 104, paddingTop: Spacing.three, textAlignVertical: 'top' },
-  error: { color: DANGER },
 });

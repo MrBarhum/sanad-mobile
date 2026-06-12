@@ -10,11 +10,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TIMEZONES, type TimezoneOption } from '@/constants/timezones';
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { LtrText } from './ltr-text';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -65,6 +67,7 @@ export function TimezonePicker({
 }) {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -78,16 +81,17 @@ export function TimezonePicker({
       <KeyboardAvoidingView
         style={styles.backdrop}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ThemedView style={styles.sheet}>
+        <ThemedView style={[styles.sheet, { borderColor: theme.border }]}>
           <View style={styles.header}>
-            <ThemedText type="subtitle" style={styles.title} accessibilityRole="header">
+            <ThemedText type="sectionTitle" style={styles.title} accessibilityRole="header">
               {t('circleTimezone.pickerTitle')}
             </ThemedText>
             <Pressable
               onPress={onClose}
               accessibilityRole="button"
               accessibilityLabel={t('common.close')}
-              hitSlop={Spacing.two}>
+              hitSlop={Spacing.two}
+              style={styles.closeButton}>
               <ThemedText style={styles.close}>✕</ThemedText>
             </Pressable>
           </View>
@@ -102,12 +106,12 @@ export function TimezonePicker({
             accessibilityLabel={t('circleTimezone.searchPlaceholder')}
             style={[
               styles.search,
-              { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.backgroundSelected },
+              { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.border },
             ]}
           />
 
           <ScrollView
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[styles.list, { paddingBottom: Spacing.five + insets.bottom }]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled">
             {/* This device shortcut */}
@@ -160,28 +164,34 @@ function Row({
   currentLabel?: string;
   onPress: () => void;
 }) {
+  const theme = useTheme();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      style={({ pressed }) => [pressed && styles.pressed]}>
-      <ThemedView
-        type={selected ? 'backgroundSelected' : 'backgroundElement'}
-        style={styles.row}>
-        <View style={styles.rowText}>
-          <ThemedText style={styles.rowPrimary}>{primary}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {secondary}
-          </ThemedText>
-        </View>
-        {currentLabel ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {currentLabel}
-          </ThemedText>
-        ) : null}
-        {selected ? <ThemedText style={styles.check}>✓</ThemedText> : null}
-      </ThemedView>
+      style={({ pressed }) => [
+        styles.row,
+        {
+          backgroundColor: selected ? theme.primaryBg : theme.backgroundElement,
+          borderColor: selected ? theme.primary : theme.border,
+        },
+        pressed && styles.pressed,
+      ]}>
+      <View style={styles.rowText}>
+        <ThemedText style={styles.rowPrimary}>{primary}</ThemedText>
+        <LtrText type="small" themeColor="textSecondary">
+          {secondary}
+        </LtrText>
+      </View>
+      {currentLabel ? (
+        <ThemedText type="small" themeColor="primaryText">
+          {currentLabel}
+        </ThemedText>
+      ) : null}
+      {selected ? (
+        <ThemedText style={[styles.check, { color: theme.primaryText }]}>✓</ThemedText>
+      ) : null}
     </Pressable>
   );
 }
@@ -192,9 +202,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MaxFormWidth,
     alignSelf: 'center',
-    borderTopLeftRadius: Spacing.four,
-    borderTopRightRadius: Spacing.four,
-    maxHeight: '90%',
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
+    borderWidth: StyleSheet.hairlineWidth,
+    maxHeight: '92%',
     paddingTop: Spacing.four,
   },
   header: {
@@ -204,19 +215,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     gap: Spacing.three,
   },
-  title: { fontSize: 24, lineHeight: 32, flexShrink: 1 },
-  close: { fontSize: 20, fontWeight: '600', padding: Spacing.one },
+  title: { flexShrink: 1 },
+  closeButton: {
+    minWidth: TouchTarget.min,
+    minHeight: TouchTarget.min,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  close: { fontSize: 20, fontWeight: '600' },
   search: {
     marginHorizontal: Spacing.four,
     marginTop: Spacing.three,
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     fontSize: 16,
-    minHeight: 52,
+    minHeight: TouchTarget.comfortable,
   },
-  list: { paddingHorizontal: Spacing.four, paddingTop: Spacing.three, paddingBottom: Spacing.five, gap: Spacing.two },
+  list: { paddingHorizontal: Spacing.four, paddingTop: Spacing.three, gap: Spacing.two },
   sectionLabel: { marginTop: Spacing.two },
   empty: { paddingVertical: Spacing.three },
   pressed: { opacity: 0.7 },
@@ -226,7 +243,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.three,
     minHeight: 56,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
   },

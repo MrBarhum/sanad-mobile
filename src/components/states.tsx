@@ -1,18 +1,24 @@
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Button } from './button';
+import { Surface } from './surface';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 /** Full-area centered spinner for a screen/section that is loading. */
-export function LoadingState() {
+export function LoadingState({ label }: { label?: string }) {
   const theme = useTheme();
   return (
     <ThemedView style={styles.centered}>
-      <ActivityIndicator color={theme.text} />
+      <ActivityIndicator color={theme.primary} size="large" />
+      {label ? (
+        <ThemedText themeColor="textSecondary" accessibilityRole="text">
+          {label}
+        </ThemedText>
+      ) : null}
     </ThemedView>
   );
 }
@@ -27,8 +33,12 @@ export function ErrorState({
   retryLabel: string;
   onRetry: () => void;
 }) {
+  const theme = useTheme();
   return (
     <ThemedView style={styles.centered}>
+      <View style={[styles.iconCircle, { borderColor: theme.errorFg }]}>
+        <ThemedText style={[styles.iconGlyph, { color: theme.errorFg }]}>!</ThemedText>
+      </View>
       <ThemedText style={styles.message} accessibilityRole="alert">
         {message}
       </ThemedText>
@@ -37,17 +47,29 @@ export function ErrorState({
   );
 }
 
-/** Centered empty-state message (e.g. an empty list). */
-export function EmptyState({ title, subtitle }: { title: string; subtitle?: string }) {
+/** Centered empty-state card (e.g. an empty list). */
+export function EmptyState({
+  title,
+  subtitle,
+  icon,
+}: {
+  title: string;
+  subtitle?: string;
+  /** Optional decorative glyph above the title. */
+  icon?: string;
+}) {
   return (
-    <ThemedView type="backgroundElement" style={styles.empty}>
-      <ThemedText style={styles.emptyTitle}>{title}</ThemedText>
+    <Surface tone="card" style={styles.empty}>
+      {icon ? <ThemedText style={styles.emptyIcon}>{icon}</ThemedText> : null}
+      <ThemedText type="cardTitle" style={styles.centerText}>
+        {title}
+      </ThemedText>
       {subtitle ? (
-        <ThemedText type="small" themeColor="textSecondary" style={styles.emptySubtitle}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
           {subtitle}
         </ThemedText>
       ) : null}
-    </ThemedView>
+    </Surface>
   );
 }
 
@@ -61,11 +83,20 @@ const styles = StyleSheet.create({
   },
   message: { textAlign: 'center' },
   empty: {
-    borderRadius: Spacing.four,
-    padding: Spacing.five,
+    paddingVertical: Spacing.five,
+    paddingHorizontal: Spacing.four,
     gap: Spacing.two,
     alignItems: 'center',
   },
-  emptyTitle: { fontSize: 18, fontWeight: '600', textAlign: 'center' },
-  emptySubtitle: { textAlign: 'center' },
+  emptyIcon: { fontSize: 40, lineHeight: 48 },
+  centerText: { textAlign: 'center' },
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: Radius.pill,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconGlyph: { fontSize: 28, fontWeight: '800' },
 });

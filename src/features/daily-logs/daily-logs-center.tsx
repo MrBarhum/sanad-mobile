@@ -1,12 +1,14 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { LtrText } from '@/components/ltr-text';
+import { Screen } from '@/components/screen';
+import { Section, Surface } from '@/components/surface';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/providers';
 import { todayYmd } from '@/utils/date';
 
@@ -60,19 +62,16 @@ export function DailyLogsCenter({
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('dailyLogs.disclaimer')}
-        </ThemedText>
+    <Screen>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('dailyLogs.disclaimer')}
+      </ThemedText>
 
-        {canAdd ? (
-          <Button label={t('dailyLogs.add')} onPress={() => router.push('/daily-logs/new')} />
-        ) : null}
+      {canAdd ? (
+        <Button label={t('dailyLogs.add')} onPress={() => router.push('/daily-logs/new')} />
+      ) : null}
 
-        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-          {t('dailyLogs.todayTitle')}
-        </ThemedText>
+      <Section title={t('dailyLogs.todayTitle')}>
         {todayLogs.length === 0 ? (
           <EmptyState
             title={t('dailyLogs.noTodayTitle')}
@@ -81,17 +80,14 @@ export function DailyLogsCenter({
         ) : (
           <View style={styles.list}>{todayLogs.map(renderRow)}</View>
         )}
+      </Section>
 
-        {recentLogs.length > 0 ? (
-          <>
-            <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-              {t('dailyLogs.recentTitle')}
-            </ThemedText>
-            <View style={styles.list}>{recentLogs.map(renderRow)}</View>
-          </>
-        ) : null}
-      </ScrollView>
-    </ThemedView>
+      {recentLogs.length > 0 ? (
+        <Section title={t('dailyLogs.recentTitle')}>
+          <View style={styles.list}>{recentLogs.map(renderRow)}</View>
+        </Section>
+      ) : null}
+    </Screen>
   );
 }
 
@@ -113,61 +109,48 @@ function LogRow({
     (log.general_notes ? 1 : 0);
 
   return (
-    <Pressable
+    <Surface
       onPress={onOpen}
-      accessibilityRole="button"
       accessibilityLabel={`${log.log_date}`}
-      style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView type="backgroundElement" style={styles.card}>
-        <View style={styles.cardHeader}>
-          <ThemedText style={styles.cardTitle}>{log.log_date}</ThemedText>
-          {mine ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('dailyLogs.mineLabel')}
-            </ThemedText>
-          ) : null}
-        </View>
-
-        {details.length > 0 ? (
+      style={styles.card}>
+      <View style={styles.cardHeader}>
+        <LtrText type="cardTitle" style={styles.cardTitle}>
+          {log.log_date}
+        </LtrText>
+        {mine ? (
           <ThemedText type="small" themeColor="textSecondary">
-            {details.map((detail) => `${detail.label}: ${detail.value}`).join(' • ')}
-          </ThemedText>
-        ) : (
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('dailyLogs.notesOnly')}
-          </ThemedText>
-        )}
-
-        {noteCount > 0 ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('dailyLogs.noteCount', { count: noteCount })}
+            {t('dailyLogs.mineLabel')}
           </ThemedText>
         ) : null}
-      </ThemedView>
-    </Pressable>
+      </View>
+
+      {details.length > 0 ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {details.map((detail) => `${detail.label}: ${detail.value}`).join(' • ')}
+        </ThemedText>
+      ) : (
+        <ThemedText type="small" themeColor="textSecondary">
+          {t('dailyLogs.notesOnly')}
+        </ThemedText>
+      )}
+
+      {noteCount > 0 ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {t('dailyLogs.noteCount', { count: noteCount })}
+        </ThemedText>
+      ) : null}
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  sectionTitle: { fontSize: 22, lineHeight: 30, marginTop: Spacing.two },
   list: { gap: Spacing.three },
-  card: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  card: { gap: Spacing.two },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  cardTitle: { fontSize: 18, fontWeight: '600', flexShrink: 1 },
-  pressed: { opacity: 0.7 },
+  cardTitle: { flexShrink: 1 },
 });

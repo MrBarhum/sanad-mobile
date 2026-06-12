@@ -1,13 +1,16 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { isolateLtr } from '@/components/ltr-text';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/providers';
 import { formatHm, todayYmd } from '@/utils/date';
 
@@ -16,9 +19,9 @@ import { useSetVisitStatus, useVisits } from './hooks';
 
 const RECENT_LIMIT = 10;
 
-const DONE_COLORS: Record<Exclude<VisitStatus, 'planned'>, string> = {
-  completed: '#16a34a',
-  cancelled: '#dc2626',
+const STATUS_TONE: Record<Exclude<VisitStatus, 'planned'>, StatusTone> = {
+  completed: 'success',
+  cancelled: 'error',
 };
 
 function startSortKey(visit: FamilyVisit): string {
@@ -98,28 +101,24 @@ export function VisitsCenter({
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('visits.disclaimer')}
-        </ThemedText>
+    <Screen>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('visits.disclaimer')}
+      </ThemedText>
 
-        {canAdd ? (
-          <Button label={t('visits.add')} onPress={() => router.push('/visits/new')} />
-        ) : null}
+      {canAdd ? (
+        <Button label={t('visits.add')} onPress={() => router.push('/visits/new')} />
+      ) : null}
 
-        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-          {t('visits.todayTitle')}
-        </ThemedText>
+      <Section title={t('visits.todayTitle')}>
         {todayVisits.length === 0 ? (
           <EmptyState title={t('visits.noTodayTitle')} subtitle={t('visits.noTodaySubtitle')} />
         ) : (
           <View style={styles.list}>{todayVisits.map(renderCard)}</View>
         )}
+      </Section>
 
-        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-          {t('visits.upcomingTitle')}
-        </ThemedText>
+      <Section title={t('visits.upcomingTitle')}>
         {upcoming.length === 0 ? (
           <EmptyState
             title={t('visits.noUpcomingTitle')}
@@ -128,17 +127,14 @@ export function VisitsCenter({
         ) : (
           <View style={styles.list}>{upcoming.map(renderCard)}</View>
         )}
+      </Section>
 
-        {recent.length > 0 ? (
-          <>
-            <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-              {t('visits.recentTitle')}
-            </ThemedText>
-            <View style={styles.list}>{recent.map(renderCard)}</View>
-          </>
-        ) : null}
-      </ScrollView>
-    </ThemedView>
+      {recent.length > 0 ? (
+        <Section title={t('visits.recentTitle')}>
+          <View style={styles.list}>{recent.map(renderCard)}</View>
+        </Section>
+      ) : null}
+    </Screen>
   );
 }
 
@@ -162,20 +158,22 @@ function VisitCard({
   const { t } = useTranslation();
 
   const timeParts = [];
-  if (visit.start_time) timeParts.push(formatHm(visit.start_time));
-  if (visit.end_time) timeParts.push(formatHm(visit.end_time));
-  const when = timeParts.length > 0 ? `${visit.visit_date} ${timeParts.join(' – ')}` : visit.visit_date;
+  if (visit.start_time) timeParts.push(isolateLtr(formatHm(visit.start_time)));
+  if (visit.end_time) timeParts.push(isolateLtr(formatHm(visit.end_time)));
+  const when =
+    timeParts.length > 0 ? `${visit.visit_date} ${timeParts.join(' – ')}` : visit.visit_date;
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
+    <Surface style={styles.card}>
       <View style={styles.cardHeader}>
-        <ThemedText style={styles.cardTitle}>{visit.visitor_name}</ThemedText>
+        <ThemedText type="cardTitle" style={styles.cardTitle}>
+          {visit.visitor_name}
+        </ThemedText>
         {visit.status !== 'planned' ? (
-          <View style={[styles.badge, { borderColor: DONE_COLORS[visit.status] }]}>
-            <ThemedText type="small" style={{ color: DONE_COLORS[visit.status] }}>
-              {t(`visits.status.${visit.status}`)}
-            </ThemedText>
-          </View>
+          <StatusBadge
+            tone={STATUS_TONE[visit.status]}
+            label={t(`visits.status.${visit.status}`)}
+          />
         ) : null}
       </View>
 
@@ -208,37 +206,19 @@ function VisitCard({
         ) : null}
         <Button size="sm" variant="secondary" label={t('common.details')} onPress={onOpen} />
       </View>
-    </ThemedView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  sectionTitle: { fontSize: 22, lineHeight: 30, marginTop: Spacing.two },
   list: { gap: Spacing.three },
-  card: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  card: { gap: Spacing.two },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  cardTitle: { fontSize: 18, fontWeight: '600', flexShrink: 1 },
-  badge: {
-    borderWidth: 1,
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-    alignSelf: 'flex-start',
-  },
+  cardTitle: { flexShrink: 1 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
 });

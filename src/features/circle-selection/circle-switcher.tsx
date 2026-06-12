@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { StatusBadge } from '@/components/status-badge';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 
 import { useCircleSelection } from './provider';
 
@@ -26,30 +27,27 @@ export function CircleSwitcher() {
 
   return (
     <>
-      <Pressable
+      <Surface
         onPress={multiple ? () => setOpen(true) : undefined}
         disabled={!multiple}
-        accessibilityRole={multiple ? 'button' : undefined}
         accessibilityHint={multiple ? t('circleSwitcher.switch') : undefined}
         accessibilityLabel={activeCircle.circleName}
-        style={({ pressed }) => [pressed && multiple && styles.pressed]}>
-        <ThemedView type="backgroundElement" style={styles.card}>
-          <View style={styles.row}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('careCircle.dashboard.circleLabel')}
-            </ThemedText>
-            {multiple ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('circleSwitcher.switch')}
-              </ThemedText>
-            ) : null}
-          </View>
-          <ThemedText style={styles.circleName}>{activeCircle.circleName}</ThemedText>
+        style={styles.cardGap}>
+        <View style={styles.row}>
           <ThemedText type="small" themeColor="textSecondary">
-            {activeCircle.recipientName ?? t('careCircle.dashboard.noRecipient')}
+            {t('careCircle.dashboard.circleLabel')}
           </ThemedText>
-        </ThemedView>
-      </Pressable>
+          {multiple ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('circleSwitcher.switch')}
+            </ThemedText>
+          ) : null}
+        </View>
+        <ThemedText type="sectionTitle">{activeCircle.circleName}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {activeCircle.recipientName ?? t('careCircle.dashboard.noRecipient')}
+        </ThemedText>
+      </Surface>
 
       {multiple ? (
         <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
@@ -59,7 +57,7 @@ export function CircleSwitcher() {
             onPress={() => setOpen(false)}>
             <Pressable style={styles.sheetWrap} onPress={() => {}}>
               <ThemedView style={styles.sheet}>
-                <ThemedText type="subtitle" style={styles.title} accessibilityRole="header">
+                <ThemedText type="sectionTitle" accessibilityRole="header">
                   {t('circleSwitcher.chooseTitle')}
                 </ThemedText>
                 <ScrollView showsVerticalScrollIndicator={false} style={styles.list}>
@@ -105,46 +103,38 @@ function CircleRow({
   currentLabel: string;
   onPress: () => void;
 }) {
-  const theme = useTheme();
   return (
-    <Pressable
+    <Surface
+      tone={current ? 'selected' : 'card'}
       onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected: current }}
-      style={({ pressed }) => [pressed && styles.pressed]}>
-      <ThemedView
-        type={current ? 'backgroundSelected' : 'backgroundElement'}
-        style={styles.circleRow}>
-        <View style={styles.rowMain}>
-          <ThemedText style={styles.rowName}>{circleName}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {recipientName ?? roleLabel}
-          </ThemedText>
-        </View>
-        {current ? (
-          <ThemedText type="small" style={{ color: theme.text }}>
-            ✓ {currentLabel}
-          </ThemedText>
-        ) : (
-          <ThemedText type="small" themeColor="textSecondary">
-            {roleLabel}
-          </ThemedText>
-        )}
-      </ThemedView>
-    </Pressable>
+      selected={current}
+      accessibilityLabel={`${circleName}، ${recipientName ?? roleLabel}${current ? `، ${currentLabel}` : ''}`}
+      style={styles.circleRow}>
+      <View style={styles.rowMain}>
+        <ThemedText type="cardTitle">{circleName}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {recipientName ?? roleLabel}
+        </ThemedText>
+      </View>
+      {current ? (
+        <StatusBadge tone="success" label={currentLabel} />
+      ) : (
+        <ThemedText type="small" themeColor="textSecondary">
+          {roleLabel}
+        </ThemedText>
+      )}
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.one },
+  cardGap: { gap: Spacing.one },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  circleName: { fontSize: 22, lineHeight: 30, fontWeight: '600' },
-  pressed: { opacity: 0.7 },
   backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
   sheetWrap: { width: '100%', maxWidth: MaxFormWidth, alignSelf: 'center' },
   sheet: {
@@ -157,18 +147,14 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     maxHeight: '80%',
   },
-  title: { fontSize: 22, lineHeight: 30 },
   list: { flexGrow: 0 },
   circleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.three,
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
     marginBottom: Spacing.two,
     minHeight: 60,
   },
   rowMain: { flex: 1, gap: Spacing.half },
-  rowName: { fontSize: 18, fontWeight: '600' },
 });

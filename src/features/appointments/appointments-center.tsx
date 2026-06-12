@@ -1,13 +1,16 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { isolateLtr } from '@/components/ltr-text';
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useDoctors } from '@/features/doctors/hooks';
 import { ReminderNotice } from '@/features/notifications/reminder-notice';
 import { hmFromInstant, todayYmd, ymdFromInstant } from '@/utils/date';
@@ -15,9 +18,9 @@ import { hmFromInstant, todayYmd, ymdFromInstant } from '@/utils/date';
 import type { AppointmentStatus, CareAppointment } from './api';
 import { useSetAppointmentStatus, useUpcomingAppointments } from './hooks';
 
-const DONE_COLORS: Record<Exclude<AppointmentStatus, 'scheduled'>, string> = {
-  completed: '#16a34a',
-  cancelled: '#dc2626',
+const STATUS_TONE: Record<Exclude<AppointmentStatus, 'scheduled'>, StatusTone> = {
+  completed: 'success',
+  cancelled: 'error',
 };
 
 /** Appointment center: today's and upcoming appointments. */
@@ -81,21 +84,18 @@ export function AppointmentsCenter({
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('appointments.disclaimer')}
-        </ThemedText>
+    <Screen>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('appointments.disclaimer')}
+      </ThemedText>
 
-        <ReminderNotice messageKey="appointments.reminderNotice" />
+      <ReminderNotice messageKey="appointments.reminderNotice" />
 
-        {canManage ? (
-          <Button label={t('appointments.add')} onPress={() => router.push('/appointments/new')} />
-        ) : null}
+      {canManage ? (
+        <Button label={t('appointments.add')} onPress={() => router.push('/appointments/new')} />
+      ) : null}
 
-        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-          {t('appointments.todayTitle')}
-        </ThemedText>
+      <Section title={t('appointments.todayTitle')}>
         {todayAppointments.length === 0 ? (
           <EmptyState
             title={t('appointments.noTodayTitle')}
@@ -104,10 +104,9 @@ export function AppointmentsCenter({
         ) : (
           <View style={styles.list}>{todayAppointments.map(renderCard)}</View>
         )}
+      </Section>
 
-        <ThemedText type="subtitle" style={styles.sectionTitle} accessibilityRole="header">
-          {t('appointments.upcomingTitle')}
-        </ThemedText>
+      <Section title={t('appointments.upcomingTitle')}>
         {upcoming.length === 0 ? (
           <EmptyState
             title={t('appointments.noUpcomingTitle')}
@@ -116,8 +115,8 @@ export function AppointmentsCenter({
         ) : (
           <View style={styles.list}>{upcoming.map(renderCard)}</View>
         )}
-      </ScrollView>
-    </ThemedView>
+      </Section>
+    </Screen>
   );
 }
 
@@ -141,19 +140,22 @@ function AppointmentCard({
   const { t } = useTranslation();
 
   const when = appointment.ends_at
-    ? `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} – ${hmFromInstant(appointment.ends_at)}`
-    : `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)}`;
+    ? isolateLtr(
+        `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} – ${hmFromInstant(appointment.ends_at)}`,
+      )
+    : isolateLtr(`${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)}`);
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
+    <Surface style={styles.card}>
       <View style={styles.cardHeader}>
-        <ThemedText style={styles.cardTitle}>{appointment.title}</ThemedText>
+        <ThemedText type="cardTitle" style={styles.cardTitle}>
+          {appointment.title}
+        </ThemedText>
         {appointment.status !== 'scheduled' ? (
-          <View style={[styles.badge, { borderColor: DONE_COLORS[appointment.status] }]}>
-            <ThemedText type="small" style={{ color: DONE_COLORS[appointment.status] }}>
-              {t(`appointments.status.${appointment.status}`)}
-            </ThemedText>
-          </View>
+          <StatusBadge
+            tone={STATUS_TONE[appointment.status]}
+            label={t(`appointments.status.${appointment.status}`)}
+          />
         ) : null}
       </View>
 
@@ -191,37 +193,19 @@ function AppointmentCard({
         ) : null}
         <Button size="sm" variant="secondary" label={t('common.details')} onPress={onOpen} />
       </View>
-    </ThemedView>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center' },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
-    gap: Spacing.three,
-  },
-  sectionTitle: { fontSize: 22, lineHeight: 30, marginTop: Spacing.two },
   list: { gap: Spacing.three },
-  card: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  card: { gap: Spacing.two },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  cardTitle: { fontSize: 18, fontWeight: '600', flexShrink: 1 },
-  badge: {
-    borderWidth: 1,
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-    alignSelf: 'flex-start',
-  },
+  cardTitle: { flexShrink: 1 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
 });

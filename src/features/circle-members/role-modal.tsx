@@ -11,15 +11,17 @@ import {
 } from 'react-native';
 
 import { Button } from '@/components/button';
+import { IconButton } from '@/components/icon-button';
+import { StatusBadge } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import type { CircleMember, CircleRole } from './api';
 import { assignableRolesFor } from './permissions';
 import { roleCapability, roleChangeDirection } from './role-capabilities';
-
-const DANGER = '#dc2626';
 
 /**
  * Two-step role picker. Step 1 lets a manager browse the roles they may assign,
@@ -44,6 +46,7 @@ export function RoleModal({
   onSave: (role: CircleRole) => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const roles = assignableRolesFor(actorRole, member);
   const [selected, setSelected] = useState<CircleRole>(member.role);
   const [expanded, setExpanded] = useState<CircleRole | null>(member.role);
@@ -59,16 +62,15 @@ export function RoleModal({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ThemedView style={styles.sheet}>
           <View style={styles.header}>
-            <ThemedText type="subtitle" style={styles.title} accessibilityRole="header">
+            <ThemedText type="sectionTitle" style={styles.title} accessibilityRole="header">
               {confirming ? t('circleMembers.confirmRoleTitle') : t('circleMembers.changeRoleTitle')}
             </ThemedText>
-            <Pressable
-              onPress={onClose}
-              accessibilityRole="button"
+            <IconButton
+              icon="✕"
               accessibilityLabel={t('common.close')}
-              hitSlop={Spacing.two}>
-              <ThemedText style={styles.close}>✕</ThemedText>
-            </Pressable>
+              onPress={onClose}
+              filled={false}
+            />
           </View>
 
           <ScrollView
@@ -98,7 +100,7 @@ export function RoleModal({
 
             {error ? (
               <ThemedText
-                style={styles.error}
+                style={{ color: theme.errorFg }}
                 accessibilityRole="alert"
                 accessibilityLiveRegion="polite">
                 {error}
@@ -163,6 +165,7 @@ function RoleOption({
   onToggleDetails: () => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const cap = roleCapability(role);
   const can = t(cap.canKey, { returnObjects: true });
   const cannot = t(cap.cannotKey, { returnObjects: true });
@@ -170,23 +173,23 @@ function RoleOption({
   const cannotList: string[] = Array.isArray(cannot) ? (cannot as string[]) : [];
 
   return (
-    <ThemedView type={selected ? 'backgroundSelected' : 'backgroundElement'} style={styles.option}>
+    <Surface tone={selected ? 'selected' : 'card'} style={styles.option}>
       <Pressable
         onPress={onSelect}
         accessibilityRole="button"
         accessibilityState={{ selected }}>
         <View style={styles.optionHeader}>
           <View style={styles.optionTitleWrap}>
-            <ThemedText style={styles.optionTitle}>{t(cap.titleKey)}</ThemedText>
+            <ThemedText type="cardTitle" style={styles.optionTitle}>
+              {t(cap.titleKey)}
+            </ThemedText>
             {isCurrent ? (
-              <ThemedView type="backgroundSelected" style={styles.currentBadge}>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('circleMembers.current')}
-                </ThemedText>
-              </ThemedView>
+              <StatusBadge tone="neutral" label={t('circleMembers.current')} />
             ) : null}
           </View>
-          {selected ? <ThemedText style={styles.check}>✓</ThemedText> : null}
+          {selected ? (
+            <ThemedText style={[styles.check, { color: theme.primary }]}>✓</ThemedText>
+          ) : null}
         </View>
         <ThemedText type="small" themeColor="textSecondary">
           {t(cap.summaryKey)}
@@ -221,7 +224,7 @@ function RoleOption({
           ))}
         </View>
       ) : null}
-    </ThemedView>
+    </Surface>
   );
 }
 
@@ -236,8 +239,8 @@ function ConfirmStep({
 }) {
   const { t } = useTranslation();
   return (
-    <ThemedView type="backgroundElement" style={styles.confirmCard}>
-      <ThemedText style={styles.confirmSummary}>
+    <Surface style={styles.confirmCard}>
+      <ThemedText type="cardTitle">
         {t('circleMembers.roleChangeSummary', {
           from: t(`circleMembers.roles.${from}`),
           to: t(`circleMembers.roles.${to}`),
@@ -246,7 +249,7 @@ function ConfirmStep({
       <ThemedText type="small" themeColor="textSecondary">
         {t(`circleMembers.direction.${direction}`)}
       </ThemedText>
-    </ThemedView>
+    </Surface>
   );
 }
 
@@ -268,15 +271,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     gap: Spacing.three,
   },
-  title: { fontSize: 24, lineHeight: 32, flexShrink: 1 },
-  close: { fontSize: 20, fontWeight: '600', padding: Spacing.one },
+  title: { flexShrink: 1 },
   content: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
     paddingBottom: Spacing.five,
     gap: Spacing.three,
   },
-  option: { borderRadius: Spacing.three, padding: Spacing.three, gap: Spacing.two },
+  option: { gap: Spacing.two },
   optionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -284,19 +286,12 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   optionTitleWrap: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flexShrink: 1 },
-  optionTitle: { fontSize: 16, fontWeight: '600' },
-  currentBadge: {
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-  },
+  optionTitle: { flexShrink: 1 },
   check: { fontSize: 16, fontWeight: '700' },
   detailsToggle: { paddingVertical: Spacing.half },
   details: { gap: Spacing.one, marginTop: Spacing.one },
   cannotHeading: { marginTop: Spacing.two },
-  confirmCard: { borderRadius: Spacing.three, padding: Spacing.four, gap: Spacing.two },
-  confirmSummary: { fontSize: 18, fontWeight: '600' },
+  confirmCard: { gap: Spacing.two },
   actions: { gap: Spacing.two, marginTop: Spacing.two },
   action: { width: '100%' },
-  error: { color: DANGER },
 });

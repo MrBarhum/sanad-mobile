@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
 
+import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
 
 import { useActiveCircle, type ActiveCircle } from './hooks';
 
@@ -30,15 +28,11 @@ export function CircleGate({ children }: { children: (circle: ActiveCircle) => R
   }
   if (!circle) {
     return (
-      <ThemedView style={styles.center}>
+      <Screen scroll={false} center>
         <EmptyState title={t('careCircle.noActiveCircle')} />
-      </ThemedView>
+      </Screen>
     );
   }
 
   return <>{children(circle)}</>;
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', padding: Spacing.four },
-});
