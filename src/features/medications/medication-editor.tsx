@@ -67,14 +67,14 @@ export function MedicationEditor({
   if (!medication.data) {
     return (
       <Screen scroll={false} center>
-        <EmptyState icon="💊" title={t('medications.notFound')} />
+        <EmptyState icon="â—‰" title={t('medications.notFound')} />
       </Screen>
     );
   }
 
   return (
     <Screen>
-      {/* Section A — Medication information */}
+      {/* Section A â€” Medication information */}
       <Section title={t('medications.medicationInfoTitle')}>
         {canManage ? (
           <MedicationFields key={medication.data.id} circleId={circleId} initial={medication.data} />
@@ -87,7 +87,7 @@ export function MedicationEditor({
 
       <ThemedView type="border" style={styles.divider} />
 
-      {/* Section B — Dose schedules */}
+      {/* Section B â€” Dose schedules */}
       <SchedulesManager
         circleId={circleId}
         medicationId={medication.data.id}
@@ -243,7 +243,7 @@ function ReadOnlyMedication({ medication }: { medication: Medication }) {
           {t('medications.readOnly')}
         </ThemedText>
       </Surface>
-      <ThemedText style={styles.readName}>{medication.name}</ThemedText>
+      <ThemedText type="subtitle">{medication.name}</ThemedText>
       {medication.dosage ? <InfoRow label={t('medications.fields.dosage')} value={medication.dosage} /> : null}
       {medication.form ? <InfoRow label={t('medications.fields.form')} value={medication.form} /> : null}
       <InfoRow
@@ -260,10 +260,10 @@ function ReadOnlyMedication({ medication }: { medication: Medication }) {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="smallBold" themeColor="textSecondary">
         {label}
       </ThemedText>
-      <ThemedText style={styles.infoValue}>{value}</ThemedText>
+      <ThemedText>{value}</ThemedText>
     </View>
   );
 }
@@ -468,10 +468,10 @@ function ScheduleCard({
       : [...schedule.days_of_week]
           .sort((a, b) => a - b)
           .map((day) => t(`medications.weekdaysShort.${WEEKDAY_KEYS[day]}`))
-          .join('، ');
-  const timesText = [...schedule.times].map(formatHm).sort().join('، ');
+          .join('ØŒ ');
+  const timesText = [...schedule.times].map(formatHm).sort().join('ØŒ ');
   const rangeText = schedule.end_date
-    ? `${schedule.start_date} — ${schedule.end_date}`
+    ? `${schedule.start_date} â€” ${schedule.end_date}`
     : `${t('medications.fromDate')} ${schedule.start_date}`;
 
   return (
@@ -525,9 +525,7 @@ function ScheduleCard({
 const styles = StyleSheet.create({
   fields: { gap: Spacing.three },
   notice: { padding: Spacing.three },
-  readName: { fontSize: 22, fontWeight: '700' },
   infoRow: { gap: Spacing.half },
-  infoValue: { fontSize: 16, lineHeight: 24 },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',

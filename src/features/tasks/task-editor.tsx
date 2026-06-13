@@ -16,7 +16,7 @@ import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { TimeField } from '@/components/time-field';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { Spacing } from '@/constants/theme';
+import { Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
@@ -35,11 +35,18 @@ import { TASK_CATEGORIES, TASK_PRIORITIES, taskSchema } from './schema';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
-/** Task status → badge tone (color + a distinct glyph, never color alone). */
+/** Task status â†’ badge tone (color + a distinct glyph, never color alone). */
 const STATUS_TONE: Record<TaskStatus, StatusTone> = {
   open: 'info',
   completed: 'success',
   cancelled: 'error',
+};
+
+/** Task status â†’ badge glyph (open reads as "pending"). */
+const STATUS_GLYPH: Record<TaskStatus, string> = {
+  open: 'â—·',
+  completed: 'âœ“',
+  cancelled: 'âœ•',
 };
 
 /** Loads a task, then renders the view/edit screen with status + delete actions. */
@@ -70,7 +77,7 @@ export function TaskEditor({
   if (!task.data) {
     return (
       <Screen scroll={false} center>
-        <EmptyState title={t('tasks.notFound')} />
+        <EmptyState icon="âœ“" title={t('tasks.notFound')} />
       </Screen>
     );
   }
@@ -311,14 +318,16 @@ function ReadOnlyTask({ task }: { task: CareTask }) {
           {t('tasks.readOnly')}
         </ThemedText>
       </Surface>
-      <ThemedText style={styles.readName}>{task.title}</ThemedText>
-      <InfoRow label={t('tasks.fields.category')} value={t(`tasks.category.${task.category}`)} />
-      <InfoRow label={t('tasks.fields.priority')} value={t(`tasks.priority.${task.priority}`)} />
-      <InfoRow label={t('tasks.dueLabel')} value={due} />
-      {task.description ? (
-        <InfoRow label={t('tasks.fields.description')} value={task.description} />
-      ) : null}
-      {task.notes ? <InfoRow label={t('tasks.fields.notes')} value={task.notes} /> : null}
+      <ThemedText type="sectionTitle">{task.title}</ThemedText>
+      <View style={styles.infoGroup}>
+        <InfoRow label={t('tasks.fields.category')} value={t(`tasks.category.${task.category}`)} />
+        <InfoRow label={t('tasks.fields.priority')} value={t(`tasks.priority.${task.priority}`)} />
+        <InfoRow label={t('tasks.dueLabel')} value={due} />
+        {task.description ? (
+          <InfoRow label={t('tasks.fields.description')} value={task.description} />
+        ) : null}
+        {task.notes ? <InfoRow label={t('tasks.fields.notes')} value={task.notes} /> : null}
+      </View>
     </View>
   );
 }
@@ -326,10 +335,10 @@ function ReadOnlyTask({ task }: { task: CareTask }) {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="smallBold" themeColor="textSecondary">
         {label}
       </ThemedText>
-      <ThemedText style={styles.infoValue}>{value}</ThemedText>
+      <ThemedText type="default">{value}</ThemedText>
     </View>
   );
 }
@@ -346,6 +355,7 @@ function StatusSection({
   canCollaborate: boolean;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const complete = useCompleteTask(circleId);
@@ -370,7 +380,11 @@ function StatusSection({
     <Surface style={styles.statusCard}>
       <View style={styles.statusHeader}>
         <ThemedText type="smallBold">{t('tasks.fields.status')}</ThemedText>
-        <StatusBadge tone={STATUS_TONE[task.status]} label={t(`tasks.status.${task.status}`)} />
+        <StatusBadge
+          tone={STATUS_TONE[task.status]}
+          glyph={STATUS_GLYPH[task.status]}
+          label={t(`tasks.status.${task.status}`)}
+        />
       </View>
       {task.status === 'completed' && task.completed_at ? (
         <ThemedText type="small" themeColor="textSecondary">
@@ -390,20 +404,24 @@ function StatusSection({
       ) : null}
 
       {canAct ? (
-        <View style={styles.actions}>
+        <View style={[styles.actions, { borderTopColor: theme.divider }]}>
           <Button
             size="sm"
+            glyph="âœ“"
             label={t('tasks.complete')}
             loading={pending}
             disabled={pending}
             onPress={() => run('complete')}
+            style={styles.action}
           />
           <Button
             size="sm"
             variant="secondary"
+            glyph="âœ•"
             label={t('tasks.cancelTask')}
             disabled={pending}
             onPress={() => run('cancel')}
+            style={styles.action}
           />
         </View>
       ) : null}
@@ -455,14 +473,14 @@ function DeleteTaskRow({ circleId, id }: { circleId: string; id: string }) {
 const styles = StyleSheet.create({
   fields: { gap: Spacing.three },
   notice: { padding: Spacing.three },
-  readName: { fontSize: 22, fontWeight: '700' },
+  infoGroup: { gap: Spacing.two },
   infoRow: { gap: Spacing.half },
-  infoValue: { fontSize: 16, lineHeight: 24 },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.three,
+    minHeight: TouchTarget.min,
   },
   statusCard: { gap: Spacing.two },
   statusHeader: {
@@ -471,6 +489,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
+  action: { flexGrow: 1, flexBasis: 96 },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
 });

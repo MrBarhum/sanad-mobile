@@ -138,7 +138,7 @@ function ReadOnlyLog({ log }: { log: DailyCareLog }) {
           {t('dailyLogs.readOnly')}
         </ThemedText>
       </Surface>
-      <LtrText type="sectionTitle">{log.log_date}</LtrText>
+      <LtrText type="subtitle">{log.log_date}</LtrText>
       {details.map((detail) => (
         <InfoRow key={detail.key} label={detail.label} value={detail.value} />
       ))}
@@ -157,10 +157,10 @@ function ReadOnlyLog({ log }: { log: DailyCareLog }) {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="smallBold" themeColor="textSecondary">
         {label}
       </ThemedText>
-      <ThemedText style={styles.infoValue}>{value}</ThemedText>
+      <ThemedText>{value}</ThemedText>
     </View>
   );
 }
@@ -209,6 +209,5 @@ function DeleteLogRow({ circleId, id }: { circleId: string; id: string }) {
 const styles = StyleSheet.create({
   fields: { gap: Spacing.three },
   infoRow: { gap: Spacing.half },
-  infoValue: { fontSize: 16, lineHeight: 24 },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
 });

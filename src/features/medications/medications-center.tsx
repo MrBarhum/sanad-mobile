@@ -4,13 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { GlyphChip } from '@/components/glyph-chip';
 import { LtrText } from '@/components/ltr-text';
 import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { ReminderNotice } from '@/features/notifications/reminder-notice';
 import { formatHm, todayYmd } from '@/utils/date';
 
@@ -18,11 +20,18 @@ import type { Medication, MedicationLogStatus } from './api';
 import { useActiveMedications, useLogDose, useTodayDoses } from './hooks';
 import type { DoseItem } from './today';
 
-/** Status → badge tone (color + a distinct glyph, never color alone). */
+/** Status â†’ badge tone (color + a distinct glyph, never color alone). */
 const STATUS_TONE: Record<MedicationLogStatus, StatusTone> = {
   given: 'success',
   postponed: 'warning',
   missed: 'error',
+};
+
+/** Non-emoji glyph per dose action, mirrored on the badge for recognition. */
+const STATUS_GLYPH: Record<MedicationLogStatus, string> = {
+  given: 'âœ“',
+  postponed: 'â—·',
+  missed: 'âœ•',
 };
 
 const STATUS_ORDER: MedicationLogStatus[] = ['given', 'postponed', 'missed'];
@@ -70,20 +79,20 @@ export function MedicationsCenter({
 
   return (
     <Screen>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         {t('medications.disclaimer')}
       </ThemedText>
 
       <ReminderNotice messageKey="medications.reminderNotice" />
 
       {canManage ? (
-        <Button label={t('medications.add')} onPress={() => router.push('/medications/new')} />
+        <Button glyph="ï¼‹" label={t('medications.add')} onPress={() => router.push('/medications/new')} />
       ) : null}
 
       <Section title={t('medications.todayTitle')}>
         {today.doses.length === 0 ? (
           <EmptyState
-            icon="💊"
+            icon="â—‰"
             title={t('medications.noDosesTitle')}
             subtitle={t('medications.noDosesSubtitle')}
           />
@@ -105,7 +114,7 @@ export function MedicationsCenter({
       <Section title={t('medications.listTitle')}>
         {meds.length === 0 ? (
           <EmptyState
-            icon="💊"
+            icon="â—‰"
             title={t('medications.noMedsTitle')}
             subtitle={canManage ? t('medications.noMedsSubtitle') : undefined}
           />
@@ -137,20 +146,32 @@ function DoseCard({
   onSetStatus: (status: MedicationLogStatus) => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const subtitleParts = [dose.dosage, dose.form].filter(Boolean) as string[];
 
   return (
     <Surface style={styles.doseCard}>
       <View style={styles.doseHeader}>
-        <LtrText style={styles.doseTime}>{formatHm(dose.scheduledTime)}</LtrText>
+        {/* The scheduled time is the scannable anchor of the day timeline. */}
+        <View style={[styles.timeChip, { backgroundColor: theme.accentBg }]}>
+          <LtrText style={[styles.doseTime, { color: theme.accentFg }]}>
+            {formatHm(dose.scheduledTime)}
+          </LtrText>
+        </View>
         {dose.status ? (
-          <StatusBadge tone={STATUS_TONE[dose.status]} label={t(`medications.status.${dose.status}`)} />
+          <StatusBadge
+            tone={STATUS_TONE[dose.status]}
+            glyph={STATUS_GLYPH[dose.status]}
+            label={t(`medications.status.${dose.status}`)}
+          />
         ) : null}
       </View>
 
       <ThemedText type="cardTitle">{dose.medicationName}</ThemedText>
       {subtitleParts.length > 0 ? (
-        <ThemedText themeColor="textSecondary">{subtitleParts.join(' • ')}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {subtitleParts.join(' â€¢ ')}
+        </ThemedText>
       ) : null}
       {dose.withFood ? (
         <ThemedText type="small" themeColor="textSecondary">
@@ -164,11 +185,12 @@ function DoseCard({
       ) : null}
 
       {canLog ? (
-        <View style={styles.doseActions}>
+        <View style={[styles.doseActions, { borderTopColor: theme.divider }]}>
           {STATUS_ORDER.map((status) => (
             <Button
               key={status}
               variant={dose.status === status ? 'primary' : 'secondary'}
+              glyph={STATUS_GLYPH[status]}
               label={t(`medications.status.${status}`)}
               disabled={pending}
               onPress={() => onSetStatus(status)}
@@ -183,19 +205,29 @@ function DoseCard({
 
 function MedicationRow({ medication, onPress }: { medication: Medication; onPress: () => void }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const subtitleParts = [medication.dosage, medication.form].filter(Boolean) as string[];
 
   return (
-    <Surface onPress={onPress} accessibilityLabel={medication.name} accessibilityHint={t('medications.tapToEdit')} style={styles.medCard}>
-      <ThemedText type="cardTitle">{medication.name}</ThemedText>
-      {subtitleParts.length > 0 ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {subtitleParts.join(' • ')}
+    <Surface
+      onPress={onPress}
+      accessibilityLabel={medication.name}
+      accessibilityHint={t('medications.tapToEdit')}
+      style={styles.medCard}>
+      <View style={styles.medRow}>
+        <GlyphChip glyph="â—‰" tone="primary" size="sm" />
+        <View style={styles.medText}>
+          <ThemedText type="cardTitle">{medication.name}</ThemedText>
+          {subtitleParts.length > 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {subtitleParts.join(' â€¢ ')}
+            </ThemedText>
+          ) : null}
+        </View>
+        <ThemedText style={[styles.chevron, { color: theme.textMuted }]} accessibilityElementsHidden>
+          â€º
         </ThemedText>
-      ) : null}
-      <ThemedText type="small" themeColor="primaryText">
-        {t('medications.tapToEdit')} ›
-      </ThemedText>
+      </View>
     </Surface>
   );
 }
@@ -208,9 +240,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
+    marginBottom: Spacing.one,
   },
-  doseTime: { fontSize: 24, fontWeight: '800' },
-  doseActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.two },
+  timeChip: {
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    minHeight: 40,
+    justifyContent: 'center',
+  },
+  doseTime: { fontFamily: FontFamily.bold, fontSize: 20, lineHeight: 30, fontWeight: '700' },
+  doseActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
   doseAction: { flexGrow: 1, flexBasis: 96 },
-  medCard: { gap: Spacing.one },
+  medCard: { paddingVertical: Spacing.three },
+  medRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  medText: { flex: 1, gap: Spacing.half },
+  chevron: { fontSize: 24, lineHeight: 28, fontWeight: '600' },
 });

@@ -7,7 +7,7 @@ import { StickyFormActions } from '@/components/form-actions';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { MaxFormWidth, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
@@ -75,7 +75,7 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
         />
       }>
       <UnsavedChangesGuard when={dirty && !submitted} />
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         {t('visits.disclaimer')}
       </ThemedText>
 
@@ -106,5 +106,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.three,
+    minHeight: TouchTarget.min,
   },
 });

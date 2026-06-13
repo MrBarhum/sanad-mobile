@@ -1,10 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
 
-import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { NavCard } from '@/components/nav-card';
 
 import { useTodayLogSummary } from './hooks';
 
@@ -26,25 +23,11 @@ export function DailyLogsCard({ circleId }: { circleId: string }) {
         : t('dailyLogs.summary.counts', { count: summary.todayCount });
 
   return (
-    <Surface
+    <NavCard
+      glyph="âœŽ"
+      title={t('careCircle.dashboard.sections.dailyLogs.title')}
+      subtitle={subtitle}
       onPress={() => router.push('/daily-logs')}
-      accessibilityLabel={t('careCircle.dashboard.sections.dailyLogs.title')}
-      style={styles.card}>
-      <ThemedText type="cardTitle">
-        {t('careCircle.dashboard.sections.dailyLogs.title')}
-      </ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
-        {subtitle}
-      </ThemedText>
-    </Surface>
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    gap: Spacing.two,
-    minHeight: 96,
-    justifyContent: 'center',
-  },
-  cardSubtitle: { fontSize: 16, lineHeight: 24 },
-});

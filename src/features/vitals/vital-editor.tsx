@@ -134,7 +134,7 @@ function ReadOnlyVital({ reading }: { reading: VitalReading }) {
           {t('vitals.readOnly')}
         </ThemedText>
       </Surface>
-      <ThemedText type="sectionTitle">{t(`vitals.type.${reading.reading_type}`)}</ThemedText>
+      <ThemedText type="subtitle">{t(`vitals.type.${reading.reading_type}`)}</ThemedText>
       <InfoRow label={t('vitals.fields.readingAt')} value={when} />
       {value ? <InfoRow label={t('vitals.valueLabel')} value={value} /> : null}
       {reading.notes ? <InfoRow label={t('vitals.fields.notes')} value={reading.notes} /> : null}
@@ -145,10 +145,10 @@ function ReadOnlyVital({ reading }: { reading: VitalReading }) {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="smallBold" themeColor="textSecondary">
         {label}
       </ThemedText>
-      <ThemedText style={styles.infoValue}>{value}</ThemedText>
+      <ThemedText>{value}</ThemedText>
     </View>
   );
 }
@@ -197,6 +197,5 @@ function DeleteVitalRow({ circleId, id }: { circleId: string; id: string }) {
 const styles = StyleSheet.create({
   fields: { gap: Spacing.three },
   infoRow: { gap: Spacing.half },
-  infoValue: { fontSize: 16, lineHeight: 24 },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
 });

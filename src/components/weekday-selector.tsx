@@ -114,7 +114,7 @@ function Chip({
         type="small"
         themeColor={selected ? 'primaryText' : 'textSecondary'}
         style={[styles.chip, selected && styles.chipSelectedText, fullWidth && styles.chipFullText]}>
-        {selected ? `✓ ${label}` : label}
+        {selected ? `âœ“ ${label}` : label}
       </ThemedText>
     </Pressable>
   );
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   chipWrap: {
     minHeight: TouchTarget.min,
     minWidth: TouchTarget.min,
-    borderRadius: Radius.md,
+    borderRadius: Radius.pill,
     borderWidth: 1.5,
     justifyContent: 'center',
   },

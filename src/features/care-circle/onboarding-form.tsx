@@ -8,7 +8,7 @@ import { DateField } from '@/components/date-field';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { useCreateCareCircle } from './hooks';
@@ -74,7 +74,7 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
         <ThemedText type="title" accessibilityRole="header">
           {t('careCircle.onboarding.title')}
         </ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.subtitle}>
+        <ThemedText themeColor="textSecondary">
           {t('careCircle.onboarding.subtitle')}
         </ThemedText>
       </ThemedView>
@@ -142,17 +142,18 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
 }
 
 const styles = StyleSheet.create({
-  header: { gap: Spacing.two },
-  subtitle: { fontSize: 18, lineHeight: 28 },
+  // Screen contributes Spacing.three between groups; the extra margins lift the
+  // headerâ†’form and formâ†’submit rhythm to a generous Spacing.four/five.
+  header: { gap: Spacing.two, marginBottom: Spacing.two },
   form: { gap: Spacing.three },
   field: { gap: Spacing.one },
   input: {
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.sm,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     fontSize: 16,
-    minHeight: 52,
+    minHeight: TouchTarget.comfortable,
   },
-  submit: { marginTop: Spacing.two },
+  submit: { marginTop: Spacing.three },
 });

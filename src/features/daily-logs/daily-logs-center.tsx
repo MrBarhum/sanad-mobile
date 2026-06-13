@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { GlyphChip } from '@/components/glyph-chip';
 import { LtrText } from '@/components/ltr-text';
 import { Screen } from '@/components/screen';
 import { Section, Surface } from '@/components/surface';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 import { todayYmd } from '@/utils/date';
 
@@ -63,17 +65,18 @@ export function DailyLogsCenter({
 
   return (
     <Screen>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         {t('dailyLogs.disclaimer')}
       </ThemedText>
 
       {canAdd ? (
-        <Button label={t('dailyLogs.add')} onPress={() => router.push('/daily-logs/new')} />
+        <Button glyph="ï¼‹" label={t('dailyLogs.add')} onPress={() => router.push('/daily-logs/new')} />
       ) : null}
 
       <Section title={t('dailyLogs.todayTitle')}>
         {todayLogs.length === 0 ? (
           <EmptyState
+            icon="âœŽ"
             title={t('dailyLogs.noTodayTitle')}
             subtitle={canAdd ? t('dailyLogs.noTodaySubtitle') : undefined}
           />
@@ -101,6 +104,7 @@ function LogRow({
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const details = describeDailyLog(log, t);
   const noteCount =
     (log.bathroom_notes ? 1 : 0) +
@@ -113,39 +117,49 @@ function LogRow({
       onPress={onOpen}
       accessibilityLabel={`${log.log_date}`}
       style={styles.card}>
-      <View style={styles.cardHeader}>
-        <LtrText type="cardTitle" style={styles.cardTitle}>
-          {log.log_date}
-        </LtrText>
-        {mine ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('dailyLogs.mineLabel')}
-          </ThemedText>
-        ) : null}
+      <View style={styles.row}>
+        <GlyphChip glyph="âœŽ" tone="primary" size="sm" />
+        <View style={styles.text}>
+          <View style={styles.cardHeader}>
+            <LtrText type="cardTitle" style={styles.cardTitle}>
+              {log.log_date}
+            </LtrText>
+            {mine ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('dailyLogs.mineLabel')}
+              </ThemedText>
+            ) : null}
+          </View>
+
+          {details.length > 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {details.map((detail) => `${detail.label}: ${detail.value}`).join(' â€¢ ')}
+            </ThemedText>
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('dailyLogs.notesOnly')}
+            </ThemedText>
+          )}
+
+          {noteCount > 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('dailyLogs.noteCount', { count: noteCount })}
+            </ThemedText>
+          ) : null}
+        </View>
+        <ThemedText style={[styles.chevron, { color: theme.textMuted }]} accessibilityElementsHidden>
+          â€º
+        </ThemedText>
       </View>
-
-      {details.length > 0 ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {details.map((detail) => `${detail.label}: ${detail.value}`).join(' • ')}
-        </ThemedText>
-      ) : (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('dailyLogs.notesOnly')}
-        </ThemedText>
-      )}
-
-      {noteCount > 0 ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('dailyLogs.noteCount', { count: noteCount })}
-        </ThemedText>
-      ) : null}
     </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   list: { gap: Spacing.three },
-  card: { gap: Spacing.two },
+  card: { paddingVertical: Spacing.three },
+  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  text: { flex: 1, gap: Spacing.half },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -153,4 +167,5 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   cardTitle: { flexShrink: 1 },
+  chevron: { fontSize: 24, lineHeight: 28, fontWeight: '600' },
 });

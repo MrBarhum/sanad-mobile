@@ -27,7 +27,7 @@ type FormModalProps = {
 /**
  * Bottom-sheet modal hosting an add/edit form. Cross-platform (react-native
  * Modal renders as an overlay on web too). Closing is explicit via the header
- * close button or Cancel — no backdrop-tap dismissal — to avoid losing input by
+ * close button or Cancel â€” no backdrop-tap dismissal â€” to avoid losing input by
  * accident and to keep behavior identical on web and native. The caller owns the
  * form fields (`children`) and validation; this only provides the chrome.
  */
@@ -49,9 +49,10 @@ export function FormModal({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
-        style={styles.backdrop}
+        style={[styles.backdrop, { backgroundColor: theme.overlay }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ThemedView style={[styles.sheet, { borderColor: theme.border }]}>
+          <View style={[styles.grabber, { backgroundColor: theme.backgroundSelected }]} />
           <View style={styles.header}>
             <ThemedText type="sectionTitle" style={styles.title} accessibilityRole="header">
               {title}
@@ -62,7 +63,7 @@ export function FormModal({
               accessibilityLabel={closeLabel}
               hitSlop={Spacing.two}
               style={styles.closeButton}>
-              <ThemedText style={styles.close}>✕</ThemedText>
+              <ThemedText style={styles.close}>âœ•</ThemedText>
             </Pressable>
           </View>
 
@@ -105,7 +106,7 @@ export function FormModal({
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  backdrop: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
     width: '100%',
     maxWidth: MaxFormWidth,
@@ -114,7 +115,15 @@ const styles = StyleSheet.create({
     borderTopRightRadius: Radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     maxHeight: '92%',
-    paddingTop: Spacing.four,
+    paddingTop: Spacing.two,
+  },
+  // Visual bottom-sheet affordance (dismissal stays explicit via Cancel/close).
+  grabber: {
+    alignSelf: 'center',
+    width: 44,
+    height: 5,
+    borderRadius: Radius.pill,
+    marginBottom: Spacing.three,
   },
   header: {
     flexDirection: 'row',

@@ -29,7 +29,7 @@ export function CircleGate({ children }: { children: (circle: ActiveCircle) => R
   if (!circle) {
     return (
       <Screen scroll={false} center>
-        <EmptyState title={t('careCircle.noActiveCircle')} />
+        <EmptyState icon="â–" title={t('careCircle.noActiveCircle')} />
       </Screen>
     );
   }

@@ -2,18 +2,21 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { GlyphChip } from '@/components/glyph-chip';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 
 /**
  * Placeholder "Explore" screen. Each section is a non-interactive "coming soon"
- * card describing a future feature — there is no logic or data fetching here yet.
+ * card describing a future feature â€” there is no logic or data fetching here yet.
+ * Glyph anchors are decorative non-emoji marks; the labels carry all meaning.
  */
 const SECTIONS = [
-  { key: 'guides', titleKey: 'explore.sections.guides.title', subtitleKey: 'explore.sections.guides.subtitle' },
-  { key: 'resources', titleKey: 'explore.sections.resources.title', subtitleKey: 'explore.sections.resources.subtitle' },
-  { key: 'community', titleKey: 'explore.sections.community.title', subtitleKey: 'explore.sections.community.subtitle' },
+  { key: 'guides', glyph: 'â—ˆ', titleKey: 'explore.sections.guides.title', subtitleKey: 'explore.sections.guides.subtitle' },
+  { key: 'resources', glyph: 'â—Ž', titleKey: 'explore.sections.resources.title', subtitleKey: 'explore.sections.resources.subtitle' },
+  { key: 'community', glyph: 'âŠ™', titleKey: 'explore.sections.community.title', subtitleKey: 'explore.sections.community.subtitle' },
 ] as const;
 
 export default function ExploreScreen() {
@@ -27,26 +30,27 @@ export default function ExploreScreen() {
             <ThemedText type="title" accessibilityRole="header">
               {t('explore.title')}
             </ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-              {t('explore.subtitle')}
-            </ThemedText>
+            <ThemedText themeColor="textSecondary">{t('explore.subtitle')}</ThemedText>
           </ThemedView>
 
           <View style={styles.cards}>
             {SECTIONS.map((section) => (
-              <ThemedView key={section.key} type="backgroundElement" style={styles.card}>
+              <Surface key={section.key} style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <ThemedText style={styles.cardTitle}>{t(section.titleKey)}</ThemedText>
+                  <GlyphChip glyph={section.glyph} tone="neutral" size="sm" />
+                  <ThemedText type="cardTitle" style={styles.cardTitle}>
+                    {t(section.titleKey)}
+                  </ThemedText>
                   <ThemedView type="backgroundSelected" style={styles.badge}>
                     <ThemedText type="small" themeColor="textSecondary">
                       {t('explore.comingSoon')}
                     </ThemedText>
                   </ThemedView>
                 </View>
-                <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
+                <ThemedText type="small" themeColor="textSecondary">
                   {t(section.subtitleKey)}
                 </ThemedText>
-              </ThemedView>
+              </Surface>
             ))}
           </View>
         </ScrollView>
@@ -74,16 +78,10 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.two,
   },
-  subtitle: {
-    fontSize: 18,
-    lineHeight: 28,
-  },
   cards: {
     gap: Spacing.three,
   },
   card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
     gap: Spacing.two,
     minHeight: 96,
     justifyContent: 'center',
@@ -91,22 +89,14 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
   cardTitle: {
-    fontSize: 20,
-    lineHeight: 28,
-    fontWeight: 600,
-    flexShrink: 1,
+    flex: 1,
   },
   badge: {
-    borderRadius: Spacing.five,
+    borderRadius: Radius.pill,
     paddingVertical: Spacing.half,
     paddingHorizontal: Spacing.two,
-  },
-  cardSubtitle: {
-    fontSize: 16,
-    lineHeight: 24,
   },
 });

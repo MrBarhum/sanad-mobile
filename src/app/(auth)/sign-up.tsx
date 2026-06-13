@@ -1,15 +1,15 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, TextInput } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { z } from 'zod';
 
 import { Button } from '@/components/button';
+import { FormField } from '@/components/form-field';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 
 import { supabase } from '../../../lib/supabase';
 
@@ -20,7 +20,6 @@ const credentialsSchema = z.object({
 
 export default function SignUpScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -60,63 +59,44 @@ export default function SignUpScreen() {
     // If a session exists, the (auth) guard redirects automatically.
   }
 
-  const inputStyle = [
-    styles.input,
-    {
-      color: theme.text,
-      backgroundColor: theme.backgroundElement,
-      borderColor: theme.backgroundSelected,
-    },
-  ];
-
   return (
     <Screen edges={{ top: true }} maxWidth={MaxFormWidth} center keyboardAvoiding gap={Spacing.five}>
       <ThemedView style={styles.header}>
-        <ThemedText type="sectionTitle" accessibilityRole="header">
+        <ThemedText type="title" accessibilityRole="header">
           {t('auth.signUpTitle')}
         </ThemedText>
         <ThemedText themeColor="textSecondary">{t('auth.signUpSubtitle')}</ThemedText>
       </ThemedView>
 
       <ThemedView style={styles.form}>
-        <ThemedView style={styles.field}>
-          <ThemedText type="smallBold">{t('auth.email')}</ThemedText>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            inputMode="email"
-            autoComplete="email"
-            textContentType="emailAddress"
-            placeholder={t('auth.emailPlaceholder')}
-            placeholderTextColor={theme.textSecondary}
-            accessibilityLabel={t('auth.email')}
-            style={inputStyle}
-          />
-        </ThemedView>
+        <FormField
+          label={t('auth.email')}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          inputMode="email"
+          autoComplete="email"
+          textContentType="emailAddress"
+          placeholder={t('auth.emailPlaceholder')}
+        />
 
-        <ThemedView style={styles.field}>
-          <ThemedText type="smallBold">{t('auth.password')}</ThemedText>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            autoCapitalize="none"
-            autoCorrect={false}
-            secureTextEntry
-            autoComplete="new-password"
-            textContentType="newPassword"
-            placeholder={t('auth.passwordPlaceholder')}
-            placeholderTextColor={theme.textSecondary}
-            accessibilityLabel={t('auth.password')}
-            style={inputStyle}
-          />
-        </ThemedView>
+        <FormField
+          label={t('auth.password')}
+          value={password}
+          onChangeText={setPassword}
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry
+          autoComplete="new-password"
+          textContentType="newPassword"
+          placeholder={t('auth.passwordPlaceholder')}
+        />
 
         {error ? (
           <ThemedText
-            style={{ color: theme.errorFg }}
+            themeColor="errorFg"
             accessibilityRole="alert"
             accessibilityLiveRegion="polite">
             {error}
@@ -150,15 +130,6 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   header: { gap: Spacing.two },
   form: { gap: Spacing.three },
-  field: { gap: Spacing.one },
-  input: {
-    borderWidth: 1,
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: 16,
-    minHeight: 52,
-  },
   button: { marginTop: Spacing.two },
   footer: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
 });

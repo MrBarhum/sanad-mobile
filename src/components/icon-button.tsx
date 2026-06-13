@@ -6,7 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { ThemedText } from './themed-text';
 
 type IconButtonProps = {
-  /** A glyph/emoji icon. Decorative — meaning comes from accessibilityLabel. */
+  /** A glyph/emoji icon. Decorative â€” meaning comes from accessibilityLabel. */
   icon: string;
   /** REQUIRED: spoken label, since the control is icon-only. */
   accessibilityLabel: string;
@@ -22,7 +22,7 @@ type IconButtonProps = {
 
 /**
  * A square, accessible icon button that always meets the 48dp touch-target floor.
- * Use only for SECONDARY actions — primary operations use a labeled Button so the
+ * Use only for SECONDARY actions â€” primary operations use a labeled Button so the
  * action is never a tiny icon-only target (an accessibility requirement for older
  * users).
  */
@@ -49,7 +49,8 @@ export function IconButton({
       hitSlop={8}
       style={({ pressed }) => [
         styles.button,
-        filled && { backgroundColor: theme.backgroundElement, borderColor: theme.border, borderWidth: StyleSheet.hairlineWidth },
+        filled && { backgroundColor: theme.backgroundSelected },
+        pressed && { backgroundColor: theme.border },
         pressed && styles.pressed,
         disabled && styles.disabled,
         style,
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
   button: {
     minWidth: TouchTarget.min,
     minHeight: TouchTarget.min,
-    borderRadius: Radius.md,
+    borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,

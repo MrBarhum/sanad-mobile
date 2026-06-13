@@ -76,7 +76,7 @@ export function DailyLogForm({ circleId }: { circleId: string }) {
         />
       }>
       <UnsavedChangesGuard when={dirty && !submitted} />
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         {t('dailyLogs.disclaimer')}
       </ThemedText>
 

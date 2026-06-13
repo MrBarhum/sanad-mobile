@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
 
 import { DateField } from '@/components/date-field';
 import { FormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
+import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
-import { ErrorState, LoadingState } from '@/components/states';
-import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
+import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { MaxFormWidth } from '@/constants/theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -44,7 +42,7 @@ export function RecipientProfileForm({
   if (!recipient.data) {
     return (
       <Screen scroll={false} center maxWidth={MaxFormWidth}>
-        <ThemedText style={styles.centeredText}>{t('recipientProfile.empty')}</ThemedText>
+        <EmptyState icon="âœ¦" title={t('recipientProfile.empty')} />
       </Screen>
     );
   }
@@ -152,13 +150,7 @@ function RecipientFields({
   return (
     <Screen maxWidth={MaxFormWidth} keyboardAvoiding>
       <UnsavedChangesGuard when={canManage && dirty} />
-      {!canManage ? (
-        <Surface>
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('recipientProfile.readOnly')}
-          </ThemedText>
-        </Surface>
-      ) : null}
+      {!canManage ? <InfoBanner tone="neutral" text={t('recipientProfile.readOnly')} /> : null}
 
       <FormField
         label={t('recipientProfile.fields.fullName')}
@@ -234,7 +226,3 @@ function RecipientFields({
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  centeredText: { textAlign: 'center' },
-});

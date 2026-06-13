@@ -15,6 +15,7 @@ import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Spacing } from '@/constants/theme';
 import type { Doctor } from '@/features/doctors/api';
 import { useDoctors } from '@/features/doctors/hooks';
+import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
@@ -36,6 +37,13 @@ const STATUS_TONE: Record<AppointmentStatus, StatusTone> = {
   scheduled: 'info',
   completed: 'success',
   cancelled: 'error',
+};
+
+/** Appointment status â†’ badge glyph (scheduled reads as "upcoming"). */
+const STATUS_GLYPH: Record<AppointmentStatus, string> = {
+  scheduled: 'â—·',
+  completed: 'âœ“',
+  cancelled: 'âœ•',
 };
 
 /** Loads an appointment, then renders the view/edit screen. */
@@ -65,7 +73,7 @@ export function AppointmentEditor({
   if (!appointment.data) {
     return (
       <Screen scroll={false} center>
-        <EmptyState title={t('appointments.notFound')} />
+        <EmptyState icon="â—·" title={t('appointments.notFound')} />
       </Screen>
     );
   }
@@ -160,7 +168,7 @@ function ReadOnlyAppointment({
   const { t } = useTranslation();
   const when = appointment.ends_at
     ? isolateLtr(
-        `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} – ${hmFromInstant(appointment.ends_at)}`,
+        `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} â€“ ${hmFromInstant(appointment.ends_at)}`,
       )
     : isolateLtr(`${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)}`);
   const doctorName = appointment.doctor_id
@@ -175,18 +183,20 @@ function ReadOnlyAppointment({
         </ThemedText>
       </Surface>
       <ThemedText type="sectionTitle">{appointment.title}</ThemedText>
-      <InfoRow
-        label={t('appointments.fields.type')}
-        value={t(`appointments.type.${appointment.appointment_type}`)}
-      />
-      <InfoRow label={t('appointments.whenLabel')} value={when} />
-      {appointment.location ? (
-        <InfoRow label={t('appointments.locationLabel')} value={appointment.location} />
-      ) : null}
-      {doctorName ? <InfoRow label={t('appointments.doctorLabel')} value={doctorName} /> : null}
-      {appointment.notes ? (
-        <InfoRow label={t('appointments.fields.notes')} value={appointment.notes} />
-      ) : null}
+      <View style={styles.infoGroup}>
+        <InfoRow
+          label={t('appointments.fields.type')}
+          value={t(`appointments.type.${appointment.appointment_type}`)}
+        />
+        <InfoRow label={t('appointments.whenLabel')} value={when} />
+        {appointment.location ? (
+          <InfoRow label={t('appointments.locationLabel')} value={appointment.location} />
+        ) : null}
+        {doctorName ? <InfoRow label={t('appointments.doctorLabel')} value={doctorName} /> : null}
+        {appointment.notes ? (
+          <InfoRow label={t('appointments.fields.notes')} value={appointment.notes} />
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -194,10 +204,10 @@ function ReadOnlyAppointment({
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="smallBold" themeColor="textSecondary">
         {label}
       </ThemedText>
-      <ThemedText style={styles.infoValue}>{value}</ThemedText>
+      <ThemedText type="default">{value}</ThemedText>
     </View>
   );
 }
@@ -212,6 +222,7 @@ function StatusSection({
   canManage: boolean;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const setStatus = useSetAppointmentStatus(circleId);
   const [pending, setPending] = useState(false);
 
@@ -230,37 +241,44 @@ function StatusSection({
         <ThemedText type="smallBold">{t('appointments.fields.status')}</ThemedText>
         <StatusBadge
           tone={STATUS_TONE[appointment.status]}
+          glyph={STATUS_GLYPH[appointment.status]}
           label={t(`appointments.status.${appointment.status}`)}
         />
       </View>
 
       {canManage ? (
-        <View style={styles.actions}>
+        <View style={[styles.actions, { borderTopColor: theme.divider }]}>
           {appointment.status === 'scheduled' ? (
             <>
               <Button
                 size="sm"
+                glyph="âœ“"
                 label={t('appointments.markCompleted')}
                 loading={pending}
                 disabled={pending}
                 onPress={() => run('completed')}
+                style={styles.action}
               />
               <Button
                 size="sm"
                 variant="secondary"
+                glyph="âœ•"
                 label={t('appointments.markCancelled')}
                 disabled={pending}
                 onPress={() => run('cancelled')}
+                style={styles.action}
               />
             </>
           ) : (
             <Button
               size="sm"
               variant="secondary"
+              glyph="â—·"
               label={t('appointments.reopen')}
               loading={pending}
               disabled={pending}
               onPress={() => run('scheduled')}
+              style={styles.action}
             />
           )}
         </View>
@@ -316,8 +334,8 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
 
 const styles = StyleSheet.create({
   fields: { gap: Spacing.three },
+  infoGroup: { gap: Spacing.two },
   infoRow: { gap: Spacing.half },
-  infoValue: { fontSize: 16, lineHeight: 24 },
   statusCard: { gap: Spacing.two },
   statusHeader: {
     flexDirection: 'row',
@@ -325,6 +343,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
+  action: { flexGrow: 1, flexBasis: 96 },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
 });

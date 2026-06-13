@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { GlyphChip } from '@/components/glyph-chip';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { StatusBadge } from '@/components/status-badge';
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { FontFamily, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import { useCircleSelection } from './provider';
 
@@ -18,6 +20,7 @@ import { useCircleSelection } from './provider';
  */
 export function CircleSwitcher() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const { circles, activeCircle, activeCircleId, setActiveCircle } = useCircleSelection();
   const [open, setOpen] = useState(false);
 
@@ -43,20 +46,25 @@ export function CircleSwitcher() {
             </ThemedText>
           ) : null}
         </View>
-        <ThemedText type="sectionTitle">{activeCircle.circleName}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {activeCircle.recipientName ?? t('careCircle.dashboard.noRecipient')}
-        </ThemedText>
+        <View style={styles.cardMain}>
+          <GlyphChip glyph={[...activeCircle.circleName.trim()][0] ?? 'â€¢'} tone="primary" size="md" />
+          <View style={styles.cardText}>
+            <ThemedText type="sectionTitle">{activeCircle.circleName}</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {activeCircle.recipientName ?? t('careCircle.dashboard.noRecipient')}
+            </ThemedText>
+          </View>
+        </View>
       </Surface>
 
       {multiple ? (
         <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
           <Pressable
-            style={styles.backdrop}
+            style={[styles.backdrop, { backgroundColor: theme.overlay }]}
             accessibilityLabel={t('common.close')}
             onPress={() => setOpen(false)}>
             <Pressable style={styles.sheetWrap} onPress={() => {}}>
-              <ThemedView style={styles.sheet}>
+              <ThemedView style={[styles.sheet, { borderColor: theme.border }]}>
                 <ThemedText type="sectionTitle" accessibilityRole="header">
                   {t('circleSwitcher.chooseTitle')}
                 </ThemedText>
@@ -108,10 +116,12 @@ function CircleRow({
       tone={current ? 'selected' : 'card'}
       onPress={onPress}
       selected={current}
-      accessibilityLabel={`${circleName}، ${recipientName ?? roleLabel}${current ? `، ${currentLabel}` : ''}`}
+      accessibilityLabel={`${circleName}ØŒ ${recipientName ?? roleLabel}${current ? `ØŒ ${currentLabel}` : ''}`}
       style={styles.circleRow}>
       <View style={styles.rowMain}>
-        <ThemedText type="cardTitle">{circleName}</ThemedText>
+        <ThemedText type="cardTitle" style={current && styles.rowTitleCurrent}>
+          {circleName}
+        </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {recipientName ?? roleLabel}
         </ThemedText>
@@ -128,19 +138,22 @@ function CircleRow({
 }
 
 const styles = StyleSheet.create({
-  cardGap: { gap: Spacing.one },
+  cardGap: { gap: Spacing.two },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  cardMain: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  cardText: { flex: 1, gap: Spacing.half },
+  backdrop: { flex: 1, justifyContent: 'flex-end' },
   sheetWrap: { width: '100%', maxWidth: MaxFormWidth, alignSelf: 'center' },
   sheet: {
     width: '100%',
-    borderTopLeftRadius: Spacing.four,
-    borderTopRightRadius: Spacing.four,
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
+    borderWidth: StyleSheet.hairlineWidth,
     paddingTop: Spacing.four,
     paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.five,
@@ -154,7 +167,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.three,
     marginBottom: Spacing.two,
-    minHeight: 60,
+    minHeight: TouchTarget.comfortable,
   },
   rowMain: { flex: 1, gap: Spacing.half },
+  rowTitleCurrent: { fontFamily: FontFamily.bold, fontWeight: '700' },
 });

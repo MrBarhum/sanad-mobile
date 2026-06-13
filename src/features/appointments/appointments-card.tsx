@@ -1,10 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
 
-import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { NavCard } from '@/components/nav-card';
 
 import { useTodayAppointmentSummary } from './hooks';
 
@@ -21,21 +18,11 @@ export function AppointmentsCard({ circleId }: { circleId: string }) {
       : t('appointments.summary.count', { count });
 
   return (
-    <Surface
+    <NavCard
+      glyph="â—·"
+      title={t('careCircle.dashboard.sections.appointments.title')}
+      subtitle={subtitle}
       onPress={() => router.push('/appointments')}
-      accessibilityLabel={t('careCircle.dashboard.sections.appointments.title')}
-      style={styles.card}>
-      <ThemedText type="cardTitle">
-        {t('careCircle.dashboard.sections.appointments.title')}
-      </ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.cardSubtitle}>
-        {subtitle}
-      </ThemedText>
-    </Surface>
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: Spacing.two, minHeight: 96, justifyContent: 'center' },
-  cardSubtitle: { fontSize: 16, lineHeight: 24 },
-});

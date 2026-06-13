@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TIMEZONES, type TimezoneOption } from '@/constants/timezones';
-import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { FontFamily, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { LtrText } from './ltr-text';
@@ -27,7 +27,7 @@ function isArabic(language: string): boolean {
 /** Localized "City, Country" label for an option in the active language. */
 function primaryLabel(option: TimezoneOption, language: string): string {
   return isArabic(language)
-    ? `${option.city.ar}، ${option.country.ar}`
+    ? `${option.city.ar}ØŒ ${option.country.ar}`
     : `${option.city.en}, ${option.country.en}`;
 }
 
@@ -49,7 +49,7 @@ function matches(option: TimezoneOption, query: string): boolean {
  * label with the IANA identifier as a secondary line, a "use this device's
  * timezone" shortcut, and a search box that matches city or country in either
  * language (or the raw IANA id). Selecting a row returns only the IANA `id`; the
- * caller is responsible for confirming and persisting it. No backdrop dismissal —
+ * caller is responsible for confirming and persisting it. No backdrop dismissal â€”
  * close is explicit, matching the app's other modals.
  */
 export function TimezonePicker({
@@ -79,9 +79,10 @@ export function TimezonePicker({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
-        style={styles.backdrop}
+        style={[styles.backdrop, { backgroundColor: theme.overlay }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ThemedView style={[styles.sheet, { borderColor: theme.border }]}>
+          <View style={[styles.grabber, { backgroundColor: theme.backgroundSelected }]} />
           <View style={styles.header}>
             <ThemedText type="sectionTitle" style={styles.title} accessibilityRole="header">
               {t('circleTimezone.pickerTitle')}
@@ -92,7 +93,7 @@ export function TimezonePicker({
               accessibilityLabel={t('common.close')}
               hitSlop={Spacing.two}
               style={styles.closeButton}>
-              <ThemedText style={styles.close}>✕</ThemedText>
+              <ThemedText style={styles.close}>âœ•</ThemedText>
             </Pressable>
           </View>
 
@@ -100,7 +101,7 @@ export function TimezonePicker({
             value={query}
             onChangeText={setQuery}
             placeholder={t('circleTimezone.searchPlaceholder')}
-            placeholderTextColor={theme.textSecondary}
+            placeholderTextColor={theme.textMuted}
             autoCapitalize="none"
             autoCorrect={false}
             accessibilityLabel={t('circleTimezone.searchPlaceholder')}
@@ -174,12 +175,16 @@ function Row({
         styles.row,
         {
           backgroundColor: selected ? theme.primaryBg : theme.backgroundElement,
-          borderColor: selected ? theme.primary : theme.border,
+          borderColor: selected ? 'transparent' : theme.border,
         },
         pressed && styles.pressed,
       ]}>
       <View style={styles.rowText}>
-        <ThemedText style={styles.rowPrimary}>{primary}</ThemedText>
+        <ThemedText
+          themeColor={selected ? 'primaryText' : 'text'}
+          style={[styles.rowPrimary, selected && styles.rowPrimarySelected]}>
+          {selected ? `âœ“ ${primary}` : primary}
+        </ThemedText>
         <LtrText type="small" themeColor="textSecondary">
           {secondary}
         </LtrText>
@@ -189,15 +194,12 @@ function Row({
           {currentLabel}
         </ThemedText>
       ) : null}
-      {selected ? (
-        <ThemedText style={[styles.check, { color: theme.primaryText }]}>✓</ThemedText>
-      ) : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  backdrop: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
     width: '100%',
     maxWidth: MaxFormWidth,
@@ -206,7 +208,15 @@ const styles = StyleSheet.create({
     borderTopRightRadius: Radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     maxHeight: '92%',
-    paddingTop: Spacing.four,
+    paddingTop: Spacing.two,
+  },
+  // Visual bottom-sheet affordance (dismissal stays explicit via the close button).
+  grabber: {
+    alignSelf: 'center',
+    width: 44,
+    height: 5,
+    borderRadius: Radius.pill,
+    marginBottom: Spacing.three,
   },
   header: {
     flexDirection: 'row',
@@ -230,6 +240,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
+    fontFamily: FontFamily.regular,
     fontSize: 16,
     minHeight: TouchTarget.comfortable,
   },
@@ -249,6 +260,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
   },
   rowText: { flexShrink: 1, gap: Spacing.half },
-  rowPrimary: { fontSize: 16, fontWeight: '600' },
-  check: { fontSize: 18, fontWeight: '700' },
+  rowPrimary: { fontFamily: FontFamily.semibold, fontSize: 16, fontWeight: '600' },
+  rowPrimarySelected: { fontFamily: FontFamily.bold, fontWeight: '700' },
 });

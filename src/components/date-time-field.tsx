@@ -68,7 +68,8 @@ export function DateTimeField({
 }
 
 const styles = StyleSheet.create({
-  container: { gap: Spacing.one },
+  // Mirrors FormField's label-to-control rhythm.
+  container: { gap: Spacing.two },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.three },
   col: { flexGrow: 1, flexBasis: 160 },
 });

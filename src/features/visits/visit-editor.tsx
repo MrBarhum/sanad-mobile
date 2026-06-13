@@ -13,6 +13,7 @@ import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 import { formatHm } from '@/utils/date';
@@ -25,6 +26,13 @@ const STATUS_TONE: Record<VisitStatus, StatusTone> = {
   planned: 'info',
   completed: 'success',
   cancelled: 'error',
+};
+
+/** Visit status â†’ badge glyph (planned reads as "upcoming"). */
+const STATUS_GLYPH: Record<VisitStatus, string> = {
+  planned: 'â—·',
+  completed: 'âœ“',
+  cancelled: 'âœ•',
 };
 
 /** Loads a visit, then renders the view/edit screen with status + delete. */
@@ -57,7 +65,7 @@ export function VisitEditor({
   if (!visit.data) {
     return (
       <Screen scroll={false} center>
-        <EmptyState title={t('visits.notFound')} />
+        <EmptyState icon="âŒ‚" title={t('visits.notFound')} />
       </Screen>
     );
   }
@@ -140,7 +148,7 @@ function ReadOnlyVisit({ visit }: { visit: FamilyVisit }) {
   if (visit.start_time) timeParts.push(isolateLtr(formatHm(visit.start_time)));
   if (visit.end_time) timeParts.push(isolateLtr(formatHm(visit.end_time)));
   const when =
-    timeParts.length > 0 ? `${visit.visit_date} ${timeParts.join(' – ')}` : visit.visit_date;
+    timeParts.length > 0 ? `${visit.visit_date} ${timeParts.join(' â€“ ')}` : visit.visit_date;
 
   return (
     <View style={styles.fields}>
@@ -150,8 +158,10 @@ function ReadOnlyVisit({ visit }: { visit: FamilyVisit }) {
         </ThemedText>
       </Surface>
       <ThemedText type="sectionTitle">{visit.visitor_name}</ThemedText>
-      <InfoRow label={t('visits.whenLabel')} value={when} />
-      {visit.notes ? <InfoRow label={t('visits.fields.notes')} value={visit.notes} /> : null}
+      <View style={styles.infoGroup}>
+        <InfoRow label={t('visits.whenLabel')} value={when} />
+        {visit.notes ? <InfoRow label={t('visits.fields.notes')} value={visit.notes} /> : null}
+      </View>
     </View>
   );
 }
@@ -159,10 +169,10 @@ function ReadOnlyVisit({ visit }: { visit: FamilyVisit }) {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="smallBold" themeColor="textSecondary">
         {label}
       </ThemedText>
-      <ThemedText style={styles.infoValue}>{value}</ThemedText>
+      <ThemedText type="default">{value}</ThemedText>
     </View>
   );
 }
@@ -177,6 +187,7 @@ function StatusSection({
   canAct: boolean;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const setStatus = useSetVisitStatus(circleId);
   const [pending, setPending] = useState(false);
 
@@ -193,36 +204,46 @@ function StatusSection({
     <Surface style={styles.statusCard}>
       <View style={styles.statusRow}>
         <ThemedText type="smallBold">{t('visits.fields.status')}</ThemedText>
-        <StatusBadge tone={STATUS_TONE[visit.status]} label={t(`visits.status.${visit.status}`)} />
+        <StatusBadge
+          tone={STATUS_TONE[visit.status]}
+          glyph={STATUS_GLYPH[visit.status]}
+          label={t(`visits.status.${visit.status}`)}
+        />
       </View>
 
       {canAct ? (
-        <View style={styles.actions}>
+        <View style={[styles.actions, { borderTopColor: theme.divider }]}>
           {visit.status === 'planned' ? (
             <>
               <Button
                 size="sm"
+                glyph="âœ“"
                 label={t('visits.markCompleted')}
                 loading={pending}
                 disabled={pending}
                 onPress={() => run('completed')}
+                style={styles.action}
               />
               <Button
                 size="sm"
                 variant="secondary"
+                glyph="âœ•"
                 label={t('visits.markCancelled')}
                 disabled={pending}
                 onPress={() => run('cancelled')}
+                style={styles.action}
               />
             </>
           ) : (
             <Button
               size="sm"
               variant="secondary"
+              glyph="â—·"
               label={t('visits.reopen')}
               loading={pending}
               disabled={pending}
               onPress={() => run('planned')}
+              style={styles.action}
             />
           )}
         </View>
@@ -274,8 +295,8 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
 
 const styles = StyleSheet.create({
   fields: { gap: Spacing.three },
+  infoGroup: { gap: Spacing.two },
   infoRow: { gap: Spacing.half },
-  infoValue: { fontSize: 16, lineHeight: 24 },
   statusCard: { gap: Spacing.two },
   statusRow: {
     flexDirection: 'row',
@@ -283,6 +304,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
+  action: { flexGrow: 1, flexBasis: 96 },
   confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
 });

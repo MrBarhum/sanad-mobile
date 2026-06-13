@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import {
@@ -31,7 +31,7 @@ function minuteValues(step: number): number[] {
 
 /**
  * Labeled time field that opens a touch-friendly scrollable picker (hour /
- * minute) — no manual 'HH:MM' typing. Stores and emits 24-hour 'HH:MM' (or ''
+ * minute) â€” no manual 'HH:MM' typing. Stores and emits 24-hour 'HH:MM' (or ''
  * when cleared). The web build uses a native `<input type="time">` instead (see
  * time-field.web.tsx).
  */
@@ -88,8 +88,14 @@ export function TimeField({
             opacity: disabled ? 0.6 : 1,
           },
         ]}>
-        <ThemedText themeColor={value ? 'text' : 'textSecondary'} style={styles.triggerText}>
+        <ThemedText themeColor={value ? 'text' : 'textMuted'} style={styles.triggerText}>
           {value || placeholder || t('pickers.setTime')}
+        </ThemedText>
+        <ThemedText
+          style={[styles.triggerGlyph, { color: theme.textMuted }]}
+          accessibilityElementsHidden
+          importantForAccessibility="no">
+          â€º
         </ThemedText>
       </Pressable>
 
@@ -138,14 +144,18 @@ export function TimeField({
 }
 
 const styles = StyleSheet.create({
-  field: { gap: Spacing.one },
+  field: { gap: Spacing.two },
   trigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
-    justifyContent: 'center',
-    minHeight: 52,
+    minHeight: TouchTarget.comfortable,
   },
-  triggerText: { fontSize: 16 },
+  triggerText: { fontFamily: FontFamily.regular, fontSize: 16, flexShrink: 1 },
+  triggerGlyph: { fontSize: 22, lineHeight: 26, fontWeight: '600' },
   columns: { flexDirection: 'row', gap: Spacing.two, justifyContent: 'center' },
 });

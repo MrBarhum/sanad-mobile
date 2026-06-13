@@ -4,12 +4,13 @@ import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FormField } from '@/components/form-field';
+import { InfoBanner } from '@/components/info-banner';
 import { LtrText } from '@/components/ltr-text';
 import { OptionSelect } from '@/components/option-select';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { FontFamily, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ymdFromInstant } from '@/utils/date';
 
@@ -59,9 +60,7 @@ export function InviteForm({ circleId, actorRole }: { circleId: string; actorRol
 
   return (
     <Screen maxWidth={MaxFormWidth} keyboardAvoiding>
-      <Surface tone="warning">
-        <ThemedText type="small">{t('invitations.warning')}</ThemedText>
-      </Surface>
+      <InfoBanner tone="warning" text={t('invitations.warning')} />
 
       <OptionSelect
         label={t('invitations.fields.role')}
@@ -125,7 +124,7 @@ function CreatedCard({
         {t('invitations.createdSubtitle')}
       </ThemedText>
 
-      <Surface tone="selected" style={styles.codeBox}>
+      <Surface tone="sunken" radius={Radius.md} style={styles.codeBox}>
         <LtrText style={styles.code} selectable accessibilityLabel={created.code}>
           {created.code}
         </LtrText>
@@ -138,9 +137,7 @@ function CreatedCard({
         {t('invitations.expiresLabel', { date: ymdFromInstant(created.expiresAt) })}
       </ThemedText>
 
-      <Surface tone="warning">
-        <ThemedText type="small">{t('invitations.codeOnceWarning')}</ThemedText>
-      </Surface>
+      <InfoBanner tone="warning" text={t('invitations.codeOnceWarning')} />
 
       {feedback ? (
         <ThemedText type="small" accessibilityLiveRegion="polite">
@@ -173,7 +170,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     alignItems: 'center',
   },
-  code: { fontSize: 32, fontWeight: '700', letterSpacing: 2 },
+  code: {
+    fontFamily: FontFamily.bold,
+    fontSize: 30,
+    lineHeight: 44,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textAlign: 'center',
+  },
   actions: { gap: Spacing.two, marginTop: Spacing.two },
   action: { width: '100%' },
 });

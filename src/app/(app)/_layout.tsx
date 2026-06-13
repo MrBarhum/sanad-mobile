@@ -1,6 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { FontFamily } from '@/constants/theme';
 import { NotificationObserver } from '@/features/notifications/notification-observer';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
@@ -34,7 +35,9 @@ export default function AppLayout() {
           headerShown: true,
           headerStyle: { backgroundColor: theme.background },
           headerTintColor: theme.text,
-          headerTitleStyle: { color: theme.text },
+          // Brand typeface on every native header so screen titles match the
+          // in-screen typography (size kept native-modest, weight does the work).
+          headerTitleStyle: { color: theme.text, fontFamily: FontFamily.bold, fontSize: 18 },
           headerShadowVisible: false,
           contentStyle: { backgroundColor: theme.background },
         }}>

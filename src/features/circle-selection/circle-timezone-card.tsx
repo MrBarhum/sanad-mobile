@@ -16,7 +16,7 @@ import { useCircleSelection } from './provider';
 
 /**
  * Care-circle timezone settings. The circle's timezone is the canonical zone for
- * scheduled medication/task wall-clock times — it must match the cared-for
+ * scheduled medication/task wall-clock times â€” it must match the cared-for
  * person's location, NOT each member's device. A newly created circle is seeded
  * from the creator's device; this card shows the current value (with a friendly
  * city/country label when known), prompts a manager to confirm it when it is
@@ -43,7 +43,7 @@ export function CircleTimezoneCard() {
     const option = findTimezoneOption(id);
     if (!option) return id;
     return isArabic
-      ? `${option.city.ar}، ${option.country.ar}`
+      ? `${option.city.ar}ØŒ ${option.country.ar}`
       : `${option.city.en}, ${option.country.en}`;
   }
 
@@ -70,7 +70,7 @@ export function CircleTimezoneCard() {
   return (
     <Surface style={styles.card}>
       <ThemedText type="cardTitle">{t('circleTimezone.title')}</ThemedText>
-      <ThemedText style={styles.current}>{friendlyCurrent}</ThemedText>
+      <ThemedText type="cardTitle">{friendlyCurrent}</ThemedText>
       {friendlyCurrent !== current ? (
         <LtrText type="small" themeColor="textSecondary">
           {current}
@@ -145,6 +145,5 @@ export function CircleTimezoneCard() {
 
 const styles = StyleSheet.create({
   card: { gap: Spacing.two },
-  current: { fontSize: 16, fontWeight: '600' },
   actions: { gap: Spacing.two, marginTop: Spacing.one },
 });

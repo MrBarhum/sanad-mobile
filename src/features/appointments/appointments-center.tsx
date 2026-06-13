@@ -4,13 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
-import { isolateLtr } from '@/components/ltr-text';
+import { LtrText, isolateLtr } from '@/components/ltr-text';
 import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useDoctors } from '@/features/doctors/hooks';
 import { ReminderNotice } from '@/features/notifications/reminder-notice';
 import { hmFromInstant, todayYmd, ymdFromInstant } from '@/utils/date';
@@ -85,19 +86,24 @@ export function AppointmentsCenter({
 
   return (
     <Screen>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         {t('appointments.disclaimer')}
       </ThemedText>
 
       <ReminderNotice messageKey="appointments.reminderNotice" />
 
       {canManage ? (
-        <Button label={t('appointments.add')} onPress={() => router.push('/appointments/new')} />
+        <Button
+          glyph="ï¼‹"
+          label={t('appointments.add')}
+          onPress={() => router.push('/appointments/new')}
+        />
       ) : null}
 
       <Section title={t('appointments.todayTitle')}>
         {todayAppointments.length === 0 ? (
           <EmptyState
+            icon="â—·"
             title={t('appointments.noTodayTitle')}
             subtitle={t('appointments.noTodaySubtitle')}
           />
@@ -109,6 +115,7 @@ export function AppointmentsCenter({
       <Section title={t('appointments.upcomingTitle')}>
         {upcoming.length === 0 ? (
           <EmptyState
+            icon="â—·"
             title={t('appointments.noUpcomingTitle')}
             subtitle={canManage ? t('appointments.noUpcomingSubtitle') : undefined}
           />
@@ -138,10 +145,11 @@ function AppointmentCard({
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const when = appointment.ends_at
     ? isolateLtr(
-        `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} – ${hmFromInstant(appointment.ends_at)}`,
+        `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} â€“ ${hmFromInstant(appointment.ends_at)}`,
       )
     : isolateLtr(`${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)}`);
 
@@ -159,8 +167,13 @@ function AppointmentCard({
         ) : null}
       </View>
 
+      {/* The scheduled date/time is the scannable anchor of the card. */}
+      <View style={[styles.whenChip, { backgroundColor: theme.accentBg }]}>
+        <LtrText style={[styles.whenText, { color: theme.accentFg }]}>{when}</LtrText>
+      </View>
+
       <ThemedText type="small" themeColor="textSecondary">
-        {t(`appointments.type.${appointment.appointment_type}`)} • {when}
+        {t(`appointments.type.${appointment.appointment_type}`)}
       </ThemedText>
       {appointment.location ? (
         <ThemedText type="small" themeColor="textSecondary">
@@ -173,25 +186,36 @@ function AppointmentCard({
         </ThemedText>
       ) : null}
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, { borderTopColor: theme.divider }]}>
         {canManage && appointment.status === 'scheduled' ? (
           <>
             <Button
               size="sm"
+              glyph="âœ“"
               label={t('appointments.markCompleted')}
               disabled={pending}
               onPress={onComplete}
+              style={styles.action}
             />
             <Button
               size="sm"
               variant="secondary"
+              glyph="âœ•"
               label={t('appointments.markCancelled')}
               disabled={pending}
               onPress={onCancel}
+              style={styles.action}
             />
           </>
         ) : null}
-        <Button size="sm" variant="secondary" label={t('common.details')} onPress={onOpen} />
+        <Button
+          size="sm"
+          variant="secondary"
+          glyph="â€º"
+          label={t('common.details')}
+          onPress={onOpen}
+          style={styles.action}
+        />
       </View>
     </Surface>
   );
@@ -207,5 +231,22 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   cardTitle: { flexShrink: 1 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
+  whenChip: {
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    minHeight: 40,
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
+  whenText: { fontFamily: FontFamily.bold, fontSize: 18, lineHeight: 28, fontWeight: '700' },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
+  action: { flexGrow: 1, flexBasis: 96 },
 });

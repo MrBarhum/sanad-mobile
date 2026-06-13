@@ -1,6 +1,6 @@
 import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
-import { Fonts, ThemeColor } from '@/constants/theme';
+import { FontFamily, Fonts, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedTextProps = TextProps & {
@@ -24,7 +24,7 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
   return (
     <Text
       style={[
-        { color: theme[themeColor ?? 'text'] },
+        { color: theme[themeColor ?? (type === 'link' || type === 'linkPrimary' ? 'primaryText' : 'text')] },
         type === 'default' && styles.default,
         type === 'title' && styles.title,
         type === 'small' && styles.small,
@@ -33,7 +33,7 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
         type === 'sectionTitle' && styles.sectionTitle,
         type === 'cardTitle' && styles.cardTitle,
         type === 'link' && styles.link,
-        type === 'linkPrimary' && styles.linkPrimary,
+        type === 'linkPrimary' && styles.link,
         type === 'code' && styles.code,
         style,
       ]}
@@ -42,54 +42,67 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
   );
 }
 
+/**
+ * Type scale â€” sized for Arabic script (taller joins and diacritics need
+ * roomier line-heights, â‰ˆ1.5Ã—). Hierarchy comes from clear size AND weight
+ * steps, never from shrinking text below the 14pt readability floor. Each
+ * weight pins its exact font file plus the numeric weight, so text falls back
+ * gracefully to the system font before assets load (or on platforms without
+ * them).
+ */
 const styles = StyleSheet.create({
   small: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 500,
+    lineHeight: 22,
+    fontWeight: 400,
   },
   smallBold: {
+    fontFamily: FontFamily.semibold,
     fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 700,
+    lineHeight: 22,
+    fontWeight: 600,
   },
   default: {
+    fontFamily: FontFamily.regular,
     fontSize: 16,
-    lineHeight: 24,
-    fontWeight: 500,
+    lineHeight: 26,
+    fontWeight: 400,
   },
+  /** Screen-level greeting/hero. Was 48 â€” web-scaled; 30 is the mobile sweet spot. */
   title: {
-    fontSize: 48,
-    fontWeight: 600,
-    lineHeight: 52,
+    fontFamily: FontFamily.bold,
+    fontSize: 30,
+    lineHeight: 42,
+    fontWeight: 700,
   },
   subtitle: {
-    fontSize: 32,
-    lineHeight: 44,
-    fontWeight: 600,
+    fontFamily: FontFamily.bold,
+    fontSize: 22,
+    lineHeight: 32,
+    fontWeight: 700,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontFamily: FontFamily.bold,
+    fontSize: 19,
     lineHeight: 30,
     fontWeight: 700,
   },
   cardTitle: {
-    fontSize: 18,
-    lineHeight: 26,
+    fontFamily: FontFamily.semibold,
+    fontSize: 17,
+    lineHeight: 27,
     fontWeight: 600,
   },
   link: {
-    lineHeight: 30,
-    fontSize: 14,
-  },
-  linkPrimary: {
-    lineHeight: 30,
-    fontSize: 14,
-    color: '#3c87f7',
+    fontFamily: FontFamily.medium,
+    fontSize: 15,
+    lineHeight: 28,
+    fontWeight: 500,
   },
   code: {
     fontFamily: Fonts.mono,
     fontWeight: Platform.select({ android: 700 }) ?? 500,
-    fontSize: 12,
+    fontSize: 13,
   },
 });

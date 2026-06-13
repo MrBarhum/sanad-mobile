@@ -2,11 +2,13 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { ContactCard } from '@/components/contact-card';
+import { GlyphChip } from '@/components/glyph-chip';
 import { ErrorState, LoadingState } from '@/components/states';
 import { Screen } from '@/components/screen';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useRecipient } from '@/features/recipient-profile/hooks';
 import { useDoctors } from '@/features/doctors/hooks';
 import { approximateAgeYears } from '@/utils/date';
@@ -48,41 +50,46 @@ export function EmergencyCard({ circleId }: { circleId: string }) {
   const contactList = contacts.data ?? [];
   const doctorList = doctors.data ?? [];
 
+  const medicalRows = [
+    { key: 'bloodType', label: t('recipientProfile.fields.bloodType'), value: person?.blood_type ?? null },
+    { key: 'allergies', label: t('recipientProfile.fields.allergies'), value: person?.allergies ?? null },
+    {
+      key: 'chronicConditions',
+      label: t('recipientProfile.fields.chronicConditions'),
+      value: person?.chronic_conditions ?? null,
+    },
+    {
+      key: 'emergencyNotes',
+      label: t('recipientProfile.fields.emergencyNotes'),
+      value: person?.emergency_notes ?? null,
+    },
+  ];
+
   return (
     <Screen>
       <Surface style={styles.identity}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('emergencyCard.recipientLabel')}
-        </ThemedText>
-        <ThemedText style={styles.name}>
-          {person?.full_name ?? t('emergencyCard.noRecipient')}
-        </ThemedText>
-        {person?.birth_date ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('emergencyCard.birthDate')}: {person.birth_date}
-            {age !== null ? ` • ${t('emergencyCard.approxAge')}: ${age}` : ''}
+        <GlyphChip glyph="âœš" tone="error" />
+        <View style={styles.identityText}>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            {t('emergencyCard.recipientLabel')}
           </ThemedText>
-        ) : null}
+          <ThemedText type="subtitle">
+            {person?.full_name ?? t('emergencyCard.noRecipient')}
+          </ThemedText>
+          {person?.birth_date ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('emergencyCard.birthDate')}: {person.birth_date}
+              {age !== null ? ` â€¢ ${t('emergencyCard.approxAge')}: ${age}` : ''}
+            </ThemedText>
+          ) : null}
+        </View>
       </Surface>
 
       <Section title={t('emergencyCard.medicalTitle')}>
         <Surface style={styles.infoGroup}>
-          <InfoRow
-            label={t('recipientProfile.fields.bloodType')}
-            value={person?.blood_type ?? null}
-          />
-          <InfoRow
-            label={t('recipientProfile.fields.allergies')}
-            value={person?.allergies ?? null}
-          />
-          <InfoRow
-            label={t('recipientProfile.fields.chronicConditions')}
-            value={person?.chronic_conditions ?? null}
-          />
-          <InfoRow
-            label={t('recipientProfile.fields.emergencyNotes')}
-            value={person?.emergency_notes ?? null}
-          />
+          {medicalRows.map((row, index) => (
+            <InfoRow key={row.key} label={row.label} value={row.value} divider={index > 0} />
+          ))}
         </Surface>
       </Section>
 
@@ -123,34 +130,49 @@ export function EmergencyCard({ circleId }: { circleId: string }) {
         )}
       </Section>
 
-      <ThemedText type="small" themeColor="textSecondary" style={styles.disclaimer}>
+      <ThemedText type="small" themeColor="textMuted" style={styles.disclaimer}>
         {t('emergencyCard.disclaimer')}
       </ThemedText>
     </Screen>
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string | null }) {
+function InfoRow({
+  label,
+  value,
+  divider = false,
+}: {
+  label: string;
+  value: string | null;
+  divider?: boolean;
+}) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const display = value && value.trim() !== '' ? value : t('emergencyCard.notSpecified');
   return (
-    <View style={styles.infoRow}>
-      <ThemedText type="small" themeColor="textSecondary">
+    <View
+      style={[styles.infoRow, divider && [styles.infoRowDivided, { borderTopColor: theme.divider }]]}>
+      <ThemedText type="smallBold" themeColor="textSecondary">
         {label}
       </ThemedText>
-      <ThemedText style={styles.infoValue} selectable>
-        {display}
-      </ThemedText>
+      <ThemedText selectable>{display}</ThemedText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  identity: { gap: Spacing.one },
-  name: { fontSize: 26, lineHeight: 34, fontWeight: '700' },
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  identityText: { flex: 1, gap: Spacing.half },
   infoGroup: { gap: Spacing.three },
   infoRow: { gap: Spacing.half },
-  infoValue: { fontSize: 16, lineHeight: 24 },
+  infoRowDivided: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
   list: { gap: Spacing.three },
   disclaimer: { textAlign: 'center', marginTop: Spacing.two },
 });

@@ -1,12 +1,15 @@
 import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { GlyphChip } from '@/components/glyph-chip';
+import { NavCard } from '@/components/nav-card';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Spacing, TouchTarget } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { AppointmentsCard } from '@/features/appointments/appointments-card';
 import { CircleSwitcher } from '@/features/circle-selection/circle-switcher';
 import type { ActiveCircle } from '@/features/circle-selection/permissions';
@@ -17,38 +20,53 @@ import { TasksCard } from '@/features/tasks/tasks-card';
 import { VisitsCard } from '@/features/visits/visits-card';
 import { VitalsCard } from '@/features/vitals/vitals-card';
 
-/** Navigable feature cards on the dashboard. */
+/**
+ * People & settings rows on the dashboard â€” rendered as one grouped list (a
+ * calm "settings group") rather than four more look-alike cards. Glyphs are
+ * decorative non-emoji marks; the labels carry all meaning.
+ */
 const ACTIONS = [
   {
     key: 'members',
     href: '/circle-members',
+    glyph: 'â–',
     titleKey: 'circleMembers.title',
     subtitleKey: 'circleMembers.subtitle',
   },
   {
     key: 'recipientProfile',
     href: '/recipient-profile',
+    glyph: 'âœ¦',
     titleKey: 'careCircle.dashboard.sections.recipientProfile.title',
     subtitleKey: 'careCircle.dashboard.sections.recipientProfile.subtitle',
   },
   {
     key: 'emergencyContacts',
     href: '/emergency-contacts',
+    glyph: 'âœ†',
     titleKey: 'careCircle.dashboard.sections.emergencyContacts.title',
     subtitleKey: 'careCircle.dashboard.sections.emergencyContacts.subtitle',
   },
   {
     key: 'doctors',
     href: '/doctors',
+    glyph: 'âœœ',
     titleKey: 'careCircle.dashboard.sections.doctors.title',
     subtitleKey: 'careCircle.dashboard.sections.doctors.subtitle',
   },
-] as const satisfies readonly { key: string; href: Href; titleKey: string; subtitleKey: string }[];
+] as const satisfies readonly {
+  key: string;
+  href: Href;
+  glyph: string;
+  titleKey: string;
+  subtitleKey: string;
+}[];
 
 /** Dashboard shown on Home once the user belongs to an active care circle. */
 export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
   const { t } = useTranslation();
   const router = useRouter();
+  const theme = useTheme();
 
   return (
     <Screen edges={{ top: true }}>
@@ -59,32 +77,20 @@ export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
           </ThemedText>
           <NotificationBell />
         </View>
-        <ThemedText themeColor="textSecondary" style={styles.tagline}>
-          {t('home.tagline')}
-        </ThemedText>
+        <ThemedText themeColor="textSecondary">{t('home.tagline')}</ThemedText>
       </ThemedView>
 
       <CircleSwitcher />
 
-      <Surface
+      <NavCard
+        glyph="âœš"
+        glyphTone="error"
         tone="error"
+        titleColor="errorFg"
+        title={t('careCircle.dashboard.sections.emergency.title')}
+        subtitle={t('careCircle.dashboard.sections.emergency.subtitle')}
         onPress={() => router.push('/emergency-card')}
-        accessibilityLabel={t('careCircle.dashboard.sections.emergency.title')}
-        style={styles.emergencyCard}>
-        <View style={styles.emergencyRow}>
-          <ThemedText style={styles.emergencyGlyph} accessibilityElementsHidden importantForAccessibility="no">
-            🆘
-          </ThemedText>
-          <View style={styles.emergencyText}>
-            <ThemedText type="sectionTitle" themeColor="errorFg">
-              {t('careCircle.dashboard.sections.emergency.title')}
-            </ThemedText>
-            <ThemedText themeColor="textSecondary">
-              {t('careCircle.dashboard.sections.emergency.subtitle')}
-            </ThemedText>
-          </View>
-        </View>
-      </Surface>
+      />
 
       <View style={styles.cards}>
         <MedicationsCard circleId={circle.circleId} />
@@ -93,18 +99,37 @@ export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
         <TasksCard circleId={circle.circleId} />
         <AppointmentsCard circleId={circle.circleId} />
         <VisitsCard circleId={circle.circleId} />
+      </View>
 
-        {ACTIONS.map((section) => (
-          <Surface
+      <Surface padded={false}>
+        {ACTIONS.map((section, index) => (
+          <Pressable
             key={section.key}
             onPress={() => router.push(section.href)}
+            accessibilityRole="button"
             accessibilityLabel={t(section.titleKey)}
-            style={styles.card}>
-            <ThemedText type="cardTitle">{t(section.titleKey)}</ThemedText>
-            <ThemedText themeColor="textSecondary">{t(section.subtitleKey)}</ThemedText>
-          </Surface>
+            accessibilityHint={t(section.subtitleKey)}
+            android_ripple={{ color: theme.backgroundSelected }}
+            style={({ pressed }) => [
+              styles.actionRow,
+              index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.divider },
+              pressed && styles.pressed,
+            ]}>
+            <GlyphChip glyph={section.glyph} tone="neutral" size="sm" />
+            <View style={styles.rowText}>
+              <ThemedText type="cardTitle">{t(section.titleKey)}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t(section.subtitleKey)}
+              </ThemedText>
+            </View>
+            <ThemedText
+              style={[styles.chevron, { color: theme.textMuted }]}
+              accessibilityElementsHidden>
+              â€º
+            </ThemedText>
+          </Pressable>
         ))}
-      </View>
+      </Surface>
     </Screen>
   );
 }
@@ -126,15 +151,12 @@ function MedicationsCard({ circleId }: { circleId: string }) {
         });
 
   return (
-    <Surface
+    <NavCard
+      glyph="â—‰"
+      title={t('careCircle.dashboard.sections.medications.title')}
+      subtitle={subtitle}
       onPress={() => router.push('/medications')}
-      accessibilityLabel={t('careCircle.dashboard.sections.medications.title')}
-      style={styles.card}>
-      <ThemedText type="cardTitle">
-        {t('careCircle.dashboard.sections.medications.title')}
-      </ThemedText>
-      <ThemedText themeColor="textSecondary">{subtitle}</ThemedText>
-    </Surface>
+    />
   );
 }
 
@@ -147,11 +169,16 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   headerTitle: { flexShrink: 1 },
-  tagline: { fontSize: 18, lineHeight: 28 },
-  emergencyCard: { minHeight: 96, justifyContent: 'center' },
-  emergencyRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
-  emergencyGlyph: { fontSize: 32, lineHeight: 38 },
-  emergencyText: { flex: 1, gap: Spacing.two },
   cards: { gap: Spacing.three },
-  card: { gap: Spacing.two, minHeight: 96, justifyContent: 'center' },
+  rowText: { flex: 1, gap: Spacing.half },
+  chevron: { fontSize: 26, lineHeight: 30, fontWeight: '600' },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+    minHeight: TouchTarget.comfortable + Spacing.three,
+  },
+  pressed: { opacity: 0.8 },
 });

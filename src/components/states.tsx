@@ -1,9 +1,10 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { Radius, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Button } from './button';
+import { GlyphChip } from './glyph-chip';
 import { Surface } from './surface';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
@@ -33,12 +34,9 @@ export function ErrorState({
   retryLabel: string;
   onRetry: () => void;
 }) {
-  const theme = useTheme();
   return (
     <ThemedView style={styles.centered}>
-      <View style={[styles.iconCircle, { borderColor: theme.errorFg }]}>
-        <ThemedText style={[styles.iconGlyph, { color: theme.errorFg }]}>!</ThemedText>
-      </View>
+      <GlyphChip glyph="!" tone="error" size="lg" />
       <ThemedText style={styles.message} accessibilityRole="alert">
         {message}
       </ThemedText>
@@ -55,12 +53,12 @@ export function EmptyState({
 }: {
   title: string;
   subtitle?: string;
-  /** Optional decorative glyph above the title. */
+  /** Optional decorative glyph above the title â€” a non-emoji mark (â—‰ âœ“ âœŽ â™¡ â€¦). */
   icon?: string;
 }) {
   return (
     <Surface tone="card" style={styles.empty}>
-      {icon ? <ThemedText style={styles.emptyIcon}>{icon}</ThemedText> : null}
+      {icon ? <GlyphChip glyph={icon} tone="neutral" size="lg" /> : null}
       <ThemedText type="cardTitle" style={styles.centerText}>
         {title}
       </ThemedText>
@@ -85,18 +83,8 @@ const styles = StyleSheet.create({
   empty: {
     paddingVertical: Spacing.five,
     paddingHorizontal: Spacing.four,
-    gap: Spacing.two,
+    gap: Spacing.three,
     alignItems: 'center',
   },
-  emptyIcon: { fontSize: 40, lineHeight: 48 },
   centerText: { textAlign: 'center' },
-  iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: Radius.pill,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconGlyph: { fontSize: 28, fontWeight: '800' },
 });

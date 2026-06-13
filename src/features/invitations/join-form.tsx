@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/button';
 import { FormField } from '@/components/form-field';
+import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
-import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { MaxFormWidth } from '@/constants/theme';
 import { useCircleSelection } from '@/features/circle-selection/provider';
@@ -58,7 +58,9 @@ export function JoinCircleForm() {
           <ThemedText type="sectionTitle" accessibilityRole="header">
             {t('joinCircle.title')}
           </ThemedText>
-          <ThemedText themeColor="textSecondary">{t('joinCircle.subtitle')}</ThemedText>
+          <ThemedText type="small" themeColor="textMuted">
+            {t('joinCircle.subtitle')}
+          </ThemedText>
 
           <FormField
             label={t('joinCircle.codeLabel')}
@@ -70,9 +72,7 @@ export function JoinCircleForm() {
             error={error}
           />
 
-          <Surface tone="warning">
-            <ThemedText type="small">{t('joinCircle.warning')}</ThemedText>
-          </Surface>
+          <InfoBanner tone="warning" text={t('joinCircle.warning')} />
 
           <Button
             label={t('joinCircle.submit')}

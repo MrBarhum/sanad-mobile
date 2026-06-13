@@ -76,11 +76,12 @@ export function EmergencyContactsManager({
     <>
       <Screen>
         {canManage ? (
-          <Button label={t('emergencyContacts.add')} onPress={() => setAdding(true)} />
+          <Button glyph="ï¼‹" label={t('emergencyContacts.add')} onPress={() => setAdding(true)} />
         ) : null}
 
         {items.length === 0 ? (
           <EmptyState
+            icon="âœ†"
             title={t('emergencyContacts.emptyTitle')}
             subtitle={canManage ? t('emergencyContacts.emptySubtitle') : undefined}
           />

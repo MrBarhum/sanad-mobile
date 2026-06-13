@@ -7,9 +7,8 @@ import { LtrText } from '@/components/ltr-text';
 import { Screen } from '@/components/screen';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { TimeField } from '@/components/time-field';
-import { MaxFormWidth, Radius, Spacing } from '@/constants/theme';
+import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 
@@ -24,6 +23,7 @@ import { PREFERENCE_TOGGLES, quietHoursValid, type BooleanPreferenceKey } from '
  * quiet hours, timezone, and a safe local test action. */
 export function NotificationSettings() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const { circles, activeCircleId } = useCircleSelection();
 
   // null scope = the user's global default; otherwise a specific circle.
@@ -90,7 +90,7 @@ export function NotificationSettings() {
   }
 
   return (
-    <Screen maxWidth={MaxFormWidth}>
+    <Screen maxWidth={MaxFormWidth} gap={Spacing.four}>
       <PushStatusCard />
 
       {/* Scope: global default or a specific circle */}
@@ -119,21 +119,22 @@ export function NotificationSettings() {
 
       {input ? (
         <>
-          {/* Per-type toggles */}
-          <View style={styles.section}>
-            {PREFERENCE_TOGGLES.map((toggle) => (
+          {/* Per-type toggles â€” one calm grouped surface */}
+          <Surface padded={false}>
+            {PREFERENCE_TOGGLES.map((toggle, index) => (
               <ToggleRow
                 key={toggle.key}
+                topDivider={index > 0}
                 label={t(toggle.labelKey)}
                 description={t(toggle.descriptionKey)}
                 value={input[toggle.key as BooleanPreferenceKey]}
                 onValueChange={(v) => update(toggle.key, v)}
               />
             ))}
-          </View>
+          </Surface>
 
           {/* Quiet hours */}
-          <View style={styles.section}>
+          <Surface padded={false}>
             <ToggleRow
               label={t('notificationSettings.quietHours.label')}
               description={t('notificationSettings.quietHours.description')}
@@ -141,34 +142,40 @@ export function NotificationSettings() {
               onValueChange={(v) => update('quietHoursEnabled', v)}
             />
             {input.quietHoursEnabled ? (
-              <View style={styles.quietRow}>
-                <View style={styles.quietCol}>
-                  <TimeField
-                    label={t('notificationSettings.quietHours.start')}
-                    value={input.quietHoursStart ?? ''}
-                    onChange={(v) => update('quietHoursStart', v === '' ? null : v)}
-                  />
-                </View>
-                <View style={styles.quietCol}>
-                  <TimeField
-                    label={t('notificationSettings.quietHours.end')}
-                    value={input.quietHoursEnd ?? ''}
-                    onChange={(v) => update('quietHoursEnd', v === '' ? null : v)}
-                  />
+              <View style={[styles.quietBody, { borderTopColor: theme.divider }]}>
+                <View style={styles.quietRow}>
+                  <View style={styles.quietCol}>
+                    <TimeField
+                      label={t('notificationSettings.quietHours.start')}
+                      value={input.quietHoursStart ?? ''}
+                      onChange={(v) => update('quietHoursStart', v === '' ? null : v)}
+                    />
+                  </View>
+                  <View style={styles.quietCol}>
+                    <TimeField
+                      label={t('notificationSettings.quietHours.end')}
+                      value={input.quietHoursEnd ?? ''}
+                      onChange={(v) => update('quietHoursEnd', v === '' ? null : v)}
+                    />
+                  </View>
                 </View>
               </View>
             ) : null}
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('notificationSettings.quietHours.note')}
-            </ThemedText>
-          </View>
+            <View style={[styles.quietNote, { borderTopColor: theme.divider }]}>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('notificationSettings.quietHours.note')}
+              </ThemedText>
+            </View>
+          </Surface>
 
           {/* Timezone (display only) */}
           <Surface style={styles.tzCard}>
-            <ThemedText type="small" themeColor="textSecondary">
+            <ThemedText type="smallBold">
               {t('notificationSettings.timezone.label')}
             </ThemedText>
-            <LtrText>{timezone}</LtrText>
+            <View style={[styles.tzWell, { backgroundColor: theme.backgroundSunken }]}>
+              <LtrText>{timezone}</LtrText>
+            </View>
             <ThemedText type="small" themeColor="textSecondary">
               {t('notificationSettings.timezone.hint')}
             </ThemedText>
@@ -228,13 +235,24 @@ function ScopeChip({
   active: boolean;
   onPress: () => void;
 }) {
+  const theme = useTheme();
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: active }}>
-      <ThemedView type={active ? 'backgroundSelected' : 'backgroundElement'} style={styles.chip}>
-        <ThemedText type="small" themeColor={active ? 'text' : 'textSecondary'}>
-          {label}
-        </ThemedText>
-      </ThemedView>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      style={[
+        styles.chip,
+        {
+          backgroundColor: active ? theme.primaryBg : theme.backgroundElement,
+          borderColor: active ? 'transparent' : theme.border,
+        },
+      ]}>
+      <ThemedText
+        type={active ? 'smallBold' : 'small'}
+        themeColor={active ? 'primaryText' : 'textSecondary'}>
+        {active ? `âœ“ ${label}` : label}
+      </ThemedText>
     </Pressable>
   );
 }
@@ -244,17 +262,24 @@ function ToggleRow({
   description,
   value,
   onValueChange,
+  topDivider = false,
 }: {
   label: string;
   description: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
+  /** Hairline separator above the row (every row but the first in a group). */
+  topDivider?: boolean;
 }) {
   const theme = useTheme();
   return (
-    <View style={styles.toggleRow}>
+    <View
+      style={[
+        styles.toggleRow,
+        topDivider && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.divider },
+      ]}>
       <View style={styles.toggleText}>
-        <ThemedText style={styles.toggleLabel}>{label}</ThemedText>
+        <ThemedText type="cardTitle">{label}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {description}
         </ThemedText>
@@ -271,18 +296,37 @@ function ToggleRow({
 
 const styles = StyleSheet.create({
   chips: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
-  chip: { borderRadius: Radius.pill, paddingVertical: Spacing.one, paddingHorizontal: Spacing.three },
-  section: { gap: Spacing.two },
+  chip: {
+    minHeight: TouchTarget.min,
+    borderRadius: Radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three + Spacing.one,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.three,
-    minHeight: 52,
+    minHeight: TouchTarget.comfortable,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
   },
   toggleText: { flex: 1, gap: Spacing.half },
-  toggleLabel: { fontSize: 16, fontWeight: '600' },
+  quietBody: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+  },
+  quietNote: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+  },
   quietRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.three },
   quietCol: { flexGrow: 1, flexBasis: 140 },
-  tzCard: { gap: Spacing.one },
+  tzCard: { gap: Spacing.two },
+  tzWell: { borderRadius: Radius.md, padding: Spacing.three },
 });

@@ -61,11 +61,13 @@ export function DoctorsManager({ circleId, canManage }: { circleId: string; canM
   return (
     <>
       <Screen>
-        {canManage ? <Button label={t('doctors.add')} onPress={() => setAdding(true)} /> : null}
+        {canManage ? (
+          <Button glyph="ï¼‹" label={t('doctors.add')} onPress={() => setAdding(true)} />
+        ) : null}
 
         {items.length === 0 ? (
           <EmptyState
-            icon="🩺"
+            icon="âœœ"
             title={t('doctors.emptyTitle')}
             subtitle={canManage ? t('doctors.emptySubtitle') : undefined}
           />

@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { GlyphChip } from '@/components/glyph-chip';
 import { isolateLtr } from '@/components/ltr-text';
 import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 import { hmFromInstant, todayYmd, ymdFromInstant } from '@/utils/date';
 
@@ -63,28 +65,29 @@ export function VitalsCenter({
 
   return (
     <Screen>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         {t('vitals.disclaimer')}
       </ThemedText>
 
       {canAdd ? (
-        <Button label={t('vitals.add')} onPress={() => router.push('/vitals/new')} />
+        <Button glyph="ï¼‹" label={t('vitals.add')} onPress={() => router.push('/vitals/new')} />
       ) : null}
 
       <Section title={t('vitals.todayTitle')}>
         {todayReadings.length === 0 ? (
           <EmptyState
+            icon="â™¡"
             title={t('vitals.noTodayTitle')}
             subtitle={canAdd ? t('vitals.noTodaySubtitle') : undefined}
           />
         ) : (
-          <View style={{ gap: Spacing.three }}>{todayReadings.map(renderRow)}</View>
+          <View style={styles.list}>{todayReadings.map(renderRow)}</View>
         )}
       </Section>
 
       {recentReadings.length > 0 ? (
         <Section title={t('vitals.recentTitle')}>
-          <View style={{ gap: Spacing.three }}>{recentReadings.map(renderRow)}</View>
+          <View style={styles.list}>{recentReadings.map(renderRow)}</View>
         </Section>
       ) : null}
     </Screen>
@@ -101,6 +104,7 @@ function VitalRow({
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const value = formatVitalValue(reading);
   const when = isolateLtr(`${ymdFromInstant(reading.reading_at)} ${hmFromInstant(reading.reading_at)}`);
 
@@ -108,33 +112,41 @@ function VitalRow({
     <Surface
       onPress={onOpen}
       accessibilityLabel={t(`vitals.type.${reading.reading_type}`)}
-      style={{ gap: Spacing.two }}>
-      <View style={styles.cardHeader}>
-        <ThemedText type="cardTitle" style={styles.cardTitle}>
-          {t(`vitals.type.${reading.reading_type}`)}
-        </ThemedText>
-        {value ? (
-          <ThemedText type="cardTitle" style={styles.value}>
-            {value}
+      style={styles.card}>
+      <View style={styles.row}>
+        <GlyphChip glyph="â™¡" tone="primary" size="sm" />
+        <View style={styles.text}>
+          <View style={styles.cardHeader}>
+            <ThemedText type="cardTitle" style={styles.cardTitle}>
+              {t(`vitals.type.${reading.reading_type}`)}
+            </ThemedText>
+            {value ? <ThemedText type="cardTitle">{value}</ThemedText> : null}
+          </View>
+
+          <ThemedText type="small" themeColor="textSecondary">
+            {when}
+            {mine ? ` â€¢ ${t('vitals.mineLabel')}` : ''}
           </ThemedText>
-        ) : null}
-      </View>
 
-      <ThemedText type="small" themeColor="textSecondary">
-        {when}
-        {mine ? ` • ${t('vitals.mineLabel')}` : ''}
-      </ThemedText>
-
-      {reading.notes ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {reading.notes}
+          {reading.notes ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {reading.notes}
+            </ThemedText>
+          ) : null}
+        </View>
+        <ThemedText style={[styles.chevron, { color: theme.textMuted }]} accessibilityElementsHidden>
+          â€º
         </ThemedText>
-      ) : null}
+      </View>
     </Surface>
   );
 }
 
 const styles = StyleSheet.create({
+  list: { gap: Spacing.three },
+  card: { paddingVertical: Spacing.three },
+  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  text: { flex: 1, gap: Spacing.half },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -142,5 +154,5 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   cardTitle: { flexShrink: 1 },
-  value: { fontWeight: '700' },
+  chevron: { fontSize: 24, lineHeight: 28, fontWeight: '600' },
 });

@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { ThemedText } from './themed-text';
@@ -11,29 +12,42 @@ type FormFieldProps = TextInputProps & {
 };
 
 /**
- * Labeled, themed text input used by the care forms. Mirrors the input styling
- * on the auth/onboarding screens and adds an inline label + optional error.
- * Direction follows the app's RTL/LTR setting (no hardcoded textAlign), so
- * Arabic content aligns to the start automatically. Pass `multiline` for notes
- * fields. All standard TextInput props pass through.
+ * Labeled, themed text input used by the care forms. Adds an inline label, an
+ * optional error and a clear focus ring (brand-colored border) so the active
+ * field is always obvious â€” important under keyboard navigation and for older
+ * users. Direction follows the app's RTL/LTR setting (no hardcoded textAlign),
+ * so Arabic content aligns to the start automatically. Pass `multiline` for
+ * notes fields. All standard TextInput props pass through.
  */
-export function FormField({ label, error, style, multiline, ...rest }: FormFieldProps) {
+export function FormField({ label, error, style, multiline, onFocus, onBlur, ...rest }: FormFieldProps) {
   const theme = useTheme();
+  const [focused, setFocused] = useState(false);
+
+  const borderColor = error ? theme.errorFg : focused ? theme.primary : theme.border;
 
   return (
     <View style={styles.field}>
       {label ? <ThemedText type="smallBold">{label}</ThemedText> : null}
       <TextInput
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.textMuted}
         accessibilityLabel={label}
         multiline={multiline}
+        onFocus={(e) => {
+          setFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          onBlur?.(e);
+        }}
         style={[
           styles.input,
           multiline && styles.multiline,
+          focused && styles.inputFocused,
           {
             color: theme.text,
             backgroundColor: theme.backgroundElement,
-            borderColor: error ? theme.errorFg : theme.border,
+            borderColor,
           },
           style,
         ]}
@@ -53,14 +67,16 @@ export function FormField({ label, error, style, multiline, ...rest }: FormField
 }
 
 const styles = StyleSheet.create({
-  field: { gap: Spacing.one },
+  field: { gap: Spacing.two },
   input: {
     borderWidth: 1,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
+    fontFamily: FontFamily.regular,
     fontSize: 16,
     minHeight: TouchTarget.comfortable,
   },
-  multiline: { minHeight: 104, paddingTop: Spacing.three, textAlignVertical: 'top' },
+  inputFocused: { borderWidth: 2, paddingHorizontal: Spacing.three - 1, paddingVertical: Spacing.three - 1 },
+  multiline: { minHeight: 112, paddingTop: Spacing.three, textAlignVertical: 'top' },
 });

@@ -11,12 +11,11 @@ import {
 } from 'react-native';
 
 import { Button } from '@/components/button';
-import { IconButton } from '@/components/icon-button';
 import { StatusBadge } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { FontFamily, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { CircleMember, CircleRole } from './api';
@@ -27,7 +26,7 @@ import { roleCapability, roleChangeDirection } from './role-capabilities';
  * Two-step role picker. Step 1 lets a manager browse the roles they may assign,
  * each with a capability summary and expandable "Can do / Cannot do" details, and
  * pick one WITHOUT mutating the server. Step 2 is an explicit confirmation that
- * summarizes old → new and whether access is raised or lowered. Save and Cancel
+ * summarizes old â†’ new and whether access is raised or lowered. Save and Cancel
  * are always separate. The update_circle_member_role RPC remains authoritative.
  */
 export function RoleModal({
@@ -58,19 +57,22 @@ export function RoleModal({
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
-        style={styles.backdrop}
+        style={[styles.backdrop, { backgroundColor: theme.overlay }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ThemedView style={styles.sheet}>
+        <ThemedView style={[styles.sheet, { borderColor: theme.border }]}>
+          <View style={[styles.grabber, { backgroundColor: theme.backgroundSelected }]} />
           <View style={styles.header}>
             <ThemedText type="sectionTitle" style={styles.title} accessibilityRole="header">
               {confirming ? t('circleMembers.confirmRoleTitle') : t('circleMembers.changeRoleTitle')}
             </ThemedText>
-            <IconButton
-              icon="✕"
-              accessibilityLabel={t('common.close')}
+            <Pressable
               onPress={onClose}
-              filled={false}
-            />
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close')}
+              hitSlop={Spacing.two}
+              style={styles.closeButton}>
+              <ThemedText style={styles.close}>âœ•</ThemedText>
+            </Pressable>
           </View>
 
           <ScrollView
@@ -180,16 +182,24 @@ function RoleOption({
         accessibilityState={{ selected }}>
         <View style={styles.optionHeader}>
           <View style={styles.optionTitleWrap}>
-            <ThemedText type="cardTitle" style={styles.optionTitle}>
+            {selected ? (
+              <ThemedText
+                type="smallBold"
+                style={{ color: theme.primary }}
+                accessibilityElementsHidden
+                importantForAccessibility="no">
+                âœ“
+              </ThemedText>
+            ) : null}
+            <ThemedText
+              type="cardTitle"
+              style={[styles.optionTitle, selected && styles.optionTitleSelected]}>
               {t(cap.titleKey)}
             </ThemedText>
             {isCurrent ? (
               <StatusBadge tone="neutral" label={t('circleMembers.current')} />
             ) : null}
           </View>
-          {selected ? (
-            <ThemedText style={[styles.check, { color: theme.primary }]}>✓</ThemedText>
-          ) : null}
         </View>
         <ThemedText type="small" themeColor="textSecondary">
           {t(cap.summaryKey)}
@@ -211,7 +221,7 @@ function RoleOption({
           <ThemedText type="smallBold">{t('circleMembers.canDo')}</ThemedText>
           {canList.map((line, i) => (
             <ThemedText key={`can-${i}`} type="small" themeColor="textSecondary">
-              • {line}
+              â€¢ {line}
             </ThemedText>
           ))}
           <ThemedText type="smallBold" style={styles.cannotHeading}>
@@ -219,7 +229,7 @@ function RoleOption({
           </ThemedText>
           {cannotList.map((line, i) => (
             <ThemedText key={`cannot-${i}`} type="small" themeColor="textSecondary">
-              • {line}
+              â€¢ {line}
             </ThemedText>
           ))}
         </View>
@@ -254,15 +264,24 @@ function ConfirmStep({
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  backdrop: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
     width: '100%',
     maxWidth: MaxFormWidth,
     alignSelf: 'center',
-    borderTopLeftRadius: Spacing.four,
-    borderTopRightRadius: Spacing.four,
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
+    borderWidth: StyleSheet.hairlineWidth,
     maxHeight: '90%',
-    paddingTop: Spacing.four,
+    paddingTop: Spacing.two,
+  },
+  // Visual bottom-sheet affordance (matches form-modal; dismissal stays explicit).
+  grabber: {
+    alignSelf: 'center',
+    width: 44,
+    height: 5,
+    borderRadius: Radius.pill,
+    marginBottom: Spacing.three,
   },
   header: {
     flexDirection: 'row',
@@ -272,6 +291,13 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   title: { flexShrink: 1 },
+  closeButton: {
+    minWidth: TouchTarget.min,
+    minHeight: TouchTarget.min,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  close: { fontSize: 20, fontWeight: '600' },
   content: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
@@ -287,8 +313,8 @@ const styles = StyleSheet.create({
   },
   optionTitleWrap: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flexShrink: 1 },
   optionTitle: { flexShrink: 1 },
-  check: { fontSize: 16, fontWeight: '700' },
-  detailsToggle: { paddingVertical: Spacing.half },
+  optionTitleSelected: { fontFamily: FontFamily.bold, fontWeight: '700' },
+  detailsToggle: { minHeight: TouchTarget.min, justifyContent: 'center', paddingVertical: Spacing.half },
   details: { gap: Spacing.one, marginTop: Spacing.one },
   cannotHeading: { marginTop: Spacing.two },
   confirmCard: { gap: Spacing.two },

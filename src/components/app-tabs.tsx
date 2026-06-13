@@ -12,8 +12,11 @@ export default function AppTabs() {
   return (
     <NativeTabs
       backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
+      // Brand-tinted pill behind the active tab; selected label picks up the
+      // brand text color so the active state is carried by tint + label weight.
+      indicatorColor={colors.primaryBg}
+      iconColor={colors.textSecondary}
+      labelStyle={{ color: colors.textSecondary, selected: { color: colors.primaryText } }}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>{t('tabs.home')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon

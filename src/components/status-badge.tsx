@@ -1,6 +1,6 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { Radius, Spacing, type ThemeColor } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { ThemedText } from './themed-text';
@@ -24,16 +24,16 @@ const BG_BY_TONE: Record<StatusTone, ThemeColor> = {
 };
 
 /**
- * A distinct glyph per tone so status is never communicated by color alone — the
+ * A distinct glyph per tone so status is never communicated by color alone â€” the
  * shape carries meaning for low-vision / color-blind users, reinforced by the
  * always-present text label.
  */
 const GLYPH_BY_TONE: Record<StatusTone, string> = {
-  success: '✓',
+  success: 'âœ“',
   warning: '!',
-  error: '✕',
+  error: 'âœ•',
   info: 'i',
-  neutral: '•',
+  neutral: 'â€¢',
 };
 
 type StatusBadgeProps = {
@@ -45,9 +45,9 @@ type StatusBadgeProps = {
 };
 
 /**
- * Pill badge for a status (e.g. a medication dose "given", a task "done"). Pairs a
- * soft tinted background, a strong foreground, a tone glyph and a text label so it
- * is legible in light & dark and never relies on color alone.
+ * Pill badge for a status (e.g. a medication dose "given", a task "done"). A soft
+ * tinted background with a strong foreground, a bold tone glyph and a text label â€”
+ * legible in light & dark, never color-only, calm rather than loud.
  */
 export function StatusBadge({ tone, label, glyph, style }: StatusBadgeProps) {
   const theme = useTheme();
@@ -56,12 +56,8 @@ export function StatusBadge({ tone, label, glyph, style }: StatusBadgeProps) {
 
   return (
     <View style={[styles.badge, { backgroundColor: bg }, style]} accessibilityRole="text">
-      <View style={[styles.glyph, { borderColor: fg }]}>
-        <ThemedText style={[styles.glyphText, { color: fg }]}>{glyph ?? GLYPH_BY_TONE[tone]}</ThemedText>
-      </View>
-      <ThemedText type="smallBold" style={{ color: fg }}>
-        {label}
-      </ThemedText>
+      <ThemedText style={[styles.glyph, { color: fg }]}>{glyph ?? GLYPH_BY_TONE[tone]}</ThemedText>
+      <ThemedText style={[styles.label, { color: fg }]}>{label}</ThemedText>
     </View>
   );
 }
@@ -70,19 +66,12 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one,
+    gap: Spacing.one + Spacing.half,
     borderRadius: Radius.pill,
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one + Spacing.half,
+    paddingHorizontal: Spacing.two + Spacing.one,
     alignSelf: 'flex-start',
   },
-  glyph: {
-    width: 18,
-    height: 18,
-    borderRadius: Radius.pill,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  glyphText: { fontSize: 11, lineHeight: 14, fontWeight: '800' },
+  glyph: { fontSize: 13, lineHeight: 18, fontWeight: '800' },
+  label: { fontFamily: FontFamily.semibold, fontSize: 13.5, lineHeight: 19, fontWeight: '600' },
 });

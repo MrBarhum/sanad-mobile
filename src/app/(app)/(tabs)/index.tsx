@@ -12,10 +12,10 @@ import { useAuth } from '@/providers';
 
 /**
  * Home decides what the authenticated user sees:
- *   - loading   → spinner
- *   - error     → message + retry
- *   - no circle → onboarding (create the first circle / join with a code)
- *   - has circle → dashboard for the active circle
+ *   - loading   Ã¢â€ â€™ spinner
+ *   - error     Ã¢â€ â€™ message + retry
+ *   - no circle Ã¢â€ â€™ onboarding (create the first circle / join with a code)
+ *   - has circle Ã¢â€ â€™ dashboard for the active circle
  */
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -29,7 +29,7 @@ export default function HomeScreen() {
   if (isLoading) {
     return (
       <ThemedView style={styles.centered}>
-        <ActivityIndicator color={theme.text} />
+        <ActivityIndicator color={theme.primary} size="large" />
       </ThemedView>
     );
   }

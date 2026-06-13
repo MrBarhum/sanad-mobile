@@ -70,7 +70,7 @@ export function AppointmentForm({ circleId }: { circleId: string }) {
         />
       }>
       <UnsavedChangesGuard when={dirty && !submitted} />
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         {t('appointments.disclaimer')}
       </ThemedText>
 

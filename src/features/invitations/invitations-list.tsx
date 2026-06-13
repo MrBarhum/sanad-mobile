@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { GlyphChip } from '@/components/glyph-chip';
 import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
@@ -69,6 +70,7 @@ export function InvitationsList({ circleId }: { circleId: string }) {
 
       {items.length === 0 ? (
         <EmptyState
+          icon="â–"
           title={t('invitations.emptyTitle')}
           subtitle={t('invitations.emptySubtitle')}
         />
@@ -98,11 +100,13 @@ function InvitationCard({
   onRevoke: () => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [confirming, setConfirming] = useState(false);
 
   return (
     <Surface style={styles.card}>
       <View style={styles.cardHeader}>
+        <GlyphChip glyph="â–" tone="primary" size="sm" />
         <ThemedText type="cardTitle" style={styles.cardTitle}>
           {item.invitedName?.trim() || t(`circleMembers.roles.${item.role}`)}
         </ThemedText>
@@ -136,7 +140,7 @@ function InvitationCard({
 
       {item.status === 'pending' ? (
         confirming ? (
-          <View style={styles.actions}>
+          <View style={[styles.actions, { borderTopColor: theme.divider }]}>
             <Button
               size="sm"
               variant="danger"
@@ -153,7 +157,7 @@ function InvitationCard({
             />
           </View>
         ) : (
-          <View style={styles.actions}>
+          <View style={[styles.actions, { borderTopColor: theme.divider }]}>
             <Button
               size="sm"
               variant="danger"
@@ -174,9 +178,15 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
-  cardTitle: { flexShrink: 1 },
-  actions: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap', marginTop: Spacing.one },
+  cardTitle: { flex: 1 },
+  actions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    flexWrap: 'wrap',
+    marginTop: Spacing.one,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
 });

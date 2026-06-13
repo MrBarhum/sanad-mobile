@@ -11,7 +11,7 @@ import { ThemedView } from './themed-view';
 export type FormActionsStatus = 'idle' | 'saved' | 'error';
 
 type SharedProps = {
-  /** Primary save label — a specific creation label ("Add medication") on create
+  /** Primary save label â€” a specific creation label ("Add medication") on create
    * forms, or the "Save changes" equivalent on edit forms. */
   saveLabel: string;
   onSave: () => void;
@@ -100,7 +100,7 @@ export function StickyFormActions(props: SharedProps) {
     <ThemedView
       style={[
         styles.sticky,
-        { borderTopColor: theme.backgroundSelected, paddingBottom: Spacing.three + insets.bottom },
+        { borderTopColor: theme.divider, paddingBottom: Spacing.three + insets.bottom },
       ]}>
       <View style={styles.stickyInner}>
         <ActionsBody {...props} />

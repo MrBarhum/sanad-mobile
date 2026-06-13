@@ -20,7 +20,7 @@ function uniqueSortedTimes(times: string[]): string[] {
  * immediately obvious what happens each day. Shows one line per distinct day-set
  * ("Every day: 08:00", "Sun, Tue, Thu: 23:00") and an expandable per-day
  * breakdown listing every time that falls on each weekday. Stopped schedules are
- * excluded — they don't generate doses.
+ * excluded â€” they don't generate doses.
  */
 export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[] }) {
   const { t } = useTranslation();
@@ -59,7 +59,7 @@ export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[]
 
   function daysLabel(days: number[]): string {
     if (days.length >= 7) return t('medications.everyDay');
-    return days.map((day) => t(`medications.weekdaysShort.${WEEKDAY_KEYS[day]}`)).join('، ');
+    return days.map((day) => t(`medications.weekdaysShort.${WEEKDAY_KEYS[day]}`)).join('ØŒ ');
   }
 
   return (
@@ -70,7 +70,7 @@ export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[]
         <ThemedText key={index} type="small">
           {t('medications.summary.line', {
             days: daysLabel(group.days),
-            times: isolateLtr(group.times.join('، ')),
+            times: isolateLtr(group.times.join('ØŒ ')),
           })}
         </ThemedText>
       ))}
@@ -88,12 +88,12 @@ export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[]
         <View style={styles.perDay}>
           {perDay.map((times, day) => (
             <View key={day} style={styles.perDayRow}>
-              <ThemedText type="small" style={styles.perDayName}>
+              <ThemedText type="smallBold">
                 {t(`medications.weekdays.${WEEKDAY_KEYS[day]}`)}
               </ThemedText>
               {times.length ? (
                 <LtrText type="small" themeColor="textSecondary" style={styles.perDayTimes}>
-                  {times.join('، ')}
+                  {times.join('ØŒ ')}
                 </LtrText>
               ) : (
                 <ThemedText type="small" themeColor="textSecondary" style={styles.perDayTimes}>
@@ -113,6 +113,5 @@ const styles = StyleSheet.create({
   toggle: { textDecorationLine: 'underline', marginTop: Spacing.one },
   perDay: { gap: Spacing.one, marginTop: Spacing.one },
   perDayRow: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.three },
-  perDayName: { fontWeight: '600' },
   perDayTimes: { flexShrink: 1, textAlign: 'right' },
 });

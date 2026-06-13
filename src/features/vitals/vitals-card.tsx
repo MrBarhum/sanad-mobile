@@ -1,10 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
 
-import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { NavCard } from '@/components/nav-card';
 
 import { useTodayVitalSummary } from './hooks';
 
@@ -21,18 +18,11 @@ export function VitalsCard({ circleId }: { circleId: string }) {
       : t('vitals.summary.counts', { today: summary.todayCount, total: summary.totalCount });
 
   return (
-    <Surface
+    <NavCard
+      glyph="â™¡"
+      title={t('careCircle.dashboard.sections.vitals.title')}
+      subtitle={subtitle}
       onPress={() => router.push('/vitals')}
-      accessibilityLabel={t('careCircle.dashboard.sections.vitals.title')}
-      style={styles.card}>
-      <ThemedText type="cardTitle">
-        {t('careCircle.dashboard.sections.vitals.title')}
-      </ThemedText>
-      <ThemedText themeColor="textSecondary">{subtitle}</ThemedText>
-    </Surface>
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: Spacing.two, minHeight: 96, justifyContent: 'center' },
-});

@@ -4,12 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { LtrText } from '@/components/ltr-text';
 import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { ReminderNotice } from '@/features/notifications/reminder-notice';
 import { useAuth } from '@/providers';
 import { formatHm, todayYmd } from '@/utils/date';
@@ -17,7 +19,7 @@ import { formatHm, todayYmd } from '@/utils/date';
 import type { CareTask, TaskPriority, TaskStatus } from './api';
 import { useCancelTask, useCompleteTask, useTasks } from './hooks';
 
-/** Priority → badge tone (color + a distinct glyph, never color alone). */
+/** Priority â†’ badge tone (color + a distinct glyph, never color alone). */
 const PRIORITY_TONE: Record<TaskPriority, StatusTone> = {
   low: 'neutral',
   normal: 'neutral',
@@ -25,10 +27,16 @@ const PRIORITY_TONE: Record<TaskPriority, StatusTone> = {
   urgent: 'error',
 };
 
-/** Done/cancelled status → badge tone. */
+/** Done/cancelled status â†’ badge tone. */
 const DONE_TONE: Record<Exclude<TaskStatus, 'open'>, StatusTone> = {
   completed: 'success',
   cancelled: 'error',
+};
+
+/** Done/cancelled status â†’ badge glyph (mirrors the action buttons). */
+const DONE_GLYPH: Record<Exclude<TaskStatus, 'open'>, string> = {
+  completed: 'âœ“',
+  cancelled: 'âœ•',
 };
 
 function dueSortKey(task: CareTask): string {
@@ -111,19 +119,23 @@ export function TasksCenter({
 
   return (
     <Screen>
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textMuted">
         {t('tasks.disclaimer')}
       </ThemedText>
 
       <ReminderNotice messageKey="tasks.reminderNotice" />
 
       {canManage ? (
-        <Button label={t('tasks.add')} onPress={() => router.push('/tasks/new')} />
+        <Button glyph="ï¼‹" label={t('tasks.add')} onPress={() => router.push('/tasks/new')} />
       ) : null}
 
       <Section title={t('tasks.todayTitle')}>
         {todayTasks.length === 0 ? (
-          <EmptyState title={t('tasks.noTodayTitle')} subtitle={t('tasks.noTodaySubtitle')} />
+          <EmptyState
+            icon="âœ“"
+            title={t('tasks.noTodayTitle')}
+            subtitle={t('tasks.noTodaySubtitle')}
+          />
         ) : (
           <View style={styles.list}>{todayTasks.map(renderRow)}</View>
         )}
@@ -132,6 +144,7 @@ export function TasksCenter({
       <Section title={t('tasks.openTitle')}>
         {otherOpen.length === 0 ? (
           <EmptyState
+            icon="âœ“"
             title={t('tasks.noOpenTitle')}
             subtitle={canManage ? t('tasks.noOpenSubtitle') : undefined}
           />
@@ -169,12 +182,13 @@ function TaskRow({
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
 
-  const meta = [t(`tasks.category.${task.category}`)];
-  if (task.due_date) {
-    const due = task.due_time ? `${task.due_date} ${formatHm(task.due_time)}` : task.due_date;
-    meta.push(`${t('tasks.dueLabel')}: ${due}`);
-  }
+  const due = task.due_date
+    ? task.due_time
+      ? `${task.due_date} ${formatHm(task.due_time)}`
+      : task.due_date
+    : null;
   const assignText = mine
     ? t('tasks.assignedToMe')
     : unassigned
@@ -197,35 +211,61 @@ function TaskRow({
       </View>
 
       <ThemedText type="small" themeColor="textSecondary">
-        {meta.join(' • ')}
+        {t(`tasks.category.${task.category}`)}
       </ThemedText>
+      {due ? (
+        <View style={styles.dueRow}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {`${t('tasks.dueLabel')}:`}
+          </ThemedText>
+          {/* The due date/time is the scannable anchor of the task card. */}
+          <View style={[styles.dueChip, { backgroundColor: theme.accentBg }]}>
+            <LtrText style={[styles.dueText, { color: theme.accentFg }]}>{due}</LtrText>
+          </View>
+        </View>
+      ) : null}
       <ThemedText type="small" themeColor="textSecondary">
         {assignText}
       </ThemedText>
 
       {task.status !== 'open' ? (
-        <StatusBadge tone={DONE_TONE[task.status]} label={t(`tasks.status.${task.status}`)} />
+        <StatusBadge
+          tone={DONE_TONE[task.status]}
+          glyph={DONE_GLYPH[task.status]}
+          label={t(`tasks.status.${task.status}`)}
+        />
       ) : null}
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, { borderTopColor: theme.divider }]}>
         {canAct ? (
           <>
             <Button
               size="sm"
+              glyph="âœ“"
               label={t('tasks.complete')}
               disabled={pending}
               onPress={onComplete}
+              style={styles.action}
             />
             <Button
               size="sm"
               variant="secondary"
+              glyph="âœ•"
               label={t('tasks.cancelTask')}
               disabled={pending}
               onPress={onCancel}
+              style={styles.action}
             />
           </>
         ) : null}
-        <Button size="sm" variant="secondary" label={t('common.details')} onPress={onOpen} />
+        <Button
+          size="sm"
+          variant="secondary"
+          glyph="â€º"
+          label={t('common.details')}
+          onPress={onOpen}
+          style={styles.action}
+        />
       </View>
     </Surface>
   );
@@ -241,5 +281,23 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   cardTitle: { flexShrink: 1 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
+  dueRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  dueChip: {
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    minHeight: 40,
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
+  dueText: { fontFamily: FontFamily.bold, fontSize: 18, lineHeight: 28, fontWeight: '700' },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
+  action: { flexGrow: 1, flexBasis: 96 },
 });

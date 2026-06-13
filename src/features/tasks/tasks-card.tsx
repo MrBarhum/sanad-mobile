@@ -1,10 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
 
-import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { NavCard } from '@/components/nav-card';
 
 import { useTodayTaskSummary } from './hooks';
 
@@ -21,18 +18,11 @@ export function TasksCard({ circleId }: { circleId: string }) {
       : t('tasks.summary.counts', { due: summary.dueToday, done: summary.completedToday });
 
   return (
-    <Surface
+    <NavCard
+      glyph="âœ“"
+      title={t('careCircle.dashboard.sections.tasks.title')}
+      subtitle={subtitle}
       onPress={() => router.push('/tasks')}
-      accessibilityLabel={t('careCircle.dashboard.sections.tasks.title')}
-      style={styles.card}>
-      <ThemedText type="cardTitle">
-        {t('careCircle.dashboard.sections.tasks.title')}
-      </ThemedText>
-      <ThemedText themeColor="textSecondary">{subtitle}</ThemedText>
-    </Surface>
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: Spacing.two, minHeight: 96, justifyContent: 'center' },
-});

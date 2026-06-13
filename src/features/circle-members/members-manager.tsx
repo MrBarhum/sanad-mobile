@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { GlyphChip } from '@/components/glyph-chip';
 import { LtrText } from '@/components/ltr-text';
 import { Screen } from '@/components/screen';
 import { ErrorState, LoadingState } from '@/components/states';
@@ -224,6 +225,7 @@ function MemberCard({
   onMakeOwner: () => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [confirmingOwner, setConfirmingOwner] = useState(false);
 
@@ -237,9 +239,18 @@ function MemberCard({
   const canMakeOwner =
     viewerIsOwner && !member.isOwner && !member.isSelf && member.status === 'active';
 
+  // Purely presentational: the divider-separated action row renders only when at
+  // least one action is visible (same conditions as the buttons below).
+  const showLeave = member.isSelf && member.status === 'active' && !lastAdmin && !member.isOwner;
+  const showRemove =
+    !member.isSelf && canStatus && member.status === 'active' && !lastAdmin && !member.isOwner;
+  const showReactivate = canStatus && member.status !== 'active';
+  const hasActions = canEditRole || showLeave || showRemove || showReactivate || canMakeOwner;
+
   return (
     <Surface style={styles.card}>
       <View style={styles.cardHeader}>
+        <GlyphChip glyph={[...displayName.trim()][0] ?? 'â€¢'} tone="primary" size="sm" />
         <ThemedText type="cardTitle" style={styles.cardName}>
           {displayName}
         </ThemedText>
@@ -264,7 +275,7 @@ function MemberCard({
           {t(`circleMembers.roles.${member.role}`)}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          •
+          â€¢
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {t(`circleMembers.status.${member.status}`)}
@@ -281,89 +292,91 @@ function MemberCard({
         </ThemedText>
       ) : null}
 
-      <View style={styles.cardActions}>
-        {canEditRole ? (
-          <Button
-            size="sm"
-            variant="secondary"
-            label={t('circleMembers.changeRole')}
-            disabled={busy}
-            onPress={onEditRole}
-          />
-        ) : null}
-
-        {member.isSelf && member.status === 'active' && !lastAdmin && !member.isOwner ? (
-          <Button size="sm" variant="danger" label={t('circleMembers.leave')} disabled={busy} onPress={onLeave} />
-        ) : null}
-
-        {!member.isSelf && canStatus && member.status === 'active' && !lastAdmin && !member.isOwner ? (
-          confirmingRemove ? (
-            <>
-              <Button
-                size="sm"
-                variant="danger"
-                label={t('circleMembers.confirmRemove')}
-                loading={busy}
-                onPress={onRemove}
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                label={t('common.cancel')}
-                disabled={busy}
-                onPress={() => setConfirmingRemove(false)}
-              />
-            </>
-          ) : (
-            <Button
-              size="sm"
-              variant="danger"
-              label={t('circleMembers.remove')}
-              disabled={busy}
-              onPress={() => setConfirmingRemove(true)}
-            />
-          )
-        ) : null}
-
-        {canStatus && member.status !== 'active' ? (
-          <Button
-            size="sm"
-            variant="secondary"
-            label={t('circleMembers.reactivate')}
-            disabled={busy}
-            onPress={onReactivate}
-          />
-        ) : null}
-
-        {canMakeOwner ? (
-          confirmingOwner ? (
-            <>
-              <Button
-                size="sm"
-                variant="secondary"
-                label={t('circleMembers.confirmMakeOwner')}
-                loading={busy}
-                onPress={onMakeOwner}
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                label={t('common.cancel')}
-                disabled={busy}
-                onPress={() => setConfirmingOwner(false)}
-              />
-            </>
-          ) : (
+      {hasActions ? (
+        <View style={[styles.cardActions, { borderTopColor: theme.divider }]}>
+          {canEditRole ? (
             <Button
               size="sm"
               variant="secondary"
-              label={t('circleMembers.makeOwner')}
+              label={t('circleMembers.changeRole')}
               disabled={busy}
-              onPress={() => setConfirmingOwner(true)}
+              onPress={onEditRole}
             />
-          )
-        ) : null}
-      </View>
+          ) : null}
+
+          {showLeave ? (
+            <Button size="sm" variant="danger" label={t('circleMembers.leave')} disabled={busy} onPress={onLeave} />
+          ) : null}
+
+          {showRemove ? (
+            confirmingRemove ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  label={t('circleMembers.confirmRemove')}
+                  loading={busy}
+                  onPress={onRemove}
+                />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  label={t('common.cancel')}
+                  disabled={busy}
+                  onPress={() => setConfirmingRemove(false)}
+                />
+              </>
+            ) : (
+              <Button
+                size="sm"
+                variant="danger"
+                label={t('circleMembers.remove')}
+                disabled={busy}
+                onPress={() => setConfirmingRemove(true)}
+              />
+            )
+          ) : null}
+
+          {showReactivate ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              label={t('circleMembers.reactivate')}
+              disabled={busy}
+              onPress={onReactivate}
+            />
+          ) : null}
+
+          {canMakeOwner ? (
+            confirmingOwner ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  label={t('circleMembers.confirmMakeOwner')}
+                  loading={busy}
+                  onPress={onMakeOwner}
+                />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  label={t('common.cancel')}
+                  disabled={busy}
+                  onPress={() => setConfirmingOwner(false)}
+                />
+              </>
+            ) : (
+              <Button
+                size="sm"
+                variant="secondary"
+                label={t('circleMembers.makeOwner')}
+                disabled={busy}
+                onPress={() => setConfirmingOwner(true)}
+              />
+            )
+          ) : null}
+        </View>
+      ) : null}
     </Surface>
   );
 }
@@ -375,12 +388,18 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
-  cardName: { flexShrink: 1 },
+  cardName: { flex: 1 },
   badges: { flexDirection: 'row', gap: Spacing.one, flexShrink: 0 },
   metaRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center', flexWrap: 'wrap' },
   note: { fontStyle: 'italic' },
-  cardActions: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap', marginTop: Spacing.one },
+  cardActions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    flexWrap: 'wrap',
+    marginTop: Spacing.one,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
 });

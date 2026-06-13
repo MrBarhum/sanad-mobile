@@ -1,13 +1,20 @@
 /**
- * Sanad design tokens — a single source of truth for color, spacing, radius,
- * typography and touch-target sizing. Arabic-first, calm & trustworthy, tuned for
- * older adults and family caregivers (large targets, strong contrast, never
- * color-only). Light and dark are full peers.
+ * Sanad design tokens â€” a single source of truth for color, type, spacing,
+ * radius, elevation and touch-target sizing.
+ *
+ * Visual direction: "Warm Care OS" â€” a calm, premium, Arabic-first family-care
+ * interface. Identity comes from typography (IBM Plex Sans Arabic), warm-neutral
+ * canvases (never flat white / pure black), one confident brand blue, and soft
+ * tinted anchors â€” not from gradients, heavy shadows or decoration. Tuned for
+ * older adults and family caregivers: large targets, strong contrast, status is
+ * never color-only. Light and dark are full peers.
  *
  * Existing token keys (text/background/backgroundElement/backgroundSelected/
- * textSecondary, Spacing, MaxContentWidth, MaxFormWidth, Fonts, BottomTabInset,
- * TopTabInset) are preserved so every current consumer keeps working; the rest is
- * additive (brand, semantic, border, Radius, TouchTarget, Gutter).
+ * textSecondary/border/primary/onPrimary/primaryBg/primaryText/semantic Fg+Bg,
+ * Spacing, MaxContentWidth, MaxFormWidth, Fonts, BottomTabInset, TopTabInset,
+ * Radius, TouchTarget, Gutter) are preserved so every consumer keeps working;
+ * the rest is additive (textMuted, backgroundSunken, divider, primaryPressed,
+ * accentFg/Bg, overlay, FontFamily, CardShadow).
  */
 
 import '@/global.css';
@@ -16,75 +23,110 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    // Surfaces & text
-    text: '#14161A',
-    textSecondary: '#586070',
-    background: '#F4F6F9', // soft canvas so cards float
-    backgroundElement: '#FFFFFF', // cards / inputs
-    backgroundSelected: '#E7EAF0',
-    border: '#DCE0E7',
+    // Surfaces & text â€” warm porcelain canvas, white cards, warm hairlines.
+    text: '#1D1B16',
+    textSecondary: '#5C594F',
+    /** Quieter than textSecondary â€” metadata/timestamps only, never body text. */
+    textMuted: '#767266',
+    background: '#F6F4EF',
+    backgroundElement: '#FFFFFF',
+    backgroundSelected: '#ECE9E1',
+    /** Recessed wells INSIDE cards (picker wheels, code blocks, quiet rows). */
+    backgroundSunken: '#F3F1EB',
+    border: '#E2DFD6',
+    /** Softer than border â€” separators between rows inside one surface. */
+    divider: '#ECE9E2',
 
-    // Brand
-    primary: '#1B63C5',
+    // Brand â€” one confident, calm blue (kept compatible with the app icon).
+    primary: '#1B5FBE',
+    primaryPressed: '#164E9D',
     onPrimary: '#FFFFFF',
-    primaryBg: '#E9F0FB', // tinted primary surface (links/info chips)
-    primaryText: '#1B5BB5', // brand-colored text on a normal surface
+    primaryBg: '#E8EFFA', // tinted primary surface (chips/links/info)
+    primaryText: '#17549F', // brand-colored text on a normal surface
+
+    // Warm sand accent â€” reserved for "today/highlight" moments, used sparingly.
+    accentFg: '#8A5A17',
+    accentBg: '#F5EBD8',
 
     // Semantic foregrounds (text + icon) and soft backgrounds (badges/surfaces)
     successFg: '#1A7A43',
-    successBg: '#E4F3EA',
-    warningFg: '#A85B00',
-    warningBg: '#FAEEDB',
-    errorFg: '#C42B2B',
-    errorBg: '#FBE7E7',
-    infoFg: '#1B5BB5',
-    infoBg: '#E9F0FB',
+    successBg: '#E3F2E7',
+    warningFg: '#9A5B00',
+    warningBg: '#F8EDD8',
+    errorFg: '#BE2E2E',
+    errorBg: '#FAE7E4',
+    infoFg: '#17549F',
+    infoBg: '#E8EFFA',
+
+    /** Modal scrim. */
+    overlay: 'rgba(29, 27, 22, 0.45)',
   },
   dark: {
-    text: '#F3F5F7',
-    textSecondary: '#A8ADB7',
-    background: '#0B0C0F',
-    backgroundElement: '#191B20',
-    backgroundSelected: '#272A31',
-    border: '#2C2F37',
+    // Warm graphite â€” lifted cards, never pure black.
+    text: '#F4F2EC',
+    textSecondary: '#ACA89D',
+    textMuted: '#8B877C',
+    background: '#151412',
+    backgroundElement: '#201F1B',
+    backgroundSelected: '#2C2A25',
+    backgroundSunken: '#1B1A17',
+    border: '#353329',
+    divider: '#272520',
 
-    primary: '#2768CC',
+    primary: '#2F6FD0',
+    primaryPressed: '#275FB4',
     onPrimary: '#FFFFFF',
-    primaryBg: '#16263F',
-    primaryText: '#8FB8F0',
+    primaryBg: '#1D2B42',
+    primaryText: '#96BEF5',
 
-    successFg: '#46C078',
-    successBg: '#12311F',
-    warningFg: '#E0982F',
-    warningBg: '#33260E',
-    errorFg: '#F26464',
-    errorBg: '#3A1A1A',
-    infoFg: '#8FB8F0',
-    infoBg: '#16263F',
+    accentFg: '#DDAF63',
+    accentBg: '#352A17',
+
+    successFg: '#4DC07D',
+    successBg: '#152F20',
+    warningFg: '#E2A23E',
+    warningBg: '#332813',
+    errorFg: '#EF6F6B',
+    errorBg: '#3A1D1B',
+    infoFg: '#96BEF5',
+    infoBg: '#1D2B42',
+
+    overlay: 'rgba(0, 0, 0, 0.55)',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+/**
+ * App typeface â€” IBM Plex Sans Arabic (SIL OFL, bundled in assets/fonts, loaded
+ * once in the root layout via expo-font). One family carries Arabic AND Latin so
+ * mixed content (medication names, emails) stays harmonious. Static weight files
+ * â†’ each weight is its own family name; pair with the matching numeric
+ * fontWeight so platforms without the file (or before load) fall back cleanly to
+ * the system font at the right weight.
+ */
+export const FontFamily = {
+  regular: 'IBMPlexSansArabic-Regular',
+  medium: 'IBMPlexSansArabic-Medium',
+  semibold: 'IBMPlexSansArabic-SemiBold',
+  bold: 'IBMPlexSansArabic-Bold',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
+    sans: FontFamily.regular,
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
-    sans: 'normal',
+    sans: FontFamily.regular,
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',
   },
   web: {
-    sans: 'var(--font-display)',
+    sans: `${FontFamily.regular}, var(--font-display)`,
     serif: 'var(--font-serif)',
     rounded: 'var(--font-rounded)',
     mono: 'var(--font-mono)',
@@ -92,7 +134,7 @@ export const Fonts = Platform.select({
 });
 
 /**
- * 4-pt spacing scale. Names are historical (one = 4pt … six = 64pt); prefer the
+ * 4-pt spacing scale. Names are historical (one = 4pt â€¦ six = 64pt); prefer the
  * scale over magic numbers everywhere.
  */
 export const Spacing = {
@@ -105,14 +147,33 @@ export const Spacing = {
   six: 64,
 } as const;
 
-/** Corner-radius scale. `pill` rounds to a stadium/circle. */
+/** Corner-radius scale. `card` is the standard panel radius; `pill` a stadium. */
 export const Radius = {
   sm: 8,
   md: 12,
   lg: 16,
+  card: 20,
   xl: 24,
   pill: 999,
 } as const;
+
+/**
+ * Whisper-soft card elevation for LIGHT mode only â€” dark mode separates surfaces
+ * by lifted background + hairline border instead (shadows read as smears on a
+ * dark canvas). Keep opacity â‰¤0.07: depth should be felt, not seen.
+ */
+export const CardShadow = Platform.select({
+  web: {
+    boxShadow: '0 2px 10px rgba(40, 36, 26, 0.06)',
+  },
+  default: {
+    shadowColor: '#28241A',
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
+  },
+}) as object;
 
 /**
  * Minimum / comfortable touch-target heights (dp). 48 is the accessibility floor
@@ -123,7 +184,7 @@ export const TouchTarget = {
   comfortable: 52,
 } as const;
 
-/** Phone horizontal gutter — consistent edge padding for full-width content. */
+/** Phone horizontal gutter â€” consistent edge padding for full-width content. */
 export const Gutter = 20;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

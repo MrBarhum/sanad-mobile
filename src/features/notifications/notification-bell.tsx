@@ -3,23 +3,26 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import { useUnreadCount } from './hooks';
 
 // A fixed, saturated badge red used as a small overlay fill (not a theme surface)
-// so the white count stays high-contrast in BOTH light and dark themes — the
+// so the white count stays high-contrast in BOTH light and dark themes â€” the
 // theme's errorFg is intentionally lighter in dark mode and would weaken on white.
 const BADGE_FILL = '#D92D20';
 
 /**
- * Bell with an unread badge that opens the notification center. Used in the app
- * shell (dashboard header, account). Keeps a large touch target and an accessible
- * label that announces the unread count.
+ * Labeled notifications pill with an unread-count badge that opens the
+ * notification center. Used in the app shell (dashboard header, account).
+ * Deliberately a LABELED affordance (not an icon-only bell): clearer for older
+ * users, and the unread count rides inside the pill so nothing overlaps.
  */
 export function NotificationBell() {
   const { t } = useTranslation();
   const router = useRouter();
+  const theme = useTheme();
   const { data } = useUnreadCount();
   const unread = data ?? 0;
 
@@ -33,11 +36,19 @@ export function NotificationBell() {
           : t('notifications.openCenter')
       }
       hitSlop={Spacing.two}
-      style={styles.wrap}>
-      <ThemedText style={styles.bell}>🔔</ThemedText>
+      style={({ pressed }) => [
+        styles.pill,
+        {
+          backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement,
+          borderColor: theme.border,
+        },
+      ]}>
+      <ThemedText style={[styles.label, { color: theme.primaryText }]}>
+        {t('notifications.title')}
+      </ThemedText>
       {unread > 0 ? (
         <View style={[styles.badge, { backgroundColor: BADGE_FILL }]}>
-          <ThemedText style={[styles.badgeText, { color: '#FFFFFF' }]}>
+          <ThemedText style={styles.badgeText}>
             {unread > 99 ? '99+' : String(unread)}
           </ThemedText>
         </View>
@@ -47,20 +58,23 @@ export function NotificationBell() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  bell: { fontSize: 24 },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    minHeight: TouchTarget.min,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.three,
+  },
+  label: { fontFamily: FontFamily.semibold, fontSize: 14, lineHeight: 20, fontWeight: '600' },
   badge: {
-    // Overlay badge anchored to the top-end corner; `end` flips with RTL so the
-    // count sits at the trailing edge in both Arabic and English layouts.
-    position: 'absolute',
-    top: 4,
-    end: 2,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 4,
+    minWidth: 22,
+    height: 22,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { fontSize: 11, fontWeight: '700' },
+  badgeText: { color: '#FFFFFF', fontSize: 12, lineHeight: 16, fontWeight: '700' },
 });

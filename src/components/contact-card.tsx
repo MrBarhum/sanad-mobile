@@ -4,6 +4,7 @@ import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { GlyphChip } from './glyph-chip';
 import { LtrText } from './ltr-text';
 import { Surface } from './surface';
 import { ThemedText } from './themed-text';
@@ -14,7 +15,7 @@ type ContactCardProps = {
   subtitle?: string | null;
   /** Additional secondary lines (e.g. clinic name). */
   details?: (string | null | undefined)[];
-  /** Phone number — rendered LTR and offered as a one-tap call. */
+  /** Phone number â€” rendered LTR and offered as a one-tap call. */
   phone?: string | null;
   /** Accessible label for the call affordance (e.g. "Call {name}"). */
   callLabel?: string;
@@ -24,40 +25,54 @@ type ContactCardProps = {
 };
 
 /**
- * A responsive, scannable contact card for a doctor or emergency contact: a clear
- * name, an optional qualifier, secondary details, a prominent one-tap phone row
- * (rendered LTR so the number reads correctly in the RTL layout) and an actions
- * slot. Uses the full available width and keeps a strong, calm hierarchy suited to
- * older users.
+ * A responsive, scannable contact card for a doctor or emergency contact: an
+ * initial-letter avatar anchors the row, then a clear name, optional qualifier,
+ * secondary details, a prominent one-tap call row (number rendered LTR so it
+ * reads correctly in the RTL layout) and an actions slot separated by a divider.
+ * Full width, strong calm hierarchy, suited to older users.
  */
 export function ContactCard({ name, subtitle, details, phone, callLabel, notes, children }: ContactCardProps) {
   const theme = useTheme();
   const detailLines = (details ?? []).filter(Boolean) as string[];
+  // First grapheme of the name as the avatar letterform (Arabic or Latin).
+  const initial = [...name.trim()][0] ?? 'â€¢';
 
   function call() {
     if (!phone) return;
     const sanitized = phone.replace(/[^\d+]/g, '');
     Linking.openURL(`tel:${sanitized}`).catch(() => {
-      // Device may not support telephony (tablet / emulator) — ignore quietly.
+      // Device may not support telephony (tablet / emulator) â€” ignore quietly.
     });
   }
 
   return (
     <Surface style={styles.card}>
-      <View style={styles.headerText}>
-        <ThemedText type="cardTitle">{name}</ThemedText>
-        {subtitle ? (
-          <ThemedText type="smallBold" themeColor="primaryText">
-            {subtitle}
-          </ThemedText>
-        ) : null}
+      <View style={styles.headerRow}>
+        <GlyphChip glyph={initial} tone="primary" />
+        <View style={styles.headerText}>
+          <ThemedText type="cardTitle">{name}</ThemedText>
+          {subtitle ? (
+            <ThemedText type="smallBold" themeColor="primaryText">
+              {subtitle}
+            </ThemedText>
+          ) : null}
+        </View>
       </View>
 
-      {detailLines.map((line, i) => (
-        <ThemedText key={i} themeColor="textSecondary">
-          {line}
-        </ThemedText>
-      ))}
+      {detailLines.length > 0 || notes ? (
+        <View style={styles.details}>
+          {detailLines.map((line, i) => (
+            <ThemedText key={i} type="small" themeColor="textSecondary">
+              {line}
+            </ThemedText>
+          ))}
+          {notes ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {notes}
+            </ThemedText>
+          ) : null}
+        </View>
+      ) : null}
 
       {phone ? (
         <Pressable
@@ -66,11 +81,14 @@ export function ContactCard({ name, subtitle, details, phone, callLabel, notes, 
           accessibilityLabel={callLabel ?? phone}
           style={({ pressed }) => [
             styles.phoneRow,
-            { backgroundColor: theme.primaryBg, borderColor: theme.border },
+            { backgroundColor: theme.primaryBg },
             pressed && styles.pressed,
           ]}>
-          <ThemedText style={styles.phoneGlyph} accessibilityElementsHidden>
-            📞
+          <ThemedText
+            style={[styles.phoneGlyph, { color: theme.primaryText }]}
+            accessibilityElementsHidden
+            importantForAccessibility="no">
+            âœ†
           </ThemedText>
           <LtrText style={[styles.phoneText, { color: theme.primaryText }]} selectable>
             {phone}
@@ -78,31 +96,32 @@ export function ContactCard({ name, subtitle, details, phone, callLabel, notes, 
         </Pressable>
       ) : null}
 
-      {notes ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {notes}
-        </ThemedText>
+      {children ? (
+        <View style={[styles.actions, { borderTopColor: theme.divider }]}>{children}</View>
       ) : null}
-
-      {children}
     </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { gap: Spacing.two },
-  headerText: { gap: Spacing.half },
+  card: { gap: Spacing.three },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  headerText: { flex: 1, gap: Spacing.half },
+  details: { gap: Spacing.one },
   phoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.two,
     minHeight: TouchTarget.comfortable,
     borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.three,
-    marginTop: Spacing.one,
   },
-  phoneGlyph: { fontSize: 18 },
-  phoneText: { fontSize: 18, fontWeight: '700' },
+  phoneGlyph: { fontSize: 20, lineHeight: 26, fontWeight: '700' },
+  phoneText: { fontSize: 18, lineHeight: 26, fontWeight: '700' },
   pressed: { opacity: 0.7 },
+  actions: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
 });
