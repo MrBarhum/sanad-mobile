@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { Glyph } from '@/constants/glyphs';
 
 import { useActiveCircle, type ActiveCircle } from './hooks';
 
@@ -29,7 +30,7 @@ export function CircleGate({ children }: { children: (circle: ActiveCircle) => R
   if (!circle) {
     return (
       <Screen scroll={false} center>
-        <EmptyState icon="â–" title={t('careCircle.noActiveCircle')} />
+        <EmptyState icon={Glyph.members} title={t('careCircle.noActiveCircle')} />
       </Screen>
     );
   }

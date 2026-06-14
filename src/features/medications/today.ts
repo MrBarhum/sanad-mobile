@@ -1,4 +1,4 @@
-import { dayOfWeekFromYmd } from '@/utils/date';
+import { dayOfWeekFromYmd, formatHm } from '@/utils/date';
 
 import type { Medication, MedicationLog, MedicationLogStatus, MedicationSchedule } from './api';
 
@@ -61,7 +61,16 @@ export function computeDoseItems(params: {
     if (schedule.end_date && schedule.end_date < date) continue;
     if (!schedule.days_of_week.includes(dow)) continue;
 
+    // Defensively collapse duplicate times within a schedule (e.g. legacy rows
+    // written before client-side duplicate validation). Each distinct time must
+    // appear once, or the dose list would render two items with the same
+    // `${schedule.id}|${time}` React key.
+    const seenTimes = new Set<string>();
     for (const time of schedule.times) {
+      const normalized = formatHm(time);
+      if (seenTimes.has(normalized)) continue;
+      seenTimes.add(normalized);
+
       const log = logByKey.get(`${schedule.id}|${time}`) ?? null;
       items.push({
         key: `${schedule.id}|${time}`,

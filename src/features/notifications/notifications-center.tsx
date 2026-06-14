@@ -11,6 +11,7 @@ import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCircleSelection } from '@/features/circle-selection/provider';
@@ -28,18 +29,18 @@ import {
 
 /**
  * Per-type non-emoji glyph + tone for the row anchor chip (replaces the
- * catalog's emoji icons in this screen â€” shape stays decorative, the type
+ * catalog's emoji icons in this screen — shape stays decorative, the type
  * label text below always carries the meaning).
  */
 const TYPE_GLYPH: Record<NotificationType, { glyph: string; tone: GlyphChipTone }> = {
-  medication_due: { glyph: 'â—‰', tone: 'primary' },
-  medication_missed: { glyph: 'â—‰', tone: 'warning' },
-  task_due: { glyph: 'âœ“', tone: 'primary' },
-  appointment_upcoming: { glyph: 'â—·', tone: 'primary' },
-  visit_update: { glyph: 'â–', tone: 'accent' },
-  care_update: { glyph: 'âœŽ', tone: 'primary' },
-  emergency: { glyph: 'âœš', tone: 'error' },
-  system: { glyph: 'âŠ™', tone: 'neutral' },
+  medication_due: { glyph: Glyph.medication, tone: 'primary' },
+  medication_missed: { glyph: Glyph.medication, tone: 'warning' },
+  task_due: { glyph: Glyph.task, tone: 'primary' },
+  appointment_upcoming: { glyph: Glyph.appointment, tone: 'primary' },
+  visit_update: { glyph: Glyph.members, tone: 'accent' },
+  care_update: { glyph: Glyph.dailyLog, tone: 'primary' },
+  emergency: { glyph: Glyph.emergency, tone: 'error' },
+  system: { glyph: Glyph.system, tone: 'neutral' },
 };
 
 /** The /notifications screen body: a global, recent-first inbox with an optional
@@ -133,7 +134,7 @@ export function NotificationsCenter() {
         />
       ) : items.length === 0 ? (
         <EmptyState
-          icon="âŠ™"
+          icon={Glyph.system}
           title={t('notifications.emptyTitle')}
           subtitle={t('notifications.emptySubtitle')}
         />
@@ -180,14 +181,14 @@ function FilterChip({
       style={[
         styles.chip,
         {
-          backgroundColor: active ? theme.primaryBg : theme.backgroundElement,
+          backgroundColor: active ? theme.primaryBg : theme.backgroundSelected,
           borderColor: active ? 'transparent' : theme.border,
         },
       ]}>
       <ThemedText
         type={active ? 'smallBold' : 'small'}
         themeColor={active ? 'primaryText' : 'textSecondary'}>
-        {active ? `âœ“ ${label}` : label}
+        {active ? `${Glyph.check} ${label}` : label}
       </ThemedText>
     </Pressable>
   );
@@ -222,7 +223,7 @@ function NotificationRow({
                 style={styles.unreadDot}
                 accessibilityElementsHidden
                 importantForAccessibility="no">
-                â—
+                {Glyph.dot}
               </ThemedText>
             ) : null}
             <ThemedText type={unread ? 'cardTitle' : 'default'} style={styles.rowTitle}>
@@ -234,8 +235,8 @@ function NotificationRow({
           </ThemedText>
           <ThemedText type="small" themeColor="textMuted" style={styles.meta}>
             {t(meta.labelKey)}
-            {circleName ? ` Â· ${circleName}` : ''}
-            {stamp ? ` Â· ${isolateLtr(stamp)}` : ''}
+            {circleName ? ` ${Glyph.middot} ${circleName}` : ''}
+            {stamp ? ` ${Glyph.middot} ${isolateLtr(stamp)}` : ''}
           </ThemedText>
         </View>
       </Pressable>

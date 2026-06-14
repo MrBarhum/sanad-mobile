@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { NavCard } from '@/components/nav-card';
+import { Glyph } from '@/constants/glyphs';
 
 import { useTodayTaskSummary } from './hooks';
 
@@ -19,7 +20,7 @@ export function TasksCard({ circleId }: { circleId: string }) {
 
   return (
     <NavCard
-      glyph="âœ“"
+      glyph={Glyph.task}
       title={t('careCircle.dashboard.sections.tasks.title')}
       subtitle={subtitle}
       onPress={() => router.push('/tasks')}

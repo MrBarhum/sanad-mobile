@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { InfoBanner } from '@/components/info-banner';
+import { Glyph } from '@/constants/glyphs';
 
 /**
  * Small tappable hint that explains reminders come from notification settings and
@@ -16,7 +17,7 @@ export function ReminderNotice({ messageKey }: { messageKey: string }) {
     <InfoBanner
       tone="info"
       text={t(messageKey)}
-      actionText={`${t('notifications.manageLink')} â€º`}
+      actionText={`${t('notifications.manageLink')} ${Glyph.chevron}`}
       onPress={() => router.push('/notification-settings')}
       accessibilityLabel={t('notifications.manageLink')}
     />

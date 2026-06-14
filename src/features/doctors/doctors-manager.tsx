@@ -9,6 +9,7 @@ import { FormModal } from '@/components/form-modal';
 import { ItemActions } from '@/components/item-actions';
 import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { confirmDiscard } from '@/utils/confirm';
@@ -62,12 +63,12 @@ export function DoctorsManager({ circleId, canManage }: { circleId: string; canM
     <>
       <Screen>
         {canManage ? (
-          <Button glyph="ï¼‹" label={t('doctors.add')} onPress={() => setAdding(true)} />
+          <Button glyph={Glyph.plus} label={t('doctors.add')} onPress={() => setAdding(true)} />
         ) : null}
 
         {items.length === 0 ? (
           <EmptyState
-            icon="âœœ"
+            icon={Glyph.doctor}
             title={t('doctors.emptyTitle')}
             subtitle={canManage ? t('doctors.emptySubtitle') : undefined}
           />

@@ -1,5 +1,6 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { Glyph } from '@/constants/glyphs';
 import { FontFamily, Radius, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -24,16 +25,16 @@ const BG_BY_TONE: Record<StatusTone, ThemeColor> = {
 };
 
 /**
- * A distinct glyph per tone so status is never communicated by color alone â€” the
+ * A distinct glyph per tone so status is never communicated by color alone — the
  * shape carries meaning for low-vision / color-blind users, reinforced by the
  * always-present text label.
  */
 const GLYPH_BY_TONE: Record<StatusTone, string> = {
-  success: 'âœ“',
-  warning: '!',
-  error: 'âœ•',
-  info: 'i',
-  neutral: 'â€¢',
+  success: Glyph.check,
+  warning: Glyph.warn,
+  error: Glyph.cross,
+  info: Glyph.info,
+  neutral: Glyph.bullet,
 };
 
 type StatusBadgeProps = {
@@ -46,7 +47,7 @@ type StatusBadgeProps = {
 
 /**
  * Pill badge for a status (e.g. a medication dose "given", a task "done"). A soft
- * tinted background with a strong foreground, a bold tone glyph and a text label â€”
+ * tinted background with a strong foreground, a bold tone glyph and a text label —
  * legible in light & dark, never color-only, calm rather than loud.
  */
 export function StatusBadge({ tone, label, glyph, style }: StatusBadgeProps) {

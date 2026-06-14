@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 
 import { GlyphChip, type GlyphChipTone } from './glyph-chip';
@@ -9,7 +10,7 @@ import { ThemedText } from './themed-text';
 type InfoBannerProps = {
   /** Main message. */
   text: string;
-  /** Optional second line styled as a link/action hint (e.g. "Manage settings â€º"). */
+  /** Optional second line styled as a link/action hint (e.g. "Manage settings ›"). */
   actionText?: string;
   tone?: Extract<GlyphChipTone, 'info' | 'warning' | 'neutral' | 'accent'>;
   /** Tapping the whole banner triggers this (e.g. open notification settings). */
@@ -17,7 +18,12 @@ type InfoBannerProps = {
   accessibilityLabel?: string;
 };
 
-const GLYPH_BY_TONE = { info: 'i', warning: '!', neutral: 'i', accent: 'âœ¦' } as const;
+const GLYPH_BY_TONE = {
+  info: Glyph.info,
+  warning: Glyph.warn,
+  neutral: Glyph.info,
+  accent: Glyph.profile,
+} as const;
 
 /**
  * A contained, tinted notice row: small tone chip + message (+ optional action

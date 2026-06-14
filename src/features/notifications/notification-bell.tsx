@@ -9,7 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useUnreadCount } from './hooks';
 
 // A fixed, saturated badge red used as a small overlay fill (not a theme surface)
-// so the white count stays high-contrast in BOTH light and dark themes â€” the
+// so the white count stays high-contrast in BOTH light and dark themes — the
 // theme's errorFg is intentionally lighter in dark mode and would weaken on white.
 const BADGE_FILL = '#D92D20';
 

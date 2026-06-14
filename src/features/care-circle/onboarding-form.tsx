@@ -143,7 +143,7 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
 
 const styles = StyleSheet.create({
   // Screen contributes Spacing.three between groups; the extra margins lift the
-  // headerâ†’form and formâ†’submit rhythm to a generous Spacing.four/five.
+  // header→form and form→submit rhythm to a generous Spacing.four/five.
   header: { gap: Spacing.two, marginBottom: Spacing.two },
   form: { gap: Spacing.three },
   field: { gap: Spacing.one },

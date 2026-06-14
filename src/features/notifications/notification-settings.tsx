@@ -8,6 +8,7 @@ import { Screen } from '@/components/screen';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { TimeField } from '@/components/time-field';
+import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCircleSelection } from '@/features/circle-selection/provider';
@@ -119,7 +120,7 @@ export function NotificationSettings() {
 
       {input ? (
         <>
-          {/* Per-type toggles â€” one calm grouped surface */}
+          {/* Per-type toggles — one calm grouped surface */}
           <Surface padded={false}>
             {PREFERENCE_TOGGLES.map((toggle, index) => (
               <ToggleRow
@@ -244,14 +245,14 @@ function ScopeChip({
       style={[
         styles.chip,
         {
-          backgroundColor: active ? theme.primaryBg : theme.backgroundElement,
+          backgroundColor: active ? theme.primaryBg : theme.backgroundSelected,
           borderColor: active ? 'transparent' : theme.border,
         },
       ]}>
       <ThemedText
         type={active ? 'smallBold' : 'small'}
         themeColor={active ? 'primaryText' : 'textSecondary'}>
-        {active ? `âœ“ ${label}` : label}
+        {active ? `${Glyph.check} ${label}` : label}
       </ThemedText>
     </Pressable>
   );

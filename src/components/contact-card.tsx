@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
+import { Glyph, initialFor } from '@/constants/glyphs';
 import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -15,7 +16,7 @@ type ContactCardProps = {
   subtitle?: string | null;
   /** Additional secondary lines (e.g. clinic name). */
   details?: (string | null | undefined)[];
-  /** Phone number â€” rendered LTR and offered as a one-tap call. */
+  /** Phone number — rendered LTR and offered as a one-tap call. */
   phone?: string | null;
   /** Accessible label for the call affordance (e.g. "Call {name}"). */
   callLabel?: string;
@@ -35,13 +36,13 @@ export function ContactCard({ name, subtitle, details, phone, callLabel, notes, 
   const theme = useTheme();
   const detailLines = (details ?? []).filter(Boolean) as string[];
   // First grapheme of the name as the avatar letterform (Arabic or Latin).
-  const initial = [...name.trim()][0] ?? 'â€¢';
+  const initial = initialFor(name);
 
   function call() {
     if (!phone) return;
     const sanitized = phone.replace(/[^\d+]/g, '');
     Linking.openURL(`tel:${sanitized}`).catch(() => {
-      // Device may not support telephony (tablet / emulator) â€” ignore quietly.
+      // Device may not support telephony (tablet / emulator) — ignore quietly.
     });
   }
 
@@ -88,7 +89,7 @@ export function ContactCard({ name, subtitle, details, phone, callLabel, notes, 
             style={[styles.phoneGlyph, { color: theme.primaryText }]}
             accessibilityElementsHidden
             importantForAccessibility="no">
-            âœ†
+            {Glyph.contact}
           </ThemedText>
           <LtrText style={[styles.phoneText, { color: theme.primaryText }]} selectable>
             {phone}

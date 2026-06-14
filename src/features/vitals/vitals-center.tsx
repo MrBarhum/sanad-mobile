@@ -9,6 +9,7 @@ import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
@@ -70,13 +71,13 @@ export function VitalsCenter({
       </ThemedText>
 
       {canAdd ? (
-        <Button glyph="ï¼‹" label={t('vitals.add')} onPress={() => router.push('/vitals/new')} />
+        <Button glyph={Glyph.plus} label={t('vitals.add')} onPress={() => router.push('/vitals/new')} />
       ) : null}
 
       <Section title={t('vitals.todayTitle')}>
         {todayReadings.length === 0 ? (
           <EmptyState
-            icon="â™¡"
+            icon={Glyph.vital}
             title={t('vitals.noTodayTitle')}
             subtitle={canAdd ? t('vitals.noTodaySubtitle') : undefined}
           />
@@ -114,7 +115,7 @@ function VitalRow({
       accessibilityLabel={t(`vitals.type.${reading.reading_type}`)}
       style={styles.card}>
       <View style={styles.row}>
-        <GlyphChip glyph="â™¡" tone="primary" size="sm" />
+        <GlyphChip glyph={Glyph.vital} tone="primary" size="sm" />
         <View style={styles.text}>
           <View style={styles.cardHeader}>
             <ThemedText type="cardTitle" style={styles.cardTitle}>
@@ -125,7 +126,7 @@ function VitalRow({
 
           <ThemedText type="small" themeColor="textSecondary">
             {when}
-            {mine ? ` â€¢ ${t('vitals.mineLabel')}` : ''}
+            {mine ? ` ${Glyph.bullet} ${t('vitals.mineLabel')}` : ''}
           </ThemedText>
 
           {reading.notes ? (
@@ -135,7 +136,7 @@ function VitalRow({
           ) : null}
         </View>
         <ThemedText style={[styles.chevron, { color: theme.textMuted }]} accessibilityElementsHidden>
-          â€º
+          {Glyph.chevron}
         </ThemedText>
       </View>
     </Surface>

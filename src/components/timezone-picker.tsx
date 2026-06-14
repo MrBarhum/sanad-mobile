@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Glyph } from '@/constants/glyphs';
 import { TIMEZONES, type TimezoneOption } from '@/constants/timezones';
 import { FontFamily, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -27,7 +28,7 @@ function isArabic(language: string): boolean {
 /** Localized "City, Country" label for an option in the active language. */
 function primaryLabel(option: TimezoneOption, language: string): string {
   return isArabic(language)
-    ? `${option.city.ar}ØŒ ${option.country.ar}`
+    ? `${option.city.ar}، ${option.country.ar}`
     : `${option.city.en}, ${option.country.en}`;
 }
 
@@ -49,7 +50,7 @@ function matches(option: TimezoneOption, query: string): boolean {
  * label with the IANA identifier as a secondary line, a "use this device's
  * timezone" shortcut, and a search box that matches city or country in either
  * language (or the raw IANA id). Selecting a row returns only the IANA `id`; the
- * caller is responsible for confirming and persisting it. No backdrop dismissal â€”
+ * caller is responsible for confirming and persisting it. No backdrop dismissal —
  * close is explicit, matching the app's other modals.
  */
 export function TimezonePicker({
@@ -93,7 +94,7 @@ export function TimezonePicker({
               accessibilityLabel={t('common.close')}
               hitSlop={Spacing.two}
               style={styles.closeButton}>
-              <ThemedText style={styles.close}>âœ•</ThemedText>
+              <ThemedText style={styles.close}>{Glyph.cross}</ThemedText>
             </Pressable>
           </View>
 
@@ -174,7 +175,7 @@ function Row({
       style={({ pressed }) => [
         styles.row,
         {
-          backgroundColor: selected ? theme.primaryBg : theme.backgroundElement,
+          backgroundColor: selected ? theme.primaryBg : theme.backgroundSelected,
           borderColor: selected ? 'transparent' : theme.border,
         },
         pressed && styles.pressed,
@@ -183,7 +184,7 @@ function Row({
         <ThemedText
           themeColor={selected ? 'primaryText' : 'text'}
           style={[styles.rowPrimary, selected && styles.rowPrimarySelected]}>
-          {selected ? `âœ“ ${primary}` : primary}
+          {selected ? `${Glyph.check} ${primary}` : primary}
         </ThemedText>
         <LtrText type="small" themeColor="textSecondary">
           {secondary}

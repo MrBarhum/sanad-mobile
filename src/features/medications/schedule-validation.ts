@@ -9,20 +9,26 @@ function normTime(time: string): string {
 }
 
 /**
- * Times that appear more than once within a single draft (normalized to HH:MM).
- * A schedule should never list the same time twice — that would double-count a
- * dose. Empty rows are ignored (the schema rejects those separately).
+ * Times that appear more than once in `times` (normalized to HH:MM). A schedule
+ * should never list the same time twice — it would double-count a dose and make
+ * the dose list emit two items with the same `${scheduleId}|${time}` React key.
+ * Empty rows are ignored (the schema rejects those separately).
  */
-export function duplicateTimesInDraft(draft: ScheduleDraft): string[] {
+export function duplicateTimes(times: string[]): string[] {
   const seen = new Set<string>();
   const dups = new Set<string>();
-  for (const raw of draft.times) {
+  for (const raw of times) {
     const time = normTime(raw);
     if (time === '') continue;
     if (seen.has(time)) dups.add(time);
     else seen.add(time);
   }
   return [...dups];
+}
+
+/** Duplicate times within a single schedule draft (see {@link duplicateTimes}). */
+export function duplicateTimesInDraft(draft: ScheduleDraft): string[] {
+  return duplicateTimes(draft.times);
 }
 
 /** A weekday + time slot that collides with another active schedule. */

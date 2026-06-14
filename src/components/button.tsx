@@ -14,8 +14,8 @@ type ButtonProps = {
   variant?: ButtonVariant;
   size?: ButtonSize;
   /**
-   * Optional leading text glyph (non-emoji, e.g. 'ï¼‹' on add actions) rendered
-   * in the label color. Decorative â€” the label always carries the meaning.
+   * Optional leading text glyph (non-emoji, e.g. '＋' on add actions) rendered
+   * in the label color. Decorative — the label always carries the meaning.
    */
   glyph?: string;
   loading?: boolean;
@@ -27,15 +27,15 @@ type ButtonProps = {
 
 /**
  * The single button primitive across the care screens. Variants:
- *   - primary   â€” filled brand blue (the main action), darkens while pressed.
- *   - secondary â€” quiet warm-neutral fill (companion actions). Calm on both the
+ *   - primary   — filled brand blue (the main action), darkens while pressed.
+ *   - secondary — quiet warm-neutral fill (companion actions). Calm on both the
  *                 canvas and on cards; never a huge white slab in dark mode.
- *   - danger    â€” soft error-tinted fill with strong error text. Reads clearly
+ *   - danger    — soft error-tinted fill with strong error text. Reads clearly
  *                 destructive yet stays visually + semantically separate from
  *                 save/confirm, without shouting.
- *   - plain     â€” text-only, brand-colored (low-emphasis tertiary actions).
+ *   - plain     — text-only, brand-colored (low-emphasis tertiary actions).
  * Always meets the touch-target floor; labels stay legible in light & dark.
- * Cross-platform â€” no native-only APIs.
+ * Cross-platform — no native-only APIs.
  */
 export function Button({
   label,
@@ -65,7 +65,9 @@ export function Button({
     secondary: {
       background: theme.backgroundSelected,
       pressed: theme.border,
-      border: 'transparent',
+      // A visible hairline edge so a quiet secondary button still reads as a
+      // pressable control (not loose text) on both the canvas and on cards.
+      border: theme.border,
       text: theme.text,
     },
     danger: {

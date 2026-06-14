@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ReminderNotice } from '@/features/notifications/reminder-notice';
@@ -19,7 +20,7 @@ import { formatHm, todayYmd } from '@/utils/date';
 import type { CareTask, TaskPriority, TaskStatus } from './api';
 import { useCancelTask, useCompleteTask, useTasks } from './hooks';
 
-/** Priority â†’ badge tone (color + a distinct glyph, never color alone). */
+/** Priority → badge tone (color + a distinct glyph, never color alone). */
 const PRIORITY_TONE: Record<TaskPriority, StatusTone> = {
   low: 'neutral',
   normal: 'neutral',
@@ -27,16 +28,16 @@ const PRIORITY_TONE: Record<TaskPriority, StatusTone> = {
   urgent: 'error',
 };
 
-/** Done/cancelled status â†’ badge tone. */
+/** Done/cancelled status → badge tone. */
 const DONE_TONE: Record<Exclude<TaskStatus, 'open'>, StatusTone> = {
   completed: 'success',
   cancelled: 'error',
 };
 
-/** Done/cancelled status â†’ badge glyph (mirrors the action buttons). */
+/** Done/cancelled status → badge glyph (mirrors the action buttons). */
 const DONE_GLYPH: Record<Exclude<TaskStatus, 'open'>, string> = {
-  completed: 'âœ“',
-  cancelled: 'âœ•',
+  completed: Glyph.check,
+  cancelled: Glyph.cross,
 };
 
 function dueSortKey(task: CareTask): string {
@@ -126,13 +127,13 @@ export function TasksCenter({
       <ReminderNotice messageKey="tasks.reminderNotice" />
 
       {canManage ? (
-        <Button glyph="ï¼‹" label={t('tasks.add')} onPress={() => router.push('/tasks/new')} />
+        <Button glyph={Glyph.plus} label={t('tasks.add')} onPress={() => router.push('/tasks/new')} />
       ) : null}
 
       <Section title={t('tasks.todayTitle')}>
         {todayTasks.length === 0 ? (
           <EmptyState
-            icon="âœ“"
+            icon={Glyph.task}
             title={t('tasks.noTodayTitle')}
             subtitle={t('tasks.noTodaySubtitle')}
           />
@@ -144,7 +145,7 @@ export function TasksCenter({
       <Section title={t('tasks.openTitle')}>
         {otherOpen.length === 0 ? (
           <EmptyState
-            icon="âœ“"
+            icon={Glyph.task}
             title={t('tasks.noOpenTitle')}
             subtitle={canManage ? t('tasks.noOpenSubtitle') : undefined}
           />
@@ -241,7 +242,7 @@ function TaskRow({
           <>
             <Button
               size="sm"
-              glyph="âœ“"
+              glyph={Glyph.check}
               label={t('tasks.complete')}
               disabled={pending}
               onPress={onComplete}
@@ -250,7 +251,7 @@ function TaskRow({
             <Button
               size="sm"
               variant="secondary"
-              glyph="âœ•"
+              glyph={Glyph.cross}
               label={t('tasks.cancelTask')}
               disabled={pending}
               onPress={onCancel}
@@ -261,7 +262,7 @@ function TaskRow({
         <Button
           size="sm"
           variant="secondary"
-          glyph="â€º"
+          glyph={Glyph.chevron}
           label={t('common.details')}
           onPress={onOpen}
           style={styles.action}

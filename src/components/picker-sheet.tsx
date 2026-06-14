@@ -2,6 +2,7 @@ import { useRef, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -9,17 +10,17 @@ import { Button } from './button';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
-const ROW_HEIGHT = TouchTarget.min; // 48 â€” large, easy targets for older users
+const ROW_HEIGHT = TouchTarget.min; // 48 — large, easy targets for older users
 const VISIBLE_ROWS = 5;
 
 /**
  * Bottom-sheet chrome for the native date / time pickers. Holds a title, a close
- * affordance, the picker body (`children` â€” a row of `WheelColumn`s) and
+ * affordance, the picker body (`children` — a row of `WheelColumn`s) and
  * Done / Clear / Cancel actions. Tapping the backdrop or the close icon cancels
  * (discards the in-progress selection); the caller commits only on Done. The sheet
  * caps its height and honors the bottom safe-area inset so the actions are always
  * reachable on short and tall devices. Cross-platform-safe, but only the native
- * field variants import it â€” the web variants use real HTML inputs.
+ * field variants import it — the web variants use real HTML inputs.
  */
 export function PickerSheet({
   visible,
@@ -73,7 +74,7 @@ export function PickerSheet({
                 accessibilityLabel={closeLabel ?? cancelLabel}
                 hitSlop={Spacing.two}
                 style={styles.close}>
-                <ThemedText style={styles.closeGlyph}>âœ•</ThemedText>
+                <ThemedText style={styles.closeGlyph}>{Glyph.cross}</ThemedText>
               </Pressable>
             </View>
 
@@ -97,7 +98,7 @@ export function PickerSheet({
  * A single scrollable selection column (year, month, day, hour or minute). Taps
  * select a value; the selected row is highlighted (filled + bold + a check) so
  * the choice is never communicated by color alone. On mount it scrolls the
- * selected value into view. Numbers only â€” formatting (e.g. zero-padding) via
+ * selected value into view. Numbers only — formatting (e.g. zero-padding) via
  * `formatValue`.
  */
 export function WheelColumn({
@@ -156,7 +157,7 @@ export function WheelColumn({
               <ThemedText
                 themeColor={isSelected ? 'primaryText' : 'text'}
                 style={[styles.rowText, isSelected && styles.rowTextSelected]}>
-                {isSelected ? `âœ“ ${text}` : text}
+                {isSelected ? `${Glyph.check} ${text}` : text}
               </ThemedText>
             </Pressable>
           );
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
   closeGlyph: { fontSize: 20, fontWeight: '600' },
   // A plain full-width block (column direction): the child wheel-row (the field's
   // own `columns` View) stretches to the full width, which is what keeps its
-  // flex:1 WheelColumns from collapsing to zero width â€” the cause of the blank
+  // flex:1 WheelColumns from collapsing to zero width — the cause of the blank
   // Android picker. Do NOT make this a row.
   body: { width: '100%' },
   actions: { gap: Spacing.two },

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Glyph } from '@/constants/glyphs';
 import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -31,7 +32,7 @@ function minuteValues(step: number): number[] {
 
 /**
  * Labeled time field that opens a touch-friendly scrollable picker (hour /
- * minute) â€” no manual 'HH:MM' typing. Stores and emits 24-hour 'HH:MM' (or ''
+ * minute) — no manual 'HH:MM' typing. Stores and emits 24-hour 'HH:MM' (or ''
  * when cleared). The web build uses a native `<input type="time">` instead (see
  * time-field.web.tsx).
  */
@@ -95,7 +96,7 @@ export function TimeField({
           style={[styles.triggerGlyph, { color: theme.textMuted }]}
           accessibilityElementsHidden
           importantForAccessibility="no">
-          â€º
+          {Glyph.chevron}
         </ThemedText>
       </Pressable>
 

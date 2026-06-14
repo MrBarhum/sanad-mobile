@@ -20,7 +20,7 @@ function uniqueSortedTimes(times: string[]): string[] {
  * immediately obvious what happens each day. Shows one line per distinct day-set
  * ("Every day: 08:00", "Sun, Tue, Thu: 23:00") and an expandable per-day
  * breakdown listing every time that falls on each weekday. Stopped schedules are
- * excluded â€” they don't generate doses.
+ * excluded — they don't generate doses.
  */
 export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[] }) {
   const { t } = useTranslation();
@@ -59,7 +59,7 @@ export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[]
 
   function daysLabel(days: number[]): string {
     if (days.length >= 7) return t('medications.everyDay');
-    return days.map((day) => t(`medications.weekdaysShort.${WEEKDAY_KEYS[day]}`)).join('ØŒ ');
+    return days.map((day) => t(`medications.weekdaysShort.${WEEKDAY_KEYS[day]}`)).join('، ');
   }
 
   return (
@@ -70,7 +70,7 @@ export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[]
         <ThemedText key={index} type="small">
           {t('medications.summary.line', {
             days: daysLabel(group.days),
-            times: isolateLtr(group.times.join('ØŒ ')),
+            times: isolateLtr(group.times.join('، ')),
           })}
         </ThemedText>
       ))}
@@ -93,7 +93,7 @@ export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[]
               </ThemedText>
               {times.length ? (
                 <LtrText type="small" themeColor="textSecondary" style={styles.perDayTimes}>
-                  {times.join('ØŒ ')}
+                  {times.join('، ')}
                 </LtrText>
               ) : (
                 <ThemedText type="small" themeColor="textSecondary" style={styles.perDayTimes}>

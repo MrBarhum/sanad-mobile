@@ -15,6 +15,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Glyph } from '@/constants/glyphs';
 import { FontFamily, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -26,7 +27,7 @@ import { roleCapability, roleChangeDirection } from './role-capabilities';
  * Two-step role picker. Step 1 lets a manager browse the roles they may assign,
  * each with a capability summary and expandable "Can do / Cannot do" details, and
  * pick one WITHOUT mutating the server. Step 2 is an explicit confirmation that
- * summarizes old â†’ new and whether access is raised or lowered. Save and Cancel
+ * summarizes old → new and whether access is raised or lowered. Save and Cancel
  * are always separate. The update_circle_member_role RPC remains authoritative.
  */
 export function RoleModal({
@@ -71,7 +72,7 @@ export function RoleModal({
               accessibilityLabel={t('common.close')}
               hitSlop={Spacing.two}
               style={styles.closeButton}>
-              <ThemedText style={styles.close}>âœ•</ThemedText>
+              <ThemedText style={styles.close}>{Glyph.cross}</ThemedText>
             </Pressable>
           </View>
 
@@ -178,8 +179,9 @@ function RoleOption({
     <Surface tone={selected ? 'selected' : 'card'} style={styles.option}>
       <Pressable
         onPress={onSelect}
-        accessibilityRole="button"
-        accessibilityState={{ selected }}>
+        accessibilityRole="radio"
+        accessibilityState={{ selected }}
+        style={styles.selectArea}>
         <View style={styles.optionHeader}>
           <View style={styles.optionTitleWrap}>
             {selected ? (
@@ -188,7 +190,7 @@ function RoleOption({
                 style={{ color: theme.primary }}
                 accessibilityElementsHidden
                 importantForAccessibility="no">
-                âœ“
+                {Glyph.check}
               </ThemedText>
             ) : null}
             <ThemedText
@@ -221,7 +223,7 @@ function RoleOption({
           <ThemedText type="smallBold">{t('circleMembers.canDo')}</ThemedText>
           {canList.map((line, i) => (
             <ThemedText key={`can-${i}`} type="small" themeColor="textSecondary">
-              â€¢ {line}
+              {Glyph.bullet} {line}
             </ThemedText>
           ))}
           <ThemedText type="smallBold" style={styles.cannotHeading}>
@@ -229,7 +231,7 @@ function RoleOption({
           </ThemedText>
           {cannotList.map((line, i) => (
             <ThemedText key={`cannot-${i}`} type="small" themeColor="textSecondary">
-              â€¢ {line}
+              {Glyph.bullet} {line}
             </ThemedText>
           ))}
         </View>
@@ -305,6 +307,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   option: { gap: Spacing.two },
+  // Guarantee the role-row select target meets the 48dp floor even when the
+  // capability summary is a single short line.
+  selectArea: { minHeight: TouchTarget.min, justifyContent: 'center', gap: Spacing.two },
   optionHeader: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Glyph } from '@/constants/glyphs';
 import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -105,7 +106,7 @@ function Chip({
         styles.chipWrap,
         fullWidth && styles.chipFull,
         {
-          backgroundColor: selected ? theme.primaryBg : theme.backgroundElement,
+          backgroundColor: selected ? theme.primaryBg : theme.backgroundSelected,
           borderColor: selected ? theme.primary : theme.border,
         },
         pressed && styles.pressed,
@@ -114,7 +115,7 @@ function Chip({
         type="small"
         themeColor={selected ? 'primaryText' : 'textSecondary'}
         style={[styles.chip, selected && styles.chipSelectedText, fullWidth && styles.chipFullText]}>
-        {selected ? `âœ“ ${label}` : label}
+        {selected ? `${Glyph.check} ${label}` : label}
       </ThemedText>
     </Pressable>
   );

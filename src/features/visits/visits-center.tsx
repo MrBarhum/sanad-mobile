@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
@@ -108,13 +109,13 @@ export function VisitsCenter({
       </ThemedText>
 
       {canAdd ? (
-        <Button glyph="ï¼‹" label={t('visits.add')} onPress={() => router.push('/visits/new')} />
+        <Button glyph={Glyph.plus} label={t('visits.add')} onPress={() => router.push('/visits/new')} />
       ) : null}
 
       <Section title={t('visits.todayTitle')}>
         {todayVisits.length === 0 ? (
           <EmptyState
-            icon="âŒ‚"
+            icon={Glyph.visit}
             title={t('visits.noTodayTitle')}
             subtitle={t('visits.noTodaySubtitle')}
           />
@@ -126,7 +127,7 @@ export function VisitsCenter({
       <Section title={t('visits.upcomingTitle')}>
         {upcoming.length === 0 ? (
           <EmptyState
-            icon="âŒ‚"
+            icon={Glyph.visit}
             title={t('visits.noUpcomingTitle')}
             subtitle={canAdd ? t('visits.noUpcomingSubtitle') : undefined}
           />
@@ -168,7 +169,7 @@ function VisitCard({
   if (visit.start_time) timeParts.push(isolateLtr(formatHm(visit.start_time)));
   if (visit.end_time) timeParts.push(isolateLtr(formatHm(visit.end_time)));
   const when =
-    timeParts.length > 0 ? `${visit.visit_date} ${timeParts.join(' â€“ ')}` : visit.visit_date;
+    timeParts.length > 0 ? `${visit.visit_date} ${timeParts.join(' – ')}` : visit.visit_date;
 
   return (
     <Surface style={styles.card}>
@@ -199,7 +200,7 @@ function VisitCard({
           <>
             <Button
               size="sm"
-              glyph="âœ“"
+              glyph={Glyph.check}
               label={t('visits.markCompleted')}
               disabled={pending}
               onPress={onComplete}
@@ -208,7 +209,7 @@ function VisitCard({
             <Button
               size="sm"
               variant="secondary"
-              glyph="âœ•"
+              glyph={Glyph.cross}
               label={t('visits.markCancelled')}
               disabled={pending}
               onPress={onCancel}
@@ -219,7 +220,7 @@ function VisitCard({
         <Button
           size="sm"
           variant="secondary"
-          glyph="â€º"
+          glyph={Glyph.chevron}
           label={t('common.details')}
           onPress={onOpen}
           style={styles.action}

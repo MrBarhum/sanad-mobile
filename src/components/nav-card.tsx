@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -8,14 +9,14 @@ import { Surface, type SurfaceTone } from './surface';
 import { ThemedText } from './themed-text';
 
 type NavCardProps = {
-  /** Decorative non-emoji glyph for the leading identity chip (â—‰ âœ“ âœŽ â™¡ â—· âŒ‚ â€¦). */
+  /** Decorative non-emoji glyph for the leading identity chip (◉ ✓ ✎ ♡ ◷ ⌂ …). */
   glyph: string;
   glyphTone?: GlyphChipTone;
   title: string;
   /** Live summary or description under the title. */
   subtitle?: string;
   onPress: () => void;
-  /** Surface tone â€” e.g. 'error' for the emergency card. */
+  /** Surface tone — e.g. 'error' for the emergency card. */
   tone?: SurfaceTone;
   /** Title color override (theme color name), e.g. 'errorFg' on the emergency card. */
   titleColor?: 'text' | 'errorFg';
@@ -27,7 +28,7 @@ type NavCardProps = {
  * The dashboard/navigation card: identity chip + title + live subtitle + a
  * trailing chevron. One shared implementation keeps every feature entry point
  * on the home screen visually identical (chip carries identity, text carries
- * meaning, chevron signals navigation â€” RTL-safe, no physical offsets).
+ * meaning, chevron signals navigation — RTL-safe, no physical offsets).
  */
 export function NavCard({
   glyph,
@@ -65,7 +66,7 @@ export function NavCard({
           style={[styles.chevron, { color: tone === 'error' ? theme.errorFg : theme.textMuted }]}
           accessibilityElementsHidden
           importantForAccessibility="no">
-          â€º
+          {Glyph.chevron}
         </ThemedText>
       </View>
     </Surface>

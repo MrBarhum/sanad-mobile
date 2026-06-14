@@ -11,6 +11,7 @@ import { ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge } from '@/components/status-badge';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph, initialFor } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -250,7 +251,7 @@ function MemberCard({
   return (
     <Surface style={styles.card}>
       <View style={styles.cardHeader}>
-        <GlyphChip glyph={[...displayName.trim()][0] ?? 'â€¢'} tone="primary" size="sm" />
+        <GlyphChip glyph={initialFor(displayName)} tone="primary" size="sm" />
         <ThemedText type="cardTitle" style={styles.cardName}>
           {displayName}
         </ThemedText>
@@ -275,7 +276,7 @@ function MemberCard({
           {t(`circleMembers.roles.${member.role}`)}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          â€¢
+          {Glyph.bullet}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {t(`circleMembers.status.${member.status}`)}

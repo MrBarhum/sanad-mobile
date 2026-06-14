@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useDoctors } from '@/features/doctors/hooks';
@@ -94,7 +95,7 @@ export function AppointmentsCenter({
 
       {canManage ? (
         <Button
-          glyph="ï¼‹"
+          glyph={Glyph.plus}
           label={t('appointments.add')}
           onPress={() => router.push('/appointments/new')}
         />
@@ -103,7 +104,7 @@ export function AppointmentsCenter({
       <Section title={t('appointments.todayTitle')}>
         {todayAppointments.length === 0 ? (
           <EmptyState
-            icon="â—·"
+            icon={Glyph.appointment}
             title={t('appointments.noTodayTitle')}
             subtitle={t('appointments.noTodaySubtitle')}
           />
@@ -115,7 +116,7 @@ export function AppointmentsCenter({
       <Section title={t('appointments.upcomingTitle')}>
         {upcoming.length === 0 ? (
           <EmptyState
-            icon="â—·"
+            icon={Glyph.appointment}
             title={t('appointments.noUpcomingTitle')}
             subtitle={canManage ? t('appointments.noUpcomingSubtitle') : undefined}
           />
@@ -149,7 +150,7 @@ function AppointmentCard({
 
   const when = appointment.ends_at
     ? isolateLtr(
-        `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} â€“ ${hmFromInstant(appointment.ends_at)}`,
+        `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} – ${hmFromInstant(appointment.ends_at)}`,
       )
     : isolateLtr(`${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)}`);
 
@@ -191,7 +192,7 @@ function AppointmentCard({
           <>
             <Button
               size="sm"
-              glyph="âœ“"
+              glyph={Glyph.check}
               label={t('appointments.markCompleted')}
               disabled={pending}
               onPress={onComplete}
@@ -200,7 +201,7 @@ function AppointmentCard({
             <Button
               size="sm"
               variant="secondary"
-              glyph="âœ•"
+              glyph={Glyph.cross}
               label={t('appointments.markCancelled')}
               disabled={pending}
               onPress={onCancel}
@@ -211,7 +212,7 @@ function AppointmentCard({
         <Button
           size="sm"
           variant="secondary"
-          glyph="â€º"
+          glyph={Glyph.chevron}
           label={t('common.details')}
           onPress={onOpen}
           style={styles.action}

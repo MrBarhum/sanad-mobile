@@ -58,10 +58,10 @@ type SurfaceProps = {
 };
 
 /**
- * A themed container surface â€” the one card/panel primitive used across the app.
+ * A themed container surface — the one card/panel primitive used across the app.
  * Cards get a whisper-soft shadow in light mode (dark mode separates by lifted
  * background + hairline border instead). Pass `onPress` to make it a pressable
- * card â€” Android gets a native ripple, other platforms a gentle opacity dip.
+ * card — Android gets a native ripple, other platforms a gentle opacity dip.
  */
 export function Surface({
   children,
@@ -121,7 +121,7 @@ export function Surface({
   );
 }
 
-/** A card is just the default surface â€” kept as a named alias for intent. */
+/** A card is just the default surface — kept as a named alias for intent. */
 export function Card(props: SurfaceProps) {
   return <Surface {...props} />;
 }

@@ -1,11 +1,11 @@
 /**
- * Sanad design tokens â€” a single source of truth for color, type, spacing,
+ * Sanad design tokens — a single source of truth for color, type, spacing,
  * radius, elevation and touch-target sizing.
  *
- * Visual direction: "Warm Care OS" â€” a calm, premium, Arabic-first family-care
+ * Visual direction: "Warm Care OS" — a calm, premium, Arabic-first family-care
  * interface. Identity comes from typography (IBM Plex Sans Arabic), warm-neutral
  * canvases (never flat white / pure black), one confident brand blue, and soft
- * tinted anchors â€” not from gradients, heavy shadows or decoration. Tuned for
+ * tinted anchors — not from gradients, heavy shadows or decoration. Tuned for
  * older adults and family caregivers: large targets, strong contrast, status is
  * never color-only. Light and dark are full peers.
  *
@@ -23,10 +23,10 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    // Surfaces & text â€” warm porcelain canvas, white cards, warm hairlines.
+    // Surfaces & text — warm porcelain canvas, white cards, warm hairlines.
     text: '#1D1B16',
     textSecondary: '#5C594F',
-    /** Quieter than textSecondary â€” metadata/timestamps only, never body text. */
+    /** Quieter than textSecondary — metadata/timestamps only, never body text. */
     textMuted: '#767266',
     background: '#F6F4EF',
     backgroundElement: '#FFFFFF',
@@ -34,17 +34,17 @@ export const Colors = {
     /** Recessed wells INSIDE cards (picker wheels, code blocks, quiet rows). */
     backgroundSunken: '#F3F1EB',
     border: '#E2DFD6',
-    /** Softer than border â€” separators between rows inside one surface. */
+    /** Softer than border — separators between rows inside one surface. */
     divider: '#ECE9E2',
 
-    // Brand â€” one confident, calm blue (kept compatible with the app icon).
+    // Brand — one confident, calm blue (kept compatible with the app icon).
     primary: '#1B5FBE',
     primaryPressed: '#164E9D',
     onPrimary: '#FFFFFF',
     primaryBg: '#E8EFFA', // tinted primary surface (chips/links/info)
     primaryText: '#17549F', // brand-colored text on a normal surface
 
-    // Warm sand accent â€” reserved for "today/highlight" moments, used sparingly.
+    // Warm sand accent — reserved for "today/highlight" moments, used sparingly.
     accentFg: '#8A5A17',
     accentBg: '#F5EBD8',
 
@@ -62,7 +62,7 @@ export const Colors = {
     overlay: 'rgba(29, 27, 22, 0.45)',
   },
   dark: {
-    // Warm graphite â€” lifted cards, never pure black.
+    // Warm graphite — lifted cards, never pure black.
     text: '#F4F2EC',
     textSecondary: '#ACA89D',
     textMuted: '#8B877C',
@@ -98,10 +98,10 @@ export const Colors = {
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 /**
- * App typeface â€” IBM Plex Sans Arabic (SIL OFL, bundled in assets/fonts, loaded
+ * App typeface — IBM Plex Sans Arabic (SIL OFL, bundled in assets/fonts, loaded
  * once in the root layout via expo-font). One family carries Arabic AND Latin so
  * mixed content (medication names, emails) stays harmonious. Static weight files
- * â†’ each weight is its own family name; pair with the matching numeric
+ * → each weight is its own family name; pair with the matching numeric
  * fontWeight so platforms without the file (or before load) fall back cleanly to
  * the system font at the right weight.
  */
@@ -134,7 +134,7 @@ export const Fonts = Platform.select({
 });
 
 /**
- * 4-pt spacing scale. Names are historical (one = 4pt â€¦ six = 64pt); prefer the
+ * 4-pt spacing scale. Names are historical (one = 4pt … six = 64pt); prefer the
  * scale over magic numbers everywhere.
  */
 export const Spacing = {
@@ -158,9 +158,9 @@ export const Radius = {
 } as const;
 
 /**
- * Whisper-soft card elevation for LIGHT mode only â€” dark mode separates surfaces
+ * Whisper-soft card elevation for LIGHT mode only — dark mode separates surfaces
  * by lifted background + hairline border instead (shadows read as smears on a
- * dark canvas). Keep opacity â‰¤0.07: depth should be felt, not seen.
+ * dark canvas). Keep opacity ≤0.07: depth should be felt, not seen.
  */
 export const CardShadow = Platform.select({
   web: {
@@ -184,7 +184,7 @@ export const TouchTarget = {
   comfortable: 52,
 } as const;
 
-/** Phone horizontal gutter â€” consistent edge padding for full-width content. */
+/** Phone horizontal gutter — consistent edge padding for full-width content. */
 export const Gutter = 20;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

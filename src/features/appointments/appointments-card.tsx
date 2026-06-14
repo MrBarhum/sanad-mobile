@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { NavCard } from '@/components/nav-card';
+import { Glyph } from '@/constants/glyphs';
 
 import { useTodayAppointmentSummary } from './hooks';
 
@@ -19,7 +20,7 @@ export function AppointmentsCard({ circleId }: { circleId: string }) {
 
   return (
     <NavCard
-      glyph="â—·"
+      glyph={Glyph.appointment}
       title={t('careCircle.dashboard.sections.appointments.title')}
       subtitle={subtitle}
       onPress={() => router.push('/appointments')}

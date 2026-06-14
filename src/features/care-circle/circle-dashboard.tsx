@@ -6,6 +6,7 @@ import { GlyphChip } from '@/components/glyph-chip';
 import { NavCard } from '@/components/nav-card';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
+import { Glyph } from '@/constants/glyphs';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing, TouchTarget } from '@/constants/theme';
@@ -21,7 +22,7 @@ import { VisitsCard } from '@/features/visits/visits-card';
 import { VitalsCard } from '@/features/vitals/vitals-card';
 
 /**
- * People & settings rows on the dashboard â€” rendered as one grouped list (a
+ * People & settings rows on the dashboard — rendered as one grouped list (a
  * calm "settings group") rather than four more look-alike cards. Glyphs are
  * decorative non-emoji marks; the labels carry all meaning.
  */
@@ -29,28 +30,28 @@ const ACTIONS = [
   {
     key: 'members',
     href: '/circle-members',
-    glyph: 'â–',
+    glyph: Glyph.members,
     titleKey: 'circleMembers.title',
     subtitleKey: 'circleMembers.subtitle',
   },
   {
     key: 'recipientProfile',
     href: '/recipient-profile',
-    glyph: 'âœ¦',
+    glyph: Glyph.profile,
     titleKey: 'careCircle.dashboard.sections.recipientProfile.title',
     subtitleKey: 'careCircle.dashboard.sections.recipientProfile.subtitle',
   },
   {
     key: 'emergencyContacts',
     href: '/emergency-contacts',
-    glyph: 'âœ†',
+    glyph: Glyph.contact,
     titleKey: 'careCircle.dashboard.sections.emergencyContacts.title',
     subtitleKey: 'careCircle.dashboard.sections.emergencyContacts.subtitle',
   },
   {
     key: 'doctors',
     href: '/doctors',
-    glyph: 'âœœ',
+    glyph: Glyph.doctor,
     titleKey: 'careCircle.dashboard.sections.doctors.title',
     subtitleKey: 'careCircle.dashboard.sections.doctors.subtitle',
   },
@@ -83,7 +84,7 @@ export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
       <CircleSwitcher />
 
       <NavCard
-        glyph="âœš"
+        glyph={Glyph.emergency}
         glyphTone="error"
         tone="error"
         titleColor="errorFg"
@@ -125,7 +126,7 @@ export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
             <ThemedText
               style={[styles.chevron, { color: theme.textMuted }]}
               accessibilityElementsHidden>
-              â€º
+              {Glyph.chevron}
             </ThemedText>
           </Pressable>
         ))}
@@ -152,7 +153,7 @@ function MedicationsCard({ circleId }: { circleId: string }) {
 
   return (
     <NavCard
-      glyph="â—‰"
+      glyph={Glyph.medication}
       title={t('careCircle.dashboard.sections.medications.title')}
       subtitle={subtitle}
       onPress={() => router.push('/medications')}

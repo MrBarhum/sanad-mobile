@@ -9,6 +9,7 @@ import { GlyphChip } from '@/components/glyph-chip';
 import { Screen } from '@/components/screen';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { CircleSwitcher } from '@/features/circle-selection/circle-switcher';
@@ -40,7 +41,7 @@ export default function AccountScreen() {
       try {
         await deactivatePushToken(token);
       } catch {
-        // ignore â€” a stale token is also invalidated server-side on re-register
+        // ignore — a stale token is also invalidated server-side on re-register
       }
     }
     // On success the auth state change propagates and the (app) guard redirects
@@ -78,7 +79,7 @@ export default function AccountScreen() {
         {activeCircle ? (
           <Surface padded={false}>
             <LinkRow
-              glyph="â–"
+              glyph={Glyph.members}
               title={t('circleMembers.title')}
               subtitle={t('circleMembers.subtitle')}
               onPress={() => router.push('/circle-members')}
@@ -92,13 +93,13 @@ export default function AccountScreen() {
       <Section title={t('account.notificationsSectionTitle')}>
         <Surface padded={false}>
           <LinkRow
-            glyph="â—Ž"
+            glyph={Glyph.bullseye}
             title={t('notificationSettings.title')}
             subtitle={t('notificationSettings.subtitle')}
             onPress={() => router.push('/notification-settings')}
           />
           <LinkRow
-            glyph="ï¼‹"
+            glyph={Glyph.plus}
             topDivider
             title={t('account.joinAnother')}
             subtitle={t('account.joinAnotherSubtitle')}
@@ -163,7 +164,7 @@ function LinkRow({
         </ThemedText>
       </View>
       <ThemedText style={[styles.chevron, { color: theme.textMuted }]} accessibilityElementsHidden>
-        â€º
+        {Glyph.chevron}
       </ThemedText>
     </Pressable>
   );

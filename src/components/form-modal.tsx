@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -27,7 +28,7 @@ type FormModalProps = {
 /**
  * Bottom-sheet modal hosting an add/edit form. Cross-platform (react-native
  * Modal renders as an overlay on web too). Closing is explicit via the header
- * close button or Cancel â€” no backdrop-tap dismissal â€” to avoid losing input by
+ * close button or Cancel — no backdrop-tap dismissal — to avoid losing input by
  * accident and to keep behavior identical on web and native. The caller owns the
  * form fields (`children`) and validation; this only provides the chrome.
  */
@@ -63,7 +64,7 @@ export function FormModal({
               accessibilityLabel={closeLabel}
               hitSlop={Spacing.two}
               style={styles.closeButton}>
-              <ThemedText style={styles.close}>âœ•</ThemedText>
+              <ThemedText style={styles.close}>{Glyph.cross}</ThemedText>
             </Pressable>
           </View>
 

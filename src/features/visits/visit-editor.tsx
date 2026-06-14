@@ -12,6 +12,7 @@ import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -28,11 +29,11 @@ const STATUS_TONE: Record<VisitStatus, StatusTone> = {
   cancelled: 'error',
 };
 
-/** Visit status â†’ badge glyph (planned reads as "upcoming"). */
+/** Visit status → badge glyph (planned reads as "upcoming"). */
 const STATUS_GLYPH: Record<VisitStatus, string> = {
-  planned: 'â—·',
-  completed: 'âœ“',
-  cancelled: 'âœ•',
+  planned: Glyph.clock,
+  completed: Glyph.check,
+  cancelled: Glyph.cross,
 };
 
 /** Loads a visit, then renders the view/edit screen with status + delete. */
@@ -65,7 +66,7 @@ export function VisitEditor({
   if (!visit.data) {
     return (
       <Screen scroll={false} center>
-        <EmptyState icon="âŒ‚" title={t('visits.notFound')} />
+        <EmptyState icon={Glyph.visit} title={t('visits.notFound')} />
       </Screen>
     );
   }
@@ -148,7 +149,7 @@ function ReadOnlyVisit({ visit }: { visit: FamilyVisit }) {
   if (visit.start_time) timeParts.push(isolateLtr(formatHm(visit.start_time)));
   if (visit.end_time) timeParts.push(isolateLtr(formatHm(visit.end_time)));
   const when =
-    timeParts.length > 0 ? `${visit.visit_date} ${timeParts.join(' â€“ ')}` : visit.visit_date;
+    timeParts.length > 0 ? `${visit.visit_date} ${timeParts.join(' – ')}` : visit.visit_date;
 
   return (
     <View style={styles.fields}>
@@ -217,7 +218,7 @@ function StatusSection({
             <>
               <Button
                 size="sm"
-                glyph="âœ“"
+                glyph={Glyph.check}
                 label={t('visits.markCompleted')}
                 loading={pending}
                 disabled={pending}
@@ -227,7 +228,7 @@ function StatusSection({
               <Button
                 size="sm"
                 variant="secondary"
-                glyph="âœ•"
+                glyph={Glyph.cross}
                 label={t('visits.markCancelled')}
                 disabled={pending}
                 onPress={() => run('cancelled')}
@@ -238,7 +239,7 @@ function StatusSection({
             <Button
               size="sm"
               variant="secondary"
-              glyph="â—·"
+              glyph={Glyph.clock}
               label={t('visits.reopen')}
               loading={pending}
               disabled={pending}

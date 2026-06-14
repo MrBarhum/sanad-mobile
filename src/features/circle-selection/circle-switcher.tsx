@@ -7,6 +7,7 @@ import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { StatusBadge } from '@/components/status-badge';
+import { initialFor } from '@/constants/glyphs';
 import { FontFamily, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -47,7 +48,7 @@ export function CircleSwitcher() {
           ) : null}
         </View>
         <View style={styles.cardMain}>
-          <GlyphChip glyph={[...activeCircle.circleName.trim()][0] ?? 'â€¢'} tone="primary" size="md" />
+          <GlyphChip glyph={initialFor(activeCircle.circleName)} tone="primary" size="md" />
           <View style={styles.cardText}>
             <ThemedText type="sectionTitle">{activeCircle.circleName}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
@@ -116,7 +117,7 @@ function CircleRow({
       tone={current ? 'selected' : 'card'}
       onPress={onPress}
       selected={current}
-      accessibilityLabel={`${circleName}ØŒ ${recipientName ?? roleLabel}${current ? `ØŒ ${currentLabel}` : ''}`}
+      accessibilityLabel={`${circleName}، ${recipientName ?? roleLabel}${current ? `، ${currentLabel}` : ''}`}
       style={styles.circleRow}>
       <View style={styles.rowMain}>
         <ThemedText type="cardTitle" style={current && styles.rowTitleCurrent}>

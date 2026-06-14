@@ -14,7 +14,7 @@ type FormFieldProps = TextInputProps & {
 /**
  * Labeled, themed text input used by the care forms. Adds an inline label, an
  * optional error and a clear focus ring (brand-colored border) so the active
- * field is always obvious â€” important under keyboard navigation and for older
+ * field is always obvious — important under keyboard navigation and for older
  * users. Direction follows the app's RTL/LTR setting (no hardcoded textAlign),
  * so Arabic content aligns to the start automatically. Pass `multiline` for
  * notes fields. All standard TextInput props pass through.

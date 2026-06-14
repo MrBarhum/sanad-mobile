@@ -6,8 +6,8 @@ import type { AppNotification, NotificationType } from './api';
  * Per-type display metadata. `labelKey` is the i18n key for the type's short
  * label; `fallbackRoute` is where a tap goes when the notification carries no
  * explicit deep link. The per-type visual anchor (a calm non-emoji glyph + tone)
- * lives with the UI that renders it â€” see `TYPE_GLYPH` in
- * `notifications-center.tsx` â€” so this stays a pure data/routing module.
+ * lives with the UI that renders it — see `TYPE_GLYPH` in
+ * `notifications-center.tsx` — so this stays a pure data/routing module.
  */
 type NotificationTypeMeta = {
   labelKey: string;

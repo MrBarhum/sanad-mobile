@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ymdFromInstant } from '@/utils/date';
@@ -70,7 +71,7 @@ export function InvitationsList({ circleId }: { circleId: string }) {
 
       {items.length === 0 ? (
         <EmptyState
-          icon="â–"
+          icon={Glyph.members}
           title={t('invitations.emptyTitle')}
           subtitle={t('invitations.emptySubtitle')}
         />
@@ -106,7 +107,7 @@ function InvitationCard({
   return (
     <Surface style={styles.card}>
       <View style={styles.cardHeader}>
-        <GlyphChip glyph="â–" tone="primary" size="sm" />
+        <GlyphChip glyph={Glyph.members} tone="primary" size="sm" />
         <ThemedText type="cardTitle" style={styles.cardTitle}>
           {item.invitedName?.trim() || t(`circleMembers.roles.${item.role}`)}
         </ThemedText>

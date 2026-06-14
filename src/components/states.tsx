@@ -53,7 +53,7 @@ export function EmptyState({
 }: {
   title: string;
   subtitle?: string;
-  /** Optional decorative glyph above the title â€” a non-emoji mark (â—‰ âœ“ âœŽ â™¡ â€¦). */
+  /** Optional decorative glyph above the title — a non-emoji mark (◉ ✓ ✎ ♡ …). */
   icon?: string;
 }) {
   return (

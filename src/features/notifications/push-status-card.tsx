@@ -7,6 +7,7 @@ import { GlyphChip } from '@/components/glyph-chip';
 import { StatusBadge } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -15,7 +16,7 @@ import { usePushRegistration, type EnableResult } from './hooks';
 /**
  * Arabic-first explanation + enable control for push notifications. Shows WHY
  * Sanad asks (medication, task and appointment reminders), a short privacy
- * statement, and a single explicit "Enable" action â€” permission is never
+ * statement, and a single explicit "Enable" action — permission is never
  * requested automatically. Renders an honest status for every outcome: granted,
  * denied (with a hint to use OS settings), web/simulator unsupported, or a
  * missing EAS project id. Web is described plainly, never faked.
@@ -36,7 +37,7 @@ export function PushStatusCard() {
   return (
     <Surface style={styles.card}>
       <View style={styles.headerRow}>
-        <GlyphChip glyph="âŠ™" tone={enabled ? 'info' : 'neutral'} />
+        <GlyphChip glyph={Glyph.system} tone={enabled ? 'info' : 'neutral'} />
         <View style={styles.headerText}>
           <ThemedText type="cardTitle">{t('notificationSettings.push.explainTitle')}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">

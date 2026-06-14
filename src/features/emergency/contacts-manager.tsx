@@ -11,6 +11,7 @@ import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -76,12 +77,12 @@ export function EmergencyContactsManager({
     <>
       <Screen>
         {canManage ? (
-          <Button glyph="ï¼‹" label={t('emergencyContacts.add')} onPress={() => setAdding(true)} />
+          <Button glyph={Glyph.plus} label={t('emergencyContacts.add')} onPress={() => setAdding(true)} />
         ) : null}
 
         {items.length === 0 ? (
           <EmptyState
-            icon="âœ†"
+            icon={Glyph.contact}
             title={t('emergencyContacts.emptyTitle')}
             subtitle={canManage ? t('emergencyContacts.emptySubtitle') : undefined}
           />

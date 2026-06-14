@@ -9,6 +9,7 @@ import { Screen } from '@/components/screen';
 import { Section, Surface } from '@/components/surface';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
@@ -70,13 +71,13 @@ export function DailyLogsCenter({
       </ThemedText>
 
       {canAdd ? (
-        <Button glyph="ï¼‹" label={t('dailyLogs.add')} onPress={() => router.push('/daily-logs/new')} />
+        <Button glyph={Glyph.plus} label={t('dailyLogs.add')} onPress={() => router.push('/daily-logs/new')} />
       ) : null}
 
       <Section title={t('dailyLogs.todayTitle')}>
         {todayLogs.length === 0 ? (
           <EmptyState
-            icon="âœŽ"
+            icon={Glyph.dailyLog}
             title={t('dailyLogs.noTodayTitle')}
             subtitle={canAdd ? t('dailyLogs.noTodaySubtitle') : undefined}
           />
@@ -118,7 +119,7 @@ function LogRow({
       accessibilityLabel={`${log.log_date}`}
       style={styles.card}>
       <View style={styles.row}>
-        <GlyphChip glyph="âœŽ" tone="primary" size="sm" />
+        <GlyphChip glyph={Glyph.dailyLog} tone="primary" size="sm" />
         <View style={styles.text}>
           <View style={styles.cardHeader}>
             <LtrText type="cardTitle" style={styles.cardTitle}>
@@ -133,7 +134,7 @@ function LogRow({
 
           {details.length > 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
-              {details.map((detail) => `${detail.label}: ${detail.value}`).join(' â€¢ ')}
+              {details.map((detail) => `${detail.label}: ${detail.value}`).join(` ${Glyph.bullet} `)}
             </ThemedText>
           ) : (
             <ThemedText type="small" themeColor="textSecondary">
@@ -148,7 +149,7 @@ function LogRow({
           ) : null}
         </View>
         <ThemedText style={[styles.chevron, { color: theme.textMuted }]} accessibilityElementsHidden>
-          â€º
+          {Glyph.chevron}
         </ThemedText>
       </View>
     </Surface>

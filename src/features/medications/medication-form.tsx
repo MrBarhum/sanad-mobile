@@ -23,6 +23,7 @@ import {
   prepareSchedule,
   type ScheduleDraft,
 } from './schedule-fields';
+import { duplicateTimesInDraft } from './schedule-validation';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
@@ -46,6 +47,9 @@ export function MedicationForm({ circleId }: { circleId: string }) {
 
   const { dirty } = useUnsavedChanges({ name, dosage, medForm, instructions, withFood, schedule });
   const submitting = create.isPending;
+  // Mirror the schedule modal: block save while the schedule has duplicate times
+  // (the inline error in ScheduleFields tells the user which rows to fix).
+  const hasDuplicateTimes = duplicateTimesInDraft(schedule).length > 0;
 
   // Navigate back only after the guard has released (next commit), so a successful
   // save doesn't trip the unsaved-changes prompt.
@@ -107,7 +111,7 @@ export function MedicationForm({ circleId }: { circleId: string }) {
           saveLabel={t('medications.add')}
           onSave={onSubmit}
           saving={submitting}
-          disabled={!dirty}
+          disabled={!dirty || hasDuplicateTimes}
           status={submitError ? 'error' : 'idle'}
           errorLabel={submitError ?? undefined}
         />

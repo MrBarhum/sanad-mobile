@@ -28,7 +28,7 @@ function navTheme(scheme: 'light' | 'dark') {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  // The brand typeface (Arabic + Latin). Pure asset load â€” no native module, no
+  // The brand typeface (Arabic + Latin). Pure asset load — no native module, no
   // rebuild; Metro serves the files on the existing Development Build. If
   // loading errors we render anyway and text falls back to the system font.
   const [fontsLoaded, fontsError] = useFonts({

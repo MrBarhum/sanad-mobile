@@ -8,6 +8,7 @@ import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
+import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth } from '@/constants/theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { fieldErrors } from '@/utils/form';
@@ -42,7 +43,7 @@ export function RecipientProfileForm({
   if (!recipient.data) {
     return (
       <Screen scroll={false} center maxWidth={MaxFormWidth}>
-        <EmptyState icon="âœ¦" title={t('recipientProfile.empty')} />
+        <EmptyState icon={Glyph.profile} title={t('recipientProfile.empty')} />
       </Screen>
     );
   }

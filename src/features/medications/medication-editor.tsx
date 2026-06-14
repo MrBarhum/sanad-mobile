@@ -14,6 +14,7 @@ import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -67,14 +68,14 @@ export function MedicationEditor({
   if (!medication.data) {
     return (
       <Screen scroll={false} center>
-        <EmptyState icon="â—‰" title={t('medications.notFound')} />
+        <EmptyState icon={Glyph.medication} title={t('medications.notFound')} />
       </Screen>
     );
   }
 
   return (
     <Screen>
-      {/* Section A â€” Medication information */}
+      {/* Section A — Medication information */}
       <Section title={t('medications.medicationInfoTitle')}>
         {canManage ? (
           <MedicationFields key={medication.data.id} circleId={circleId} initial={medication.data} />
@@ -87,7 +88,7 @@ export function MedicationEditor({
 
       <ThemedView type="border" style={styles.divider} />
 
-      {/* Section B â€” Dose schedules */}
+      {/* Section B — Dose schedules */}
       <SchedulesManager
         circleId={circleId}
         medicationId={medication.data.id}
@@ -468,10 +469,10 @@ function ScheduleCard({
       : [...schedule.days_of_week]
           .sort((a, b) => a - b)
           .map((day) => t(`medications.weekdaysShort.${WEEKDAY_KEYS[day]}`))
-          .join('ØŒ ');
-  const timesText = [...schedule.times].map(formatHm).sort().join('ØŒ ');
+          .join('، ');
+  const timesText = [...schedule.times].map(formatHm).sort().join('، ');
   const rangeText = schedule.end_date
-    ? `${schedule.start_date} â€” ${schedule.end_date}`
+    ? `${schedule.start_date} — ${schedule.end_date}`
     : `${t('medications.fromDate')} ${schedule.start_date}`;
 
   return (

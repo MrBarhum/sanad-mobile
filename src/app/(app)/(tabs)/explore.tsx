@@ -6,17 +6,18 @@ import { GlyphChip } from '@/components/glyph-chip';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Glyph } from '@/constants/glyphs';
 import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 
 /**
  * Placeholder "Explore" screen. Each section is a non-interactive "coming soon"
- * card describing a future feature â€” there is no logic or data fetching here yet.
+ * card describing a future feature — there is no logic or data fetching here yet.
  * Glyph anchors are decorative non-emoji marks; the labels carry all meaning.
  */
 const SECTIONS = [
-  { key: 'guides', glyph: 'â—ˆ', titleKey: 'explore.sections.guides.title', subtitleKey: 'explore.sections.guides.subtitle' },
-  { key: 'resources', glyph: 'â—Ž', titleKey: 'explore.sections.resources.title', subtitleKey: 'explore.sections.resources.subtitle' },
-  { key: 'community', glyph: 'âŠ™', titleKey: 'explore.sections.community.title', subtitleKey: 'explore.sections.community.subtitle' },
+  { key: 'guides', glyph: Glyph.diamond, titleKey: 'explore.sections.guides.title', subtitleKey: 'explore.sections.guides.subtitle' },
+  { key: 'resources', glyph: Glyph.bullseye, titleKey: 'explore.sections.resources.title', subtitleKey: 'explore.sections.resources.subtitle' },
+  { key: 'community', glyph: Glyph.system, titleKey: 'explore.sections.community.title', subtitleKey: 'explore.sections.community.subtitle' },
 ] as const;
 
 export default function ExploreScreen() {

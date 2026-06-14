@@ -41,8 +41,8 @@ const GLYPH_SIZE: Record<GlyphChipSize, number> = { sm: 16, md: 20, lg: 28 };
 
 type GlyphChipProps = {
   /**
-   * A short mark: a non-emoji Unicode glyph (âœš â—‰ â™¡ âœŽ âœ“ â—· âŒ‚ â– âœ¦ â€¦) or an
-   * initial letter (contact avatars). Emojis are deliberately avoided â€” they
+   * A short mark: a non-emoji Unicode glyph (✚ ◉ ♡ ✎ ✓ ◷ ⌂ ❖ ✦ …) or an
+   * initial letter (contact avatars). Emojis are deliberately avoided — they
    * render as inconsistent multicolor OEM artwork and break the calm palette.
    */
   glyph: string;

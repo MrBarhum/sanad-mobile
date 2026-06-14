@@ -7,6 +7,7 @@ import { ErrorState, LoadingState } from '@/components/states';
 import { Screen } from '@/components/screen';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useRecipient } from '@/features/recipient-profile/hooks';
@@ -68,7 +69,7 @@ export function EmergencyCard({ circleId }: { circleId: string }) {
   return (
     <Screen>
       <Surface style={styles.identity}>
-        <GlyphChip glyph="âœš" tone="error" />
+        <GlyphChip glyph={Glyph.emergency} tone="error" />
         <View style={styles.identityText}>
           <ThemedText type="smallBold" themeColor="textSecondary">
             {t('emergencyCard.recipientLabel')}
@@ -79,7 +80,7 @@ export function EmergencyCard({ circleId }: { circleId: string }) {
           {person?.birth_date ? (
             <ThemedText type="small" themeColor="textSecondary">
               {t('emergencyCard.birthDate')}: {person.birth_date}
-              {age !== null ? ` â€¢ ${t('emergencyCard.approxAge')}: ${age}` : ''}
+              {age !== null ? ` ${Glyph.bullet} ${t('emergencyCard.approxAge')}: ${age}` : ''}
             </ThemedText>
           ) : null}
         </View>

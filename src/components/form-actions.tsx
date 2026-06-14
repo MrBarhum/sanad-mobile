@@ -11,7 +11,7 @@ import { ThemedView } from './themed-view';
 export type FormActionsStatus = 'idle' | 'saved' | 'error';
 
 type SharedProps = {
-  /** Primary save label â€” a specific creation label ("Add medication") on create
+  /** Primary save label — a specific creation label ("Add medication") on create
    * forms, or the "Save changes" equivalent on edit forms. */
   saveLabel: string;
   onSave: () => void;

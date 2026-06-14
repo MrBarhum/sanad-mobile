@@ -11,6 +11,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
+import { Glyph } from '@/constants/glyphs';
 import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ReminderNotice } from '@/features/notifications/reminder-notice';
@@ -20,7 +21,7 @@ import type { Medication, MedicationLogStatus } from './api';
 import { useActiveMedications, useLogDose, useTodayDoses } from './hooks';
 import type { DoseItem } from './today';
 
-/** Status â†’ badge tone (color + a distinct glyph, never color alone). */
+/** Status → badge tone (color + a distinct glyph, never color alone). */
 const STATUS_TONE: Record<MedicationLogStatus, StatusTone> = {
   given: 'success',
   postponed: 'warning',
@@ -29,9 +30,9 @@ const STATUS_TONE: Record<MedicationLogStatus, StatusTone> = {
 
 /** Non-emoji glyph per dose action, mirrored on the badge for recognition. */
 const STATUS_GLYPH: Record<MedicationLogStatus, string> = {
-  given: 'âœ“',
-  postponed: 'â—·',
-  missed: 'âœ•',
+  given: Glyph.check,
+  postponed: Glyph.clock,
+  missed: Glyph.cross,
 };
 
 const STATUS_ORDER: MedicationLogStatus[] = ['given', 'postponed', 'missed'];
@@ -86,13 +87,13 @@ export function MedicationsCenter({
       <ReminderNotice messageKey="medications.reminderNotice" />
 
       {canManage ? (
-        <Button glyph="ï¼‹" label={t('medications.add')} onPress={() => router.push('/medications/new')} />
+        <Button glyph={Glyph.plus} label={t('medications.add')} onPress={() => router.push('/medications/new')} />
       ) : null}
 
       <Section title={t('medications.todayTitle')}>
         {today.doses.length === 0 ? (
           <EmptyState
-            icon="â—‰"
+            icon={Glyph.medication}
             title={t('medications.noDosesTitle')}
             subtitle={t('medications.noDosesSubtitle')}
           />
@@ -114,7 +115,7 @@ export function MedicationsCenter({
       <Section title={t('medications.listTitle')}>
         {meds.length === 0 ? (
           <EmptyState
-            icon="â—‰"
+            icon={Glyph.medication}
             title={t('medications.noMedsTitle')}
             subtitle={canManage ? t('medications.noMedsSubtitle') : undefined}
           />
@@ -170,7 +171,7 @@ function DoseCard({
       <ThemedText type="cardTitle">{dose.medicationName}</ThemedText>
       {subtitleParts.length > 0 ? (
         <ThemedText type="small" themeColor="textSecondary">
-          {subtitleParts.join(' â€¢ ')}
+          {subtitleParts.join(` ${Glyph.bullet} `)}
         </ThemedText>
       ) : null}
       {dose.withFood ? (
@@ -215,17 +216,17 @@ function MedicationRow({ medication, onPress }: { medication: Medication; onPres
       accessibilityHint={t('medications.tapToEdit')}
       style={styles.medCard}>
       <View style={styles.medRow}>
-        <GlyphChip glyph="â—‰" tone="primary" size="sm" />
+        <GlyphChip glyph={Glyph.medication} tone="primary" size="sm" />
         <View style={styles.medText}>
           <ThemedText type="cardTitle">{medication.name}</ThemedText>
           {subtitleParts.length > 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
-              {subtitleParts.join(' â€¢ ')}
+              {subtitleParts.join(` ${Glyph.bullet} `)}
             </ThemedText>
           ) : null}
         </View>
         <ThemedText style={[styles.chevron, { color: theme.textMuted }]} accessibilityElementsHidden>
-          â€º
+          {Glyph.chevron}
         </ThemedText>
       </View>
     </Surface>

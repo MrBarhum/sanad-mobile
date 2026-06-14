@@ -12,6 +12,7 @@ import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import type { Doctor } from '@/features/doctors/api';
 import { useDoctors } from '@/features/doctors/hooks';
@@ -39,11 +40,11 @@ const STATUS_TONE: Record<AppointmentStatus, StatusTone> = {
   cancelled: 'error',
 };
 
-/** Appointment status â†’ badge glyph (scheduled reads as "upcoming"). */
+/** Appointment status → badge glyph (scheduled reads as "upcoming"). */
 const STATUS_GLYPH: Record<AppointmentStatus, string> = {
-  scheduled: 'â—·',
-  completed: 'âœ“',
-  cancelled: 'âœ•',
+  scheduled: Glyph.clock,
+  completed: Glyph.check,
+  cancelled: Glyph.cross,
 };
 
 /** Loads an appointment, then renders the view/edit screen. */
@@ -73,7 +74,7 @@ export function AppointmentEditor({
   if (!appointment.data) {
     return (
       <Screen scroll={false} center>
-        <EmptyState icon="â—·" title={t('appointments.notFound')} />
+        <EmptyState icon={Glyph.appointment} title={t('appointments.notFound')} />
       </Screen>
     );
   }
@@ -168,7 +169,7 @@ function ReadOnlyAppointment({
   const { t } = useTranslation();
   const when = appointment.ends_at
     ? isolateLtr(
-        `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} â€“ ${hmFromInstant(appointment.ends_at)}`,
+        `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} – ${hmFromInstant(appointment.ends_at)}`,
       )
     : isolateLtr(`${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)}`);
   const doctorName = appointment.doctor_id
@@ -252,7 +253,7 @@ function StatusSection({
             <>
               <Button
                 size="sm"
-                glyph="âœ“"
+                glyph={Glyph.check}
                 label={t('appointments.markCompleted')}
                 loading={pending}
                 disabled={pending}
@@ -262,7 +263,7 @@ function StatusSection({
               <Button
                 size="sm"
                 variant="secondary"
-                glyph="âœ•"
+                glyph={Glyph.cross}
                 label={t('appointments.markCancelled')}
                 disabled={pending}
                 onPress={() => run('cancelled')}
@@ -273,7 +274,7 @@ function StatusSection({
             <Button
               size="sm"
               variant="secondary"
-              glyph="â—·"
+              glyph={Glyph.clock}
               label={t('appointments.reopen')}
               loading={pending}
               disabled={pending}

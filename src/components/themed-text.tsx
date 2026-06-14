@@ -43,8 +43,8 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 }
 
 /**
- * Type scale â€” sized for Arabic script (taller joins and diacritics need
- * roomier line-heights, â‰ˆ1.5Ã—). Hierarchy comes from clear size AND weight
+ * Type scale — sized for Arabic script (taller joins and diacritics need
+ * roomier line-heights, ≈1.5×). Hierarchy comes from clear size AND weight
  * steps, never from shrinking text below the 14pt readability floor. Each
  * weight pins its exact font file plus the numeric weight, so text falls back
  * gracefully to the system font before assets load (or on platforms without
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: 400,
   },
-  /** Screen-level greeting/hero. Was 48 â€” web-scaled; 30 is the mobile sweet spot. */
+  /** Screen-level greeting/hero. Was 48 — web-scaled; 30 is the mobile sweet spot. */
   title: {
     fontFamily: FontFamily.bold,
     fontSize: 30,

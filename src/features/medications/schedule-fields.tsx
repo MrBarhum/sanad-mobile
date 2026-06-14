@@ -7,13 +7,14 @@ import { FormField } from '@/components/form-field';
 import { ThemedText } from '@/components/themed-text';
 import { TimeField } from '@/components/time-field';
 import { WeekdaySelector } from '@/components/weekday-selector';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { formatHm, todayYmd } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
 
 import type { MedicationSchedule, ScheduleInput } from './api';
 import { scheduleSchema } from './schema';
-import { duplicateTimesInDraft } from './schedule-validation';
+import { duplicateTimes, duplicateTimesInDraft } from './schedule-validation';
 
 /** Form state for a single schedule (mirrors scheduleSchema input shape). */
 export type ScheduleDraft = {
@@ -24,7 +25,7 @@ export type ScheduleDraft = {
   notes: string;
 };
 
-/** 0 = Sunday .. 6 = Saturday â€” matches the DB convention and Date.getDay(). */
+/** 0 = Sunday .. 6 = Saturday — matches the DB convention and Date.getDay(). */
 export const WEEKDAY_KEYS = [
   'sunday',
   'monday',
@@ -79,6 +80,14 @@ export function prepareSchedule(
   const parsed = scheduleSchema.safeParse(cleaned);
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
 
+  // Reject exact duplicate time rows before they reach the DB. The schema can't
+  // express "no repeats", so we enforce it here — the single entry point both the
+  // add-medication form and the schedule modal flow through. Two identical times
+  // would double-count a dose and collide on the dose list's React key.
+  if (duplicateTimes(parsed.data.times).length > 0) {
+    return { ok: false, errors: { times: 'duplicate' } };
+  }
+
   return {
     ok: true,
     input: {
@@ -106,6 +115,7 @@ export function ScheduleFields({
   errors?: Partial<Record<string, string>>;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   // Short chip labels + full names indexed 0 (Sun)..6 (Sat), matching WEEKDAY_KEYS.
   const dayLabels = WEEKDAY_KEYS.map((key) => t(`medications.weekdaysShort.${key}`));
@@ -126,12 +136,21 @@ export function ScheduleFields({
   }
 
   function timesError(): string | undefined {
-    const code = errors?.times;
-    if (!code) return undefined;
-    return code === 'time' ? t('medications.errors.timeFormat') : t('medications.errors.timesRequired');
+    switch (errors?.times) {
+      case undefined:
+      // The duplicate case is surfaced by the live indicator below (which also
+      // highlights the offending rows) — don't double up the message here.
+      case 'duplicate':
+        return undefined;
+      case 'time':
+        return t('medications.errors.timeFormat');
+      default:
+        return t('medications.errors.timesRequired');
+    }
   }
 
-  const hasDuplicateTimes = duplicateTimesInDraft(value).length > 0;
+  const duplicateTimeValues = new Set(duplicateTimesInDraft(value));
+  const hasDuplicateTimes = duplicateTimeValues.size > 0;
 
   function dateError(code?: string): string | undefined {
     switch (code) {
@@ -161,25 +180,37 @@ export function ScheduleFields({
 
       <View style={styles.section}>
         <ThemedText type="smallBold">{t('medications.fields.times')}</ThemedText>
-        {value.times.map((time, index) => (
-          <View key={index} style={styles.timeRow}>
-            <View style={styles.timeInput}>
-              <TimeField
-                value={time}
-                onChange={(next) => setTime(index, next)}
-                accessibilityLabel={`${t('medications.fields.times')} ${index + 1}`}
-              />
+        {value.times.map((time, index) => {
+          const isDuplicate = duplicateTimeValues.has(formatHm(time));
+          return (
+            <View
+              key={index}
+              style={[
+                styles.timeRow,
+                isDuplicate && {
+                  ...styles.timeRowInvalid,
+                  borderColor: theme.errorFg,
+                  backgroundColor: theme.errorBg,
+                },
+              ]}>
+              <View style={styles.timeInput}>
+                <TimeField
+                  value={time}
+                  onChange={(next) => setTime(index, next)}
+                  accessibilityLabel={`${t('medications.fields.times')} ${index + 1}`}
+                />
+              </View>
+              {value.times.length > 1 ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  label={t('common.delete')}
+                  onPress={() => removeTime(index)}
+                />
+              ) : null}
             </View>
-            {value.times.length > 1 ? (
-              <Button
-                size="sm"
-                variant="secondary"
-                label={t('common.delete')}
-                onPress={() => removeTime(index)}
-              />
-            ) : null}
-          </View>
-        ))}
+          );
+        })}
         <Button
           size="sm"
           variant="secondary"
@@ -230,5 +261,6 @@ const styles = StyleSheet.create({
   container: { gap: Spacing.three },
   section: { gap: Spacing.two },
   timeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
+  timeRowInvalid: { borderWidth: 1, borderRadius: Radius.md, padding: Spacing.two },
   timeInput: { flex: 1 },
 });

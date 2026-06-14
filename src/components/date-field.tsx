@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Glyph } from '@/constants/glyphs';
 import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -27,7 +28,7 @@ function todayParts(): Ymd {
 
 /**
  * Labeled date field that opens a touch-friendly scrollable picker (year / month
- * / day) â€” no manual 'YYYY-MM-DD' typing. Stores and emits 'YYYY-MM-DD' (or ''
+ * / day) — no manual 'YYYY-MM-DD' typing. Stores and emits 'YYYY-MM-DD' (or ''
  * when cleared). RTL-friendly and themed; mirrors FormField's label + error
  * chrome. The web build uses a native `<input type="date">` instead (see
  * date-field.web.tsx).
@@ -95,7 +96,7 @@ export function DateField({
           style={[styles.triggerGlyph, { color: theme.textMuted }]}
           accessibilityElementsHidden
           importantForAccessibility="no">
-          â€º
+          {Glyph.chevron}
         </ThemedText>
       </Pressable>
 

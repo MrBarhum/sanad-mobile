@@ -16,6 +16,7 @@ import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { TimeField } from '@/components/time-field';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
+import { Glyph } from '@/constants/glyphs';
 import { Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -35,18 +36,18 @@ import { TASK_CATEGORIES, TASK_PRIORITIES, taskSchema } from './schema';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
-/** Task status â†’ badge tone (color + a distinct glyph, never color alone). */
+/** Task status → badge tone (color + a distinct glyph, never color alone). */
 const STATUS_TONE: Record<TaskStatus, StatusTone> = {
   open: 'info',
   completed: 'success',
   cancelled: 'error',
 };
 
-/** Task status â†’ badge glyph (open reads as "pending"). */
+/** Task status → badge glyph (open reads as "pending"). */
 const STATUS_GLYPH: Record<TaskStatus, string> = {
-  open: 'â—·',
-  completed: 'âœ“',
-  cancelled: 'âœ•',
+  open: Glyph.clock,
+  completed: Glyph.check,
+  cancelled: Glyph.cross,
 };
 
 /** Loads a task, then renders the view/edit screen with status + delete actions. */
@@ -77,7 +78,7 @@ export function TaskEditor({
   if (!task.data) {
     return (
       <Screen scroll={false} center>
-        <EmptyState icon="âœ“" title={t('tasks.notFound')} />
+        <EmptyState icon={Glyph.task} title={t('tasks.notFound')} />
       </Screen>
     );
   }
@@ -407,7 +408,7 @@ function StatusSection({
         <View style={[styles.actions, { borderTopColor: theme.divider }]}>
           <Button
             size="sm"
-            glyph="âœ“"
+            glyph={Glyph.check}
             label={t('tasks.complete')}
             loading={pending}
             disabled={pending}
@@ -417,7 +418,7 @@ function StatusSection({
           <Button
             size="sm"
             variant="secondary"
-            glyph="âœ•"
+            glyph={Glyph.cross}
             label={t('tasks.cancelTask')}
             disabled={pending}
             onPress={() => run('cancel')}
