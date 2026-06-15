@@ -111,7 +111,25 @@
           "title": "Vital readings",
           "subtitle": "Blood pressure, sugar, temperature and more"
         }
-      }
+      },
+      "today": {
+        "title": "Today",
+        "loopCardTitle": "Today's care loop",
+        "loopDoses": "{{given}} of {{total}} doses today",
+        "loopAllDone": "Today's doses are complete",
+        "loopNone": "No doses scheduled today",
+        "loopLoading": "Loading today's doses…",
+        "loopA11y": "Today's care loop: {{given}} of {{total}} doses given",
+        "loopA11yNone": "Today's care loop: no doses scheduled today",
+        "nextDoseLabel": "Next dose",
+        "nextDoseAllGiven": "All of today's doses given",
+        "nextDoseNone": "No doses today",
+        "appointmentLabel": "Today's appointment",
+        "appointmentNone": "No appointments today",
+        "tasksLabel": "Tasks due today",
+        "tasksNone": "No tasks due today"
+      },
+      "manageTitle": "All care sections"
     }
   },
   "circleSwitcher": {

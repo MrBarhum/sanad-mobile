@@ -6,12 +6,13 @@ import { GlyphChip } from '@/components/glyph-chip';
 import { Icon } from '@/components/icon';
 import { NavCard } from '@/components/nav-card';
 import { Screen } from '@/components/screen';
-import { Surface } from '@/components/surface';
+import { Section, Surface } from '@/components/surface';
 import { type IconName } from '@/constants/icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { formatLongDate } from '@/utils/date';
 import { AppointmentsCard } from '@/features/appointments/appointments-card';
 import { CircleSwitcher } from '@/features/circle-selection/circle-switcher';
 import type { ActiveCircle } from '@/features/circle-selection/permissions';
@@ -21,6 +22,8 @@ import { NotificationBell } from '@/features/notifications/notification-bell';
 import { TasksCard } from '@/features/tasks/tasks-card';
 import { VisitsCard } from '@/features/visits/visits-card';
 import { VitalsCard } from '@/features/vitals/vitals-card';
+
+import { TodayOverview } from './today-overview';
 
 /**
  * People & settings rows on the dashboard — rendered as one grouped list (a
@@ -66,7 +69,7 @@ const ACTIONS = [
 
 /** Dashboard shown on Home once the user belongs to an active care circle. */
 export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const theme = useTheme();
 
@@ -79,10 +82,14 @@ export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
           </ThemedText>
           <NotificationBell />
         </View>
-        <ThemedText themeColor="textSecondary">{t('home.tagline')}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {formatLongDate(i18n.language)}
+        </ThemedText>
       </ThemedView>
 
       <CircleSwitcher />
+
+      <TodayOverview circle={circle} />
 
       <NavCard
         iconName="emergency"
@@ -94,40 +101,42 @@ export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
         onPress={() => router.push('/emergency-card')}
       />
 
-      <View style={styles.cards}>
-        <MedicationsCard circleId={circle.circleId} />
-        <DailyLogsCard circleId={circle.circleId} />
-        <VitalsCard circleId={circle.circleId} />
-        <TasksCard circleId={circle.circleId} />
-        <AppointmentsCard circleId={circle.circleId} />
-        <VisitsCard circleId={circle.circleId} />
-      </View>
+      <Section title={t('careCircle.dashboard.manageTitle')}>
+        <View style={styles.cards}>
+          <MedicationsCard circleId={circle.circleId} />
+          <DailyLogsCard circleId={circle.circleId} />
+          <VitalsCard circleId={circle.circleId} />
+          <TasksCard circleId={circle.circleId} />
+          <AppointmentsCard circleId={circle.circleId} />
+          <VisitsCard circleId={circle.circleId} />
+        </View>
 
-      <Surface padded={false}>
-        {ACTIONS.map((section, index) => (
-          <Pressable
-            key={section.key}
-            onPress={() => router.push(section.href)}
-            accessibilityRole="button"
-            accessibilityLabel={t(section.titleKey)}
-            accessibilityHint={t(section.subtitleKey)}
-            android_ripple={{ color: theme.backgroundSelected }}
-            style={({ pressed }) => [
-              styles.actionRow,
-              index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.divider },
-              pressed && styles.pressed,
-            ]}>
-            <GlyphChip iconName={section.iconName} tone="neutral" size="sm" />
-            <View style={styles.rowText}>
-              <ThemedText type="cardTitle">{t(section.titleKey)}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {t(section.subtitleKey)}
-              </ThemedText>
-            </View>
-            <Icon name="chevron" size={26} color="textMuted" />
-          </Pressable>
-        ))}
-      </Surface>
+        <Surface padded={false}>
+          {ACTIONS.map((section, index) => (
+            <Pressable
+              key={section.key}
+              onPress={() => router.push(section.href)}
+              accessibilityRole="button"
+              accessibilityLabel={t(section.titleKey)}
+              accessibilityHint={t(section.subtitleKey)}
+              android_ripple={{ color: theme.backgroundSelected }}
+              style={({ pressed }) => [
+                styles.actionRow,
+                index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.divider },
+                pressed && styles.pressed,
+              ]}>
+              <GlyphChip iconName={section.iconName} tone="neutral" size="sm" />
+              <View style={styles.rowText}>
+                <ThemedText type="cardTitle">{t(section.titleKey)}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t(section.subtitleKey)}
+                </ThemedText>
+              </View>
+              <Icon name="chevron" size={26} color="textMuted" />
+            </Pressable>
+          ))}
+        </Surface>
+      </Section>
     </Screen>
   );
 }

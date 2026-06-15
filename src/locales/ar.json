@@ -111,7 +111,25 @@
           "title": "القياسات الحيوية",
           "subtitle": "ضغط الدم والسكر والحرارة وغيرها"
         }
-      }
+      },
+      "today": {
+        "title": "اليوم",
+        "loopCardTitle": "حلقة رعاية اليوم",
+        "loopDoses": "{{given}} من {{total}} جرعة اليوم",
+        "loopAllDone": "اكتملت جرعات اليوم",
+        "loopNone": "لا جرعات مجدولة اليوم",
+        "loopLoading": "جارٍ تحميل جرعات اليوم…",
+        "loopA11y": "حلقة رعاية اليوم: {{given}} من {{total}} جرعة تم إعطاؤها",
+        "loopA11yNone": "حلقة رعاية اليوم: لا جرعات مجدولة اليوم",
+        "nextDoseLabel": "الجرعة القادمة",
+        "nextDoseAllGiven": "تم إعطاء جرعات اليوم",
+        "nextDoseNone": "لا جرعات اليوم",
+        "appointmentLabel": "موعد اليوم",
+        "appointmentNone": "لا مواعيد اليوم",
+        "tasksLabel": "المهام المستحقّة اليوم",
+        "tasksNone": "لا مهام مستحقّة اليوم"
+      },
+      "manageTitle": "كل أقسام الرعاية"
     }
   },
   "circleSwitcher": {

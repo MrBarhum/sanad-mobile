@@ -44,6 +44,25 @@ export function todayYmd(): string {
 }
 
 /**
+ * Today's date as a long, human-readable string in the given UI language (e.g.
+ * "الأحد، 15 يونيو" / "Sunday, 15 June"). Arabic is forced to Western (Latin)
+ * digits for consistency with the rest of the app's numerals. Falls back to the
+ * plain 'YYYY-MM-DD' form if `Intl` is unavailable or the locale data is missing.
+ */
+export function formatLongDate(language: string | undefined): string {
+  try {
+    const locale = language && language.startsWith('ar') ? 'ar-u-nu-latn' : language || 'en';
+    return new Intl.DateTimeFormat(locale, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }).format(new Date());
+  } catch {
+    return todayYmd();
+  }
+}
+
+/**
  * Local day-of-week for a 'YYYY-MM-DD' date: 0 = Sunday .. 6 = Saturday, matching
  * the `days_of_week` convention stored on medication schedules. Returns null for
  * malformed input.
