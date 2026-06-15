@@ -3,10 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { GlyphChip } from '@/components/glyph-chip';
+import { Icon } from '@/components/icon';
 import { NavCard } from '@/components/nav-card';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
-import { Glyph } from '@/constants/glyphs';
+import { type IconName } from '@/constants/icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing, TouchTarget } from '@/constants/theme';
@@ -30,35 +31,35 @@ const ACTIONS = [
   {
     key: 'members',
     href: '/circle-members',
-    glyph: Glyph.members,
+    iconName: 'member',
     titleKey: 'circleMembers.title',
     subtitleKey: 'circleMembers.subtitle',
   },
   {
     key: 'recipientProfile',
     href: '/recipient-profile',
-    glyph: Glyph.profile,
+    iconName: 'profile',
     titleKey: 'careCircle.dashboard.sections.recipientProfile.title',
     subtitleKey: 'careCircle.dashboard.sections.recipientProfile.subtitle',
   },
   {
     key: 'emergencyContacts',
     href: '/emergency-contacts',
-    glyph: Glyph.contact,
+    iconName: 'call',
     titleKey: 'careCircle.dashboard.sections.emergencyContacts.title',
     subtitleKey: 'careCircle.dashboard.sections.emergencyContacts.subtitle',
   },
   {
     key: 'doctors',
     href: '/doctors',
-    glyph: Glyph.doctor,
+    iconName: 'doctor',
     titleKey: 'careCircle.dashboard.sections.doctors.title',
     subtitleKey: 'careCircle.dashboard.sections.doctors.subtitle',
   },
 ] as const satisfies readonly {
   key: string;
   href: Href;
-  glyph: string;
+  iconName: IconName;
   titleKey: string;
   subtitleKey: string;
 }[];
@@ -84,7 +85,7 @@ export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
       <CircleSwitcher />
 
       <NavCard
-        glyph={Glyph.emergency}
+        iconName="emergency"
         glyphTone="error"
         tone="error"
         titleColor="errorFg"
@@ -116,18 +117,14 @@ export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
               index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.divider },
               pressed && styles.pressed,
             ]}>
-            <GlyphChip glyph={section.glyph} tone="neutral" size="sm" />
+            <GlyphChip iconName={section.iconName} tone="neutral" size="sm" />
             <View style={styles.rowText}>
               <ThemedText type="cardTitle">{t(section.titleKey)}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
                 {t(section.subtitleKey)}
               </ThemedText>
             </View>
-            <ThemedText
-              style={[styles.chevron, { color: theme.textMuted }]}
-              accessibilityElementsHidden>
-              {Glyph.chevron}
-            </ThemedText>
+            <Icon name="chevron" size={26} color="textMuted" />
           </Pressable>
         ))}
       </Surface>
@@ -153,7 +150,7 @@ function MedicationsCard({ circleId }: { circleId: string }) {
 
   return (
     <NavCard
-      glyph={Glyph.medication}
+      iconName="medication"
       title={t('careCircle.dashboard.sections.medications.title')}
       subtitle={subtitle}
       onPress={() => router.push('/medications')}
@@ -172,7 +169,6 @@ const styles = StyleSheet.create({
   headerTitle: { flexShrink: 1 },
   cards: { gap: Spacing.three },
   rowText: { flex: 1, gap: Spacing.half },
-  chevron: { fontSize: 26, lineHeight: 30, fontWeight: '600' },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
-import { Glyph, initialFor } from '@/constants/glyphs';
+import { initialFor } from '@/constants/glyphs';
 import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { GlyphChip } from './glyph-chip';
+import { Icon } from './icon';
 import { LtrText } from './ltr-text';
 import { Surface } from './surface';
 import { ThemedText } from './themed-text';
@@ -85,12 +86,7 @@ export function ContactCard({ name, subtitle, details, phone, callLabel, notes, 
             { backgroundColor: theme.primaryBg },
             pressed && styles.pressed,
           ]}>
-          <ThemedText
-            style={[styles.phoneGlyph, { color: theme.primaryText }]}
-            accessibilityElementsHidden
-            importantForAccessibility="no">
-            {Glyph.contact}
-          </ThemedText>
+          <Icon name="call" size={20} color="primaryText" />
           <LtrText style={[styles.phoneText, { color: theme.primaryText }]} selectable>
             {phone}
           </LtrText>
@@ -118,7 +114,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
   },
-  phoneGlyph: { fontSize: 20, lineHeight: 26, fontWeight: '700' },
   phoneText: { fontSize: 18, lineHeight: 26, fontWeight: '700' },
   pressed: { opacity: 0.7 },
   actions: {

@@ -1,9 +1,10 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { Glyph } from '@/constants/glyphs';
+import { type IconName } from '@/constants/icons';
 import { FontFamily, Radius, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { Icon } from './icon';
 import { ThemedText } from './themed-text';
 
 export type StatusTone = 'success' | 'warning' | 'error' | 'info' | 'neutral';
@@ -25,39 +26,48 @@ const BG_BY_TONE: Record<StatusTone, ThemeColor> = {
 };
 
 /**
- * A distinct glyph per tone so status is never communicated by color alone — the
+ * A distinct icon per tone so status is never communicated by color alone — the
  * shape carries meaning for low-vision / color-blind users, reinforced by the
  * always-present text label.
  */
-const GLYPH_BY_TONE: Record<StatusTone, string> = {
-  success: Glyph.check,
-  warning: Glyph.warn,
-  error: Glyph.cross,
-  info: Glyph.info,
-  neutral: Glyph.bullet,
+const ICON_BY_TONE: Record<StatusTone, IconName> = {
+  success: 'success',
+  warning: 'warning',
+  error: 'error',
+  info: 'info',
+  neutral: 'dot',
 };
 
 type StatusBadgeProps = {
   tone: StatusTone;
   label: string;
-  /** Override the leading glyph (still shape-based, never color-only). */
+  /** Override the leading icon with another semantic icon (still shape-based). */
+  iconName?: IconName;
+  /**
+   * Legacy escape hatch: render a literal text glyph instead of the tone icon.
+   * Kept so existing call sites keep working; new code should use `iconName`.
+   */
   glyph?: string;
   style?: StyleProp<ViewStyle>;
 };
 
 /**
  * Pill badge for a status (e.g. a medication dose "given", a task "done"). A soft
- * tinted background with a strong foreground, a bold tone glyph and a text label —
+ * tinted background with a strong foreground, a bold tone icon and a text label —
  * legible in light & dark, never color-only, calm rather than loud.
  */
-export function StatusBadge({ tone, label, glyph, style }: StatusBadgeProps) {
+export function StatusBadge({ tone, label, iconName, glyph, style }: StatusBadgeProps) {
   const theme = useTheme();
   const fg = theme[FG_BY_TONE[tone]];
   const bg = theme[BG_BY_TONE[tone]];
 
   return (
     <View style={[styles.badge, { backgroundColor: bg }, style]} accessibilityRole="text">
-      <ThemedText style={[styles.glyph, { color: fg }]}>{glyph ?? GLYPH_BY_TONE[tone]}</ThemedText>
+      {glyph ? (
+        <ThemedText style={[styles.glyph, { color: fg }]}>{glyph}</ThemedText>
+      ) : (
+        <Icon name={iconName ?? ICON_BY_TONE[tone]} size={14} color={FG_BY_TONE[tone]} />
+      )}
       <ThemedText style={[styles.label, { color: fg }]}>{label}</ThemedText>
     </View>
   );

@@ -14,7 +14,7 @@ Three decisions will matter more than anything else:
 
 1. **The dashboard must be "today-first," not "navigation-first."** A grid of 13 feature buttons is the failure mode. The home screen should answer one question: *"What does my dad need right now, and did it get done?"*
 2. **The medication loop must close visibly.** The single most-wanted thing in this category is: *the caregiver wants to know whether the dose was actually taken* — and if it wasn't, someone gets nudged. You have `given / postponed / missed` already. The win is surfacing that to the whole family in a feed, plus a missed-dose escalation.
-3. **Kill the decorative-glyph approach permanently.** The mojibake bug isn't a one-off encoding accident — it's a symptom of using raw Unicode symbol literals as your icon system. The durable fix is a real vector icon set (you already have one shipped with Expo) plus text labels. Details in §5.
+3. **Kill the decorative-glyph approach permanently.** The mojibake bug isn't a one-off encoding accident — it's a symptom of using raw Unicode symbol literals as your icon system. The durable fix is a real vector icon set plus text labels. (Correction: despite earlier wording, `@expo/vector-icons` is **not** bundled by Expo in this repo — install it with `npx expo install @expo/vector-icons`.) Details in §5.
 
 Everything below expands on this.
 
@@ -250,10 +250,10 @@ Premium = **precision + restraint + consistency**, not visual richness. Tight, c
 
 **Why a find-and-replace alone isn't the fix:** if you just repair the broken bytes, you've kept the fragile system that produced them. The next Windows line-ending conversion or file rewrite re-breaks it. You're treating the symptom.
 
-**The durable fix (within your constraints — no native rebuild, ideally no new dependency):**
+**The durable fix (within your constraints — no native rebuild; one approved icon dependency, `@expo/vector-icons`):**
 
 1. **Stop using raw symbol literals as iconography.** Replace them with a vector icon component.
-2. **Use `@expo/vector-icons`** — it ships *with* Expo, so it's **zero new dependency and no native rebuild** (it satisfies your "no new deps without approval / no native rebuild" constraints out of the box). Pick one icon family (e.g., Ionicons or MaterialCommunityIcons) and use it consistently. (If you ever want `lucide-react-native`, note it pulls in `react-native-svg` — a new dependency that needs your explicit approval, even though Expo provides the native side.)
+2. **Use `@expo/vector-icons`.** **Install it with `npx expo install @expo/vector-icons` — in this repo it is *not* bundled by Expo and must be installed explicitly.** It is the one approved icon dependency for Sanad; it is JS + bundled-font based and loads through the already-installed `expo-font` path, so it does **not** require a native rebuild in the current development build. Pick one icon family (Sanad uses Ionicons by default, with MaterialCommunityIcons for a few care-domain icons) and use it consistently. (If you ever want `lucide-react-native`, note it pulls in `react-native-svg` — a new dependency that needs your explicit approval, even though Expo provides the native side.)
 3. **Wrap icons in a single `Icon` component** so the whole app references named icons (`<Icon name="check" …/>`), never literal characters. One place to swap families, one place to enforce size/color tokens, and accessibility labels live there too.
 4. **For the few places a character is genuinely fine** (e.g., an Arabic initial in a chip), centralize those strings in one constants module and ensure that file is UTF-8.
 5. **Lock encoding at the repo level:** add an `.editorconfig` enforcing `charset = utf-8` and `end_of_line = lf`, and make sure `.gitattributes` normalizes line endings so Windows tooling can't silently re-corrupt files. Keep the `git diff --check` discipline you already have.

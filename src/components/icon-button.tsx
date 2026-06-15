@@ -1,13 +1,17 @@
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
+import { type IconName } from '@/constants/icons';
 import { Radius, TouchTarget, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { Icon } from './icon';
 import { ThemedText } from './themed-text';
 
 type IconButtonProps = {
-  /** A glyph/emoji icon. Decorative — meaning comes from accessibilityLabel. */
-  icon: string;
+  /** A semantic vector icon (preferred). */
+  iconName?: IconName;
+  /** Legacy: a glyph/emoji string. Decorative — meaning comes from accessibilityLabel. */
+  icon?: string;
   /** REQUIRED: spoken label, since the control is icon-only. */
   accessibilityLabel: string;
   onPress: () => void;
@@ -24,9 +28,10 @@ type IconButtonProps = {
  * A square, accessible icon button that always meets the 48dp touch-target floor.
  * Use only for SECONDARY actions — primary operations use a labeled Button so the
  * action is never a tiny icon-only target (an accessibility requirement for older
- * users).
+ * users). The reference implementation of the icon-only-control pattern.
  */
 export function IconButton({
+  iconName,
   icon,
   accessibilityLabel,
   onPress,
@@ -55,7 +60,11 @@ export function IconButton({
         disabled && styles.disabled,
         style,
       ]}>
-      <ThemedText style={[styles.icon, { color: theme[color] }]}>{icon}</ThemedText>
+      {iconName ? (
+        <Icon name={iconName} size={20} color={color} />
+      ) : icon ? (
+        <ThemedText style={[styles.icon, { color: theme[color] }]}>{icon}</ThemedText>
+      ) : null}
     </Pressable>
   );
 }

@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { NavCard } from '@/components/nav-card';
-import { Glyph } from '@/constants/glyphs';
 
 import { useTodayVisitSummary } from './hooks';
 
@@ -20,7 +19,7 @@ export function VisitsCard({ circleId }: { circleId: string }) {
 
   return (
     <NavCard
-      glyph={Glyph.visit}
+      iconName="visit"
       title={t('careCircle.dashboard.sections.visits.title')}
       subtitle={subtitle}
       onPress={() => router.push('/visits')}

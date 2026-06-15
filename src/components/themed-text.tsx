@@ -6,6 +6,8 @@ import { useTheme } from '@/hooks/use-theme';
 export type ThemedTextProps = TextProps & {
   type?:
     | 'default'
+    | 'display'
+    | 'eyebrow'
     | 'title'
     | 'small'
     | 'smallBold'
@@ -26,6 +28,8 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
       style={[
         { color: theme[themeColor ?? (type === 'link' || type === 'linkPrimary' ? 'primaryText' : 'text')] },
         type === 'default' && styles.default,
+        type === 'display' && styles.display,
+        type === 'eyebrow' && styles.eyebrow,
         type === 'title' && styles.title,
         type === 'small' && styles.small,
         type === 'smallBold' && styles.smallBold,
@@ -68,6 +72,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 26,
     fontWeight: 400,
+  },
+  /**
+   * Flagship hero step above `title`, for the future Today-Home greeting. Additive
+   * — not used by any current screen; `title` remains the default screen heading.
+   */
+  display: {
+    fontFamily: FontFamily.bold,
+    fontSize: 34,
+    lineHeight: 46,
+    fontWeight: 700,
+  },
+  /** Small overline above a hero (e.g. "اليوم / TODAY"). Pair with a muted/accent color. */
+  eyebrow: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: 600,
+    letterSpacing: 0.5,
   },
   /** Screen-level greeting/hero. Was 48 — web-scaled; 30 is the mobile sweet spot. */
   title: {

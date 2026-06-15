@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { NavCard } from '@/components/nav-card';
-import { Glyph } from '@/constants/glyphs';
 
 import { useTodayVitalSummary } from './hooks';
 
@@ -20,7 +19,7 @@ export function VitalsCard({ circleId }: { circleId: string }) {
 
   return (
     <NavCard
-      glyph={Glyph.vital}
+      iconName="vital"
       title={t('careCircle.dashboard.sections.vitals.title')}
       subtitle={subtitle}
       onPress={() => router.push('/vitals')}

@@ -43,7 +43,7 @@ Separate **standing guardrails** (always apply, every task) from **scheduled ini
 
 **Scheduled initiatives — only when the task explicitly asks for them:**
 - **Today-first home.** The strategic direction for the home screen, built in a *dedicated home/IA redesign task*. Do **not** restructure the home during unrelated work; the only standing rule is "don't regress the home into a worse/grid layout."
-- **Vector-icon migration.** The long-term icon direction (centralized `<Icon>` on `@expo/vector-icons`). Do **not** start migrating icons unless the task *is* the icon/design-foundation work. The current accepted fallback is centralized ASCII-safe constants in `glyphs.ts` — fine to keep; just add no new raw Unicode literals.
+- **Vector-icon migration.** The centralized `<Icon>` (on `@expo/vector-icons`) is now the icon direction. `@expo/vector-icons` is **not** bundled by Expo in this repo — it is installed explicitly (`npx expo install @expo/vector-icons`) and is Sanad's one approved icon dependency. The foundation exists (`src/components/icon.tsx` + the semantic map in `src/constants/icons.ts`); shared primitives and the dashboard already use it. Do **not** continue migrating the remaining `Glyph` consumers during unrelated work — that is its own task. The ASCII-safe `glyphs.ts` remains the fallback for not-yet-migrated areas; add no new raw Unicode literals.
 - **Merging feature areas** (e.g., Visits into Schedule) or any IA/data-model change: only as its own explicit task.
 
 ---
@@ -172,7 +172,7 @@ The Android date/time pickers previously rendered as **blank surfaces**; that wa
 The mojibake bug (`â€º âœ… â— â„¢ â€œ â€‌`) came from **raw Unicode symbol literals embedded in source** (UTF-8 decoded as Windows-1252). Repairing bytes alone is not the fix — remove the fragile pattern.
 
 - **Never embed decorative symbol characters as iconography** in source (no ✅ › ● ™ smart-quotes etc. as icons).
-- **Long-term icon direction: a vector icon set via a single `Icon` component.** Prefer **`@expo/vector-icons`** — it ships with Expo, so it adds **no new dependency and needs no native rebuild** (satisfies the project's "no new deps / no native rebuild" constraints). Choose one family (e.g., Ionicons or MaterialCommunityIcons) and use it consistently. **Perform this migration only in a dedicated icon/design-foundation task** (see Scope discipline); the current accepted fallback is centralized ASCII-safe constants in `glyphs.ts`.
+- **Long-term icon direction: a vector icon set via a single `Icon` component.** Use **`@expo/vector-icons`**. **Install it with `npx expo install @expo/vector-icons` — in this repo it is *not* bundled by Expo and must be installed explicitly.** It is the one approved icon dependency for Sanad; it is JS + bundled-font based and loads through the already-installed `expo-font` path, so it does **not** require a native rebuild in the current Development Build. Choose one family (e.g., Ionicons or MaterialCommunityIcons) and use it consistently. **Perform this migration only in a dedicated icon/design-foundation task** (see Scope discipline); the current accepted fallback is centralized ASCII-safe constants in `glyphs.ts`.
 - **Centralize icons:** reference named icons (`<Icon name="check" size={…} color={…} accessibilityLabel="…" />`), never literal characters. One component = one place to enforce size/color tokens and accessibility labels, and one place to swap families.
 - **`@expo/vector-icons` is the default. `lucide-react-native` is allowed only with explicit approval** (it pulls in `react-native-svg`, a new dependency — even though Expo provides the native side).
 - For genuine single-character chips (e.g., an Arabic initial like "د" for doctor), keep those strings in **one UTF-8 constants module** — never scatter them.
@@ -265,7 +265,7 @@ If web export is relevant to the change: `npx expo export --platform web` (verif
 
 - **No backend/deploy/credential operations of any kind**, including (non-exhaustive): `supabase login/logout/link/db push/functions deploy`, `eas login/logout/init/build/submit`, any `firebase` CLI command, `git reset/restore/clean`, or automatic git commits.
 - **No `git add .` / `git add -A`.** Stage specific files only. **No push, no deploy.**
-- **No new dependencies without explicit approval.** (`@expo/vector-icons` is already in Expo and is the approved icon path; `react-native-svg`/`lucide-react-native` require approval.)
+- **No new dependencies without explicit approval.** (`@expo/vector-icons` is the approved icon dependency and is now installed via `npx expo install @expo/vector-icons`; it was **not** bundled by Expo in this repo. `react-native-svg`/`lucide-react-native` still require approval.)
 - **No native-rebuild-triggering work** unless explicitly planned and approved.
 - **Do not print, request, or inspect secrets** — no `.env` values, no service-account keys, no tokens. The Firebase Admin SDK key is on EAS and was deleted locally; never request or recreate it.
 - **Do not modify backend logic**, Supabase schema/migrations, Edge Functions, cron, environment variables, or remote push delivery as part of UI work.

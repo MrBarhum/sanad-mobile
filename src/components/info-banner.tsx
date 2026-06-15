@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { Glyph } from '@/constants/glyphs';
+import { type IconName } from '@/constants/icons';
 import { Spacing } from '@/constants/theme';
 
 import { GlyphChip, type GlyphChipTone } from './glyph-chip';
@@ -18,12 +18,12 @@ type InfoBannerProps = {
   accessibilityLabel?: string;
 };
 
-const GLYPH_BY_TONE = {
-  info: Glyph.info,
-  warning: Glyph.warn,
-  neutral: Glyph.info,
-  accent: Glyph.profile,
-} as const;
+const ICON_BY_TONE = {
+  info: 'info',
+  warning: 'warning',
+  neutral: 'info',
+  accent: 'info',
+} as const satisfies Record<'info' | 'warning' | 'neutral' | 'accent', IconName>;
 
 /**
  * A contained, tinted notice row: small tone chip + message (+ optional action
@@ -41,7 +41,7 @@ export function InfoBanner({ text, actionText, tone = 'info', onPress, accessibi
       accessibilityLabel={accessibilityLabel}
       style={styles.banner}>
       <View style={styles.row}>
-        <GlyphChip glyph={GLYPH_BY_TONE[tone]} tone={tone} size="sm" />
+        <GlyphChip iconName={ICON_BY_TONE[tone]} tone={tone} size="sm" />
         <View style={styles.text}>
           <ThemedText type="small" themeColor={fgColor}>
             {text}

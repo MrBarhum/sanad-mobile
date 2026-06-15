@@ -1,8 +1,10 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { type IconName } from '@/constants/icons';
 import { Radius, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { Icon } from './icon';
 import { ThemedText } from './themed-text';
 
 export type GlyphChipTone =
@@ -41,11 +43,16 @@ const GLYPH_SIZE: Record<GlyphChipSize, number> = { sm: 16, md: 20, lg: 28 };
 
 type GlyphChipProps = {
   /**
-   * A short mark: a non-emoji Unicode glyph (✚ ◉ ♡ ✎ ✓ ◷ ⌂ ❖ ✦ …) or an
-   * initial letter (contact avatars). Emojis are deliberately avoided — they
-   * render as inconsistent multicolor OEM artwork and break the calm palette.
+   * A semantic vector icon — the preferred way to give a chip its identity
+   * (`<GlyphChip iconName="medication" />`).
    */
-  glyph: string;
+  iconName?: IconName;
+  /**
+   * A short text mark: an initial letter (contact / member avatars) or a
+   * non-emoji glyph. Use this for letterform avatars — which a vector icon set
+   * cannot render — or as a fallback; prefer `iconName` for iconography.
+   */
+  glyph?: string;
   tone?: GlyphChipTone;
   size?: GlyphChipSize;
   /**
@@ -57,12 +64,13 @@ type GlyphChipProps = {
 };
 
 /**
- * Sanad's identity anchor: a soft tinted circle holding a bold glyph or
- * letterform. Replaces ad-hoc emoji icons on cards, empty states and rows with
- * one consistent, themable visual language (shape carries identity; tint stays
- * within the calm palette; never the sole carrier of meaning).
+ * Sanad's identity anchor: a soft tinted circle holding a vector icon or a
+ * letterform. Gives cards, empty states and rows one consistent, themable visual
+ * language (shape carries identity; tint stays within the calm palette; never
+ * the sole carrier of meaning).
  */
 export function GlyphChip({
+  iconName,
   glyph,
   tone = 'primary',
   size = 'md',
@@ -86,11 +94,15 @@ export function GlyphChip({
         },
         style,
       ]}>
-      <ThemedText
-        themeColor={FG_BY_TONE[tone]}
-        style={[styles.glyph, { fontSize: GLYPH_SIZE[size], lineHeight: GLYPH_SIZE[size] + 8 }]}>
-        {glyph}
-      </ThemedText>
+      {iconName ? (
+        <Icon name={iconName} size={GLYPH_SIZE[size]} color={FG_BY_TONE[tone]} />
+      ) : glyph ? (
+        <ThemedText
+          themeColor={FG_BY_TONE[tone]}
+          style={[styles.glyph, { fontSize: GLYPH_SIZE[size], lineHeight: GLYPH_SIZE[size] + 8 }]}>
+          {glyph}
+        </ThemedText>
+      ) : null}
     </View>
   );
 }

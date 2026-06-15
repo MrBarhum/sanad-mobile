@@ -1,5 +1,6 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { type IconName } from '@/constants/icons';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -36,7 +37,7 @@ export function ErrorState({
 }) {
   return (
     <ThemedView style={styles.centered}>
-      <GlyphChip glyph="!" tone="error" size="lg" />
+      <GlyphChip iconName="warning" tone="error" size="lg" />
       <ThemedText style={styles.message} accessibilityRole="alert">
         {message}
       </ThemedText>
@@ -50,15 +51,22 @@ export function EmptyState({
   title,
   subtitle,
   icon,
+  iconName,
 }: {
   title: string;
   subtitle?: string;
-  /** Optional decorative glyph above the title — a non-emoji mark (◉ ✓ ✎ ♡ …). */
+  /** Optional decorative glyph above the title — legacy text mark. Prefer `iconName`. */
   icon?: string;
+  /** Optional semantic icon above the title (preferred). */
+  iconName?: IconName;
 }) {
   return (
     <Surface tone="card" style={styles.empty}>
-      {icon ? <GlyphChip glyph={icon} tone="neutral" size="lg" /> : null}
+      {iconName ? (
+        <GlyphChip iconName={iconName} tone="neutral" size="lg" />
+      ) : icon ? (
+        <GlyphChip glyph={icon} tone="neutral" size="lg" />
+      ) : null}
       <ThemedText type="cardTitle" style={styles.centerText}>
         {title}
       </ThemedText>

@@ -58,6 +58,19 @@ export const Colors = {
     infoFg: '#17549F',
     infoBg: '#E8EFFA',
 
+    // Additive foundation tokens — a "today/now" accent ramp, filled-status
+    // foregrounds and a second surface lift. Currently UNUSED: they exist so the
+    // upcoming Today-Home hero, the signature care ring and filled controls have
+    // tokens to reference. Not applied to any existing screen in this phase.
+    accentSolid: '#B97A1E', // saturated sand for a "today/now" fill
+    accentText: '#7A4E12', // sand text/eyebrow on the canvas (AA)
+    onAccent: '#FFFFFF', // text/icon on accentSolid
+    dangerSolid: '#D92D20', // saturated destructive fill (also the bell badge red)
+    onError: '#FFFFFF',
+    onSuccess: '#FFFFFF',
+    onWarning: '#2A1D05', // dark text reads on a solid amber
+    backgroundRaised: '#FFFFFF', // second elevation step (light lifts via shadow)
+
     /** Modal scrim. */
     overlay: 'rgba(29, 27, 22, 0.45)',
   },
@@ -90,6 +103,18 @@ export const Colors = {
     errorBg: '#3A1D1B',
     infoFg: '#96BEF5',
     infoBg: '#1D2B42',
+
+    // Additive foundation tokens — see the light palette for intent. Unused in
+    // this phase; present so light/dark stay key-symmetric (required by the
+    // `ThemeColor` type below).
+    accentSolid: '#C8923C',
+    accentText: '#E2B872',
+    onAccent: '#1A1408',
+    dangerSolid: '#E5564D',
+    onError: '#FFFFFF',
+    onSuccess: '#FFFFFF',
+    onWarning: '#2A1D05',
+    backgroundRaised: '#26241F', // second lift above backgroundElement on graphite
 
     overlay: 'rgba(0, 0, 0, 0.55)',
   },
@@ -144,7 +169,22 @@ export const Spacing = {
   three: 16,
   four: 24,
   five: 32,
+  /** Between-section rhythm — fills the 32→64 gap. Additive; opt-in per layout. */
+  section: 40,
   six: 64,
+} as const;
+
+/**
+ * Icon sizing scale (dp) for the centralized `<Icon>` component. `sm/md/lg`
+ * deliberately match the existing GlyphChip glyph sizes (16/20/28) so the move
+ * from text glyphs to vector icons is visually 1:1; `xl` is reserved for a
+ * future Today-Home hero.
+ */
+export const IconSize = {
+  sm: 16,
+  md: 20,
+  lg: 28,
+  xl: 40,
 } as const;
 
 /** Corner-radius scale. `card` is the standard panel radius; `pill` a stadium. */

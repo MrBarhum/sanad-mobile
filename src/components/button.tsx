@@ -1,12 +1,22 @@
 import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { type IconName } from '@/constants/icons';
+import { FontFamily, Radius, Spacing, TouchTarget, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { Icon } from './icon';
 import { ThemedText } from './themed-text';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'plain';
 export type ButtonSize = 'md' | 'sm';
+
+/** Icon tint per variant — mirrors each variant's label color, as a theme token. */
+const ICON_COLOR: Record<ButtonVariant, ThemeColor> = {
+  primary: 'onPrimary',
+  secondary: 'text',
+  danger: 'errorFg',
+  plain: 'primaryText',
+};
 
 type ButtonProps = {
   label: string;
@@ -14,9 +24,11 @@ type ButtonProps = {
   variant?: ButtonVariant;
   size?: ButtonSize;
   /**
-   * Optional leading text glyph (non-emoji, e.g. '＋' on add actions) rendered
-   * in the label color. Decorative — the label always carries the meaning.
+   * Optional leading icon rendered in the label color before the label.
+   * Decorative — the label always carries the meaning.
    */
+  iconName?: IconName;
+  /** Legacy leading text glyph (e.g. '＋'). Kept for existing call sites; prefer `iconName`. */
   glyph?: string;
   loading?: boolean;
   disabled?: boolean;
@@ -42,6 +54,7 @@ export function Button({
   onPress,
   variant = 'primary',
   size = 'md',
+  iconName,
   glyph,
   loading = false,
   disabled = false,
@@ -107,7 +120,9 @@ export function Button({
         <ActivityIndicator color={colors.text} />
       ) : (
         <View style={styles.content}>
-          {glyph ? (
+          {iconName ? (
+            <Icon name={iconName} size={size === 'sm' ? 16 : 18} color={ICON_COLOR[variant]} />
+          ) : glyph ? (
             <ThemedText
               accessibilityElementsHidden
               importantForAccessibility="no"

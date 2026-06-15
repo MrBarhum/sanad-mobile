@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Icon } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
 import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -43,6 +44,7 @@ export function NotificationBell() {
           borderColor: theme.border,
         },
       ]}>
+      <Icon name="notification" size={18} color="primaryText" />
       <ThemedText style={[styles.label, { color: theme.primaryText }]}>
         {t('notifications.title')}
       </ThemedText>

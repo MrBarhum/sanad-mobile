@@ -5,6 +5,7 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { IconFonts } from '@/components/icon';
 import { Colors, FontFamily } from '@/constants/theme';
 import { AppProviders } from '@/providers';
 
@@ -36,6 +37,9 @@ export default function RootLayout() {
     [FontFamily.medium]: require('@/assets/fonts/IBMPlexSansArabic-Medium.ttf'),
     [FontFamily.semibold]: require('@/assets/fonts/IBMPlexSansArabic-SemiBold.ttf'),
     [FontFamily.bold]: require('@/assets/fonts/IBMPlexSansArabic-Bold.ttf'),
+    // Vector icon glyph fonts (Ionicons + MaterialCommunityIcons), so icons are
+    // ready before first paint — same expo-font path, no native rebuild.
+    ...IconFonts,
   });
 
   // Keep the native splash up for the (sub-100ms) local font load so the UI

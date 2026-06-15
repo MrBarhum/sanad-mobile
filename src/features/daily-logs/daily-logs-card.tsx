@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { NavCard } from '@/components/nav-card';
-import { Glyph } from '@/constants/glyphs';
 
 import { useTodayLogSummary } from './hooks';
 
@@ -25,7 +24,7 @@ export function DailyLogsCard({ circleId }: { circleId: string }) {
 
   return (
     <NavCard
-      glyph={Glyph.dailyLog}
+      iconName="dailyLog"
       title={t('careCircle.dashboard.sections.dailyLogs.title')}
       subtitle={subtitle}
       onPress={() => router.push('/daily-logs')}
