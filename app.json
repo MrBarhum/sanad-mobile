@@ -42,7 +42,8 @@
       "expo-localization",
       "expo-secure-store",
       "expo-notifications",
-      "expo-image"
+      "expo-image",
+      "expo-font"
     ],
     "extra": {
       "supportsRTL": true,
