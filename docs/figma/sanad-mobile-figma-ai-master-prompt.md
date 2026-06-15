@@ -61,7 +61,7 @@ TYPOGRAPHY — ONE family for Arabic AND Latin: "IBM Plex Sans Arabic" (weights 
   display 34/46/700; title 30/42/700 (screen heading); subtitle 22/32/700; sectionTitle 19/30/700; cardTitle 17/27/600; body 16/26/400 (RAISE the base body floor to 17sp wherever possible for older-adult readability); link 15/28/500; small 14/22/400; smallBold 14/22/600; eyebrow 13/18/600 with +0.5 letter-spacing — eyebrow letter-spacing is LATIN-ONLY (letter-spacing breaks Arabic letter-joining, never apply it to Arabic); code 13 mono.
   Never set body below 14sp. Prefer a 17sp floor for primary reading text.
 
-SPACING (4pt scale): half 2; one 4; two 8; three 16; four 24; five 32; section 40; six 64. Phone horizontal gutter = 24. 
+SPACING (4pt scale): half 2; one 4; two 8; three 16; four 24; five 32; section 40; six 64. Phone horizontal gutter = 24.
 RADIUS: sm 8; md 12; lg 16; card 20; xl 24; pill 999.
 ICON SIZE: sm 16; md 20; lg 28; xl 40.
 TOUCH TARGET: minimum 48dp; comfortable 52dp; PRIMARY actions >= 56dp; keep interactive targets >= 8dp apart.
@@ -114,7 +114,7 @@ DO NOT reproduce any of that. The new design MUST feel premium, warm, calm, mode
 === 6. THE SANAD SIGNATURE ELEMENT — "Today Care Ring" ===
 Design a calm, distinctive "Today Care Ring" that shows the day's medication-dose loop as "given of total" — it is the one differentiated motif in the app and should anchor the Home hero.
 - It reflects RECORDED dose completion (a task loop), NEVER a clinical/health interpretation. Its colors are accent (in progress) / success (complete) / neutral (none) — NOT health colors.
-- States (always worded, never color-only): 
+- States (always worded, never color-only):
   loading — neutral ring + pill icon inside + caption "جارٍ تحميل جرعات اليوم…";
   empty (0 scheduled) — neutral ring + pill icon + caption "لا جرعات مجدولة اليوم";
   progress (given < total) — accent ring + a large "given/total" count inside (Latin digits) + a segmented strip + caption "{given} من {total} جرعة اليوم";
@@ -149,7 +149,7 @@ C. MEDICATIONS (priority)
 
 D. EMERGENCY (priority — safety-critical, distinct and prominent, NOT a small grid tile)
   10. Emergency card (the "show-a-stranger" read-only screen): a prominent error-toned identity block (recipient name, birth date, approx age as informational only); a medical info section (blood type, allergies, chronic conditions, emergency notes — each value selectable; "غير محدد" when empty); an emergency-contacts section and a doctors section, each with one-tap CALL rows; a muted disclaimer "هذه المعلومات مُدخلة من العائلة للعرض فقط، وليست نصيحة أو تشخيصًا طبيًا." NO SOS / dial-emergency-services button and no "guaranteed response" claim.
-  11. Emergency contacts manager: contact cards (name, relationship, phone) with a large one-tap CALL row (phone LTR-isolated, "اتصال {name}"), a "رئيسية" primary badge, managers get add/edit/delete (two-step delete). 
+  11. Emergency contacts manager: contact cards (name, relationship, phone) with a large one-tap CALL row (phone LTR-isolated, "اتصال {name}"), a "رئيسية" primary badge, managers get add/edit/delete (two-step delete).
   12. Doctors manager: doctor cards (name, specialty, clinic, optional phone) with an optional one-tap CALL row; managers add/edit via a bottom-sheet form modal.
   13. The CALL affordance component: a wide, high-contrast button row using primaryBg, the "call" icon, the phone number in LTR isolation, min height 52dp.
 
