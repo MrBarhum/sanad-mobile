@@ -1,0 +1,79 @@
+# Git attributes - normalize line endings and protect binary assets.
+#
+# `core.autocrlf` on a developer's machine (this repo has it set to `true`) can
+# silently rewrite line endings on checkout/commit. These rules override that:
+# text files are stored and checked out with LF everywhere, regardless of OS or
+# editor, while binary assets (images, fonts, archives) are never touched.
+
+# Default: let Git detect text vs binary, and force LF for anything textual.
+* text=auto eol=lf
+
+# ---------------------------------------------------------------------------
+# Source / docs / config - declared explicitly so detection never guesses wrong.
+# ---------------------------------------------------------------------------
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.jsx       text eol=lf
+*.mjs       text eol=lf
+*.cjs       text eol=lf
+*.json      text eol=lf
+*.jsonc     text eol=lf
+*.md        text eol=lf
+*.css       text eol=lf
+*.scss      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.sql       text eol=lf
+*.toml      text eol=lf
+*.svg       text eol=lf
+*.txt       text eol=lf
+*.html      text eol=lf
+*.xml       text eol=lf
+.editorconfig   text eol=lf
+.gitattributes  text eol=lf
+.gitignore      text eol=lf
+.env.example    text eol=lf
+
+# Android/Firebase config is JSON - keep it text and LF, never treat as binary.
+google-services.json text eol=lf
+
+# ---------------------------------------------------------------------------
+# Binary assets - never normalize, never line-diff (prevents corruption).
+# ---------------------------------------------------------------------------
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.ico       binary
+*.icns      binary
+*.bmp       binary
+
+*.ttf       binary
+*.otf       binary
+*.woff      binary
+*.woff2     binary
+*.eot       binary
+
+*.mp3       binary
+*.mp4       binary
+*.mov       binary
+*.webm      binary
+
+*.db        binary
+*.sqlite    binary
+*.sqlite3   binary
+
+*.pdf       binary
+*.zip       binary
+*.gz        binary
+*.tgz       binary
+*.jar       binary
+*.aab       binary
+*.apk       binary
+*.keystore  binary
+*.jks       binary
+*.p12       binary
+*.p8        binary
+*.pfx       binary
