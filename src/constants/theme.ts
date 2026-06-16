@@ -4,17 +4,26 @@
  *
  * Visual direction: "Warm Care OS" — a calm, premium, Arabic-first family-care
  * interface. Identity comes from typography (IBM Plex Sans Arabic), warm-neutral
- * canvases (never flat white / pure black), one confident brand blue, and soft
- * tinted anchors — not from gradients, heavy shadows or decoration. Tuned for
- * older adults and family caregivers: large targets, strong contrast, status is
- * never color-only. Light and dark are full peers.
+ * canvases (never flat white / pure black), one confident teal brand, a soft sand
+ * accent, and per-feature category tints — not from gradients, heavy shadows or
+ * decoration. Tuned for older adults and family caregivers: large targets, strong
+ * contrast, status is never color-only. Light and dark are full peers.
+ *
+ * Phase A (Figma Make parity, 2026-06-16): the palette was re-pointed from the
+ * prior brand blue to the Figma Make teal / porcelain / graphite direction (values
+ * derived from docs/figma/make-export/extracted/src/styles/theme.css), and a
+ * 5-step category color ramp (categoryBlue/Purple/Green/Gold/Teal) was added for
+ * feature-identity icon chips. Token KEYS are unchanged — only values changed and
+ * the ramp was appended — so every existing consumer keeps working. Rationale +
+ * the few derived (non-1:1) values are documented in
+ * docs/claude-reports/2026-06-16-figma-phase-a-token-icon-alignment.md.
  *
  * Existing token keys (text/background/backgroundElement/backgroundSelected/
  * textSecondary/border/primary/onPrimary/primaryBg/primaryText/semantic Fg+Bg,
  * Spacing, MaxContentWidth, MaxFormWidth, Fonts, BottomTabInset, TopTabInset,
  * Radius, TouchTarget, Gutter) are preserved so every consumer keeps working;
  * the rest is additive (textMuted, backgroundSunken, divider, primaryPressed,
- * accentFg/Bg, overlay, FontFamily, CardShadow).
+ * accentFg/Bg, overlay, FontFamily, CardShadow, category* ramp).
  */
 
 import '@/global.css';
@@ -24,99 +33,112 @@ import { Platform } from 'react-native';
 export const Colors = {
   light: {
     // Surfaces & text — warm porcelain canvas, white cards, warm hairlines.
-    text: '#1D1B16',
-    textSecondary: '#5C594F',
+    text: '#1A1714',
+    textSecondary: '#6B6258',
     /** Quieter than textSecondary — metadata/timestamps only, never body text. */
-    textMuted: '#767266',
-    background: '#F6F4EF',
+    textMuted: '#8A837A',
+    background: '#F7F3EE',
     backgroundElement: '#FFFFFF',
-    backgroundSelected: '#ECE9E1',
-    /** Recessed wells INSIDE cards (picker wheels, code blocks, quiet rows). */
-    backgroundSunken: '#F3F1EB',
-    border: '#E2DFD6',
+    /** Pressed/selected fill — a step deeper than backgroundSunken (derived). */
+    backgroundSelected: '#E4DDCE',
+    /** Recessed wells INSIDE cards + input fields (Figma Make input/secondary tone). */
+    backgroundSunken: '#EDE8DF',
+    border: '#E1DDD8',
     /** Softer than border — separators between rows inside one surface. */
-    divider: '#ECE9E2',
+    divider: '#ECE7DF',
 
-    // Brand — one confident, calm blue (kept compatible with the app icon).
-    primary: '#1B5FBE',
-    primaryPressed: '#164E9D',
+    // Brand — one confident teal (Figma Make parity; was brand blue #1B5FBE).
+    primary: '#2E8A7B',
+    primaryPressed: '#256F63',
     onPrimary: '#FFFFFF',
-    primaryBg: '#E8EFFA', // tinted primary surface (chips/links/info)
-    primaryText: '#17549F', // brand-colored text on a normal surface
+    primaryBg: '#EAF3F1', // tinted teal surface (chips/links/active)
+    primaryText: '#1F6E60', // darker teal so brand text clears AA on porcelain
 
     // Warm sand accent — reserved for "today/highlight" moments, used sparingly.
     accentFg: '#8A5A17',
-    accentBg: '#F5EBD8',
+    accentBg: '#F4E9D5',
 
     // Semantic foregrounds (text + icon) and soft backgrounds (badges/surfaces)
-    successFg: '#1A7A43',
-    successBg: '#E3F2E7',
+    successFg: '#1F7A4D',
+    successBg: '#E4F1EA',
     warningFg: '#9A5B00',
-    warningBg: '#F8EDD8',
-    errorFg: '#BE2E2E',
-    errorBg: '#FAE7E4',
-    infoFg: '#17549F',
-    infoBg: '#E8EFFA',
+    warningBg: '#F6EBD7',
+    errorFg: '#B5403F',
+    errorBg: '#F7E5E3',
+    infoFg: '#3E6FA0',
+    infoBg: '#E7EEF7',
 
-    // Additive foundation tokens — a "today/now" accent ramp, filled-status
-    // foregrounds and a second surface lift. Currently UNUSED: they exist so the
-    // upcoming Today-Home hero, the signature care ring and filled controls have
-    // tokens to reference. Not applied to any existing screen in this phase.
-    accentSolid: '#B97A1E', // saturated sand for a "today/now" fill
+    // Filled-status foregrounds + a second surface lift. The filled-status fgs are
+    // still UNUSED by screens; kept key-symmetric for the ThemeColor type.
+    accentSolid: '#C8904A', // Figma Make gold accent fill
     accentText: '#7A4E12', // sand text/eyebrow on the canvas (AA)
     onAccent: '#FFFFFF', // text/icon on accentSolid
-    dangerSolid: '#D92D20', // saturated destructive fill (also the bell badge red)
+    dangerSolid: '#C45050', // softer Figma Make destructive fill (NOT the bell badge red #D92D20)
     onError: '#FFFFFF',
     onSuccess: '#FFFFFF',
     onWarning: '#2A1D05', // dark text reads on a solid amber
     backgroundRaised: '#FFFFFF', // second elevation step (light lifts via shadow)
 
     /** Modal scrim. */
-    overlay: 'rgba(29, 27, 22, 0.45)',
+    overlay: 'rgba(26, 23, 20, 0.45)',
+
+    // Per-feature category ramp (Figma Make chart palette) — used as <Icon> tint
+    // colors for feature/medication identity chips. Low-opacity tint backgrounds
+    // are derived at consume time (Phase B), so only the 5 solids live here.
+    categoryBlue: '#5A8ABF',
+    categoryPurple: '#8B6FA8',
+    categoryGreen: '#4A9A75',
+    categoryGold: '#C8904A',
+    categoryTeal: '#2E8A7B',
   },
   dark: {
-    // Warm graphite — lifted cards, never pure black.
-    text: '#F4F2EC',
+    // Warm graphite — near-black canvas, lifted cards (Figma Make parity).
+    text: '#EDE8DF',
     textSecondary: '#ACA89D',
-    textMuted: '#8B877C',
-    background: '#151412',
-    backgroundElement: '#201F1B',
-    backgroundSelected: '#2C2A25',
-    backgroundSunken: '#1B1A17',
-    border: '#353329',
-    divider: '#272520',
+    textMuted: '#8A837A',
+    background: '#0F0E0C',
+    backgroundElement: '#1A1916',
+    backgroundSelected: '#322E27',
+    backgroundSunken: '#26231E',
+    border: '#2E2A24',
+    divider: '#211F1B',
 
-    primary: '#2F6FD0',
-    primaryPressed: '#275FB4',
-    onPrimary: '#FFFFFF',
-    primaryBg: '#1D2B42',
-    primaryText: '#96BEF5',
+    primary: '#4BA898',
+    primaryPressed: '#3E9384',
+    onPrimary: '#0F0E0C', // dark text on the lighter dark-mode teal (Figma Make)
+    primaryBg: '#1C2D29',
+    primaryText: '#7AC8BA',
 
     accentFg: '#DDAF63',
-    accentBg: '#352A17',
+    accentBg: '#34291A',
 
-    successFg: '#4DC07D',
-    successBg: '#152F20',
-    warningFg: '#E2A23E',
+    successFg: '#5AAE85',
+    successBg: '#16291F',
+    warningFg: '#D9A24A',
     warningBg: '#332813',
-    errorFg: '#EF6F6B',
-    errorBg: '#3A1D1B',
-    infoFg: '#96BEF5',
-    infoBg: '#1D2B42',
+    errorFg: '#E07A78',
+    errorBg: '#3A1E1C',
+    infoFg: '#7FA8D8',
+    infoBg: '#1B2738',
 
-    // Additive foundation tokens — see the light palette for intent. Unused in
-    // this phase; present so light/dark stay key-symmetric (required by the
-    // `ThemeColor` type below).
-    accentSolid: '#C8923C',
+    // Filled-status foregrounds — see the light palette. Light fills in dark mode
+    // take dark on* text; still UNUSED by screens, kept key-symmetric.
+    accentSolid: '#C8904A',
     accentText: '#E2B872',
-    onAccent: '#1A1408',
-    dangerSolid: '#E5564D',
+    onAccent: '#0F0E0C',
+    dangerSolid: '#C45050',
     onError: '#FFFFFF',
-    onSuccess: '#FFFFFF',
+    onSuccess: '#0F0E0C',
     onWarning: '#2A1D05',
-    backgroundRaised: '#26241F', // second lift above backgroundElement on graphite
+    backgroundRaised: '#232019', // second lift (Figma Make elevated nested-well)
 
     overlay: 'rgba(0, 0, 0, 0.55)',
+
+    categoryBlue: '#6A9ACC',
+    categoryPurple: '#9B7FC0',
+    categoryGreen: '#5AAE85',
+    categoryGold: '#C8904A',
+    categoryTeal: '#4BA898',
   },
 } as const;
 

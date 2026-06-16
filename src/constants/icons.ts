@@ -13,7 +13,9 @@
  * proper `chevron-back`/`chevron-forward` pair for RTL). A *small, deliberate*
  * set of care-domain icons uses MaterialCommunityIcons where recognisability is
  * materially better and Ionicons has no good equivalent: `medication` (pill),
- * `doctor`, and `vital` (heart-pulse). Both fonts ship inside the single
+ * `doctor`, `vital` (heart-pulse), and the Phase A (Figma Make parity) additions
+ * `temperature` (thermometer), `oxygen` (lungs), `appetite` (silverware-fork-knife)
+ * and `owner` (crown-outline). Both fonts ship inside the single
  * `@expo/vector-icons` package, so this exception adds no further dependency.
  *
  * COLLISIONS RESOLVED: the old glyph set reused one mark for several meanings —
@@ -77,6 +79,39 @@ export const ICONS = {
   settings: { family: 'ionicons', name: 'settings-outline' },
   system: { family: 'ionicons', name: 'cog-outline' },
   call: { family: 'ionicons', name: 'call' },
+
+  // --- Navigation additions (Figma Make parity) -------------------------------
+  /** Full back arrow on detail-screen headers — mirrors in RTL (→ arrow-forward). */
+  back: { family: 'ionicons', name: 'arrow-back', rtlName: 'arrow-forward', directional: true },
+  /** Downward disclosure (circle switcher, expandable rows). Not directional. */
+  chevronDown: { family: 'ionicons', name: 'chevron-down' },
+
+  // --- Feature / reading identities (Figma Make parity) -----------------------
+  explore: { family: 'ionicons', name: 'compass-outline' },
+  activity: { family: 'ionicons', name: 'pulse' }, // generic reading/activity — NOT a health verdict
+  heart: { family: 'ionicons', name: 'heart-outline' }, // identity only — never health-color coded
+  location: { family: 'ionicons', name: 'location-outline' },
+  drop: { family: 'ionicons', name: 'water-outline' }, // blood type / hydration
+  temperature: { family: 'material-community', name: 'thermometer' }, // care-domain reading
+  oxygen: { family: 'material-community', name: 'lungs' }, // care-domain reading
+  mood: { family: 'ionicons', name: 'happy-outline' }, // daily-log observation, not a clinical scale
+  appetite: { family: 'material-community', name: 'silverware-fork-knife' },
+
+  // --- Actions & roles (Figma Make parity) ------------------------------------
+  more: { family: 'ionicons', name: 'ellipsis-horizontal' },
+  edit: { family: 'ionicons', name: 'create-outline' }, // pencil (shares the dailyLog glyph)
+  copy: { family: 'ionicons', name: 'copy-outline' },
+  view: { family: 'ionicons', name: 'eye-outline' },
+  invite: { family: 'ionicons', name: 'person-add-outline' },
+  removeMember: { family: 'ionicons', name: 'person-remove-outline' },
+  owner: { family: 'material-community', name: 'crown-outline' }, // care-circle owner marker
+  role: { family: 'ionicons', name: 'ribbon-outline' },
+  shield: { family: 'ionicons', name: 'shield-checkmark-outline' },
+  lock: { family: 'ionicons', name: 'lock-closed-outline' },
+
+  // --- Theme toggle (Account) -------------------------------------------------
+  moon: { family: 'ionicons', name: 'moon-outline' },
+  sun: { family: 'ionicons', name: 'sunny-outline' },
 } satisfies Record<string, IconEntry>;
 
 /** The semantic icon names available to `<Icon name="…" />`. */

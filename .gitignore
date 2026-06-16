@@ -36,6 +36,10 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Figma Make export — local Vite/React web visual reference only.
+# Not part of the Expo app; excluded from tsconfig and not tracked in git.
+docs/figma/make-export/
+
 example
 
 # generated native folders
