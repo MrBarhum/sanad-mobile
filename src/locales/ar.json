@@ -127,9 +127,34 @@
         "appointmentLabel": "موعد اليوم",
         "appointmentNone": "لا مواعيد اليوم",
         "tasksLabel": "المهام المستحقّة اليوم",
-        "tasksNone": "لا مهام مستحقّة اليوم"
+        "tasksNone": "لا مهام مستحقّة اليوم",
+        "tileMedsValue": "{{given}} من {{total}}",
+        "tileMedsNone": "لا جرعات اليوم",
+        "tileMedsDone": "اكتملت",
+        "tileTasksValue": "{{count}} مستحقّة",
+        "tileTasksNone": "لا مهام اليوم",
+        "tileApptNone": "لا مواعيد اليوم",
+        "emergencyMeta": "وصول سريع",
+        "viewAll": "عرض الكل",
+        "doseUnlogged": "لم تُسجّل بعد",
+        "logAction": "تسجيل",
+        "medLoopEyebrow": "دورة الدواء · اليوم",
+        "allDosesGiven": "جميع الجرعات أُعطيت",
+        "allMedications": "كل الأدوية",
+        "quickActions": "وصول سريع",
+        "dueTodayShort": "مستحقّة اليوم",
+        "ageYears": "{{age}} سنة",
+        "apptTodayAt": "اليوم، الساعة {{time}}",
+        "joinAnotherCircle": "الانضمام إلى دائرة أخرى",
+        "emergencyTitle": "معلومات الطوارئ",
+        "emergencyView": "عرض",
+        "emergencyBlood": "فصيلة الدم: {{value}}",
+        "emergencyAllergy": "تحسّس: {{value}}",
+        "emergencySubtitle": "اطّلع على بطاقة الطوارئ"
       },
-      "manageTitle": "كل أقسام الرعاية"
+      "manageTitle": "كل أقسام الرعاية",
+      "careTeamTitle": "فريق الرعاية",
+      "quickAccessTitle": "الوصول السريع"
     }
   },
   "circleSwitcher": {

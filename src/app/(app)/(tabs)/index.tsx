@@ -4,7 +4,7 @@ import { ActivityIndicator, StyleSheet } from 'react-native';
 import { Screen } from '@/components/screen';
 import { ErrorState } from '@/components/states';
 import { ThemedView } from '@/components/themed-view';
-import { CareCircleDashboard } from '@/features/care-circle/circle-dashboard';
+import { FigmaHome } from '@/features/care-circle/figma-home';
 import { CareCircleOnboarding } from '@/features/care-circle/onboarding-form';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import { useTheme } from '@/hooks/use-theme';
@@ -50,7 +50,7 @@ export default function HomeScreen() {
     return <CareCircleOnboarding userId={user.id} />;
   }
 
-  return <CareCircleDashboard circle={activeCircle} />;
+  return <FigmaHome circle={activeCircle} />;
 }
 
 const styles = StyleSheet.create({

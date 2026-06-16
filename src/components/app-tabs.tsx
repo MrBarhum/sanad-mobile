@@ -1,46 +1,44 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useColorScheme } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { FigmaTabBar } from '@/components/figma/figma-tab-bar';
 
+/**
+ * The app's bottom tab navigator (Home / Explore / Account).
+ *
+ * Figma exact-copy: the previous native tab bar (`NativeTabs`) could not be
+ * styled to match the Figma BottomNav, so this uses Expo Router's JS `Tabs` with
+ * a fully custom `tabBar` (`FigmaTabBar`) — the teal active pill, lucide icons
+ * and Cairo labels from the Figma design. Navigation behavior is preserved: the
+ * custom bar emits the standard `tabPress` event and navigates on select. RTL
+ * tab order is handled by the row mirroring (Home sits at the right).
+ */
 export default function AppTabs() {
   const { t } = useTranslation();
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
   return (
-    <NativeTabs
-      backgroundColor={colors.background}
-      // Brand-tinted pill behind the active tab; selected label picks up the
-      // brand text color so the active state is carried by tint + label weight.
-      indicatorColor={colors.primaryBg}
-      iconColor={colors.textSecondary}
-      labelStyle={{ color: colors.textSecondary, selected: { color: colors.primaryText } }}>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>{t('tabs.home')}</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
+    <Tabs
+      screenOptions={{ headerShown: false }}
+      tabBar={({ state, navigation }) => (
+        <FigmaTabBar
+          activeIndex={state.index}
+          routeNames={state.routes.map((route) => route.name)}
+          onSelect={(index) => {
+            const route = state.routes[index];
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (state.index !== index && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          }}
         />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>{t('tabs.explore')}</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="account">
-        <NativeTabs.Trigger.Label>{t('tabs.account')}</NativeTabs.Trigger.Label>
-        {/* TODO: replace with a dedicated account icon; reusing home icon as a placeholder. */}
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+      )}>
+      <Tabs.Screen name="index" options={{ title: t('tabs.home') }} />
+      <Tabs.Screen name="explore" options={{ title: t('tabs.explore') }} />
+      <Tabs.Screen name="account" options={{ title: t('tabs.account') }} />
+    </Tabs>
   );
 }

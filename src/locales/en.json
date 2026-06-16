@@ -127,9 +127,34 @@
         "appointmentLabel": "Today's appointment",
         "appointmentNone": "No appointments today",
         "tasksLabel": "Tasks due today",
-        "tasksNone": "No tasks due today"
+        "tasksNone": "No tasks due today",
+        "tileMedsValue": "{{given}} of {{total}}",
+        "tileMedsNone": "No doses today",
+        "tileMedsDone": "All done",
+        "tileTasksValue": "{{count}} due",
+        "tileTasksNone": "No tasks today",
+        "tileApptNone": "No appointments today",
+        "emergencyMeta": "Quick access",
+        "viewAll": "View all",
+        "doseUnlogged": "Not logged yet",
+        "logAction": "Log",
+        "medLoopEyebrow": "Medication loop · Today",
+        "allDosesGiven": "All doses given",
+        "allMedications": "All medications",
+        "quickActions": "Quick access",
+        "dueTodayShort": "Due today",
+        "ageYears": "{{age}} yrs",
+        "apptTodayAt": "Today at {{time}}",
+        "joinAnotherCircle": "Join another circle",
+        "emergencyTitle": "Emergency info",
+        "emergencyView": "View",
+        "emergencyBlood": "Blood type: {{value}}",
+        "emergencyAllergy": "Allergies: {{value}}",
+        "emergencySubtitle": "View the emergency card"
       },
-      "manageTitle": "All care sections"
+      "manageTitle": "All care sections",
+      "careTeamTitle": "Care team",
+      "quickAccessTitle": "Quick access"
     }
   },
   "circleSwitcher": {
