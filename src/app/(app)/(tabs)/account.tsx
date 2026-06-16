@@ -1,32 +1,45 @@
 import { useRouter } from 'expo-router';
+import { Bell, LogOut, Plus, User, Users } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View, useColorScheme } from 'react-native';
 
+import { FigmaButton } from '@/components/figma/figma-button';
+import { FigmaCard } from '@/components/figma/figma-card';
+import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
+import { FigmaScreen } from '@/components/figma/figma-screen';
+import {
+  FigmaCategory,
+  FigmaColors,
+  FigmaFont,
+  FigmaRadius,
+  type FigmaScheme,
+} from '@/components/figma/figma-tokens';
+import { IconChip } from '@/components/figma/icon-chip';
 import { LtrText } from '@/components/ltr-text';
-import { Button } from '@/components/button';
-import { GlyphChip } from '@/components/glyph-chip';
-import { Screen } from '@/components/screen';
-import { Section, Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
-import { Glyph } from '@/constants/glyphs';
-import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
-import { CircleSwitcher } from '@/features/circle-selection/circle-switcher';
-import { CircleTimezoneCard } from '@/features/circle-selection/circle-timezone-card';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import { deactivatePushToken } from '@/features/notifications/api';
-import { NotificationBell } from '@/features/notifications/notification-bell';
 import { getRememberedToken } from '@/features/notifications/hooks';
 import { useAuth } from '@/providers';
 
 import { supabase } from '../../../../lib/supabase';
 
+/**
+ * The Figma Make Account screen, recreated as literally as possible in React
+ * Native on real Sanad data. Mirrors `AccountScreen.tsx`: a profile header
+ * (user email via `useAuth`), a grouped "care circles" list (active circle →
+ * members, notification settings, join another circle) and a danger sign-out.
+ * Cairo + Figma tokens, RTL. No old Sanad Screen/Surface/Section/CircleSwitcher.
+ *
+ * KEEPS the exact existing sign-out logic verbatim (deactivatePushToken +
+ * supabase.auth.signOut + error state) — only the visuals changed.
+ */
 export default function AccountScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const router = useRouter();
-  const theme = useTheme();
+  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const c = FigmaColors[scheme];
   const { activeCircle } = useCircleSelection();
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,142 +66,107 @@ export default function AccountScreen() {
     }
   }
 
+  // The active circle subtitle: the user's role label in this circle, plus the
+  // cared-for person's name when stored (both come straight from the selection
+  // provider — no fabricated member count, which we don't have here).
+  const circleSubtitleParts = [
+    activeCircle ? t(`circleMembers.roles.${activeCircle.role}`) : null,
+    activeCircle?.recipientName ?? null,
+  ].filter(Boolean) as string[];
+  const circleSubtitle = circleSubtitleParts.join('  ·  ');
+
+  const muted = { color: c.muted, fontFamily: FigmaFont.regular };
+
   return (
-    <Screen edges={{ top: true }} maxWidth={MaxFormWidth}>
-      <View style={styles.headerRow}>
-        <ThemedText type="subtitle" accessibilityRole="header">
-          {t('account.title')}
-        </ThemedText>
-        <NotificationBell />
-      </View>
-
-      <Surface style={styles.cardGap}>
-        <ThemedText type="smallBold">{t('account.signedInAs')}</ThemedText>
-        <View style={[styles.emailWell, { backgroundColor: theme.backgroundSunken }]}>
-          {user?.email ? (
-            <LtrText selectable>{user.email}</LtrText>
-          ) : (
-            <ThemedText>{t('account.noEmail')}</ThemedText>
-          )}
+    <FigmaScreen gap={24}>
+      {/* Profile header */}
+      <FigmaCard radius={FigmaRadius.r24} padding={20}>
+        <View style={styles.profileRow}>
+          <IconChip
+            Icon={User}
+            color={c.primary}
+            size={64}
+            radius={FigmaRadius.pill}
+            iconSize={30}
+            tintOpacity={0.15}
+          />
+          <View style={styles.profileText}>
+            <Text style={[styles.profileLabel, muted]}>{t('account.signedInAs')}</Text>
+            {user?.email ? (
+              <LtrText selectable style={[styles.profileEmail, { color: c.text }]}>
+                {user.email}
+              </LtrText>
+            ) : (
+              <Text style={[styles.profileEmail, { color: c.text }]}>{t('account.noEmail')}</Text>
+            )}
+          </View>
         </View>
-      </Surface>
+      </FigmaCard>
 
-      <Section title={t('account.circleSectionTitle')}>
-        <CircleSwitcher />
-
-        {activeCircle ? (
-          <Surface padded={false}>
-            <LinkRow
-              glyph={Glyph.members}
-              title={t('circleMembers.title')}
-              subtitle={t('circleMembers.subtitle')}
+      {/* Care circles */}
+      <View>
+        <FigmaSectionLabel label={t('account.circleSectionTitle')} />
+        <FigmaCard tone="card" radius={FigmaRadius.r24} padding={0}>
+          {activeCircle ? (
+            <FigmaListRow
+              Icon={Users}
+              color={c.primary}
+              title={activeCircle.circleName || t('circleMembers.title')}
+              subtitle={circleSubtitle || t('circleMembers.subtitle')}
               onPress={() => router.push('/circle-members')}
             />
-          </Surface>
-        ) : null}
-
-        {activeCircle ? <CircleTimezoneCard /> : null}
-      </Section>
-
-      <Section title={t('account.notificationsSectionTitle')}>
-        <Surface padded={false}>
-          <LinkRow
-            glyph={Glyph.bullseye}
+          ) : null}
+          <FigmaListRow
+            Icon={Bell}
+            color={FigmaCategory.purple}
+            topDivider={Boolean(activeCircle)}
             title={t('notificationSettings.title')}
             subtitle={t('notificationSettings.subtitle')}
             onPress={() => router.push('/notification-settings')}
           />
-          <LinkRow
-            glyph={Glyph.plus}
+          <FigmaListRow
+            Icon={Plus}
+            color={FigmaCategory.gold}
             topDivider
             title={t('account.joinAnother')}
             subtitle={t('account.joinAnotherSubtitle')}
             onPress={() => router.push('/join-circle')}
           />
-        </Surface>
-      </Section>
-
-      {error ? (
-        <ThemedText
-          themeColor="errorFg"
-          accessibilityRole="alert"
-          accessibilityLiveRegion="polite">
-          {error}
-        </ThemedText>
-      ) : null}
-
-      <Button
-        variant="danger"
-        label={t('account.signOut')}
-        loading={signingOut}
-        disabled={signingOut}
-        onPress={onSignOut}
-        style={styles.signOut}
-      />
-    </Screen>
-  );
-}
-
-function LinkRow({
-  glyph,
-  title,
-  subtitle,
-  onPress,
-  topDivider = false,
-}: {
-  glyph: string;
-  title: string;
-  subtitle: string;
-  onPress: () => void;
-  /** Hairline separator above the row (every row but the first in a group). */
-  topDivider?: boolean;
-}) {
-  const theme = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={title}
-      accessibilityHint={subtitle}
-      android_ripple={{ color: theme.backgroundSelected }}
-      style={({ pressed }) => [
-        styles.linkRow,
-        topDivider && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.divider },
-        pressed && styles.pressed,
-      ]}>
-      <GlyphChip glyph={glyph} tone="neutral" size="sm" />
-      <View style={styles.linkRowText}>
-        <ThemedText type="cardTitle">{title}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {subtitle}
-        </ThemedText>
+        </FigmaCard>
       </View>
-      <ThemedText style={[styles.chevron, { color: theme.textMuted }]} accessibilityElementsHidden>
-        {Glyph.chevron}
-      </ThemedText>
-    </Pressable>
+
+      {/* Danger sign-out */}
+      <View style={styles.dangerBlock}>
+        {error ? (
+          <Text
+            style={[styles.error, { color: c.error }]}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite">
+            {error}
+          </Text>
+        ) : null}
+        <FigmaButton
+          variant="danger"
+          label={t('account.signOut')}
+          Icon={LogOut}
+          loading={signingOut}
+          disabled={signingOut}
+          onPress={onSignOut}
+        />
+        <Text style={[styles.version, muted]}>{t('figma.account.version', { version: '1.0.0' })}</Text>
+      </View>
+    </FigmaScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-  },
-  cardGap: { gap: Spacing.two },
-  emailWell: { borderRadius: Radius.md, padding: Spacing.three },
-  linkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
-    minHeight: TouchTarget.comfortable + Spacing.three,
-  },
-  linkRowText: { flex: 1, gap: Spacing.half },
-  chevron: { fontSize: 26, lineHeight: 30, fontWeight: '600' },
-  pressed: { opacity: 0.8 },
-  signOut: { marginTop: Spacing.two },
+  // Profile header
+  profileRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  profileText: { flex: 1, gap: 2 },
+  profileLabel: { fontSize: 12 },
+  profileEmail: { fontSize: 16, fontFamily: FigmaFont.bold },
+  // Danger zone
+  dangerBlock: { gap: 12 },
+  error: { fontSize: 13, fontFamily: FigmaFont.medium },
+  version: { fontSize: 12, textAlign: 'center', marginTop: 4 },
 });

@@ -23,12 +23,16 @@ export const FigmaColors = {
     elevated: '#232019',
     text: '#EDE8DF',
     muted: '#8A837A',
+    /** Solid muted/cream surface (Figma `--muted`) — pending/unlogged pills, quiet wells. */
+    mutedSurface: '#26231E',
     border: 'rgba(237, 232, 223, 0.07)',
     /** Care-ring track (un-filled portion). */
     ringTrack: 'rgba(237, 232, 223, 0.10)',
     primary: '#4BA898',
     onPrimary: '#0F0E0C',
     accent: '#C8904A',
+    /** Modal / bottom-sheet scrim (Figma uses rgba(0,0,0,0.5)). */
+    overlay: 'rgba(0, 0, 0, 0.5)',
     error: '#C45050',
     success: '#5AAE85',
   },
@@ -38,17 +42,36 @@ export const FigmaColors = {
     elevated: '#F7F3EE',
     text: '#1A1714',
     muted: '#6B6258',
+    /** Solid muted/cream surface (Figma `--muted`) — pending/unlogged pills, quiet wells. */
+    mutedSurface: '#EDE8DF',
     border: 'rgba(26, 23, 20, 0.08)',
     ringTrack: 'rgba(26, 23, 20, 0.08)',
     primary: '#2E8A7B',
     onPrimary: '#FFFFFF',
     accent: '#C8904A',
+    /** Modal / bottom-sheet scrim (Figma uses rgba(0,0,0,0.5)). */
+    overlay: 'rgba(0, 0, 0, 0.5)',
     error: '#C45050',
     success: '#4A9A75',
   },
 } as const;
 
 export type FigmaScheme = keyof typeof FigmaColors;
+
+/**
+ * Exact Figma status colors (constant across light/dark, as in the export's
+ * `statusConfig`). Pending/unlogged is intentionally NOT here — it uses the solid
+ * `mutedSurface` + `muted` foreground (a lighter/cream pill), never a tint.
+ */
+export const FigmaStatus = {
+  given: '#5AAE85',
+  success: '#5AAE85',
+  postponed: '#C8904A',
+  warning: '#C8904A',
+  missed: '#C45050',
+  error: '#C45050',
+  info: '#5A8ABF',
+} as const;
 
 /** Per-feature category colors (Figma `--chart-*` ramp), used as icon-chip tints. */
 export const FigmaCategory = {

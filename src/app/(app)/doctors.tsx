@@ -1,11 +1,11 @@
 import { CircleGate } from '@/features/care-circle/circle-gate';
-import { DoctorsManager } from '@/features/doctors/doctors-manager';
+import { FigmaDoctors } from '@/features/doctors/figma-doctors';
 
 /** Manage the circle's doctors. */
 export default function DoctorsScreen() {
   return (
     <CircleGate>
-      {(circle) => <DoctorsManager circleId={circle.circleId} canManage={circle.canManage} />}
+      {(circle) => <FigmaDoctors circleId={circle.circleId} canManage={circle.canManage} />}
     </CircleGate>
   );
 }

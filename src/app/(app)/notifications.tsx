@@ -1,5 +1,5 @@
-import { NotificationsCenter } from '@/features/notifications/notifications-center';
+import { FigmaNotifications } from '@/features/notifications/figma-notifications';
 
 export default function NotificationsScreen() {
-  return <NotificationsCenter />;
+  return <FigmaNotifications />;
 }

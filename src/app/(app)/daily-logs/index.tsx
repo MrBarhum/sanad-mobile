@@ -1,12 +1,12 @@
 import { CircleGate } from '@/features/care-circle/circle-gate';
-import { DailyLogsCenter } from '@/features/daily-logs/daily-logs-center';
+import { FigmaDailyLogs } from '@/features/daily-logs/figma-daily-logs';
 
-/** Daily care logs center: today's logs, recent logs, add. */
+/** Daily care logs: observational family notes, newest day first, with add. */
 export default function DailyLogsScreen() {
   return (
     <CircleGate>
       {(circle) => (
-        <DailyLogsCenter
+        <FigmaDailyLogs
           circleId={circle.circleId}
           canManage={circle.canManage}
           canCollaborate={circle.canLogDoses}

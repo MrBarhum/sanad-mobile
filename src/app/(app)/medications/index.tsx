@@ -1,12 +1,12 @@
 import { CircleGate } from '@/features/care-circle/circle-gate';
-import { MedicationsCenter } from '@/features/medications/medications-center';
+import { FigmaMedications } from '@/features/medications/figma-medications';
 
 /** Medication center: today's doses + medication list. */
 export default function MedicationsScreen() {
   return (
     <CircleGate>
       {(circle) => (
-        <MedicationsCenter
+        <FigmaMedications
           circleId={circle.circleId}
           canManage={circle.canManage}
           canLog={circle.canLogDoses}

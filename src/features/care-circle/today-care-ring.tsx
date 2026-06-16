@@ -39,8 +39,8 @@ type TodayCareRingProps = {
   caption: string;
 };
 
-const RING_DIAMETER = 84;
-const RING_BORDER = 8;
+const RING_DIAMETER = 96;
+const RING_BORDER = 10;
 /** Above this many doses the strip shows a proportional bar instead of one-per-dose. */
 const MAX_SEGMENTS = 8;
 
@@ -54,11 +54,13 @@ export function TodayCareRing({ given, total, loading = false, title, caption }:
   const theme = useTheme();
   const state = loopState(loading, given, total);
 
+  // Teal "in progress" (the Figma Make care-loop color), success when complete,
+  // neutral when nothing is scheduled. Never a health color.
   const ringBorder: ThemeColor =
-    state === 'complete' ? 'successFg' : state === 'progress' ? 'accentSolid' : 'border';
+    state === 'complete' ? 'successFg' : state === 'progress' ? 'primary' : 'border';
   const ringBg: ThemeColor =
-    state === 'complete' ? 'successBg' : state === 'progress' ? 'accentBg' : 'backgroundSunken';
-  const fill: ThemeColor = state === 'complete' ? 'successFg' : 'accentSolid';
+    state === 'complete' ? 'successBg' : state === 'progress' ? 'primaryBg' : 'backgroundSunken';
+  const fill: ThemeColor = state === 'complete' ? 'successFg' : 'primary';
 
   const showStrip = state === 'progress' || state === 'complete';
   const segmentCount = Math.min(total, MAX_SEGMENTS);
@@ -74,7 +76,7 @@ export function TodayCareRing({ given, total, loading = false, title, caption }:
         {state === 'complete' ? (
           <Icon name="success" size="lg" color="successFg" />
         ) : state === 'progress' ? (
-          <LtrText style={styles.count} themeColor="accentFg">
+          <LtrText style={styles.count} themeColor="primaryText">
             {`${given}/${total}`}
           </LtrText>
         ) : (

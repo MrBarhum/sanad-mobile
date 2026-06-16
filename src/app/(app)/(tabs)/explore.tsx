@@ -1,103 +1,189 @@
+import { useRouter } from 'expo-router';
+import {
+  Activity,
+  AlertCircle,
+  Calendar,
+  Check,
+  FileText,
+  Pill,
+  Stethoscope,
+  Users,
+} from 'lucide-react-native';
+import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, Text, View, useColorScheme } from 'react-native';
 
-import { GlyphChip } from '@/components/glyph-chip';
-import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Glyph } from '@/constants/glyphs';
-import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { FigmaCard } from '@/components/figma/figma-card';
+import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
+import { FigmaScreen } from '@/components/figma/figma-screen';
+import {
+  FigmaCategory,
+  FigmaColors,
+  FigmaFont,
+  FigmaRadius,
+  type FigmaScheme,
+} from '@/components/figma/figma-tokens';
+
+type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+
+type ExploreItem = {
+  id: string;
+  route: string;
+  titleKey: string;
+  subtitleKey: string;
+  color: string;
+  Icon: IconCmp;
+};
+
+type ExploreSection = {
+  id: string;
+  titleKey: string;
+  items: ExploreItem[];
+};
 
 /**
- * Placeholder "Explore" screen. Each section is a non-interactive "coming soon"
- * card describing a future feature — there is no logic or data fetching here yet.
- * Glyph anchors are decorative non-emoji marks; the labels carry all meaning.
+ * The Figma Make "Explore" screen, recreated literally in React Native: a plain
+ * title header (no back / add) over grouped section lists. Each row is a tinted
+ * icon chip + label + sublabel + a trailing chevron that navigates to the real
+ * existing feature center (its own CircleGate resolves the active circle). This
+ * is a static navigation index — no per-item counts are fabricated; the
+ * sublabels describe each feature instead. Cairo + Figma tokens, dark-first, RTL.
+ * No old Sanad Screen/Surface/GlyphChip.
  */
-const SECTIONS = [
-  { key: 'guides', glyph: Glyph.diamond, titleKey: 'explore.sections.guides.title', subtitleKey: 'explore.sections.guides.subtitle' },
-  { key: 'resources', glyph: Glyph.bullseye, titleKey: 'explore.sections.resources.title', subtitleKey: 'explore.sections.resources.subtitle' },
-  { key: 'community', glyph: Glyph.system, titleKey: 'explore.sections.community.title', subtitleKey: 'explore.sections.community.subtitle' },
-] as const;
+const SECTIONS: ExploreSection[] = [
+  {
+    id: 'dailyCare',
+    titleKey: 'figma.explore.groups.dailyCare',
+    items: [
+      {
+        id: 'medications',
+        route: '/medications',
+        titleKey: 'careCircle.dashboard.sections.medications.title',
+        subtitleKey: 'figma.explore.items.medications',
+        color: FigmaCategory.teal,
+        Icon: Pill,
+      },
+      {
+        id: 'tasks',
+        route: '/tasks',
+        titleKey: 'careCircle.dashboard.sections.tasks.title',
+        subtitleKey: 'figma.explore.items.tasks',
+        color: FigmaCategory.blue,
+        Icon: Check,
+      },
+      {
+        id: 'appointments',
+        route: '/appointments',
+        titleKey: 'careCircle.dashboard.sections.appointments.title',
+        subtitleKey: 'figma.explore.items.appointments',
+        color: FigmaCategory.purple,
+        Icon: Calendar,
+      },
+      {
+        id: 'visits',
+        route: '/visits',
+        titleKey: 'careCircle.dashboard.sections.visits.title',
+        subtitleKey: 'figma.explore.items.visits',
+        color: FigmaCategory.gold,
+        Icon: Users,
+      },
+    ],
+  },
+  {
+    id: 'healthFollowup',
+    titleKey: 'figma.explore.groups.healthFollowup',
+    items: [
+      {
+        id: 'vitals',
+        route: '/vitals',
+        titleKey: 'careCircle.dashboard.sections.vitals.title',
+        subtitleKey: 'figma.explore.items.vitals',
+        color: FigmaCategory.blue,
+        Icon: Activity,
+      },
+      {
+        id: 'dailyLogs',
+        route: '/daily-logs',
+        titleKey: 'careCircle.dashboard.sections.dailyLogs.title',
+        subtitleKey: 'figma.explore.items.dailyLogs',
+        color: FigmaCategory.green,
+        Icon: FileText,
+      },
+      {
+        id: 'doctors',
+        route: '/doctors',
+        titleKey: 'careCircle.dashboard.sections.doctors.title',
+        subtitleKey: 'figma.explore.items.doctors',
+        color: FigmaCategory.gold,
+        Icon: Stethoscope,
+      },
+      {
+        id: 'emergency',
+        route: '/emergency-card',
+        titleKey: 'careCircle.dashboard.sections.emergency.title',
+        subtitleKey: 'figma.explore.items.emergency',
+        color: FigmaColors.dark.error,
+        Icon: AlertCircle,
+      },
+    ],
+  },
+  {
+    id: 'careCircle',
+    titleKey: 'figma.explore.groups.careCircle',
+    items: [
+      {
+        id: 'members',
+        route: '/circle-members',
+        titleKey: 'circleMembers.title',
+        subtitleKey: 'figma.explore.items.members',
+        color: FigmaCategory.purple,
+        Icon: Users,
+      },
+    ],
+  },
+];
 
 export default function ExploreScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const c = FigmaColors[scheme];
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <ThemedView style={styles.header}>
-            <ThemedText type="title" accessibilityRole="header">
-              {t('explore.title')}
-            </ThemedText>
-            <ThemedText themeColor="textSecondary">{t('explore.subtitle')}</ThemedText>
-          </ThemedView>
+    <FigmaScreen gap={24}>
+      {/* Title header (no back / add) */}
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: c.text }]} accessibilityRole="header">
+          {t('figma.explore.title')}
+        </Text>
+        <Text style={[styles.subtitle, { color: c.muted }]}>{t('figma.explore.subtitle')}</Text>
+      </View>
 
-          <View style={styles.cards}>
-            {SECTIONS.map((section) => (
-              <Surface key={section.key} style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <GlyphChip glyph={section.glyph} tone="neutral" size="sm" />
-                  <ThemedText type="cardTitle" style={styles.cardTitle}>
-                    {t(section.titleKey)}
-                  </ThemedText>
-                  <ThemedView type="backgroundSelected" style={styles.badge}>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {t('explore.comingSoon')}
-                    </ThemedText>
-                  </ThemedView>
-                </View>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t(section.subtitleKey)}
-                </ThemedText>
-              </Surface>
+      {/* Grouped section lists */}
+      {SECTIONS.map((section) => (
+        <View key={section.id}>
+          <FigmaSectionLabel label={t(section.titleKey)} />
+          <FigmaCard tone="card" radius={FigmaRadius.r24} padding={0}>
+            {section.items.map((item, i) => (
+              <FigmaListRow
+                key={item.id}
+                Icon={item.Icon}
+                color={item.color}
+                title={t(item.titleKey)}
+                subtitle={t(item.subtitleKey)}
+                topDivider={i > 0}
+                onPress={() => router.push(item.route as never)}
+              />
             ))}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+          </FigmaCard>
+        </View>
+      ))}
+    </FigmaScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  safeArea: {
-    flex: 1,
-    width: '100%',
-    maxWidth: MaxContentWidth,
-  },
-  content: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.five,
-    paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.five,
-  },
-  header: {
-    gap: Spacing.two,
-  },
-  cards: {
-    gap: Spacing.three,
-  },
-  card: {
-    gap: Spacing.two,
-    minHeight: 96,
-    justifyContent: 'center',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  cardTitle: {
-    flex: 1,
-  },
-  badge: {
-    borderRadius: Radius.pill,
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-  },
+  header: { gap: 4 },
+  title: { fontSize: 26, fontFamily: FigmaFont.extrabold },
+  subtitle: { fontSize: 14, fontFamily: FigmaFont.regular },
 });

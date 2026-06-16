@@ -266,12 +266,16 @@
       "caregiver": {
         "summary": "Not available yet.",
         "can": [],
-        "cannot": ["Be assigned until its dedicated least-privilege role is implemented"]
+        "cannot": [
+          "Be assigned until its dedicated least-privilege role is implemented"
+        ]
       },
       "elder": {
         "summary": "Not available yet.",
         "can": [],
-        "cannot": ["Be assigned until its dedicated least-privilege role is implemented"]
+        "cannot": [
+          "Be assigned until its dedicated least-privilege role is implemented"
+        ]
       }
     }
   },
@@ -1111,6 +1115,116 @@
         "project-id-missing": "Notifications aren't fully configured in this build yet. Please try again after the next update.",
         "error": "Could not enable notifications. Please try again."
       }
+    }
+  },
+  "figma": {
+    "explore": {
+      "title": "Explore",
+      "subtitle": "All your care tools in one place",
+      "groups": {
+        "dailyCare": "Daily care",
+        "healthFollowup": "Health & follow-up",
+        "careCircle": "Care circle"
+      },
+      "items": {
+        "medications": "Doses and timings",
+        "tasks": "Daily care tasks",
+        "appointments": "Doctor visits and appointments",
+        "visits": "Coordinate family visits",
+        "vitals": "Blood pressure, sugar and temperature",
+        "dailyLogs": "Daily condition notes",
+        "doctors": "Treating doctors and clinics",
+        "emergency": "Vital info when it's needed",
+        "members": "Family and caregivers"
+      }
+    },
+    "account": {
+      "version": "Sanad · Version {{version}}"
+    },
+    "medications": {
+      "summary": "{{given}} of {{total}} doses given today",
+      "activeCount": "{{count}} active medications",
+      "tabToday": "Today's doses",
+      "tabAll": "All medications",
+      "logAction": "Log",
+      "doseUnlogged": "Not logged",
+      "active": "Active",
+      "inactive": "Stopped"
+    },
+    "emergency": {
+      "title": "Emergency card",
+      "viewOnly": "For reference only — not an emergency service",
+      "ageYears": "{{age}} years",
+      "medicalTitle": "Important medical information",
+      "primaryContact": "Primary contact"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "markAllRead": "Mark all read",
+      "unreadBanner": "{{count}} unread notifications",
+      "emptyTitle": "No notifications",
+      "emptySubtitle": "Reminders and updates will appear here.",
+      "loadError": "Could not load notifications",
+      "retry": "Retry",
+      "loadMore": "Load more"
+    },
+    "tasks": {
+      "title": "Tasks",
+      "tabs": {
+        "today": "Today",
+        "open": "Open",
+        "done": "Done"
+      },
+      "empty": "No tasks"
+    },
+    "appointments": {
+      "title": "Appointments",
+      "tabs": {
+        "upcoming": "Upcoming",
+        "completed": "Completed"
+      },
+      "emptyUpcoming": "No upcoming appointments",
+      "emptyCompleted": "No completed appointments"
+    },
+    "vitals": {
+      "today": "Today",
+      "emptySubtitle": "Tap + to record the first reading"
+    },
+    "doctors": {
+      "title": "Doctors",
+      "emptyTitle": "No doctors yet",
+      "emptySubtitle": "Add a doctor to keep their specialty, clinic, and phone number"
+    },
+    "members": {
+      "title": "Care circle",
+      "summary": "{{name}}'s care circle · {{count}} members",
+      "rolesTitle": "Roles",
+      "legendSeparator": ":",
+      "legend": {
+        "manager": "Manager",
+        "managerDesc": "Can manage everything and add members",
+        "editor": "Editor",
+        "editorDesc": "Can add and edit records",
+        "viewer": "Viewer",
+        "viewerDesc": "Can only view information"
+      }
+    },
+    "dailylogs": {
+      "title": "Daily logs",
+      "disclaimer": "These are personal family notes to follow the condition only. They are not a diagnosis or a medical assessment.",
+      "todayPrefix": "Today, ",
+      "loading": "Loading logs…",
+      "openHint": "Open log details"
+    },
+    "visits": {
+      "title": "Family visits",
+      "tabs": {
+        "upcoming": "Upcoming",
+        "recent": "Recent"
+      },
+      "emptyUpcoming": "No upcoming visits",
+      "emptyRecent": "No recent visits",
+      "visitorLabel": "Family visit"
     }
   }
 }

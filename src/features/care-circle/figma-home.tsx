@@ -269,8 +269,11 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
                   const cfg = d.status ? DOSE_STATUS[d.status] : null;
                   const color = cfg ? cfg.color : c.muted;
                   const StripIcon = cfg ? cfg.Icon : Clock;
+                  // Pending/unlogged = a solid cream/elevated pill (Figma `--muted`),
+                  // visibly lighter than the tinted given/postponed/missed pills.
+                  const pillBg = cfg ? withAlpha(color, 0.12) : c.mutedSurface;
                   return (
-                    <View key={d.key} style={[styles.stripPill, { backgroundColor: withAlpha(color, 0.12) }]}>
+                    <View key={d.key} style={[styles.stripPill, { backgroundColor: pillBg }]}>
                       <StripIcon size={12} color={color} />
                       <Text style={[styles.stripTime, { color }]}>{isolateLtr(formatHm(d.scheduledTime))}</Text>
                     </View>
@@ -456,12 +459,14 @@ function DoseRow({
   const cfg = status ? DOSE_STATUS[status] : null;
   const StatusIcon = cfg ? cfg.Icon : Clock;
   const statusColor = cfg ? cfg.color : c.muted;
+  // Pending/unlogged = solid cream/elevated (Figma `--muted`); logged = a tint.
+  const statusBg = cfg ? withAlpha(statusColor, 0.12) : c.mutedSurface;
   const statusLabel = status ? t(`medications.status.${status}`) : t('careCircle.dashboard.today.doseUnlogged');
 
   return (
     <View>
       <View style={[styles.doseRow, { backgroundColor: c.card, borderColor: c.border }]}>
-        <View style={[styles.doseStatusCircle, { backgroundColor: withAlpha(statusColor, 0.12) }]}>
+        <View style={[styles.doseStatusCircle, { backgroundColor: statusBg }]}>
           <StatusIcon size={16} color={statusColor} />
         </View>
         <View style={styles.doseInfo}>
@@ -473,7 +478,7 @@ function DoseRow({
           </View>
           <View style={styles.doseMetaRow}>
             <Text style={[styles.doseTime, { color: c.muted }]}>{isolateLtr(formatHm(dose.scheduledTime))}</Text>
-            <View style={[styles.doseTag, { backgroundColor: withAlpha(statusColor, 0.12) }]}>
+            <View style={[styles.doseTag, { backgroundColor: statusBg }]}>
               <Text style={[styles.doseTagText, { color: statusColor }]}>{statusLabel}</Text>
             </View>
           </View>

@@ -1,12 +1,12 @@
 import { CircleGate } from '@/features/care-circle/circle-gate';
-import { VitalsCenter } from '@/features/vitals/vitals-center';
+import { FigmaVitals } from '@/features/vitals/figma-vitals';
 
-/** Vitals center: latest readings, today's readings, add. */
+/** Vitals: non-diagnostic readings grid (Figma exact-copy), add. */
 export default function VitalsScreen() {
   return (
     <CircleGate>
       {(circle) => (
-        <VitalsCenter
+        <FigmaVitals
           circleId={circle.circleId}
           canManage={circle.canManage}
           canCollaborate={circle.canLogDoses}

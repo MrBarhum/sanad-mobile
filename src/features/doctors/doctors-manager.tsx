@@ -140,7 +140,8 @@ function DoctorCard({
   );
 }
 
-function DoctorFormModal({
+/** The validated add/edit doctor form modal (also reused by the Figma screen). */
+export function DoctorFormModal({
   circleId,
   initial,
   onClose,
