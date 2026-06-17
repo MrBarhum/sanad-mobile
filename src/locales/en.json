@@ -438,6 +438,7 @@
   "medications": {
     "title": "Medications",
     "addTitle": "Add medication",
+    "addSubtitle": "The app records medication times only",
     "detailTitle": "Medication details",
     "add": "Add medication",
     "disclaimer": "The app only records the medication schedules and reminders your family enters. It does not provide medical advice.",
@@ -467,6 +468,7 @@
     "noMedsSubtitle": "Add a medication and its schedule to get started",
     "tapToEdit": "Tap to view or edit",
     "withFoodHint": "Take with food",
+    "withFoodReminder": "A reminder to take it with food",
     "scheduleSectionTitle": "Schedule",
     "notFound": "Medication not found",
     "readOnly": "View only — you don't have permission to edit",
@@ -481,6 +483,8 @@
     "addScheduleTitle": "Add dose schedule",
     "editScheduleTitle": "Edit dose schedule",
     "everyDay": "Every day",
+    "clearDays": "Clear all",
+    "periodTitle": "Medication period",
     "fromDate": "From",
     "addTime": "Add time",
     "fields": {
@@ -496,6 +500,7 @@
       "scheduleNotes": "Schedule notes"
     },
     "placeholders": {
+      "name": "e.g. Metformin",
       "dosage": "e.g. 500 mg",
       "form": "e.g. tablet, syrup, injection",
       "instructions": "e.g. after meals",
@@ -509,6 +514,7 @@
       "daysRequired": "Choose at least one day",
       "dateFormat": "Enter the date as YYYY-MM-DD",
       "endBeforeStart": "End date is before the start date",
+      "dateInPast": "The date can't be in the past",
       "duplicateTime": "This time is already in this schedule.",
       "conflict": "{{day}} at {{time}} is already in another active schedule."
     },
@@ -851,6 +857,7 @@
   "vitals": {
     "title": "Vital readings",
     "addTitle": "Add reading",
+    "addSubtitle": "Readings for tracking only",
     "detailTitle": "Reading details",
     "add": "Add reading",
     "disclaimer": "Readings entered by the family for recording and tracking only. They are not a diagnosis or medical advice, and the app does not interpret the values.",
@@ -918,6 +925,9 @@
     "day": "Day",
     "hour": "Hour",
     "minute": "Minute",
+    "period": "Period",
+    "am": "AM",
+    "pm": "PM",
     "done": "Done",
     "clear": "Clear"
   },

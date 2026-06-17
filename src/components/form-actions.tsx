@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import { Button } from './button';
+import { FormButton } from './figma/form-button';
+import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -46,7 +47,7 @@ function ActionsBody({
     <View style={styles.body}>
       {status === 'saved' && savedLabel ? (
         <ThemedText
-          style={[styles.status, { color: theme.successFg }]}
+          style={[styles.status, Cairo.semibold, { color: theme.successFg }]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {savedLabel}
@@ -54,13 +55,13 @@ function ActionsBody({
       ) : null}
       {status === 'error' && errorLabel ? (
         <ThemedText
-          style={[styles.status, { color: theme.errorFg }]}
+          style={[styles.status, Cairo.semibold, { color: theme.errorFg }]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {errorLabel}
         </ThemedText>
       ) : null}
-      <Button
+      <FormButton
         label={saveLabel}
         onPress={onSave}
         loading={saving}
@@ -68,7 +69,7 @@ function ActionsBody({
         accessibilityHint={saveAccessibilityHint}
       />
       {secondaryLabel && onSecondary ? (
-        <Button label={secondaryLabel} onPress={onSecondary} variant="secondary" disabled={saving} />
+        <FormButton label={secondaryLabel} onPress={onSecondary} variant="secondary" disabled={saving} />
       ) : null}
     </View>
   );

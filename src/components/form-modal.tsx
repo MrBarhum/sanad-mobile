@@ -6,7 +6,8 @@ import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import { Button } from './button';
+import { FormButton } from './figma/form-button';
+import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -52,10 +53,10 @@ export function FormModal({
       <KeyboardAvoidingView
         style={[styles.backdrop, { backgroundColor: theme.overlay }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ThemedView style={[styles.sheet, { borderColor: theme.border }]}>
+        <ThemedView type="backgroundElement" style={[styles.sheet, { borderColor: theme.border }]}>
           <View style={[styles.grabber, { backgroundColor: theme.backgroundSelected }]} />
           <View style={styles.header}>
-            <ThemedText type="sectionTitle" style={styles.title} accessibilityRole="header">
+            <ThemedText type="sectionTitle" style={[styles.title, Cairo.bold]} accessibilityRole="header">
               {title}
             </ThemedText>
             <Pressable
@@ -64,7 +65,7 @@ export function FormModal({
               accessibilityLabel={closeLabel}
               hitSlop={Spacing.two}
               style={styles.closeButton}>
-              <ThemedText style={styles.close}>{Glyph.cross}</ThemedText>
+              <ThemedText style={[styles.close, Cairo.semibold]}>{Glyph.cross}</ThemedText>
             </Pressable>
           </View>
 
@@ -76,7 +77,7 @@ export function FormModal({
 
             {error ? (
               <ThemedText
-                style={{ color: theme.errorFg }}
+                style={[{ color: theme.errorFg }, Cairo.regular]}
                 accessibilityRole="alert"
                 accessibilityLiveRegion="polite">
                 {error}
@@ -84,14 +85,14 @@ export function FormModal({
             ) : null}
 
             <View style={styles.actions}>
-              <Button
+              <FormButton
                 label={submitLabel}
                 onPress={onSubmit}
                 loading={submitting}
                 disabled={submitting || submitDisabled}
                 style={styles.action}
               />
-              <Button
+              <FormButton
                 label={cancelLabel}
                 onPress={onClose}
                 variant="secondary"

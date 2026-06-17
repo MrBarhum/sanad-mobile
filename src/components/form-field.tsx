@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
-import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 
 type FormFieldProps = TextInputProps & {
@@ -27,7 +28,7 @@ export function FormField({ label, error, style, multiline, onFocus, onBlur, ...
 
   return (
     <View style={styles.field}>
-      {label ? <ThemedText type="smallBold">{label}</ThemedText> : null}
+      {label ? <ThemedText type="smallBold" style={Cairo.semibold}>{label}</ThemedText> : null}
       <TextInput
         placeholderTextColor={theme.textMuted}
         accessibilityLabel={label}
@@ -42,6 +43,7 @@ export function FormField({ label, error, style, multiline, onFocus, onBlur, ...
         }}
         style={[
           styles.input,
+          Cairo.regular,
           multiline && styles.multiline,
           focused && styles.inputFocused,
           {
@@ -56,7 +58,7 @@ export function FormField({ label, error, style, multiline, onFocus, onBlur, ...
       {error ? (
         <ThemedText
           type="small"
-          style={{ color: theme.errorFg }}
+          style={[{ color: theme.errorFg }, Cairo.regular]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {error}
@@ -73,7 +75,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
-    fontFamily: FontFamily.regular,
     fontSize: 16,
     minHeight: TouchTarget.comfortable,
   },

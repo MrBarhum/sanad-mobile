@@ -19,6 +19,7 @@ export function DateField({
   onChange,
   error,
   disabled = false,
+  minDate,
   accessibilityLabel,
 }: DateFieldProps) {
   const theme = useTheme();
@@ -30,6 +31,7 @@ export function DateField({
         type="date"
         value={value}
         disabled={disabled}
+        min={minDate}
         aria-label={accessibilityLabel ?? label}
         onChange={(event) => onChange(event.target.value)}
         style={{

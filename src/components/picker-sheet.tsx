@@ -6,7 +6,8 @@ import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import { Button } from './button';
+import { FormButton } from './figma/form-button';
+import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -59,13 +60,14 @@ export function PickerSheet({
         {/* Swallow taps inside the sheet so they don't reach the backdrop. */}
         <Pressable style={styles.sheetWrap} onPress={() => {}}>
           <ThemedView
+            type="backgroundElement"
             style={[
               styles.sheet,
               { borderColor: theme.border, paddingBottom: Spacing.four + insets.bottom },
             ]}>
             <View style={[styles.grabber, { backgroundColor: theme.backgroundSelected }]} />
             <View style={styles.header}>
-              <ThemedText type="sectionTitle" accessibilityRole="header" style={styles.title}>
+              <ThemedText type="sectionTitle" accessibilityRole="header" style={[styles.title, Cairo.bold]}>
                 {title}
               </ThemedText>
               <Pressable
@@ -74,18 +76,18 @@ export function PickerSheet({
                 accessibilityLabel={closeLabel ?? cancelLabel}
                 hitSlop={Spacing.two}
                 style={styles.close}>
-                <ThemedText style={styles.closeGlyph}>{Glyph.cross}</ThemedText>
+                <ThemedText style={[styles.closeGlyph, Cairo.semibold]}>{Glyph.cross}</ThemedText>
               </Pressable>
             </View>
 
             <View style={styles.body}>{children}</View>
 
             <View style={styles.actions}>
-              <Button label={doneLabel} onPress={onDone} style={styles.action} />
+              <FormButton label={doneLabel} onPress={onDone} style={styles.action} />
               {onClear ? (
-                <Button label={clearLabel} variant="secondary" onPress={onClear} style={styles.action} />
+                <FormButton label={clearLabel} variant="secondary" onPress={onClear} style={styles.action} />
               ) : null}
-              <Button label={cancelLabel} variant="plain" onPress={onCancel} style={styles.action} />
+              <FormButton label={cancelLabel} variant="plain" onPress={onCancel} style={styles.action} />
             </View>
           </ThemedView>
         </Pressable>
@@ -133,7 +135,7 @@ export function WheelColumn({
   return (
     <View style={styles.column}>
       {label ? (
-        <ThemedText type="small" themeColor="textSecondary" style={styles.columnLabel}>
+        <ThemedText type="small" themeColor="textSecondary" style={[styles.columnLabel, Cairo.regular]}>
           {label}
         </ThemedText>
       ) : null}
@@ -156,7 +158,7 @@ export function WheelColumn({
               style={[styles.row, isSelected && { backgroundColor: theme.primaryBg }]}>
               <ThemedText
                 themeColor={isSelected ? 'primaryText' : 'text'}
-                style={[styles.rowText, isSelected && styles.rowTextSelected]}>
+                style={[styles.rowText, isSelected ? Cairo.bold : Cairo.regular, isSelected && styles.rowTextSelected]}>
                 {isSelected ? `${Glyph.check} ${text}` : text}
               </ThemedText>
             </Pressable>

@@ -4,6 +4,7 @@ import { Glyph } from '@/constants/glyphs';
 import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 
 export type SelectOption<T extends string> = {
@@ -50,7 +51,7 @@ export function OptionSelect<T extends string>({
 
   return (
     <View style={styles.field}>
-      {label ? <ThemedText type="smallBold">{label}</ThemedText> : null}
+      {label ? <ThemedText type="smallBold" style={Cairo.semibold}>{label}</ThemedText> : null}
       <View style={styles.options}>
         {options.map((option) => {
           const selected = option.value === value;
@@ -73,7 +74,8 @@ export function OptionSelect<T extends string>({
               ]}>
               <ThemedText
                 type={selected ? 'smallBold' : 'small'}
-                themeColor={selected ? 'primaryText' : 'text'}>
+                themeColor={selected ? 'primaryText' : 'text'}
+                style={selected ? Cairo.semibold : Cairo.regular}>
                 {selected ? `${Glyph.check} ${option.label}` : option.label}
               </ThemedText>
             </Pressable>

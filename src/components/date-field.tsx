@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import {
@@ -15,6 +15,7 @@ import {
   type DateFieldProps,
   type Ymd,
 } from './date-time-shared';
+import { Cairo } from './figma/form-typography';
 import { PickerSheet, WheelColumn } from './picker-sheet';
 import { ThemedText } from './themed-text';
 
@@ -24,6 +25,17 @@ const MAX_YEAR_OFFSET = 5;
 function todayParts(): Ymd {
   const now = new Date();
   return { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() };
+}
+
+/** Clamp a date up to `min` (inclusive) when it falls earlier; identity if no min. */
+function clampToMin(date: Ymd, min: Ymd | null): Ymd {
+  if (!min) return date;
+  if (date.year < min.year) return { ...min };
+  if (date.year > min.year) return date;
+  if (date.month < min.month) return { year: min.year, month: min.month, day: min.day };
+  if (date.month > min.month) return date;
+  if (date.day < min.day) return { ...date, day: min.day };
+  return date;
 }
 
 /**
@@ -41,28 +53,41 @@ export function DateField({
   placeholder,
   disabled = false,
   clearable = false,
+  minDate,
   accessibilityLabel,
 }: DateFieldProps) {
   const { t } = useTranslation();
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<Ymd>(() => parseYmd(value) ?? todayParts());
+  const min = minDate ? parseYmd(minDate) : null;
+  const [draft, setDraft] = useState<Ymd>(() => clampToMin(parseYmd(value) ?? todayParts(), min));
 
   const thisYear = new Date().getFullYear();
-  const years = rangeInclusive(thisYear - MIN_YEAR_OFFSET, thisYear + MAX_YEAR_OFFSET);
-  const months = rangeInclusive(1, 12);
+  // When a min is set, the wheel cannot scroll earlier than it (so past dates are
+  // unreachable); otherwise the full 120-year-back range stays (e.g. birth dates).
+  const firstYear = min ? min.year : thisYear - MIN_YEAR_OFFSET;
+  const years = rangeInclusive(firstYear, thisYear + MAX_YEAR_OFFSET);
+  const minMonth = min && draft.year === min.year ? min.month : 1;
+  const months = rangeInclusive(minMonth, 12);
+  const minDay = min && draft.year === min.year && draft.month === min.month ? min.day : 1;
   const maxDay = daysInMonth(draft.year, draft.month);
-  const days = rangeInclusive(1, maxDay);
-  const selectedDay = Math.min(draft.day, maxDay);
+  const days = rangeInclusive(minDay, maxDay);
+  const selectedDay = Math.min(Math.max(draft.day, minDay), maxDay);
+
+  /** Apply a partial change to the draft, re-clamped to the min date. */
+  function updateDraft(part: Partial<Ymd>) {
+    setDraft((d) => clampToMin({ ...d, ...part }, min));
+  }
 
   function openSheet() {
     if (disabled) return;
-    setDraft(parseYmd(value) ?? todayParts());
+    setDraft(clampToMin(parseYmd(value) ?? todayParts(), min));
     setOpen(true);
   }
 
   function commit() {
-    onChange(formatYmd(draft.year, draft.month, Math.min(draft.day, daysInMonth(draft.year, draft.month))));
+    const clamped = clampToMin(draft, min);
+    onChange(formatYmd(clamped.year, clamped.month, Math.min(clamped.day, daysInMonth(clamped.year, clamped.month))));
     setOpen(false);
   }
 
@@ -73,7 +98,7 @@ export function DateField({
 
   return (
     <View style={styles.field}>
-      {label ? <ThemedText type="smallBold">{label}</ThemedText> : null}
+      {label ? <ThemedText type="smallBold" style={Cairo.semibold}>{label}</ThemedText> : null}
 
       <Pressable
         onPress={openSheet}
@@ -89,7 +114,7 @@ export function DateField({
             opacity: disabled ? 0.6 : 1,
           },
         ]}>
-        <ThemedText themeColor={value ? 'text' : 'textMuted'} style={styles.triggerText}>
+        <ThemedText themeColor={value ? 'text' : 'textMuted'} style={[styles.triggerText, Cairo.regular]}>
           {value || placeholder || t('pickers.setDate')}
         </ThemedText>
         <ThemedText
@@ -103,7 +128,7 @@ export function DateField({
       {error ? (
         <ThemedText
           type="small"
-          style={{ color: theme.errorFg }}
+          style={[{ color: theme.errorFg }, Cairo.regular]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {error}
@@ -125,14 +150,14 @@ export function DateField({
               label={t('pickers.year')}
               values={years}
               selected={draft.year}
-              onSelect={(year) => setDraft((d) => ({ ...d, year }))}
+              onSelect={(year) => updateDraft({ year })}
               accessibilityLabel={t('pickers.year')}
             />
             <WheelColumn
               label={t('pickers.month')}
               values={months}
-              selected={draft.month}
-              onSelect={(month) => setDraft((d) => ({ ...d, month }))}
+              selected={Math.max(draft.month, minMonth)}
+              onSelect={(month) => updateDraft({ month })}
               formatValue={pad2}
               accessibilityLabel={t('pickers.month')}
             />
@@ -140,7 +165,7 @@ export function DateField({
               label={t('pickers.day')}
               values={days}
               selected={selectedDay}
-              onSelect={(day) => setDraft((d) => ({ ...d, day }))}
+              onSelect={(day) => updateDraft({ day })}
               formatValue={pad2}
               accessibilityLabel={t('pickers.day')}
             />
@@ -163,7 +188,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     minHeight: TouchTarget.comfortable,
   },
-  triggerText: { fontFamily: FontFamily.regular, fontSize: 16, flexShrink: 1 },
+  triggerText: { fontSize: 16, flexShrink: 1 },
   triggerGlyph: { fontSize: 22, lineHeight: 26, fontWeight: '600' },
   columns: { flexDirection: 'row', gap: Spacing.two },
 });

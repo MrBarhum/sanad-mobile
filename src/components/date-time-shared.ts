@@ -21,6 +21,13 @@ export type DateFieldProps = {
   disabled?: boolean;
   /** Show a "clear" action so an optional date can be emptied (default false). */
   clearable?: boolean;
+  /**
+   * Earliest selectable date as 'YYYY-MM-DD' (inclusive). Optional — when omitted
+   * the field keeps its full range (e.g. birth dates reach 120 years back). When
+   * set, the wheel cannot scroll to earlier dates. Existing callers that don't
+   * pass it are unaffected.
+   */
+  minDate?: string;
   accessibilityLabel?: string;
 };
 
@@ -79,4 +86,38 @@ export function parseHm(value: string): Hm | null {
 
 export function formatHmParts(hour: number, minute: number): string {
   return `${pad2(hour)}:${pad2(minute)}`;
+}
+
+/**
+ * 12-hour clock parts for the Arabic-friendly picker UX. Storage stays 24-hour
+ * 'HH:MM' everywhere — these helpers only translate the wheel display.
+ */
+export type Period = 'am' | 'pm';
+export type Hm12 = { hour12: number; minute: number; period: Period };
+
+/** 24-hour (hour, minute) -> 12-hour parts. 0->12am, 12->12pm, 13->1pm. */
+export function to12h(hour: number, minute: number): Hm12 {
+  const period: Period = hour < 12 ? 'am' : 'pm';
+  const mod = hour % 12;
+  return { hour12: mod === 0 ? 12 : mod, minute, period };
+}
+
+/** 12-hour parts -> 24-hour (hour, minute). 12am->0, 12pm->12, 1pm->13. */
+export function from12h(hour12: number, minute: number, period: Period): Hm {
+  let hour: number;
+  if (period === 'am') hour = hour12 === 12 ? 0 : hour12;
+  else hour = hour12 === 12 ? 12 : hour12 + 12;
+  return { hour, minute };
+}
+
+/**
+ * Renders a stored 24-hour 'HH:MM' as a friendly 12-hour string (e.g.
+ * '8:00 صباحًا'), using caller-supplied AM/PM labels so the format stays
+ * localized. Returns the raw value unchanged if it can't be parsed.
+ */
+export function formatHm12(value: string, amLabel: string, pmLabel: string): string {
+  const parsed = parseHm(value);
+  if (!parsed) return value;
+  const { hour12, minute, period } = to12h(parsed.hour, parsed.minute);
+  return `${hour12}:${pad2(minute)} ${period === 'am' ? amLabel : pmLabel}`;
 }

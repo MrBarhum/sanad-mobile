@@ -1,3 +1,4 @@
+import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
@@ -14,7 +15,11 @@ export default function NewVitalScreen() {
     <CircleGate>
       {(circle) =>
         circle.canManage || circle.canLogDoses ? (
-          <VitalForm circleId={circle.circleId} />
+          // The Figma add screen draws its own header; hide the native one.
+          <>
+            <Stack.Screen options={{ headerShown: false }} />
+            <VitalForm circleId={circle.circleId} />
+          </>
         ) : (
           <ThemedView style={styles.centered}>
             <EmptyState title={t('vitals.cannotAdd')} />

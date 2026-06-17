@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Spacing } from '@/constants/theme';
 
 import { DateField } from './date-field';
+import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 import { TimeField } from './time-field';
 
@@ -42,7 +43,7 @@ export function DateTimeField({
 }: DateTimeFieldProps) {
   return (
     <View style={styles.container}>
-      {label ? <ThemedText type="smallBold">{label}</ThemedText> : null}
+      {label ? <ThemedText type="smallBold" style={Cairo.semibold}>{label}</ThemedText> : null}
       <View style={styles.row}>
         <View style={styles.col}>
           <DateField
