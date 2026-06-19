@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { I18nManager, Pressable, StyleSheet, View } from 'react-native';
 
 import { Glyph } from '@/constants/glyphs';
 import { Radius, Spacing, TouchTarget } from '@/constants/theme';
@@ -96,6 +96,45 @@ export function DateField({
     setOpen(false);
   }
 
+  const yearColumn = (
+    <WheelColumn
+      key="year"
+      label={t('pickers.year')}
+      values={years}
+      selected={draft.year}
+      onSelect={(year) => updateDraft({ year })}
+      accessibilityLabel={t('pickers.year')}
+    />
+  );
+  const monthColumn = (
+    <WheelColumn
+      key="month"
+      label={t('pickers.month')}
+      values={months}
+      selected={Math.max(draft.month, minMonth)}
+      onSelect={(month) => updateDraft({ month })}
+      formatValue={pad2}
+      accessibilityLabel={t('pickers.month')}
+    />
+  );
+  const dayColumn = (
+    <WheelColumn
+      key="day"
+      label={t('pickers.day')}
+      values={days}
+      selected={selectedDay}
+      onSelect={(day) => updateDraft({ day })}
+      formatValue={pad2}
+      accessibilityLabel={t('pickers.day')}
+    />
+  );
+  // Arabic/RTL reads the date day → month → year from the RIGHT. In an RTL row the
+  // first child sits at the right edge, so order it day, month, year; LTR keeps the
+  // ISO year, month, day. The stored value (YYYY-MM-DD) and clamps are unaffected.
+  const dateColumns = I18nManager.isRTL
+    ? [dayColumn, monthColumn, yearColumn]
+    : [yearColumn, monthColumn, dayColumn];
+
   return (
     <View style={styles.field}>
       {label ? <ThemedText type="smallBold" style={Cairo.semibold}>{label}</ThemedText> : null}
@@ -144,33 +183,7 @@ export function DateField({
         onDone={commit}
         onCancel={() => setOpen(false)}
         onClear={clearable ? clear : undefined}>
-        {open ? (
-          <View style={styles.columns}>
-            <WheelColumn
-              label={t('pickers.year')}
-              values={years}
-              selected={draft.year}
-              onSelect={(year) => updateDraft({ year })}
-              accessibilityLabel={t('pickers.year')}
-            />
-            <WheelColumn
-              label={t('pickers.month')}
-              values={months}
-              selected={Math.max(draft.month, minMonth)}
-              onSelect={(month) => updateDraft({ month })}
-              formatValue={pad2}
-              accessibilityLabel={t('pickers.month')}
-            />
-            <WheelColumn
-              label={t('pickers.day')}
-              values={days}
-              selected={selectedDay}
-              onSelect={(day) => updateDraft({ day })}
-              formatValue={pad2}
-              accessibilityLabel={t('pickers.day')}
-            />
-          </View>
-        ) : null}
+        {open ? <View style={styles.columns}>{dateColumns}</View> : null}
       </PickerSheet>
     </View>
   );

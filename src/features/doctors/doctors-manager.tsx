@@ -232,7 +232,6 @@ export function DoctorFormModal({
       cancelLabel={t('common.cancel')}
       closeLabel={t('common.close')}
       submitting={submitting}
-      submitDisabled={!dirty}
       error={submitError}
       onSubmit={onSubmit}
       onClose={requestClose}>

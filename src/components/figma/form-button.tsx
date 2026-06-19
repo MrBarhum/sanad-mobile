@@ -46,7 +46,13 @@ export function FormButton({
   accessibilityLabel,
 }: FormButtonProps) {
   const theme = useTheme();
-  const isDisabled = disabled || loading;
+  const isPrimary = variant === 'primary';
+  // A PRIMARY form CTA is ALWAYS a filled, full-opacity teal rectangle and stays
+  // pressable unless busy — never grey/faded "disabled" styling. Validation runs in
+  // the submit handler: pressing an incomplete form shows inline field errors, it
+  // does not submit. Only the secondary/cancel and danger variants honor `disabled`.
+  const isDisabled = loading || (!isPrimary && disabled);
+  const fadedDisabled = !isPrimary && disabled && !loading;
 
   const palette: Record<
     FormButtonVariant,
@@ -93,7 +99,7 @@ export function FormButton({
         {
           backgroundColor: pressed && !isDisabled ? colors.pressed : colors.background,
           borderColor: colors.border,
-          opacity: isDisabled ? 0.45 : pressed && variant === 'danger' ? 0.75 : 1,
+          opacity: fadedDisabled ? 0.45 : pressed && variant === 'danger' ? 0.75 : 1,
         },
         style,
       ]}>

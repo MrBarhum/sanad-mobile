@@ -218,7 +218,6 @@ function RecipientFields({
           saveLabel={t('recipientProfile.save')}
           onSave={onSubmit}
           saving={submitting}
-          disabled={!dirty}
           status={status}
           savedLabel={t('recipientProfile.saved')}
           errorLabel={t('recipientProfile.saveFailed')}

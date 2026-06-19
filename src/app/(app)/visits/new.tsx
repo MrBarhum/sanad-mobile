@@ -1,3 +1,4 @@
+import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
@@ -14,7 +15,11 @@ export default function NewVisitScreen() {
     <CircleGate>
       {(circle) =>
         circle.canManage || circle.canLogDoses ? (
-          <VisitForm circleId={circle.circleId} canManage={circle.canManage} />
+          // The Figma add screen draws its own header; hide the native one.
+          <>
+            <Stack.Screen options={{ headerShown: false }} />
+            <VisitForm circleId={circle.circleId} canManage={circle.canManage} />
+          </>
         ) : (
           <ThemedView style={styles.centered}>
             <EmptyState title={t('visits.cannotAdd')} />

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FigmaFormScreen } from '@/components/figma/figma-form-screen';
 import { FigmaFont } from '@/components/figma/figma-tokens';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
@@ -64,27 +64,24 @@ export function VitalForm({ circleId }: { circleId: string }) {
       title={t('vitals.addTitle')}
       subtitle={t('vitals.addSubtitle')}
       onBack={() => router.back()}
-      disclaimer={t('vitals.disclaimer')}
-      footer={
-        <View style={styles.footer}>
-          {submitError ? (
-            <Text
-              style={[styles.footerError, { color: theme.errorFg }]}
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite">
-              {submitError}
-            </Text>
-          ) : null}
-          <FigmaButton
-            label={t('vitals.add')}
-            onPress={onSubmit}
-            loading={submitting}
-            disabled={!dirty}
-          />
-        </View>
-      }>
+      disclaimer={t('vitals.disclaimer')}>
       <UnsavedChangesGuard when={dirty && !submitted} />
       <FigmaVitalFields draft={draft} onChange={patch} errors={errors} />
+
+      {/* Primary CTA — rendered directly in the body (not the footer prop, which
+          did not render on Android). Always a filled teal button; an invalid press
+          runs validation and shows inline errors. */}
+      <View style={styles.footer}>
+        {submitError ? (
+          <Text
+            style={[styles.footerError, { color: theme.errorFg }]}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite">
+            {submitError}
+          </Text>
+        ) : null}
+        <FigmaFooterPrimaryButton label={t('vitals.add')} onPress={onSubmit} loading={submitting} />
+      </View>
     </FigmaFormScreen>
   );
 }

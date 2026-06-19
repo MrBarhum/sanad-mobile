@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react-native';
+import { Check, ChevronRight } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
@@ -41,8 +41,10 @@ export function FigmaFormScreen({
   title: string;
   subtitle?: string;
   onBack: () => void;
-  disclaimer: string;
-  footer: ReactNode;
+  /** Gold non-diagnostic banner text. Omit on non-medical screens (no banner). */
+  disclaimer?: string;
+  /** Sticky footer (e.g. the save button). Omit for read-only screens (no bar). */
+  footer?: ReactNode;
   children: ReactNode;
 }) {
   const theme = useTheme();
@@ -79,31 +81,32 @@ export function FigmaFormScreen({
           </View>
         </View>
 
-        {/* Medical / non-diagnostic disclaimer banner (gold) */}
-        <View style={[styles.banner, { backgroundColor: theme.accentBg }]}>
-          <Text style={[styles.bannerText, { color: theme.accentFg }]}>{disclaimer}</Text>
-        </View>
+        {/* Medical / non-diagnostic disclaimer banner (gold) — only when provided. */}
+        {disclaimer ? (
+          <View style={[styles.banner, { backgroundColor: theme.accentBg }]}>
+            <Text style={[styles.bannerText, { color: theme.accentFg }]}>{disclaimer}</Text>
+          </View>
+        ) : null}
 
         <ScrollView
           style={styles.fill}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.four }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           {children}
-        </ScrollView>
 
-        {/* Sticky save footer */}
-        <View
-          style={[
-            styles.footer,
-            {
-              backgroundColor: theme.background,
-              borderTopColor: theme.divider,
-              paddingBottom: insets.bottom + Spacing.three,
-            },
-          ]}>
-          {footer}
-        </View>
+          {/* Inline footer (fallback) — rendered as the FINAL block INSIDE the
+              ScrollView content, NOT pinned. Pinned/KAV-sibling footers proved
+              invisible on the Android device, so the CTA lives in the normal scroll
+              flow as the last visible block; on long forms the user scrolls to
+              reach it. Its own bottom padding clears the Android nav / safe area,
+              and it stretches full-width like the form cards above it. */}
+          {footer ? (
+            <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.three }]}>
+              {footer}
+            </View>
+          ) : null}
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -250,6 +253,45 @@ export function FigmaSwitch({
   );
 }
 
+/** A small muted explanatory line (e.g. the non-medical coordination disclaimers). */
+export function FigmaMutedNote({ children }: { children: ReactNode }) {
+  const theme = useTheme();
+  return <Text style={[styles.mutedNote, { color: theme.textSecondary }]}>{children}</Text>;
+}
+
+/**
+ * A label + optional hint on the start, a Figma pill switch on the end — the
+ * export's "with food" / "link to my account" row. Optional top divider for when
+ * it follows other fields inside the same card.
+ */
+export function FigmaToggleRow({
+  label,
+  hint,
+  value,
+  onValueChange,
+  topDivider,
+}: {
+  label: string;
+  hint?: string;
+  value: boolean;
+  onValueChange: (next: boolean) => void;
+  topDivider?: boolean;
+}) {
+  const theme = useTheme();
+  return (
+    <View>
+      {topDivider ? <View style={[styles.toggleDivider, { backgroundColor: theme.divider }]} /> : null}
+      <View style={styles.toggleRow}>
+        <View style={styles.toggleText}>
+          <Text style={[styles.toggleLabel, { color: theme.text }]}>{label}</Text>
+          {hint ? <Text style={[styles.toggleHint, { color: theme.textSecondary }]}>{hint}</Text> : null}
+        </View>
+        <FigmaSwitch value={value} onValueChange={onValueChange} accessibilityLabel={label} />
+      </View>
+    </View>
+  );
+}
+
 type ChipOption<T extends string> = { value: T; label: string };
 
 /**
@@ -303,6 +345,68 @@ export function FigmaChipSelect<T extends string>({
   );
 }
 
+type CardOption<T extends string> = { value: T; title: string; description?: string };
+
+/**
+ * A Figma single-choice CARD group: large, full-width, stacked selectable cards
+ * (title + optional description + a radio/check on the start). Selected = teal
+ * tint + teal border + filled check; unselected = raised surface + hairline.
+ * Use for role pickers and other "pick one, with explanation" choices (not chips).
+ */
+export function FigmaCardSelect<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: readonly CardOption<T>[];
+  onChange: (value: T) => void;
+}) {
+  const theme = useTheme();
+  return (
+    <View style={styles.cardSelect}>
+      {options.map((opt) => {
+        const on = opt.value === value;
+        return (
+          <Pressable
+            key={opt.value}
+            onPress={() => onChange(opt.value)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: on }}
+            accessibilityLabel={opt.title}
+            style={[
+              styles.optionCard,
+              {
+                backgroundColor: on ? theme.primaryBg : theme.backgroundSunken,
+                borderColor: on ? theme.primary : theme.border,
+              },
+            ]}>
+            <View
+              style={[
+                styles.radio,
+                { borderColor: on ? theme.primary : theme.border, backgroundColor: on ? theme.primary : 'transparent' },
+              ]}>
+              {on ? <Check size={13} color="#FFFFFF" /> : null}
+            </View>
+            <View style={styles.optionText}>
+              <Text
+                style={[
+                  styles.optionTitle,
+                  { color: on ? theme.primaryText : theme.text, fontFamily: on ? FigmaFont.bold : FigmaFont.semibold },
+                ]}>
+                {opt.title}
+              </Text>
+              {opt.description ? (
+                <Text style={[styles.optionDesc, { color: theme.textSecondary }]}>{opt.description}</Text>
+              ) : null}
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   header: {
@@ -327,7 +431,10 @@ const styles = StyleSheet.create({
   banner: { paddingVertical: 10, paddingHorizontal: Spacing.three },
   bannerText: { fontSize: 12, lineHeight: 18, fontFamily: FigmaFont.regular },
   scrollContent: { padding: Spacing.three, gap: Spacing.three },
-  footer: { paddingHorizontal: Spacing.three, paddingTop: Spacing.three, borderTopWidth: StyleSheet.hairlineWidth },
+  // Inline footer block: extra separation above the CTA beyond the scroll-content
+  // gap. Horizontal inset comes from scrollContent's padding; bottom (safe-area)
+  // padding is applied inline at the call site.
+  footer: { marginTop: Spacing.two },
   card: {
     borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
@@ -363,6 +470,39 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
   },
+  mutedNote: { fontSize: 13, lineHeight: 20, fontFamily: FigmaFont.regular },
+  toggleDivider: { height: StyleSheet.hairlineWidth, marginBottom: Spacing.three },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
+  toggleText: { flex: 1, gap: 2 },
+  toggleLabel: { fontSize: 15, fontFamily: FigmaFont.regular },
+  toggleHint: { fontSize: 13, fontFamily: FigmaFont.regular },
+  cardSelect: { gap: Spacing.two },
+  optionCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.three,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  optionText: { flex: 1, gap: 2 },
+  optionTitle: { fontSize: 15 },
+  optionDesc: { fontSize: 13, lineHeight: 18, fontFamily: FigmaFont.regular },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   chip: {
     minHeight: TouchTarget.min,

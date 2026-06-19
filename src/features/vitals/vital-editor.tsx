@@ -1,27 +1,36 @@
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/button';
-import { FormActions } from '@/components/form-actions';
+import { FigmaButton } from '@/components/figma/figma-button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FigmaFont } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
-import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
-import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
 import type { VitalReading } from './api';
 import { formatVitalValue } from './describe';
+import { FigmaVitalFields } from './figma-vital-fields';
 import { useDeleteVital, useUpdateVital, useVital } from './hooks';
-import { VitalFieldset, prepareVital, vitalDraftFromRow, type VitalDraft } from './vital-fields';
+import { prepareVital, vitalDraftFromRow, type VitalDraft } from './vital-fields';
 
-/** Loads a reading, then renders the view/edit screen with a delete action. */
+/**
+ * View / edit a single vital reading — rebuilt in the Figma language (header +
+ * gold non-diagnostic banner + grouped cards). Editors get the same fields as
+ * /vitals/new plus a two-step delete kept separate from save; viewers get a
+ * read-only card layout. Real hooks, validation, permissions, the non-diagnostic
+ * rule (no normal/abnormal labels, no health-color coding), and the unsaved guard
+ * are all preserved.
+ */
 export function VitalEditor({
   circleId,
   canManage,
@@ -41,18 +50,14 @@ export function VitalEditor({
   if (vital.isLoading) return <LoadingState />;
   if (vital.isError) {
     return (
-      <ErrorState
-        message={t('vitals.loadError')}
-        retryLabel={t('retry')}
-        onRetry={() => vital.refetch()}
-      />
+      <ErrorState message={t('vitals.loadError')} retryLabel={t('retry')} onRetry={() => vital.refetch()} />
     );
   }
   if (!vital.data) {
     return (
-      <Screen scroll={false} center>
+      <ThemedView style={styles.centered}>
         <EmptyState title={t('vitals.notFound')} />
-      </Screen>
+      </ThemedView>
     );
   }
 
@@ -60,25 +65,30 @@ export function VitalEditor({
   const canEdit = canManage || (canCollaborate && isOwner);
 
   return (
-    <Screen maxWidth={MaxContentWidth}>
+    <>
+      {/* The Figma editor draws its own header; hide the native one. */}
+      <Stack.Screen options={{ headerShown: false }} />
       {canEdit ? (
-        <VitalEditFields key={vital.data.id} circleId={circleId} initial={vital.data} />
+        <VitalEditScreen key={vital.data.id} circleId={circleId} initial={vital.data} />
       ) : (
-        <ReadOnlyVital reading={vital.data} />
+        <VitalViewScreen reading={vital.data} />
       )}
-
-      {canEdit ? <DeleteVitalRow circleId={circleId} id={vital.data.id} /> : null}
-    </Screen>
+    </>
   );
 }
 
-function VitalEditFields({ circleId, initial }: { circleId: string; initial: VitalReading }) {
+function VitalEditScreen({ circleId, initial }: { circleId: string; initial: VitalReading }) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const router = useRouter();
   const update = useUpdateVital(circleId);
+  const del = useDeleteVital(circleId);
 
   const [draft, setDraft] = useState<VitalDraft>(() => vitalDraftFromRow(initial));
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { dirty, markSaved } = useUnsavedChanges(draft);
   const submitting = update.isPending;
@@ -104,98 +114,115 @@ function VitalEditFields({ circleId, initial }: { circleId: string; initial: Vit
     }
   }
 
-  return (
-    <View style={styles.fields}>
-      <UnsavedChangesGuard when={dirty} />
-      <VitalFieldset draft={draft} onChange={patch} errors={errors} />
+  async function onDelete() {
+    setDeleting(true);
+    try {
+      await del.mutateAsync(initial.id);
+      router.back();
+    } catch {
+      setDeleting(false);
+    }
+  }
 
-      <FormActions
-        saveLabel={t('common.saveChanges')}
-        onSave={onSubmit}
-        saving={submitting}
-        disabled={!dirty}
-        status={status}
-        savedLabel={t('vitals.saved')}
-        errorLabel={t('vitals.saveFailed')}
-      />
-    </View>
+  return (
+    <FigmaFormScreen
+      title={t('vitals.detailTitle')}
+      onBack={() => router.back()}
+      disclaimer={t('vitals.disclaimer')}>
+      <UnsavedChangesGuard when={dirty} />
+      <FigmaVitalFields draft={draft} onChange={patch} errors={errors} />
+
+      {/* Delete — destructive, kept separate from save, two-step confirm. */}
+      <FigmaFormCard>
+        {confirming ? (
+          <View style={styles.confirmRow}>
+            <View style={styles.confirmCol}>
+              <FigmaButton
+                label={t('common.confirmDelete')}
+                variant="danger"
+                loading={deleting}
+                onPress={onDelete}
+              />
+            </View>
+            <View style={styles.confirmCol}>
+              <FigmaButton
+                label={t('common.cancel')}
+                variant="secondary"
+                onPress={() => setConfirming(false)}
+              />
+            </View>
+          </View>
+        ) : (
+          <FigmaButton
+            label={t('vitals.deleteReading')}
+            variant="danger"
+            onPress={() => setConfirming(true)}
+          />
+        )}
+      </FigmaFormCard>
+
+      {/* Save CTA — rendered in the body (not the footer prop, which did not render
+          on Android). Final child, below the destructive delete, matching the prior
+          bottom placement. */}
+      <View style={styles.footer}>
+        {status === 'saved' ? (
+          <Text style={[styles.statusText, { color: theme.successFg }]} accessibilityLiveRegion="polite">
+            {t('vitals.saved')}
+          </Text>
+        ) : null}
+        {status === 'error' ? (
+          <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert">
+            {t('vitals.saveFailed')}
+          </Text>
+        ) : null}
+        <FigmaFooterPrimaryButton label={t('common.saveChanges')} onPress={onSubmit} loading={submitting} />
+      </View>
+    </FigmaFormScreen>
   );
 }
 
-function ReadOnlyVital({ reading }: { reading: VitalReading }) {
+function VitalViewScreen({ reading }: { reading: VitalReading }) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const router = useRouter();
   const value = formatVitalValue(reading);
   const when = isolateLtr(`${ymdFromInstant(reading.reading_at)} ${hmFromInstant(reading.reading_at)}`);
 
   return (
-    <View style={styles.fields}>
-      <Surface tone="sunken">
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('vitals.readOnly')}
-        </ThemedText>
-      </Surface>
-      <ThemedText type="subtitle">{t(`vitals.type.${reading.reading_type}`)}</ThemedText>
-      <InfoRow label={t('vitals.fields.readingAt')} value={when} />
-      {value ? <InfoRow label={t('vitals.valueLabel')} value={value} /> : null}
-      {reading.notes ? <InfoRow label={t('vitals.fields.notes')} value={reading.notes} /> : null}
-    </View>
-  );
-}
+    <FigmaFormScreen
+      title={t('vitals.detailTitle')}
+      onBack={() => router.back()}
+      disclaimer={t('vitals.disclaimer')}>
+      <FigmaMutedNote>{t('vitals.readOnly')}</FigmaMutedNote>
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.infoRow}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText>{value}</ThemedText>
-    </View>
-  );
-}
+      <FigmaFormCard label={t('vitals.fields.type')}>
+        <Text style={[styles.value, { color: theme.text }]}>{t(`vitals.type.${reading.reading_type}`)}</Text>
+      </FigmaFormCard>
 
-function DeleteVitalRow({ circleId, id }: { circleId: string; id: string }) {
-  const { t } = useTranslation();
-  const router = useRouter();
-  const del = useDeleteVital(circleId);
-  const [confirming, setConfirming] = useState(false);
-  const [pending, setPending] = useState(false);
+      {value ? (
+        <FigmaFormCard label={t('vitals.valueLabel')}>
+          <Text style={[styles.value, { color: theme.text }]}>{value}</Text>
+        </FigmaFormCard>
+      ) : null}
 
-  async function onDelete() {
-    setPending(true);
-    try {
-      await del.mutateAsync(id);
-      router.back();
-    } catch {
-      setPending(false);
-    }
-  }
+      <FigmaFormCard label={t('vitals.fields.readingAt')}>
+        <Text style={[styles.value, { color: theme.text }]}>{when}</Text>
+      </FigmaFormCard>
 
-  if (confirming) {
-    return (
-      <View style={styles.confirmRow}>
-        <Button
-          variant="danger"
-          label={t('common.confirmDelete')}
-          loading={pending}
-          onPress={onDelete}
-        />
-        <Button
-          variant="secondary"
-          label={t('common.cancel')}
-          disabled={pending}
-          onPress={() => setConfirming(false)}
-        />
-      </View>
-    );
-  }
-
-  return (
-    <Button variant="danger" label={t('vitals.deleteReading')} onPress={() => setConfirming(true)} />
+      {reading.notes ? (
+        <FigmaFormCard label={t('vitals.fields.notes')}>
+          <Text style={[styles.value, { color: theme.text }]}>{reading.notes}</Text>
+        </FigmaFormCard>
+      ) : null}
+    </FigmaFormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  fields: { gap: Spacing.three },
-  infoRow: { gap: Spacing.half },
-  confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
+  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
+  footer: { gap: Spacing.two },
+  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
+  confirmRow: { flexDirection: 'row', gap: Spacing.two },
+  confirmCol: { flex: 1 },
+  value: { fontSize: 16, fontFamily: FigmaFont.regular },
 });

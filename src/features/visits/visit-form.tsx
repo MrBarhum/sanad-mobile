@@ -1,24 +1,33 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { StickyFormActions } from '@/components/form-actions';
-import { Screen } from '@/components/screen';
-import { ThemedText } from '@/components/themed-text';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import {
+  FigmaFormCard,
+  FigmaFormScreen,
+  FigmaMutedNote,
+  FigmaToggleRow,
+} from '@/components/figma/figma-form-screen';
+import { FigmaFont } from '@/components/figma/figma-tokens';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxFormWidth, Spacing, TouchTarget } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
 
+import { FigmaVisitFields } from './figma-visit-fields';
 import { useCreateVisit } from './hooks';
-import { VisitFieldset, defaultVisitDraft, prepareVisit, type VisitDraft } from './visit-fields';
+import { defaultVisitDraft, prepareVisit, type VisitDraft } from './visit-fields';
 
 /**
- * Add-visit form. Managers may record any visitor and optionally link the visit
- * to their own account; caregivers / family members always record their own
- * visit (RLS requires the visit to be linked to their account).
+ * Add-visit form — an exact-copy rebuild of the Figma `AddVisitScreen` wired to
+ * Sanad's real create flow + schema. The export's blue/IBM-Plex become teal/Cairo
+ * and its native inputs become the protected wheel pickers. Crucially, the
+ * export's "link to my account" toggle is shown to EVERYONE — Sanad's RLS instead
+ * shows it ONLY to managers (collaborators always record their own visit), and
+ * that real behavior is preserved here.
  */
 export function VisitForm({ circleId, canManage }: { circleId: string; canManage: boolean }) {
   const { t } = useTranslation();
@@ -61,51 +70,49 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
   }
 
   return (
-    <Screen
-      maxWidth={MaxFormWidth}
-      keyboardAvoiding
-      footer={
-        <StickyFormActions
-          saveLabel={t('visits.add')}
-          onSave={onSubmit}
-          saving={submitting}
-          disabled={!dirty}
-          status={submitError ? 'error' : 'idle'}
-          errorLabel={submitError ?? undefined}
-        />
-      }>
+    <FigmaFormScreen title={t('visits.addTitle')} onBack={() => router.back()}>
       <UnsavedChangesGuard when={dirty && !submitted} />
-      <ThemedText type="small" themeColor="textMuted">
-        {t('visits.disclaimer')}
-      </ThemedText>
+      <FigmaMutedNote>{t('visits.disclaimer')}</FigmaMutedNote>
 
-      <VisitFieldset draft={draft} onChange={patch} errors={errors} />
+      <FigmaFormCard>
+        <FigmaVisitFields draft={draft} onChange={patch} errors={errors} />
 
-      {canManage ? (
-        <View style={styles.switchRow}>
-          <ThemedText type="smallBold">{t('visits.fields.linkToMe')}</ThemedText>
-          <Switch
+        {canManage ? (
+          <FigmaToggleRow
+            topDivider
+            label={t('visits.fields.linkToMe')}
+            hint={t('visits.ownVisitNote')}
             value={linkToSelf}
             onValueChange={setLinkToSelf}
-            trackColor={{ true: theme.primary, false: theme.backgroundSelected }}
-            accessibilityLabel={t('visits.fields.linkToMe')}
           />
-        </View>
-      ) : (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('visits.ownVisitNote')}
-        </ThemedText>
-      )}
-    </Screen>
+        ) : (
+          <View>
+            <View style={[styles.divider, { backgroundColor: theme.divider }]} />
+            <FigmaMutedNote>{t('visits.ownVisitNote')}</FigmaMutedNote>
+          </View>
+        )}
+      </FigmaFormCard>
+
+      {/* Primary CTA — rendered directly in the body (not the footer prop, which
+          did not render on Android). Always a filled teal button; an invalid press
+          runs validation and shows inline errors. */}
+      <View style={styles.footer}>
+        {submitError ? (
+          <Text
+            style={[styles.footerError, { color: theme.errorFg }]}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite">
+            {submitError}
+          </Text>
+        ) : null}
+        <FigmaFooterPrimaryButton label={t('visits.add')} onPress={onSubmit} loading={submitting} />
+      </View>
+    </FigmaFormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
-    minHeight: TouchTarget.min,
-  },
+  footer: { gap: Spacing.two },
+  footerError: { fontSize: 13, fontFamily: FigmaFont.regular, textAlign: 'center' },
+  divider: { height: StyleSheet.hairlineWidth, marginBottom: Spacing.three },
 });

@@ -34,7 +34,14 @@ export function FigmaButton({
 }: FigmaButtonProps) {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const c = FigmaColors[scheme];
-  const isDisabled = disabled || loading;
+  const isPrimary = variant === 'primary';
+  // A PRIMARY action is ALWAYS a filled, full-opacity teal rectangle and stays
+  // pressable unless busy — never grey/faded "disabled" styling (which reads as dim/
+  // hidden). Form validation lives in the submit handler: pressing an incomplete
+  // form shows inline errors instead of submitting. Only the quiet/danger variants
+  // honor `disabled` (e.g. a busy sign-out), and a busy button keeps its vivid fill.
+  const isDisabled = loading || (!isPrimary && disabled);
+  const inactive = !isPrimary && disabled && !loading;
 
   const palette: Record<Variant, { bg: string; fg: string; border: string }> = {
     primary: { bg: c.primary, fg: c.onPrimary, border: 'transparent' },
@@ -42,6 +49,7 @@ export function FigmaButton({
     danger: { bg: c.error, fg: '#FFFFFF', border: 'transparent' },
   };
   const p = palette[variant];
+  const fg = inactive ? c.muted : p.fg;
 
   return (
     <Pressable
@@ -53,15 +61,17 @@ export function FigmaButton({
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={({ pressed }) => [
         styles.btn,
-        { backgroundColor: p.bg, borderColor: p.border, opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1 },
+        inactive
+          ? { backgroundColor: c.mutedSurface, borderColor: c.border }
+          : { backgroundColor: p.bg, borderColor: p.border, opacity: pressed ? 0.85 : 1 },
         style,
       ]}>
       {loading ? (
         <ActivityIndicator color={p.fg} />
       ) : (
         <View style={styles.content}>
-          {Icon ? <Icon size={18} color={p.fg} /> : null}
-          <Text style={[styles.label, { color: p.fg }]}>{label}</Text>
+          {Icon ? <Icon size={18} color={fg} /> : null}
+          <Text style={[styles.label, { color: fg }]}>{label}</Text>
         </View>
       )}
     </Pressable>

@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaxFormWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { FigmaFooterPrimaryButton } from './figma/figma-footer-primary-button';
 import { FormButton } from './figma/form-button';
 import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
@@ -17,8 +18,6 @@ type SharedProps = {
   saveLabel: string;
   onSave: () => void;
   saving?: boolean;
-  /** Disable save when there are no changes or validation is failing. */
-  disabled?: boolean;
   /** Inline save status shown above the button. */
   status?: FormActionsStatus;
   savedLabel?: string;
@@ -34,7 +33,6 @@ function ActionsBody({
   saveLabel,
   onSave,
   saving = false,
-  disabled = false,
   status = 'idle',
   savedLabel,
   errorLabel,
@@ -61,11 +59,13 @@ function ActionsBody({
           {errorLabel}
         </ThemedText>
       ) : null}
-      <FormButton
+      {/* The ONE forced bottom CTA: always a full-width filled teal rectangle, only
+          busy-gated by `saving` — never disabled-greyed. Validation lives in the
+          caller's onSave (an invalid press shows inline field errors, not a submit). */}
+      <FigmaFooterPrimaryButton
         label={saveLabel}
         onPress={onSave}
         loading={saving}
-        disabled={disabled}
         accessibilityHint={saveAccessibilityHint}
       />
       {secondaryLabel && onSecondary ? (

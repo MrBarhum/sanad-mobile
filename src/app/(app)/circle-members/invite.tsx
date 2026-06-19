@@ -1,3 +1,4 @@
+import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
@@ -14,7 +15,11 @@ export default function InviteMemberScreen() {
     <CircleGate>
       {(circle) =>
         circle.canManage ? (
-          <InviteForm circleId={circle.circleId} actorRole={circle.role} />
+          // The Figma invite screen draws its own header; hide the native one.
+          <>
+            <Stack.Screen options={{ headerShown: false }} />
+            <InviteForm circleId={circle.circleId} actorRole={circle.role} />
+          </>
         ) : (
           <ThemedView style={styles.centered}>
             <EmptyState title={t('invitations.managersOnly')} />

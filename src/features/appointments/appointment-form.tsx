@@ -1,26 +1,34 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { StickyFormActions } from '@/components/form-actions';
-import { Screen } from '@/components/screen';
-import { ThemedText } from '@/components/themed-text';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FigmaFont } from '@/components/figma/figma-tokens';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxFormWidth } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useDoctors } from '@/features/doctors/hooks';
 
 import {
-  AppointmentFieldset,
   defaultAppointmentDraft,
   prepareAppointment,
   type AppointmentDraft,
 } from './appointment-fields';
+import { FigmaAppointmentFields } from './figma-appointment-fields';
 import { useCreateAppointment } from './hooks';
 
-/** Add-appointment form (managers only). */
+/**
+ * Add-appointment form — an exact-copy rebuild of the Figma `AddAppointmentScreen`
+ * wired to Sanad's real create flow, schema, and the real doctors list. Figma's
+ * blue/IBM-Plex become teal/Cairo, its native date/time inputs become the
+ * protected wheel pickers, and its hardcoded doctors become the real list.
+ */
 export function AppointmentForm({ circleId }: { circleId: string }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const router = useRouter();
   const create = useCreateAppointment(circleId);
   const doctorsQuery = useDoctors(circleId);
@@ -56,30 +64,36 @@ export function AppointmentForm({ circleId }: { circleId: string }) {
   }
 
   return (
-    <Screen
-      maxWidth={MaxFormWidth}
-      keyboardAvoiding
-      footer={
-        <StickyFormActions
-          saveLabel={t('appointments.add')}
-          onSave={onSubmit}
-          saving={submitting}
-          disabled={!dirty}
-          status={submitError ? 'error' : 'idle'}
-          errorLabel={submitError ?? undefined}
-        />
-      }>
+    <FigmaFormScreen title={t('appointments.addTitle')} onBack={() => router.back()}>
       <UnsavedChangesGuard when={dirty && !submitted} />
-      <ThemedText type="small" themeColor="textMuted">
-        {t('appointments.disclaimer')}
-      </ThemedText>
+      <FigmaMutedNote>{t('appointments.disclaimer')}</FigmaMutedNote>
 
-      <AppointmentFieldset
+      <FigmaAppointmentFields
         draft={draft}
         onChange={patch}
         errors={errors}
         doctors={doctorsQuery.data ?? []}
       />
-    </Screen>
+
+      {/* Primary CTA — rendered directly in the body (not the footer prop, which
+          did not render on Android). Always a filled teal button; an invalid press
+          runs validation and shows inline errors. */}
+      <View style={styles.footer}>
+        {submitError ? (
+          <Text
+            style={[styles.footerError, { color: theme.errorFg }]}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite">
+            {submitError}
+          </Text>
+        ) : null}
+        <FigmaFooterPrimaryButton label={t('appointments.add')} onPress={onSubmit} loading={submitting} />
+      </View>
+    </FigmaFormScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  footer: { gap: Spacing.two },
+  footerError: { fontSize: 13, fontFamily: FigmaFont.regular, textAlign: 'center' },
+});

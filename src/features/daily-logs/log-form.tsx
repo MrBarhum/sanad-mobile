@@ -1,25 +1,31 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { StickyFormActions } from '@/components/form-actions';
-import { Screen } from '@/components/screen';
-import { ThemedText } from '@/components/themed-text';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import { FigmaFormScreen } from '@/components/figma/figma-form-screen';
+import { FigmaFont } from '@/components/figma/figma-tokens';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { MaxFormWidth } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
+import { FigmaDailyLogFields } from './figma-daily-log-fields';
 import { useCreateDailyLog } from './hooks';
-import {
-  DailyLogFieldset,
-  defaultDailyLogDraft,
-  prepareDailyLog,
-  type DailyLogDraft,
-} from './log-fields';
+import { defaultDailyLogDraft, prepareDailyLog, type DailyLogDraft } from './log-fields';
 
-/** Add-daily-log form (caregiving roles only). */
+/**
+ * Add-daily-log form — an exact-copy rebuild of the Figma `AddDailyLogScreen`
+ * (header + gold non-diagnostic banner + date / observations / pain / notes
+ * cards), wired to Sanad's real create flow + schema. Figma's blue/IBM-Plex
+ * become teal/Cairo. The observational disclaimer, the "غير محدّد" unset states,
+ * and the distinct "بدون" pain state are preserved; the one-log-per-date conflict
+ * surfaces its specific message.
+ */
 export function DailyLogForm({ circleId }: { circleId: string }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const router = useRouter();
   const create = useCreateDailyLog(circleId);
 
@@ -54,33 +60,39 @@ export function DailyLogForm({ circleId }: { circleId: string }) {
       // their existing log rather than retrying. 23505 = unique_violation.
       const code = (error as { code?: string } | null)?.code;
       setSubmitError(
-        code === '23505'
-          ? t('dailyLogs.errors.alreadyLoggedToday')
-          : t('dailyLogs.saveFailed'),
+        code === '23505' ? t('dailyLogs.errors.alreadyLoggedToday') : t('dailyLogs.saveFailed'),
       );
     }
   }
 
   return (
-    <Screen
-      maxWidth={MaxFormWidth}
-      keyboardAvoiding
-      footer={
-        <StickyFormActions
-          saveLabel={t('dailyLogs.add')}
-          onSave={onSubmit}
-          saving={submitting}
-          disabled={!dirty}
-          status={submitError ? 'error' : 'idle'}
-          errorLabel={submitError ?? undefined}
-        />
-      }>
+    <FigmaFormScreen
+      title={t('dailyLogs.addTitle')}
+      subtitle={t('dailyLogs.addSubtitle')}
+      onBack={() => router.back()}
+      disclaimer={t('dailyLogs.disclaimer')}>
       <UnsavedChangesGuard when={dirty && !submitted} />
-      <ThemedText type="small" themeColor="textMuted">
-        {t('dailyLogs.disclaimer')}
-      </ThemedText>
+      <FigmaDailyLogFields draft={draft} onChange={patch} errors={errors} />
 
-      <DailyLogFieldset draft={draft} onChange={patch} errors={errors} />
-    </Screen>
+      {/* Primary CTA — rendered directly in the body (not the footer prop, which
+          did not render on Android). Always a filled teal button; an invalid press
+          runs validation and shows inline errors. */}
+      <View style={styles.footer}>
+        {submitError ? (
+          <Text
+            style={[styles.footerError, { color: theme.errorFg }]}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite">
+            {submitError}
+          </Text>
+        ) : null}
+        <FigmaFooterPrimaryButton label={t('dailyLogs.add')} onPress={onSubmit} loading={submitting} />
+      </View>
+    </FigmaFormScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  footer: { gap: Spacing.two },
+  footerError: { fontSize: 13, fontFamily: FigmaFont.regular, textAlign: 'center' },
+});

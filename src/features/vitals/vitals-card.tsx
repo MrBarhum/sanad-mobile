@@ -1,27 +1,27 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { NavCard } from '@/components/nav-card';
+import { DashboardTile } from '@/components/dashboard-tile';
 
 import { useTodayVitalSummary } from './hooks';
 
-/** Navigable vitals card on the dashboard: today's count + total readings. */
+/** Navigable vitals tile on the dashboard: today's count + total readings. */
 export function VitalsCard({ circleId }: { circleId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const { summary, isLoading } = useTodayVitalSummary(circleId);
 
-  const subtitle = isLoading
+  const meta = isLoading
     ? t('careCircle.dashboard.sections.vitals.subtitle')
     : summary.totalCount === 0
       ? t('vitals.summary.none')
       : t('vitals.summary.counts', { today: summary.todayCount, total: summary.totalCount });
 
   return (
-    <NavCard
+    <DashboardTile
       iconName="vital"
       title={t('careCircle.dashboard.sections.vitals.title')}
-      subtitle={subtitle}
+      meta={meta}
       onPress={() => router.push('/vitals')}
     />
   );

@@ -150,7 +150,6 @@ function AppointmentEditFields({
         saveLabel={t('common.saveChanges')}
         onSave={onSubmit}
         saving={submitting}
-        disabled={!dirty}
         status={status}
         savedLabel={t('appointments.saved')}
         errorLabel={t('appointments.saveFailed')}

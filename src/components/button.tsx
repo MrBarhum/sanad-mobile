@@ -63,6 +63,7 @@ export function Button({
   accessibilityLabel,
 }: ButtonProps) {
   const theme = useTheme();
+  const isPrimary = variant === 'primary';
   const isDisabled = disabled || loading;
 
   const palette: Record<
@@ -97,6 +98,12 @@ export function Button({
     },
   };
   const colors = palette[variant];
+  // A PRIMARY action is always a filled, full-opacity brand rectangle — never grey
+  // or faded — so "filled teal" reliably reads as the main action. Pressability is
+  // still gated by `disabled`/`loading`; only the faded/grey *styling* is removed.
+  // The quiet/danger/plain variants keep their dim-when-disabled affordance.
+  const fadedDisabled = !isPrimary && isDisabled;
+  const iconColor: ThemeColor = ICON_COLOR[variant];
 
   return (
     <Pressable
@@ -112,7 +119,7 @@ export function Button({
         {
           backgroundColor: pressed && !isDisabled ? colors.pressed : colors.background,
           borderColor: colors.border,
-          opacity: isDisabled ? 0.45 : pressed && variant === 'danger' ? 0.75 : 1,
+          opacity: fadedDisabled ? 0.45 : pressed && variant === 'danger' ? 0.75 : 1,
         },
         style,
       ]}>
@@ -121,7 +128,7 @@ export function Button({
       ) : (
         <View style={styles.content}>
           {iconName ? (
-            <Icon name={iconName} size={size === 'sm' ? 16 : 18} color={ICON_COLOR[variant]} />
+            <Icon name={iconName} size={size === 'sm' ? 16 : 18} color={iconColor} />
           ) : glyph ? (
             <ThemedText
               accessibilityElementsHidden

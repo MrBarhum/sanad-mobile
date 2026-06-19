@@ -1,36 +1,39 @@
 import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { GlyphChip } from '@/components/glyph-chip';
-import { Icon } from '@/components/icon';
-import { NavCard } from '@/components/nav-card';
+import { DashboardTile } from '@/components/dashboard-tile';
+import { IconButton } from '@/components/icon-button';
 import { Screen } from '@/components/screen';
-import { Section, Surface } from '@/components/surface';
-import { type IconName } from '@/constants/icons';
+import { Section } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing, TouchTarget } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { type IconName } from '@/constants/icons';
+import { Spacing } from '@/constants/theme';
 import { formatLongDate } from '@/utils/date';
-import { AppointmentsCard } from '@/features/appointments/appointments-card';
 import { CircleSwitcher } from '@/features/circle-selection/circle-switcher';
 import type { ActiveCircle } from '@/features/circle-selection/permissions';
 import { DailyLogsCard } from '@/features/daily-logs/daily-logs-card';
-import { useTodayDoseSummary } from '@/features/medications/hooks';
 import { NotificationBell } from '@/features/notifications/notification-bell';
-import { TasksCard } from '@/features/tasks/tasks-card';
 import { VisitsCard } from '@/features/visits/visits-card';
 import { VitalsCard } from '@/features/vitals/vitals-card';
 
 import { TodayOverview } from './today-overview';
 
 /**
- * People & settings rows on the dashboard — rendered as one grouped list (a
- * calm "settings group") rather than four more look-alike cards. Glyphs are
- * decorative non-emoji marks; the labels carry all meaning.
+ * Demoted quick-access destinations (the rest of the app), shown as a single
+ * light 3-up grid below the Today hero — never the rejected "wall of two-column
+ * rectangles". Medications is the hero, tasks/appointments are the Today summary,
+ * and emergency is one tap from the header, so they are intentionally absent here.
  */
-const ACTIONS = [
+const QUICK_NAV = [
+  {
+    key: 'doctors',
+    href: '/doctors',
+    iconName: 'doctor',
+    titleKey: 'careCircle.dashboard.sections.doctors.title',
+    subtitleKey: 'careCircle.dashboard.sections.doctors.subtitle',
+  },
   {
     key: 'members',
     href: '/circle-members',
@@ -52,13 +55,6 @@ const ACTIONS = [
     titleKey: 'careCircle.dashboard.sections.emergencyContacts.title',
     subtitleKey: 'careCircle.dashboard.sections.emergencyContacts.subtitle',
   },
-  {
-    key: 'doctors',
-    href: '/doctors',
-    iconName: 'doctor',
-    titleKey: 'careCircle.dashboard.sections.doctors.title',
-    subtitleKey: 'careCircle.dashboard.sections.doctors.subtitle',
-  },
 ] as const satisfies readonly {
   key: string;
   href: Href;
@@ -71,120 +67,72 @@ const ACTIONS = [
 export function CareCircleDashboard({ circle }: { circle: ActiveCircle }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const theme = useTheme();
 
   return (
     <Screen edges={{ top: true }}>
       <ThemedView style={styles.header}>
-        <View style={styles.headerTop}>
-          <ThemedText type="title" accessibilityRole="header" style={styles.headerTitle}>
+        <View style={styles.headerText}>
+          <ThemedText
+            type="title"
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={styles.headerTitle}>
             {t('home.greeting')}
           </ThemedText>
-          <NotificationBell />
+          <ThemedText type="small" themeColor="textSecondary">
+            {formatLongDate(i18n.language)}
+          </ThemedText>
         </View>
-        <ThemedText type="small" themeColor="textSecondary">
-          {formatLongDate(i18n.language)}
-        </ThemedText>
+        <View style={styles.headerActions}>
+          <NotificationBell />
+          <IconButton
+            iconName="emergency"
+            color="errorFg"
+            accessibilityLabel={t('careCircle.dashboard.sections.emergency.title')}
+            accessibilityHint={t('careCircle.dashboard.sections.emergency.subtitle')}
+            onPress={() => router.push('/emergency-card')}
+          />
+        </View>
       </ThemedView>
 
       <CircleSwitcher />
 
       <TodayOverview circle={circle} />
 
-      <NavCard
-        iconName="emergency"
-        glyphTone="error"
-        tone="error"
-        titleColor="errorFg"
-        title={t('careCircle.dashboard.sections.emergency.title')}
-        subtitle={t('careCircle.dashboard.sections.emergency.subtitle')}
-        onPress={() => router.push('/emergency-card')}
-      />
-
-      <Section title={t('careCircle.dashboard.manageTitle')}>
-        <View style={styles.cards}>
-          <MedicationsCard circleId={circle.circleId} />
+      <Section title={t('careCircle.dashboard.quickAccessTitle')}>
+        <View style={styles.grid}>
           <DailyLogsCard circleId={circle.circleId} />
           <VitalsCard circleId={circle.circleId} />
-          <TasksCard circleId={circle.circleId} />
-          <AppointmentsCard circleId={circle.circleId} />
           <VisitsCard circleId={circle.circleId} />
-        </View>
-
-        <Surface padded={false}>
-          {ACTIONS.map((section, index) => (
-            <Pressable
-              key={section.key}
-              onPress={() => router.push(section.href)}
-              accessibilityRole="button"
-              accessibilityLabel={t(section.titleKey)}
-              accessibilityHint={t(section.subtitleKey)}
-              android_ripple={{ color: theme.backgroundSelected }}
-              style={({ pressed }) => [
-                styles.actionRow,
-                index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.divider },
-                pressed && styles.pressed,
-              ]}>
-              <GlyphChip iconName={section.iconName} tone="neutral" size="sm" />
-              <View style={styles.rowText}>
-                <ThemedText type="cardTitle">{t(section.titleKey)}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t(section.subtitleKey)}
-                </ThemedText>
-              </View>
-              <Icon name="chevron" size={26} color="textMuted" />
-            </Pressable>
+          {QUICK_NAV.map((item) => (
+            <DashboardTile
+              key={item.key}
+              iconName={item.iconName}
+              title={t(item.titleKey)}
+              meta={t(item.subtitleKey)}
+              onPress={() => router.push(item.href)}
+            />
           ))}
-        </Surface>
+        </View>
       </Section>
     </Screen>
   );
 }
 
-/** Navigable medications card showing today's dose summary. */
-function MedicationsCard({ circleId }: { circleId: string }) {
-  const { t } = useTranslation();
-  const router = useRouter();
-  const { summary, isLoading } = useTodayDoseSummary(circleId);
-
-  const subtitle = isLoading
-    ? t('careCircle.dashboard.sections.medications.subtitle')
-    : summary.total === 0
-      ? t('medications.summary.none')
-      : t('medications.summary.counts', {
-          total: summary.total,
-          given: summary.given,
-          remaining: summary.remaining,
-        });
-
-  return (
-    <NavCard
-      iconName="medication"
-      title={t('careCircle.dashboard.sections.medications.title')}
-      subtitle={subtitle}
-      onPress={() => router.push('/medications')}
-    />
-  );
-}
-
 const styles = StyleSheet.create({
-  header: { gap: Spacing.two },
-  headerTop: {
+  header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
+  headerText: { flexShrink: 1, gap: Spacing.half },
   headerTitle: { flexShrink: 1 },
-  cards: { gap: Spacing.three },
-  rowText: { flex: 1, gap: Spacing.half },
-  actionRow: {
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  grid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
-    minHeight: TouchTarget.comfortable + Spacing.three,
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: Spacing.three,
   },
-  pressed: { opacity: 0.8 },
 });

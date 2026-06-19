@@ -6,6 +6,7 @@ import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { FigmaFooterPrimaryButton } from './figma/figma-footer-primary-button';
 import { FormButton } from './figma/form-button';
 import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
@@ -18,8 +19,6 @@ type FormModalProps = {
   cancelLabel: string;
   closeLabel: string;
   submitting?: boolean;
-  /** Disable the submit button (e.g. no changes yet, or validation failing). */
-  submitDisabled?: boolean;
   error?: string | null;
   onSubmit: () => void;
   onClose: () => void;
@@ -40,7 +39,6 @@ export function FormModal({
   cancelLabel,
   closeLabel,
   submitting = false,
-  submitDisabled = false,
   error,
   onSubmit,
   onClose,
@@ -85,12 +83,14 @@ export function FormModal({
             ) : null}
 
             <View style={styles.actions}>
-              <FormButton
+              {/* The ONE forced bottom CTA: always a full-width filled teal
+                  rectangle, only busy-gated by `loading` — never disabled-greyed.
+                  Validation lives in the caller's onSubmit (an invalid press shows
+                  inline errors, not a submit). */}
+              <FigmaFooterPrimaryButton
                 label={submitLabel}
                 onPress={onSubmit}
                 loading={submitting}
-                disabled={submitting || submitDisabled}
-                style={styles.action}
               />
               <FormButton
                 label={cancelLabel}

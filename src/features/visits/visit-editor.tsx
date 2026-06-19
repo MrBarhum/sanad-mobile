@@ -134,7 +134,6 @@ function VisitEditFields({ circleId, initial }: { circleId: string; initial: Fam
         saveLabel={t('common.saveChanges')}
         onSave={onSubmit}
         saving={submitting}
-        disabled={!dirty}
         status={status}
         savedLabel={t('visits.saved')}
         errorLabel={t('visits.saveFailed')}

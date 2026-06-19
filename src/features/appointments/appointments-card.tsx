@@ -1,28 +1,27 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { NavCard } from '@/components/nav-card';
+import { StatTile } from '@/components/dashboard-tile';
 
 import { useTodayAppointmentSummary } from './hooks';
 
-/** Navigable appointments card on the dashboard, showing today's count. */
+/**
+ * Compact "today summary" stat for Home: appointments scheduled today. A small
+ * secondary tile (not a hero), navigating into the appointments center.
+ */
 export function AppointmentsCard({ circleId }: { circleId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const { count, isLoading } = useTodayAppointmentSummary(circleId);
 
-  const subtitle = isLoading
-    ? t('careCircle.dashboard.sections.appointments.subtitle')
-    : count === 0
-      ? t('appointments.summary.none')
-      : t('appointments.summary.count', { count });
-
   return (
-    <NavCard
+    <StatTile
       iconName="appointment"
-      title={t('careCircle.dashboard.sections.appointments.title')}
-      subtitle={subtitle}
+      tone="info"
+      value={isLoading ? '—' : String(count)}
+      label={t('careCircle.dashboard.today.appointmentLabel')}
       onPress={() => router.push('/appointments')}
+      accessibilityHint={t('careCircle.dashboard.sections.appointments.title')}
     />
   );
 }

@@ -1,17 +1,17 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { NavCard } from '@/components/nav-card';
+import { DashboardTile } from '@/components/dashboard-tile';
 
 import { useTodayLogSummary } from './hooks';
 
-/** Navigable daily-logs card on the dashboard: today's log count + latest mood. */
+/** Navigable daily-logs tile on the dashboard: today's log count + latest mood. */
 export function DailyLogsCard({ circleId }: { circleId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const { summary, isLoading } = useTodayLogSummary(circleId);
 
-  const subtitle = isLoading
+  const meta = isLoading
     ? t('careCircle.dashboard.sections.dailyLogs.subtitle')
     : summary.todayCount === 0
       ? t('dailyLogs.summary.none')
@@ -23,10 +23,10 @@ export function DailyLogsCard({ circleId }: { circleId: string }) {
         : t('dailyLogs.summary.counts', { count: summary.todayCount });
 
   return (
-    <NavCard
+    <DashboardTile
       iconName="dailyLog"
       title={t('careCircle.dashboard.sections.dailyLogs.title')}
-      subtitle={subtitle}
+      meta={meta}
       onPress={() => router.push('/daily-logs')}
     />
   );

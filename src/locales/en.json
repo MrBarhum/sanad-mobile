@@ -205,6 +205,14 @@
       "remote_member": "Remote member",
       "elder": "Care recipient"
     },
+    "roleDescriptions": {
+      "admin": "Full access — manages the circle, members, and all care data.",
+      "primary_caregiver": "Manages day-to-day care and can manage members and invitations.",
+      "family_member": "Follows the care data and can record updates.",
+      "caregiver": "Records daily care and logs.",
+      "remote_member": "Follows the care circle from afar.",
+      "elder": "The person receiving care."
+    },
     "status": {
       "active": "Active",
       "invited": "Invited",
@@ -554,6 +562,9 @@
   "tasks": {
     "title": "Tasks",
     "addTitle": "Add task",
+    "dueTitle": "Deadline",
+    "assignNone": "Unassigned",
+    "assignMe": "Me",
     "detailTitle": "Task details",
     "add": "Add task",
     "disclaimer": "For organizing and coordinating care tasks among the family only. It does not provide medical advice.",
@@ -591,6 +602,7 @@
       "dueDate": "Due date",
       "dueTime": "Due time",
       "assignToMe": "Assign to me",
+      "assignedTo": "Assign to",
       "notes": "Notes"
     },
     "placeholders": {
@@ -635,6 +647,7 @@
   "appointments": {
     "title": "Appointments",
     "addTitle": "Add appointment",
+    "dateTimeTitle": "Date & time",
     "detailTitle": "Appointment details",
     "add": "Add appointment",
     "disclaimer": "For organizing and coordinating care appointments among the family only. It does not provide medical advice.",
@@ -768,6 +781,10 @@
   "dailyLogs": {
     "title": "Daily logs",
     "addTitle": "Add daily log",
+    "addSubtitle": "Observations only — not a diagnosis",
+    "dailyTitle": "Daily observations",
+    "painScaleHint": "0 = no observed pain, 10 = severe observed pain",
+    "painOutOf": "of 10",
     "detailTitle": "Log details",
     "add": "Add log",
     "disclaimer": "Daily observations recorded by the family to follow the condition only. They are not a diagnosis or medical advice.",

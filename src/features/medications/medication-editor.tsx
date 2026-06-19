@@ -226,7 +226,6 @@ function MedicationFields({ circleId, initial }: { circleId: string; initial: Me
         saveLabel={t('common.saveChanges')}
         onSave={onSubmit}
         saving={submitting}
-        disabled={!dirty}
         status={status}
         savedLabel={t('medications.saved')}
         errorLabel={t('medications.saveFailed')}

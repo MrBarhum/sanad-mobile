@@ -1,28 +1,26 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { NavCard } from '@/components/nav-card';
+import { StatTile } from '@/components/dashboard-tile';
 
 import { useTodayTaskSummary } from './hooks';
 
-/** Navigable tasks card on the dashboard, showing today's task counts. */
+/**
+ * Compact "today summary" stat for Home: tasks still due today. A small secondary
+ * tile (not a hero), navigating into the tasks center.
+ */
 export function TasksCard({ circleId }: { circleId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const { summary, isLoading } = useTodayTaskSummary(circleId);
 
-  const subtitle = isLoading
-    ? t('careCircle.dashboard.sections.tasks.subtitle')
-    : summary.dueToday === 0 && summary.completedToday === 0
-      ? t('tasks.summary.none')
-      : t('tasks.summary.counts', { due: summary.dueToday, done: summary.completedToday });
-
   return (
-    <NavCard
+    <StatTile
       iconName="task"
-      title={t('careCircle.dashboard.sections.tasks.title')}
-      subtitle={subtitle}
+      value={isLoading ? '—' : String(summary.dueToday)}
+      label={t('careCircle.dashboard.today.tasksLabel')}
       onPress={() => router.push('/tasks')}
+      accessibilityHint={t('careCircle.dashboard.sections.tasks.title')}
     />
   );
 }

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import {
   FigmaFormCard,
   FigmaFormField,
@@ -22,7 +22,6 @@ import { FigmaScheduleFields, scheduleDatesValid } from './figma-schedule-fields
 import { useCreateMedication } from './hooks';
 import { medicationSchema } from './schema';
 import { defaultScheduleDraft, prepareSchedule, type ScheduleDraft } from './schedule-fields';
-import { duplicateTimesInDraft } from './schedule-validation';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
@@ -53,11 +52,8 @@ export function MedicationForm({ circleId }: { circleId: string }) {
 
   const { dirty } = useUnsavedChanges({ name, dosage, medForm, instructions, withFood, schedule });
   const submitting = create.isPending;
-  // Mirror the schedule modal: block save while the schedule has duplicate times
-  // (the inline error in the schedule fields tells the user which rows to fix).
-  const hasDuplicateTimes = duplicateTimesInDraft(schedule).length > 0;
-  // Block save when the schedule dates violate the add-flow constraints (no past
-  // dates; end not before start). The pickers also enforce this via minDate.
+  // Whether the schedule's add-flow date constraints hold (no past dates; end not
+  // before start). The pickers enforce this; onSubmit re-checks before saving.
   const datesValid = scheduleDatesValid(schedule, todayYmd());
 
   // Navigate back only after the guard has released (next commit), so a successful
@@ -91,7 +87,10 @@ export function MedicationForm({ circleId }: { circleId: string }) {
 
     setMedErrors(med.success ? {} : fieldErrors(med.error));
     setScheduleErrors(prepared.ok ? {} : prepared.errors);
-    if (!med.success || !prepared.ok) return;
+    // Block invalid submits here (not via a disabled button): prepareSchedule
+    // rejects duplicate/short schedules, and the schedule fields surface past /
+    // end-before-start dates inline. The CTA itself stays a visible green button.
+    if (!med.success || !prepared.ok || !datesValid) return;
 
     setSubmitError(null);
     try {
@@ -116,25 +115,7 @@ export function MedicationForm({ circleId }: { circleId: string }) {
       title={t('medications.addTitle')}
       subtitle={t('medications.addSubtitle')}
       onBack={() => router.back()}
-      disclaimer={t('medications.disclaimer')}
-      footer={
-        <View style={styles.footer}>
-          {submitError ? (
-            <Text
-              style={[styles.footerError, { color: theme.errorFg }]}
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite">
-              {submitError}
-            </Text>
-          ) : null}
-          <FigmaButton
-            label={t('medications.add')}
-            onPress={onSubmit}
-            loading={submitting}
-            disabled={!dirty || hasDuplicateTimes || !datesValid}
-          />
-        </View>
-      }>
+      disclaimer={t('medications.disclaimer')}>
       <UnsavedChangesGuard when={dirty && !submitted} />
 
       {/* Medication info */}
@@ -204,6 +185,21 @@ export function MedicationForm({ circleId }: { circleId: string }) {
           error={scheduleErrors.notes ? t('validation.tooLong') : undefined}
         />
       </FigmaFormCard>
+
+      {/* Primary CTA — rendered directly in the body (not the footer prop, which
+          did not render on Android). Always a filled teal button; an invalid press
+          runs validation and shows inline errors. */}
+      <View style={styles.footer}>
+        {submitError ? (
+          <Text
+            style={[styles.footerError, { color: theme.errorFg }]}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite">
+            {submitError}
+          </Text>
+        ) : null}
+        <FigmaFooterPrimaryButton label={t('medications.add')} onPress={onSubmit} loading={submitting} />
+      </View>
     </FigmaFormScreen>
   );
 }

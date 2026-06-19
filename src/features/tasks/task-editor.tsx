@@ -295,7 +295,6 @@ function TaskFields({ circleId, initial }: { circleId: string; initial: CareTask
         saveLabel={t('common.saveChanges')}
         onSave={onSubmit}
         saving={submitting}
-        disabled={!dirty}
         status={status}
         savedLabel={t('tasks.saved')}
         errorLabel={t('tasks.saveFailed')}

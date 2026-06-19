@@ -15,7 +15,7 @@ import {
   scheduleToDraft,
   type ScheduleDraft,
 } from './schedule-fields';
-import { duplicateTimesInDraft, findScheduleConflicts } from './schedule-validation';
+import { findScheduleConflicts } from './schedule-validation';
 
 /** Add/edit a single dose schedule in a bottom-sheet modal (managers only). */
 export function ScheduleModalHost({
@@ -45,7 +45,6 @@ export function ScheduleModalHost({
   const submitting = create.isPending || update.isPending;
   const baseline = JSON.stringify(initial ? scheduleToDraft(initial) : defaultScheduleDraft());
   const dirty = JSON.stringify(draft) !== baseline;
-  const hasDuplicateTimes = duplicateTimesInDraft(draft).length > 0;
 
   function requestClose() {
     if (!dirty) {
@@ -107,7 +106,6 @@ export function ScheduleModalHost({
       cancelLabel={t('common.cancel')}
       closeLabel={t('common.close')}
       submitting={submitting}
-      submitDisabled={!dirty || hasDuplicateTimes}
       error={submitError}
       onSubmit={onSubmit}
       onClose={requestClose}>

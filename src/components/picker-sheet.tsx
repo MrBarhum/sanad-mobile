@@ -6,7 +6,6 @@ import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import { FormButton } from './figma/form-button';
 import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
@@ -82,12 +81,49 @@ export function PickerSheet({
 
             <View style={styles.body}>{children}</View>
 
+            {/* Centered, vertically-stacked text actions. Done is high-contrast
+                Sanad teal; Clear and Cancel are high-contrast (near-white in dark)
+                — never dim/right-aligned. Behavior: Done commits, Cancel/backdrop
+                discards, Clear (when provided) clears. */}
             <View style={styles.actions}>
-              <FormButton label={doneLabel} onPress={onDone} style={styles.action} />
+              <Pressable
+                onPress={onDone}
+                accessibilityRole="button"
+                accessibilityLabel={doneLabel}
+                style={({ pressed }) => [
+                  styles.actionRow,
+                  pressed ? { backgroundColor: theme.backgroundSelected } : null,
+                ]}>
+                <ThemedText style={[styles.actionLabel, Cairo.bold, { color: theme.primary }]}>
+                  {doneLabel}
+                </ThemedText>
+              </Pressable>
               {onClear ? (
-                <FormButton label={clearLabel} variant="secondary" onPress={onClear} style={styles.action} />
+                <Pressable
+                  onPress={onClear}
+                  accessibilityRole="button"
+                  accessibilityLabel={clearLabel}
+                  style={({ pressed }) => [
+                    styles.actionRow,
+                    pressed ? { backgroundColor: theme.backgroundSelected } : null,
+                  ]}>
+                  <ThemedText style={[styles.actionLabel, Cairo.semibold, { color: theme.text }]}>
+                    {clearLabel}
+                  </ThemedText>
+                </Pressable>
               ) : null}
-              <FormButton label={cancelLabel} variant="plain" onPress={onCancel} style={styles.action} />
+              <Pressable
+                onPress={onCancel}
+                accessibilityRole="button"
+                accessibilityLabel={cancelLabel}
+                style={({ pressed }) => [
+                  styles.actionRow,
+                  pressed ? { backgroundColor: theme.backgroundSelected } : null,
+                ]}>
+                <ThemedText style={[styles.actionLabel, Cairo.semibold, { color: theme.text }]}>
+                  {cancelLabel}
+                </ThemedText>
+              </Pressable>
             </View>
           </ThemedView>
         </Pressable>
@@ -198,8 +234,14 @@ const styles = StyleSheet.create({
   // flex:1 WheelColumns from collapsing to zero width — the cause of the blank
   // Android picker. Do NOT make this a row.
   body: { width: '100%' },
-  actions: { gap: Spacing.two },
-  action: { width: '100%' },
+  actions: { gap: Spacing.one },
+  actionRow: {
+    minHeight: TouchTarget.min,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionLabel: { fontSize: 17, lineHeight: 24, textAlign: 'center' },
   column: { flex: 1, gap: Spacing.one },
   columnLabel: { textAlign: 'center' },
   columnScroll: {

@@ -9,15 +9,18 @@ import {
   ChevronLeft,
   Clock,
   FileText,
+  ListChecks,
   Phone,
+  Pill,
   Stethoscope,
+  UserPlus,
   Users,
   X,
 } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useColorScheme, useWindowDimensions } from 'react-native';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaScreen } from '@/components/figma/figma-screen';
@@ -74,6 +77,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   const router = useRouter();
   const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const c = FigmaColors[scheme];
+  const { width } = useWindowDimensions();
   const date = todayYmd();
 
   const { doses } = useTodayDoses(circle.circleId, date);
@@ -136,12 +140,20 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
       : `${isolateLtr(ymdFromInstant(nextAppt.starts_at))}  ${isolateLtr(apptTime)}`
     : '';
 
+  // Quick access to every important reachable area (2 rows of 4). Order is the
+  // natural RTL reading order; the wrap grid places the first item top-right.
   const quickActions: { id: string; route: string; label: string; color: string; Icon: IconCmp }[] = [
     { id: 'vitals', route: '/vitals', label: t('careCircle.dashboard.sections.vitals.title'), color: FigmaCategory.blue, Icon: Activity },
     { id: 'logs', route: '/daily-logs', label: t('careCircle.dashboard.sections.dailyLogs.title'), color: FigmaCategory.purple, Icon: FileText },
     { id: 'doctors', route: '/doctors', label: t('careCircle.dashboard.sections.doctors.title'), color: FigmaCategory.green, Icon: Stethoscope },
     { id: 'members', route: '/circle-members', label: t('circleMembers.title'), color: FigmaCategory.gold, Icon: Users },
+    { id: 'medications', route: '/medications', label: t('careCircle.dashboard.sections.medications.title'), color: FigmaCategory.teal, Icon: Pill },
+    { id: 'tasks', route: '/tasks', label: t('careCircle.dashboard.sections.tasks.title'), color: FigmaCategory.blue, Icon: ListChecks },
+    { id: 'appointments', route: '/appointments', label: t('careCircle.dashboard.sections.appointments.title'), color: FigmaCategory.purple, Icon: Calendar },
+    { id: 'visits', route: '/visits', label: t('careCircle.dashboard.sections.visits.title'), color: FigmaCategory.green, Icon: UserPlus },
   ];
+  // Exact 4-up tile width (screen minus the FigmaScreen gutters minus 3 column gaps).
+  const quickTileWidth = (width - FigmaLayout.gutter * 2 - 12 * 3) / 4;
 
   const muted = { color: c.muted, fontFamily: FigmaFont.regular };
 
@@ -328,7 +340,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
         </FigmaCard>
       ) : null}
 
-      {/* Quick actions — 4-up */}
+      {/* Quick actions — 4-up grid, wraps to a second row */}
       <View>
         <Text style={[styles.sectionLabel, muted]}>{t('careCircle.dashboard.today.quickActions')}</Text>
         <View style={styles.quickGrid}>
@@ -338,7 +350,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
               onPress={() => router.push(qa.route as never)}
               accessibilityRole="button"
               accessibilityLabel={qa.label}
-              style={[styles.quickTile, { backgroundColor: c.card, borderColor: c.border }]}>
+              style={[styles.quickTile, { width: quickTileWidth, backgroundColor: c.card, borderColor: c.border }]}>
               <IconChip Icon={qa.Icon} color={qa.color} size={40} radius={FigmaRadius.r12} iconSize={20} />
               <Text style={[styles.quickLabel, muted]} numberOfLines={2}>
                 {qa.label}
@@ -570,9 +582,8 @@ const styles = StyleSheet.create({
   apptLoc: { fontSize: 12 },
   // Quick actions
   sectionLabel: { fontSize: 13, fontFamily: FigmaFont.semibold, marginBottom: 10 },
-  quickGrid: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 12 },
   quickTile: {
-    flex: 1,
     alignItems: 'center',
     gap: 8,
     borderRadius: FigmaRadius.r16,
