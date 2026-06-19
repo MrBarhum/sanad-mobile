@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleShee
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Glyph } from '@/constants/glyphs';
-import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Gutter, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { FigmaFooterPrimaryButton } from './figma/figma-footer-primary-button';
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MaxFormWidth,
     alignSelf: 'center',
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
+    borderTopLeftRadius: Radius.card,
+    borderTopRightRadius: Radius.card,
     borderWidth: StyleSheet.hairlineWidth,
     maxHeight: '92%',
     paddingTop: Spacing.two,
@@ -122,8 +122,8 @@ const styles = StyleSheet.create({
   // Visual bottom-sheet affordance (dismissal stays explicit via Cancel/close).
   grabber: {
     alignSelf: 'center',
-    width: 44,
-    height: 5,
+    width: 48,
+    height: 8,
     borderRadius: Radius.pill,
     marginBottom: Spacing.three,
   },
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Gutter,
     gap: Spacing.three,
   },
   title: { flexShrink: 1 },
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   close: { fontSize: 20, fontWeight: '600' },
   content: {
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Gutter,
     paddingTop: Spacing.three,
     gap: Spacing.three,
   },

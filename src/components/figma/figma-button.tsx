@@ -18,7 +18,7 @@ type FigmaButtonProps = {
 };
 
 /**
- * The Figma button: a filled teal primary (rounded-2xl), a quiet secondary
+ * The Figma button: a filled teal primary (rounded-xl), a quiet secondary
  * (elevated + hairline), or a filled red danger. Cairo bold label, ≥52dp tall,
  * optional leading lucide icon. Matches the Figma sheet/save buttons.
  */
@@ -81,7 +81,7 @@ export function FigmaButton({
 const styles = StyleSheet.create({
   btn: {
     minHeight: 52,
-    borderRadius: FigmaRadius.r16,
+    borderRadius: FigmaRadius.r12,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',

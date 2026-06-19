@@ -3,7 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Glyph } from '@/constants/glyphs';
-import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Gutter, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Cairo } from './figma/form-typography';
@@ -211,18 +211,18 @@ const styles = StyleSheet.create({
   sheet: {
     width: '100%',
     maxHeight: '92%',
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
+    borderTopLeftRadius: Radius.card,
+    borderTopRightRadius: Radius.card,
     borderWidth: StyleSheet.hairlineWidth,
     paddingTop: Spacing.two,
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Gutter,
     gap: Spacing.three,
   },
   // Visual bottom-sheet affordance (dismissal stays explicit via Cancel/close).
   grabber: {
     alignSelf: 'center',
-    width: 44,
-    height: 5,
+    width: 48,
+    height: 8,
     borderRadius: Radius.pill,
   },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.three },

@@ -14,7 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Glyph } from '@/constants/glyphs';
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Gutter, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { FigmaFont } from './figma-tokens';
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Gutter,
     paddingBottom: Spacing.three,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
@@ -428,9 +428,9 @@ const styles = StyleSheet.create({
   headerText: { flex: 1 },
   headerTitle: { fontSize: 18, fontFamily: FigmaFont.bold },
   headerSubtitle: { fontSize: 12, fontFamily: FigmaFont.regular, marginTop: 1 },
-  banner: { paddingVertical: 10, paddingHorizontal: Spacing.three },
+  banner: { paddingVertical: 10, paddingHorizontal: Gutter },
   bannerText: { fontSize: 12, lineHeight: 18, fontFamily: FigmaFont.regular },
-  scrollContent: { padding: Spacing.three, gap: Spacing.three },
+  scrollContent: { paddingHorizontal: Gutter, paddingTop: Spacing.three, gap: Spacing.three },
   // Inline footer block: extra separation above the CTA beyond the scroll-content
   // gap. Horizontal inset comes from scrollContent's padding; bottom (safe-area)
   // padding is applied inline at the call site.

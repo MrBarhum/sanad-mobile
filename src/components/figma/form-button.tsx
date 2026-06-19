@@ -31,7 +31,7 @@ type FormButtonProps = {
  * the same theme (already the Figma teal / warm-graphite palette) so it sits
  * coherently next to the other reskinned primitives, and differs from the legacy
  * `Button` ONLY by rendering its label in **Cairo** (the Figma typeface) on the
- * Figma rounded-2xl radius. The legacy `Button` is left untouched for the
+ * Figma rounded-xl radius. The legacy `Button` is left untouched for the
  * already-migrated center screens that consume it.
  */
 export function FormButton({
@@ -119,7 +119,7 @@ export function FormButton({
 const styles = StyleSheet.create({
   base: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.lg, // 16 — Figma rounded-2xl button
+    borderRadius: Radius.md, // 12 — Figma rounded-xl button
     alignItems: 'center',
     justifyContent: 'center',
   },

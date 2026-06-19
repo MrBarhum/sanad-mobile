@@ -148,7 +148,7 @@ export function DateField({
         style={[
           styles.trigger,
           {
-            backgroundColor: theme.backgroundElement,
+            backgroundColor: theme.backgroundSunken,
             borderColor: error ? theme.errorFg : theme.border,
             opacity: disabled ? 0.6 : 1,
           },
@@ -196,9 +196,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderRadius: Radius.md,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: 14,
     minHeight: TouchTarget.comfortable,
   },
   triggerText: { fontSize: 16, flexShrink: 1 },

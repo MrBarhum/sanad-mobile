@@ -20,7 +20,8 @@ type FigmaFooterPrimaryButtonProps = {
  * (otherwise near-identical) implementation did not appear. So it deliberately
  * avoids the extras the previous version carried (a function-form `style`,
  * `overflow:'hidden'`, `numberOfLines`, and a custom `fontFamily`): a full-width,
- * 64dp, filled Sanad-teal rounded rectangle with a high-contrast centered label, in
+ * 56dp (Sanad primary-action floor; Figma's save CTA is 52dp), radius-12 (Figma
+ * rounded-xl) filled Sanad-teal rectangle with a high-contrast centered label, in
  * light AND dark mode.
  *
  * It takes NO `variant`, `disabled`, or `style` prop, so a caller can't collapse it
@@ -58,11 +59,11 @@ export function FigmaFooterPrimaryButton({
 const styles = StyleSheet.create({
   button: {
     width: '100%',
-    minHeight: 64,
-    borderRadius: 18,
+    minHeight: 56,
+    borderRadius: 12,
     paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: { fontSize: 16, fontWeight: '800', textAlign: 'center' },
+  label: { fontSize: 16, fontWeight: '700', textAlign: 'center' },
 });
