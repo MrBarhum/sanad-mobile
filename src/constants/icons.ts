@@ -102,6 +102,7 @@ export const ICONS = {
   edit: { family: 'ionicons', name: 'create-outline' }, // pencil (shares the dailyLog glyph)
   copy: { family: 'ionicons', name: 'copy-outline' },
   view: { family: 'ionicons', name: 'eye-outline' },
+  viewOff: { family: 'ionicons', name: 'eye-off-outline' },
   invite: { family: 'ionicons', name: 'person-add-outline' },
   removeMember: { family: 'ionicons', name: 'person-remove-outline' },
   owner: { family: 'material-community', name: 'crown-outline' }, // care-circle owner marker

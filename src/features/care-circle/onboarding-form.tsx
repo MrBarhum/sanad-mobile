@@ -1,22 +1,30 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, TextInput } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import { FigmaFormField } from '@/components/figma/figma-form-screen';
+import { Cairo } from '@/components/figma/form-typography';
+import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Gutter, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { useCreateCareCircle } from './hooks';
 import { createCircleSchema } from './schema';
 
 /**
- * First-run onboarding: create the care circle and its care recipient. Rendered
- * by Home when the user is not yet an active member of any circle.
+ * First-run onboarding: create the care circle and its care recipient — an exact
+ * rebuild of the Figma CreateCircle screen (brand mark + title + amber invite
+ * banner + one grouped card [circle name · divider · "معلومات المسنّ" · recipient
+ * name* · birth date] + filled teal CTA + outlined join button). Figma blue →
+ * Sanad teal. The create-circle mutation/schema/data flow are unchanged.
  */
 export function CareCircleOnboarding({ userId }: { userId: string }) {
   const { t } = useTranslation();
@@ -27,25 +35,29 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
   const [circleName, setCircleName] = useState(() => t('careCircle.onboarding.circleNameDefault'));
   const [recipientName, setRecipientName] = useState('');
   const [birthDate, setBirthDate] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ circleName?: string; recipientName?: string; birthDate?: string }>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const submitting = createCircle.isPending;
 
   async function onSubmit() {
-    setError(null);
+    setSubmitError(null);
 
     const parsed = createCircleSchema.safeParse({ circleName, recipientName, birthDate });
     if (!parsed.success) {
-      const field = parsed.error.issues[0]?.path[0];
-      setError(
-        field === 'recipientName'
-          ? t('careCircle.onboarding.errors.recipientName')
-          : field === 'birthDate'
-            ? t('careCircle.onboarding.errors.birthDate')
-            : t('careCircle.onboarding.errors.circleName'),
-      );
+      const next: { circleName?: string; recipientName?: string; birthDate?: string } = {};
+      for (const issue of parsed.error.issues) {
+        if (issue.path[0] === 'circleName' && !next.circleName)
+          next.circleName = t('careCircle.onboarding.errors.circleName');
+        if (issue.path[0] === 'recipientName' && !next.recipientName)
+          next.recipientName = t('careCircle.onboarding.errors.recipientName');
+        if (issue.path[0] === 'birthDate' && !next.birthDate)
+          next.birthDate = t('careCircle.onboarding.errors.birthDate');
+      }
+      setErrors(next);
       return;
     }
+    setErrors({});
 
     try {
       await createCircle.mutateAsync({
@@ -55,105 +67,105 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
       });
       // On success the summary query is invalidated and Home swaps to the dashboard.
     } catch {
-      setError(t('careCircle.onboarding.errors.submitFailed'));
+      setSubmitError(t('careCircle.onboarding.errors.submitFailed'));
     }
   }
 
-  const inputStyle = [
-    styles.input,
-    {
-      color: theme.text,
-      backgroundColor: theme.backgroundElement,
-      borderColor: theme.backgroundSelected,
-    },
-  ];
-
   return (
-    <Screen maxWidth={MaxFormWidth} edges={{ top: true }} keyboardAvoiding>
-      <ThemedView style={styles.header}>
-        <ThemedText type="title" accessibilityRole="header">
+    <Screen maxWidth={MaxFormWidth} edges={{ top: true }} keyboardAvoiding gap={Spacing.three}>
+      <View style={styles.header}>
+        <View style={styles.brandRow}>
+          <View style={[styles.brandCircle, { backgroundColor: theme.primary }]}>
+            <Svg width={20} height={20} viewBox="0 0 20 20" fill="none">
+              <Circle cx={10} cy={10} r={7} stroke="rgba(255,255,255,0.35)" strokeWidth={1.5} />
+              <Path d="M10 3 A7 7 0 1 1 3 10" stroke="#FFFFFF" strokeWidth={1.5} strokeLinecap="round" fill="none" />
+              <Rect x={7} y={9} width={6} height={3} rx={1.5} fill="#FFFFFF" opacity={0.9} />
+            </Svg>
+          </View>
+          <Text style={[styles.brandName, Cairo.bold, { color: theme.text }]}>{t('auth.brand')}</Text>
+        </View>
+        <Text style={[styles.title, Cairo.bold, { color: theme.text }]}>
           {t('careCircle.onboarding.title')}
-        </ThemedText>
-        <ThemedText themeColor="textSecondary">
+        </Text>
+        <ThemedText themeColor="textSecondary" style={Cairo.regular}>
           {t('careCircle.onboarding.subtitle')}
         </ThemedText>
-      </ThemedView>
+      </View>
 
-      <ThemedView style={styles.form}>
-        <ThemedView style={styles.field}>
-          <ThemedText type="smallBold">{t('careCircle.onboarding.circleNameLabel')}</ThemedText>
-          <TextInput
+      <InfoBanner tone="accent" text={t('careCircle.onboarding.inviteHint')} />
+
+      <Surface>
+        <View style={styles.cardFields}>
+          <FigmaFormField
+            label={t('careCircle.onboarding.circleNameLabel')}
             value={circleName}
             onChangeText={setCircleName}
             placeholder={t('careCircle.onboarding.circleNamePlaceholder')}
-            placeholderTextColor={theme.textSecondary}
-            accessibilityLabel={t('careCircle.onboarding.circleNameLabel')}
-            style={inputStyle}
+            error={errors.circleName}
           />
-        </ThemedView>
 
-        <ThemedView style={styles.field}>
-          <ThemedText type="smallBold">
-            {t('careCircle.onboarding.recipientNameLabel')}
+          <View style={[styles.divider, { backgroundColor: theme.divider }]} />
+
+          <ThemedText type="smallBold" themeColor="textMuted" style={Cairo.semibold}>
+            {t('careCircle.onboarding.recipientSection')}
           </ThemedText>
-          <TextInput
+
+          <FigmaFormField
+            label={t('careCircle.onboarding.recipientNameLabel')}
             value={recipientName}
             onChangeText={setRecipientName}
             placeholder={t('careCircle.onboarding.recipientNamePlaceholder')}
-            placeholderTextColor={theme.textSecondary}
-            accessibilityLabel={t('careCircle.onboarding.recipientNameLabel')}
-            style={inputStyle}
+            required
+            error={errors.recipientName}
           />
-        </ThemedView>
 
-        <DateField
-          label={t('careCircle.onboarding.birthDateLabel')}
-          value={birthDate}
-          onChange={setBirthDate}
-          clearable
-        />
+          <DateField
+            label={t('careCircle.onboarding.birthDateLabel')}
+            value={birthDate}
+            onChange={setBirthDate}
+            clearable
+            error={errors.birthDate}
+          />
+        </View>
+      </Surface>
 
-        {error ? (
-          <ThemedText
-            style={{ color: theme.errorFg }}
-            accessibilityRole="alert"
-            accessibilityLiveRegion="polite">
-            {error}
-          </ThemedText>
-        ) : null}
+      {submitError ? (
+        <ThemedText
+          style={[{ color: theme.errorFg }, Cairo.regular]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite">
+          {submitError}
+        </ThemedText>
+      ) : null}
 
-        <Button
-          label={t('careCircle.onboarding.submit')}
-          onPress={onSubmit}
-          loading={submitting}
-          disabled={submitting}
-          style={styles.submit}
-        />
+      <FigmaFooterPrimaryButton
+        label={t('careCircle.onboarding.submit')}
+        onPress={onSubmit}
+        loading={submitting}
+      />
 
-        <Button
-          label={t('careCircle.onboarding.joinWithCode')}
-          onPress={() => router.push('/join-circle')}
-          variant="plain"
-          disabled={submitting}
-        />
-      </ThemedView>
+      <Button
+        label={t('careCircle.onboarding.joinWithCode')}
+        onPress={() => router.push('/join-circle')}
+        variant="secondary"
+        disabled={submitting}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  // Screen contributes Spacing.three between groups; the extra margins lift the
-  // header→form and form→submit rhythm to a generous Spacing.four/five.
-  header: { gap: Spacing.two, marginBottom: Spacing.two },
-  form: { gap: Spacing.three },
-  field: { gap: Spacing.one },
-  input: {
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: 16,
-    minHeight: TouchTarget.comfortable,
+  header: { gap: Spacing.two },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, marginBottom: Spacing.two },
+  brandCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  submit: { marginTop: Spacing.three },
+  brandName: { fontSize: 18 },
+  title: { fontSize: 24, lineHeight: 34 },
+  cardFields: { gap: Gutter },
+  divider: { height: StyleSheet.hairlineWidth },
 });

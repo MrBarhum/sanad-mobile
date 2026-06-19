@@ -1,15 +1,21 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
 import { FormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
+import { Cairo } from '@/components/figma/form-typography';
+import { Icon } from '@/components/icon';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { Surface } from '@/components/surface';
+import { ThemedText } from '@/components/themed-text';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { MaxFormWidth } from '@/constants/theme';
+import { MaxFormWidth, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { fieldErrors } from '@/utils/form';
 
@@ -58,6 +64,12 @@ export function RecipientProfileForm({
   );
 }
 
+/** A hairline divider between fields inside a card (Figma recipient cards). */
+function CardDivider() {
+  const theme = useTheme();
+  return <View style={[styles.divider, { backgroundColor: theme.divider }]} />;
+}
+
 function RecipientFields({
   circleId,
   canManage,
@@ -68,6 +80,7 @@ function RecipientFields({
   initial: Recipient;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const update = useUpdateRecipient(circleId);
 
   const [fullName, setFullName] = useState(initial.full_name ?? '');
@@ -148,70 +161,117 @@ function RecipientFields({
     }
   }
 
+  const initialLetter = fullName.trim().charAt(0);
+
   return (
     <Screen maxWidth={MaxFormWidth} keyboardAvoiding>
       <UnsavedChangesGuard when={canManage && dirty} />
       {!canManage ? <InfoBanner tone="neutral" text={t('recipientProfile.readOnly')} /> : null}
 
-      <FormField
-        label={t('recipientProfile.fields.fullName')}
-        value={fullName}
-        onChangeText={bind(setFullName)}
-        editable={canManage}
-        error={fieldError(errors.full_name)}
-      />
-      <DateField
-        label={t('recipientProfile.fields.birthDate')}
-        value={birthDate}
-        onChange={bind(setBirthDate)}
-        disabled={!canManage}
-        clearable
-        error={fieldError(errors.birth_date)}
-      />
-      <FormField
-        label={t('recipientProfile.fields.dialect')}
-        value={dialect}
-        onChangeText={bind(setDialect)}
-        editable={canManage}
-        placeholder={t('recipientProfile.placeholders.dialect')}
-        error={fieldError(errors.dialect)}
-      />
-      <FormField
-        label={t('recipientProfile.fields.bloodType')}
-        value={bloodType}
-        onChangeText={bind(setBloodType)}
-        editable={canManage}
-        placeholder={t('recipientProfile.placeholders.bloodType')}
-        autoCapitalize="characters"
-        error={fieldError(errors.blood_type)}
-      />
-      <FormField
-        label={t('recipientProfile.fields.allergies')}
-        value={allergies}
-        onChangeText={bind(setAllergies)}
-        editable={canManage}
-        placeholder={t('recipientProfile.placeholders.allergies')}
-        multiline
-        error={fieldError(errors.allergies)}
-      />
-      <FormField
-        label={t('recipientProfile.fields.chronicConditions')}
-        value={chronic}
-        onChangeText={bind(setChronic)}
-        editable={canManage}
-        placeholder={t('recipientProfile.placeholders.chronicConditions')}
-        multiline
-        error={fieldError(errors.chronic_conditions)}
-      />
-      <FormField
-        label={t('recipientProfile.fields.emergencyNotes')}
-        value={notes}
-        onChangeText={bind(setNotes)}
-        editable={canManage}
-        placeholder={t('recipientProfile.placeholders.emergencyNotes')}
-        multiline
-        error={fieldError(errors.emergency_notes)}
-      />
+      {/* Avatar + name summary card (Figma: 56×56 rounded-square, teal border). */}
+      <Surface>
+        <View style={styles.summary}>
+          <View style={[styles.avatar, { backgroundColor: theme.primaryBg, borderColor: theme.primary }]}>
+            {initialLetter ? (
+              <Text style={[styles.avatarText, Cairo.bold, { color: theme.primaryText }]}>{initialLetter}</Text>
+            ) : (
+              <Icon name="profile" size={28} color="primaryText" />
+            )}
+          </View>
+          <View style={styles.summaryText}>
+            {fullName.trim() ? (
+              <Text style={[styles.summaryName, Cairo.bold, { color: theme.text }]}>{fullName}</Text>
+            ) : null}
+            {birthDate ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                {birthDate}
+              </ThemedText>
+            ) : null}
+          </View>
+        </View>
+      </Surface>
+
+      {/* Personal info card */}
+      <Surface radius={Radius.lg}>
+        <View style={styles.cardFields}>
+          <ThemedText type="smallBold" themeColor="textMuted" style={Cairo.semibold}>
+            {t('recipientProfile.sections.personal')}
+          </ThemedText>
+          <FormField
+            label={t('recipientProfile.fields.fullName')}
+            value={fullName}
+            onChangeText={bind(setFullName)}
+            editable={canManage}
+            error={fieldError(errors.full_name)}
+          />
+          <CardDivider />
+          <DateField
+            label={t('recipientProfile.fields.birthDate')}
+            value={birthDate}
+            onChange={bind(setBirthDate)}
+            disabled={!canManage}
+            clearable
+            error={fieldError(errors.birth_date)}
+          />
+          <CardDivider />
+          <FormField
+            label={t('recipientProfile.fields.dialect')}
+            value={dialect}
+            onChangeText={bind(setDialect)}
+            editable={canManage}
+            placeholder={t('recipientProfile.placeholders.dialect')}
+            error={fieldError(errors.dialect)}
+          />
+        </View>
+      </Surface>
+
+      {/* Medical / emergency info card */}
+      <Surface radius={Radius.lg}>
+        <View style={styles.cardFields}>
+          <ThemedText type="smallBold" themeColor="textMuted" style={Cairo.semibold}>
+            {t('recipientProfile.sections.medical')}
+          </ThemedText>
+          <FormField
+            label={t('recipientProfile.fields.bloodType')}
+            value={bloodType}
+            onChangeText={bind(setBloodType)}
+            editable={canManage}
+            placeholder={t('recipientProfile.placeholders.bloodType')}
+            autoCapitalize="characters"
+            error={fieldError(errors.blood_type)}
+          />
+          <CardDivider />
+          <FormField
+            label={t('recipientProfile.fields.allergies')}
+            value={allergies}
+            onChangeText={bind(setAllergies)}
+            editable={canManage}
+            placeholder={t('recipientProfile.placeholders.allergies')}
+            multiline
+            error={fieldError(errors.allergies)}
+          />
+          <CardDivider />
+          <FormField
+            label={t('recipientProfile.fields.chronicConditions')}
+            value={chronic}
+            onChangeText={bind(setChronic)}
+            editable={canManage}
+            placeholder={t('recipientProfile.placeholders.chronicConditions')}
+            multiline
+            error={fieldError(errors.chronic_conditions)}
+          />
+          <CardDivider />
+          <FormField
+            label={t('recipientProfile.fields.emergencyNotes')}
+            value={notes}
+            onChangeText={bind(setNotes)}
+            editable={canManage}
+            placeholder={t('recipientProfile.placeholders.emergencyNotes')}
+            multiline
+            error={fieldError(errors.emergency_notes)}
+          />
+        </View>
+      </Surface>
 
       {canManage ? (
         <FormActions
@@ -226,3 +286,20 @@ function RecipientFields({
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  summary: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { fontSize: 22 },
+  summaryText: { flex: 1, gap: Spacing.half },
+  summaryName: { fontSize: 18, lineHeight: 26 },
+  cardFields: { gap: Spacing.three },
+  divider: { height: StyleSheet.hairlineWidth },
+});

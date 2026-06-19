@@ -58,6 +58,8 @@
       "birthDatePlaceholder": "YYYY-MM-DD",
       "submit": "Create care circle",
       "joinWithCode": "Join with an invitation code",
+      "inviteHint": "You can invite the rest of the family right after creating the circle.",
+      "recipientSection": "Care recipient details",
       "errors": {
         "circleName": "Please enter a care circle name",
         "recipientName": "Please enter the full name",
@@ -356,6 +358,10 @@
     "saved": "Changes saved",
     "saveFailed": "Could not save changes. Please try again.",
     "save": "Save changes",
+    "sections": {
+      "personal": "Personal information",
+      "medical": "Medical & emergency information"
+    },
     "fields": {
       "fullName": "Full name",
       "birthDate": "Birth date",
@@ -988,12 +994,18 @@
     "signUpLink": "Sign up",
     "signInLink": "Sign in",
     "signUpCheckEmail": "Account created. Check your email to confirm your account.",
+    "confirmPassword": "Confirm password",
+    "passwordHint": "At least 6 characters",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "brand": "Sanad",
     "errors": {
       "email": "Please enter a valid email",
       "password": "Password must be at least 6 characters",
       "generic": "Could not complete the request",
       "signInFailed": "Invalid login credentials",
-      "signUpFailed": "Could not create the account"
+      "signUpFailed": "Could not create the account",
+      "passwordMismatch": "Passwords do not match"
     }
   },
   "account": {
