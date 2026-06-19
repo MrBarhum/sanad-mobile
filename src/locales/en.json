@@ -291,11 +291,11 @@
   },
   "invitations": {
     "invite": "Invite member",
-    "inviteTitle": "Invite a member",
+    "inviteTitle": "Invite a new member",
     "manageTitle": "Invitations",
     "create": "Create invitation",
     "createFailed": "Could not create the invitation. Please try again.",
-    "createdTitle": "Invitation ready",
+    "createdTitle": "Invitation code",
     "createdSubtitle": "Share this code with the person you're inviting. It works once.",
     "codeOnceWarning": "This code is shown only now and can't be retrieved later. If it's lost, revoke it and create a new one.",
     "warning": "Anyone with this code can join the circle and see sensitive care information. Share it only with people you trust.",
@@ -317,11 +317,14 @@
     "revokeFailed": "Could not revoke. Please try again.",
     "managersOnly": "Only the admin and primary caregiver can manage invitations",
     "fields": {
-      "role": "Role",
-      "invitedName": "Person's name (optional)"
+      "role": "Role in the circle",
+      "invitedName": "Reference name (optional)"
     },
     "placeholders": {
-      "invitedName": "e.g. Sara — for your reference"
+      "invitedName": "e.g. my daughter Noura"
+    },
+    "helpers": {
+      "invitedName": "For your reminder only — the invitee won't see it"
     },
     "status": {
       "pending": "Pending",
@@ -500,26 +503,26 @@
     "clearDays": "Clear all",
     "periodTitle": "Medication period",
     "fromDate": "From",
-    "addTime": "Add time",
+    "addTime": "Add dose time",
     "fields": {
       "name": "Medication name",
       "dosage": "Dosage",
       "form": "Form",
-      "instructions": "Instructions",
+      "instructions": "Usage instructions",
       "withFood": "Take with food",
       "days": "Days of the week",
       "times": "Dose times",
       "startDate": "Start date",
       "endDate": "End date",
-      "scheduleNotes": "Schedule notes"
+      "scheduleNotes": "Additional notes"
     },
     "placeholders": {
       "name": "e.g. Metformin",
       "dosage": "e.g. 500 mg",
       "form": "e.g. tablet, syrup, injection",
-      "instructions": "e.g. after meals",
+      "instructions": "e.g. take with water",
       "endDate": "Optional — YYYY-MM-DD",
-      "scheduleNotes": "Additional notes"
+      "scheduleNotes": "Any special instructions..."
     },
     "errors": {
       "name": "Please enter the medication name",
@@ -612,7 +615,7 @@
       "notes": "Notes"
     },
     "placeholders": {
-      "title": "e.g. Pick up medication",
+      "title": "e.g. Pick up medication from the pharmacy",
       "description": "Additional details",
       "dueDate": "YYYY-MM-DD",
       "dueTime": "HH:MM",
@@ -681,7 +684,7 @@
     "noDoctor": "No doctor",
     "fields": {
       "title": "Appointment title",
-      "type": "Type",
+      "type": "Appointment type",
       "date": "Date",
       "startTime": "Start time",
       "endTime": "End time",
@@ -696,7 +699,7 @@
       "startTime": "HH:MM",
       "endTime": "Optional — HH:MM",
       "location": "e.g. King Fahd Hospital",
-      "notes": "Additional notes"
+      "notes": "Instructions or additional information..."
     },
     "errors": {
       "title": "Please enter an appointment title",
@@ -726,7 +729,7 @@
   },
   "visits": {
     "title": "Family visits",
-    "addTitle": "Add visit",
+    "addTitle": "Record a visit",
     "detailTitle": "Visit details",
     "add": "Add visit",
     "disclaimer": "For organizing and coordinating family visits only. It does not provide medical advice.",
@@ -737,7 +740,7 @@
     "notFound": "Visit not found",
     "readOnly": "View only — you don't have permission to edit",
     "cannotAdd": "Recording visits is available to active care circle members",
-    "ownVisitNote": "This visit will be recorded under your account",
+    "ownVisitNote": "This visit will appear in your account log",
     "todayTitle": "Today's visits",
     "upcomingTitle": "Upcoming visits",
     "recentTitle": "Recent visits",
@@ -758,14 +761,14 @@
       "endTime": "End time",
       "status": "Status",
       "notes": "Notes",
-      "linkToMe": "Link this visit to my account"
+      "linkToMe": "Link to my account"
     },
     "placeholders": {
-      "visitorName": "e.g. Ahmed",
+      "visitorName": "Who will visit?",
       "visitDate": "YYYY-MM-DD",
       "startTime": "HH:MM",
       "endTime": "Optional — HH:MM",
-      "notes": "Additional notes"
+      "notes": "Visit details..."
     },
     "errors": {
       "visitorName": "Please enter the visitor's name",
@@ -814,12 +817,12 @@
     "painValue": "{{value}} of 10",
     "fields": {
       "logDate": "Date",
-      "mood": "Mood",
+      "mood": "General mood",
       "sleepQuality": "Sleep quality",
       "appetite": "Appetite",
-      "hydration": "Hydration",
-      "painLevel": "Pain level",
-      "mobility": "Mobility",
+      "hydration": "Body hydration",
+      "painLevel": "Observed pain level",
+      "mobility": "Mobility and physical ability",
       "bathroomNotes": "Bathroom notes",
       "foodNotes": "Food notes",
       "activityNotes": "Activity notes",
@@ -879,7 +882,7 @@
   },
   "vitals": {
     "title": "Vital readings",
-    "addTitle": "Add reading",
+    "addTitle": "Record a vital reading",
     "addSubtitle": "Readings for tracking only",
     "detailTitle": "Reading details",
     "add": "Add reading",
@@ -899,8 +902,8 @@
     "mineLabel": "Your reading",
     "valueLabel": "Value",
     "fields": {
-      "type": "Type",
-      "readingAt": "Reading time",
+      "type": "Measurement type",
+      "readingAt": "Date and time",
       "date": "Date",
       "time": "Time",
       "systolic": "Systolic",
@@ -913,9 +916,9 @@
     "placeholders": {
       "systolic": "e.g. 120",
       "diastolic": "e.g. 80",
-      "value": "e.g. 37.5",
+      "value": "Enter the value",
       "unit": "e.g. mmHg",
-      "notes": "Additional notes"
+      "notes": "e.g. after food, while resting..."
     },
     "errors": {
       "date": "Choose a valid date",

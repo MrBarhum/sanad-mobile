@@ -89,6 +89,7 @@ export function InviteForm({ circleId, actorRole }: { circleId: string; actorRol
           value={invitedName}
           onChangeText={setInvitedName}
           placeholder={t('invitations.placeholders.invitedName')}
+          hint={t('invitations.helpers.invitedName')}
         />
       </FigmaFormCard>
 
