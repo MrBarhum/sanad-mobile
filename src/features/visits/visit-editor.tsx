@@ -1,16 +1,16 @@
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/button';
-import { FormActions } from '@/components/form-actions';
+import { FigmaButton } from '@/components/figma/figma-button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FigmaFont } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
-import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
-import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
@@ -20,8 +20,9 @@ import { useAuth } from '@/providers';
 import { formatHm } from '@/utils/date';
 
 import type { FamilyVisit, VisitStatus } from './api';
+import { FigmaVisitFields } from './figma-visit-fields';
 import { useDeleteVisit, useSetVisitStatus, useUpdateVisit, useVisit } from './hooks';
-import { VisitFieldset, prepareVisit, visitDraftFromRow, type VisitDraft } from './visit-fields';
+import { prepareVisit, visitDraftFromRow, type VisitDraft } from './visit-fields';
 
 const STATUS_TONE: Record<VisitStatus, StatusTone> = {
   planned: 'info',
@@ -36,7 +37,16 @@ const STATUS_GLYPH: Record<VisitStatus, string> = {
   cancelled: Glyph.cross,
 };
 
-/** Loads a visit, then renders the view/edit screen with status + delete. */
+/**
+ * View / edit a single family visit — rebuilt in the Figma editor language
+ * (FigmaFormScreen header + grouped FigmaFormCards + body-rendered teal save CTA),
+ * matching the Add-Visit form. Editors (managers, or collaborators on their own
+ * visit) get the same FigmaVisitFields as /visits/new — including the optional
+ * start/end times — plus a status card and a two-step delete; others get a
+ * read-only layout. The account link (visitor_user_id) is preserved on save so RLS
+ * (own-visit / manager) still holds; real hooks, validation, and permissions are
+ * unchanged.
+ */
 export function VisitEditor({
   circleId,
   canManage,
@@ -56,18 +66,14 @@ export function VisitEditor({
   if (visit.isLoading) return <LoadingState />;
   if (visit.isError) {
     return (
-      <ErrorState
-        message={t('visits.loadError')}
-        retryLabel={t('retry')}
-        onRetry={() => visit.refetch()}
-      />
+      <ErrorState message={t('visits.loadError')} retryLabel={t('retry')} onRetry={() => visit.refetch()} />
     );
   }
   if (!visit.data) {
     return (
-      <Screen scroll={false} center>
+      <ThemedView style={styles.centered}>
         <EmptyState icon={Glyph.visit} title={t('visits.notFound')} />
-      </Screen>
+      </ThemedView>
     );
   }
 
@@ -75,22 +81,22 @@ export function VisitEditor({
   const canEdit = canManage || (canCollaborate && isOwner);
 
   return (
-    <Screen>
+    <>
+      {/* The Figma editor draws its own header; hide the native one. */}
+      <Stack.Screen options={{ headerShown: false }} />
       {canEdit ? (
-        <VisitEditFields key={visit.data.id} circleId={circleId} initial={visit.data} />
+        <VisitEditScreen key={visit.data.id} circleId={circleId} initial={visit.data} />
       ) : (
-        <ReadOnlyVisit visit={visit.data} />
+        <VisitViewScreen circleId={circleId} visit={visit.data} canAct={false} />
       )}
-
-      <StatusSection circleId={circleId} visit={visit.data} canAct={canEdit} />
-
-      {canEdit ? <DeleteVisitRow circleId={circleId} id={visit.data.id} /> : null}
-    </Screen>
+    </>
   );
 }
 
-function VisitEditFields({ circleId, initial }: { circleId: string; initial: FamilyVisit }) {
+function VisitEditScreen({ circleId, initial }: { circleId: string; initial: FamilyVisit }) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const router = useRouter();
   const update = useUpdateVisit(circleId);
 
   const [draft, setDraft] = useState<VisitDraft>(() => visitDraftFromRow(initial));
@@ -126,24 +132,53 @@ function VisitEditFields({ circleId, initial }: { circleId: string; initial: Fam
   }
 
   return (
-    <View style={styles.fields}>
+    <FigmaFormScreen title={t('visits.detailTitle')} onBack={() => router.back()}>
       <UnsavedChangesGuard when={dirty} />
-      <VisitFieldset draft={draft} onChange={patch} errors={errors} />
+      <FigmaMutedNote>{t('visits.disclaimer')}</FigmaMutedNote>
 
-      <FormActions
-        saveLabel={t('common.saveChanges')}
-        onSave={onSubmit}
-        saving={submitting}
-        status={status}
-        savedLabel={t('visits.saved')}
-        errorLabel={t('visits.saveFailed')}
-      />
-    </View>
+      <FigmaFormCard>
+        <FigmaVisitFields draft={draft} onChange={patch} errors={errors} />
+      </FigmaFormCard>
+
+      <StatusSection circleId={circleId} visit={initial} canAct />
+
+      <DeleteVisitRow circleId={circleId} id={initial.id} />
+
+      {/* Save CTA — rendered in the body (not the footer prop, which did not render
+          on Android). Final block, below the status + destructive delete cards. */}
+      <View style={styles.footer}>
+        {status === 'saved' ? (
+          <Text style={[styles.statusText, { color: theme.successFg }]} accessibilityLiveRegion="polite">
+            {t('visits.saved')}
+          </Text>
+        ) : null}
+        {status === 'error' ? (
+          <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert">
+            {t('visits.saveFailed')}
+          </Text>
+        ) : null}
+        <FigmaFooterPrimaryButton
+          label={t('common.saveChanges')}
+          onPress={onSubmit}
+          loading={submitting}
+        />
+      </View>
+    </FigmaFormScreen>
   );
 }
 
-function ReadOnlyVisit({ visit }: { visit: FamilyVisit }) {
+function VisitViewScreen({
+  circleId,
+  visit,
+  canAct,
+}: {
+  circleId: string;
+  visit: FamilyVisit;
+  canAct: boolean;
+}) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const router = useRouter();
   const timeParts = [];
   if (visit.start_time) timeParts.push(isolateLtr(formatHm(visit.start_time)));
   if (visit.end_time) timeParts.push(isolateLtr(formatHm(visit.end_time)));
@@ -151,28 +186,26 @@ function ReadOnlyVisit({ visit }: { visit: FamilyVisit }) {
     timeParts.length > 0 ? `${visit.visit_date} ${timeParts.join(' – ')}` : visit.visit_date;
 
   return (
-    <View style={styles.fields}>
-      <Surface tone="sunken">
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('visits.readOnly')}
-        </ThemedText>
-      </Surface>
-      <ThemedText type="sectionTitle">{visit.visitor_name}</ThemedText>
-      <View style={styles.infoGroup}>
-        <InfoRow label={t('visits.whenLabel')} value={when} />
-        {visit.notes ? <InfoRow label={t('visits.fields.notes')} value={visit.notes} /> : null}
-      </View>
-    </View>
+    <FigmaFormScreen title={t('visits.detailTitle')} onBack={() => router.back()}>
+      <FigmaMutedNote>{t('visits.readOnly')}</FigmaMutedNote>
+
+      <FigmaFormCard>
+        <Text style={[styles.title, { color: theme.text }]}>{visit.visitor_name}</Text>
+        <ReadOnlyRow label={t('visits.whenLabel')} value={when} />
+        {visit.notes ? <ReadOnlyRow label={t('visits.fields.notes')} value={visit.notes} /> : null}
+      </FigmaFormCard>
+
+      <StatusSection circleId={circleId} visit={visit} canAct={canAct} />
+    </FigmaFormScreen>
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function ReadOnlyRow({ label, value }: { label: string; value: string }) {
+  const theme = useTheme();
   return (
-    <View style={styles.infoRow}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText type="default">{value}</ThemedText>
+    <View style={styles.row}>
+      <Text style={[styles.rowLabel, { color: theme.textSecondary }]}>{label}</Text>
+      <Text style={[styles.rowValue, { color: theme.text }]}>{value}</Text>
     </View>
   );
 }
@@ -201,9 +234,9 @@ function StatusSection({
   }
 
   return (
-    <Surface style={styles.statusCard}>
-      <View style={styles.statusRow}>
-        <ThemedText type="smallBold">{t('visits.fields.status')}</ThemedText>
+    <FigmaFormCard>
+      <View style={styles.statusHeader}>
+        <Text style={[styles.statusLabel, { color: theme.text }]}>{t('visits.fields.status')}</Text>
         <StatusBadge
           tone={STATUS_TONE[visit.status]}
           glyph={STATUS_GLYPH[visit.status]}
@@ -212,43 +245,36 @@ function StatusSection({
       </View>
 
       {canAct ? (
-        <View style={[styles.actions, { borderTopColor: theme.divider }]}>
-          {visit.status === 'planned' ? (
-            <>
-              <Button
-                size="sm"
-                glyph={Glyph.check}
+        visit.status === 'planned' ? (
+          <View style={styles.actionRow}>
+            <View style={styles.actionCol}>
+              <FigmaButton
                 label={t('visits.markCompleted')}
                 loading={pending}
                 disabled={pending}
                 onPress={() => run('completed')}
-                style={styles.action}
               />
-              <Button
-                size="sm"
-                variant="secondary"
-                glyph={Glyph.cross}
+            </View>
+            <View style={styles.actionCol}>
+              <FigmaButton
                 label={t('visits.markCancelled')}
+                variant="secondary"
                 disabled={pending}
                 onPress={() => run('cancelled')}
-                style={styles.action}
               />
-            </>
-          ) : (
-            <Button
-              size="sm"
-              variant="secondary"
-              glyph={Glyph.clock}
-              label={t('visits.reopen')}
-              loading={pending}
-              disabled={pending}
-              onPress={() => run('planned')}
-              style={styles.action}
-            />
-          )}
-        </View>
+            </View>
+          </View>
+        ) : (
+          <FigmaButton
+            label={t('visits.reopen')}
+            variant="secondary"
+            loading={pending}
+            disabled={pending}
+            onPress={() => run('planned')}
+          />
+        )
       ) : null}
-    </Surface>
+    </FigmaFormCard>
   );
 }
 
@@ -269,49 +295,53 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
     }
   }
 
-  if (confirming) {
-    return (
-      <View style={styles.confirmRow}>
-        <Button
-          variant="danger"
-          label={t('common.confirmDelete')}
-          loading={pending}
-          onPress={onDelete}
-        />
-        <Button
-          variant="secondary"
-          label={t('common.cancel')}
-          disabled={pending}
-          onPress={() => setConfirming(false)}
-        />
-      </View>
-    );
-  }
-
   return (
-    <Button variant="danger" label={t('visits.deleteVisit')} onPress={() => setConfirming(true)} />
+    <FigmaFormCard>
+      {confirming ? (
+        <View style={styles.actionRow}>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('common.confirmDelete')}
+              variant="danger"
+              loading={pending}
+              onPress={onDelete}
+            />
+          </View>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('common.cancel')}
+              variant="secondary"
+              disabled={pending}
+              onPress={() => setConfirming(false)}
+            />
+          </View>
+        </View>
+      ) : (
+        <FigmaButton
+          label={t('visits.deleteVisit')}
+          variant="danger"
+          onPress={() => setConfirming(true)}
+        />
+      )}
+    </FigmaFormCard>
   );
 }
 
 const styles = StyleSheet.create({
-  fields: { gap: Spacing.three },
-  infoGroup: { gap: Spacing.two },
-  infoRow: { gap: Spacing.half },
-  statusCard: { gap: Spacing.two },
-  statusRow: {
+  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
+  footer: { gap: Spacing.two },
+  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
+  title: { fontSize: 18, fontFamily: FigmaFont.bold },
+  row: { gap: 2 },
+  rowLabel: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  rowValue: { fontSize: 16, fontFamily: FigmaFont.regular },
+  statusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
-    marginTop: Spacing.two,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: Spacing.three,
-  },
-  action: { flexGrow: 1, flexBasis: 96 },
-  confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
+  statusLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  actionRow: { flexDirection: 'row', gap: Spacing.two },
+  actionCol: { flex: 1 },
 });

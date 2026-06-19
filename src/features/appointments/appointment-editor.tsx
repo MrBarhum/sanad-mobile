@@ -1,16 +1,16 @@
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/button';
-import { FormActions } from '@/components/form-actions';
-import { Screen } from '@/components/screen';
+import { FigmaButton } from '@/components/figma/figma-button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FigmaFont } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
-import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
@@ -22,11 +22,11 @@ import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
 import type { AppointmentStatus, CareAppointment } from './api';
 import {
-  AppointmentFieldset,
   appointmentDraftFromRow,
   prepareAppointment,
   type AppointmentDraft,
 } from './appointment-fields';
+import { FigmaAppointmentFields } from './figma-appointment-fields';
 import {
   useAppointment,
   useDeleteAppointment,
@@ -47,7 +47,14 @@ const STATUS_GLYPH: Record<AppointmentStatus, string> = {
   cancelled: Glyph.cross,
 };
 
-/** Loads an appointment, then renders the view/edit screen. */
+/**
+ * View / edit a single appointment — rebuilt in the Figma editor language
+ * (FigmaFormScreen header + grouped FigmaFormCards + body-rendered teal save CTA),
+ * matching the Add-Appointment form. Managers get the same FigmaAppointmentFields
+ * as /appointments/new plus a status card and a two-step delete; everyone else gets
+ * a read-only card layout. Real hooks, the appointment-type schema, validation
+ * (prepareAppointment), status transitions, and permissions are all preserved.
+ */
 export function AppointmentEditor({
   circleId,
   canManage,
@@ -73,35 +80,37 @@ export function AppointmentEditor({
   }
   if (!appointment.data) {
     return (
-      <Screen scroll={false} center>
+      <ThemedView style={styles.centered}>
         <EmptyState icon={Glyph.appointment} title={t('appointments.notFound')} />
-      </Screen>
+      </ThemedView>
     );
   }
 
   const doctors = doctorsQuery.data ?? [];
 
   return (
-    <Screen>
+    <>
+      {/* The Figma editor draws its own header; hide the native one. */}
+      <Stack.Screen options={{ headerShown: false }} />
       {canManage ? (
-        <AppointmentEditFields
+        <AppointmentEditScreen
           key={appointment.data.id}
           circleId={circleId}
           initial={appointment.data}
           doctors={doctors}
         />
       ) : (
-        <ReadOnlyAppointment appointment={appointment.data} doctors={doctors} />
+        <AppointmentViewScreen
+          circleId={circleId}
+          appointment={appointment.data}
+          doctors={doctors}
+        />
       )}
-
-      <StatusSection circleId={circleId} appointment={appointment.data} canManage={canManage} />
-
-      {canManage ? <DeleteAppointmentRow circleId={circleId} id={appointment.data.id} /> : null}
-    </Screen>
+    </>
   );
 }
 
-function AppointmentEditFields({
+function AppointmentEditScreen({
   circleId,
   initial,
   doctors,
@@ -111,6 +120,8 @@ function AppointmentEditFields({
   doctors: Doctor[];
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const router = useRouter();
   const update = useUpdateAppointment(circleId);
 
   const [draft, setDraft] = useState<AppointmentDraft>(() => appointmentDraftFromRow(initial));
@@ -142,30 +153,51 @@ function AppointmentEditFields({
   }
 
   return (
-    <View style={styles.fields}>
+    <FigmaFormScreen title={t('appointments.detailTitle')} onBack={() => router.back()}>
       <UnsavedChangesGuard when={dirty} />
-      <AppointmentFieldset draft={draft} onChange={patch} errors={errors} doctors={doctors} />
+      <FigmaMutedNote>{t('appointments.disclaimer')}</FigmaMutedNote>
 
-      <FormActions
-        saveLabel={t('common.saveChanges')}
-        onSave={onSubmit}
-        saving={submitting}
-        status={status}
-        savedLabel={t('appointments.saved')}
-        errorLabel={t('appointments.saveFailed')}
-      />
-    </View>
+      <FigmaAppointmentFields draft={draft} onChange={patch} errors={errors} doctors={doctors} />
+
+      <StatusSection circleId={circleId} appointment={initial} canManage />
+
+      <DeleteAppointmentRow circleId={circleId} id={initial.id} />
+
+      {/* Save CTA — rendered in the body (not the footer prop, which did not render
+          on Android). Final block, below the status + destructive delete cards. */}
+      <View style={styles.footer}>
+        {status === 'saved' ? (
+          <Text style={[styles.statusText, { color: theme.successFg }]} accessibilityLiveRegion="polite">
+            {t('appointments.saved')}
+          </Text>
+        ) : null}
+        {status === 'error' ? (
+          <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert">
+            {t('appointments.saveFailed')}
+          </Text>
+        ) : null}
+        <FigmaFooterPrimaryButton
+          label={t('common.saveChanges')}
+          onPress={onSubmit}
+          loading={submitting}
+        />
+      </View>
+    </FigmaFormScreen>
   );
 }
 
-function ReadOnlyAppointment({
+function AppointmentViewScreen({
+  circleId,
   appointment,
   doctors,
 }: {
+  circleId: string;
   appointment: CareAppointment;
   doctors: Doctor[];
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const router = useRouter();
   const when = appointment.ends_at
     ? isolateLtr(
         `${ymdFromInstant(appointment.starts_at)} ${hmFromInstant(appointment.starts_at)} – ${hmFromInstant(appointment.ends_at)}`,
@@ -176,38 +208,36 @@ function ReadOnlyAppointment({
     : null;
 
   return (
-    <View style={styles.fields}>
-      <Surface tone="sunken">
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('appointments.readOnly')}
-        </ThemedText>
-      </Surface>
-      <ThemedText type="sectionTitle">{appointment.title}</ThemedText>
-      <View style={styles.infoGroup}>
-        <InfoRow
+    <FigmaFormScreen title={t('appointments.detailTitle')} onBack={() => router.back()}>
+      <FigmaMutedNote>{t('appointments.readOnly')}</FigmaMutedNote>
+
+      <FigmaFormCard>
+        <Text style={[styles.title, { color: theme.text }]}>{appointment.title}</Text>
+        <ReadOnlyRow
           label={t('appointments.fields.type')}
           value={t(`appointments.type.${appointment.appointment_type}`)}
         />
-        <InfoRow label={t('appointments.whenLabel')} value={when} />
+        <ReadOnlyRow label={t('appointments.whenLabel')} value={when} />
         {appointment.location ? (
-          <InfoRow label={t('appointments.locationLabel')} value={appointment.location} />
+          <ReadOnlyRow label={t('appointments.locationLabel')} value={appointment.location} />
         ) : null}
-        {doctorName ? <InfoRow label={t('appointments.doctorLabel')} value={doctorName} /> : null}
+        {doctorName ? <ReadOnlyRow label={t('appointments.doctorLabel')} value={doctorName} /> : null}
         {appointment.notes ? (
-          <InfoRow label={t('appointments.fields.notes')} value={appointment.notes} />
+          <ReadOnlyRow label={t('appointments.fields.notes')} value={appointment.notes} />
         ) : null}
-      </View>
-    </View>
+      </FigmaFormCard>
+
+      <StatusSection circleId={circleId} appointment={appointment} canManage={false} />
+    </FigmaFormScreen>
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function ReadOnlyRow({ label, value }: { label: string; value: string }) {
+  const theme = useTheme();
   return (
-    <View style={styles.infoRow}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText type="default">{value}</ThemedText>
+    <View style={styles.row}>
+      <Text style={[styles.rowLabel, { color: theme.textSecondary }]}>{label}</Text>
+      <Text style={[styles.rowValue, { color: theme.text }]}>{value}</Text>
     </View>
   );
 }
@@ -236,9 +266,9 @@ function StatusSection({
   }
 
   return (
-    <Surface style={styles.statusCard}>
+    <FigmaFormCard>
       <View style={styles.statusHeader}>
-        <ThemedText type="smallBold">{t('appointments.fields.status')}</ThemedText>
+        <Text style={[styles.statusLabel, { color: theme.text }]}>{t('appointments.fields.status')}</Text>
         <StatusBadge
           tone={STATUS_TONE[appointment.status]}
           glyph={STATUS_GLYPH[appointment.status]}
@@ -247,43 +277,36 @@ function StatusSection({
       </View>
 
       {canManage ? (
-        <View style={[styles.actions, { borderTopColor: theme.divider }]}>
-          {appointment.status === 'scheduled' ? (
-            <>
-              <Button
-                size="sm"
-                glyph={Glyph.check}
+        appointment.status === 'scheduled' ? (
+          <View style={styles.actionRow}>
+            <View style={styles.actionCol}>
+              <FigmaButton
                 label={t('appointments.markCompleted')}
                 loading={pending}
                 disabled={pending}
                 onPress={() => run('completed')}
-                style={styles.action}
               />
-              <Button
-                size="sm"
-                variant="secondary"
-                glyph={Glyph.cross}
+            </View>
+            <View style={styles.actionCol}>
+              <FigmaButton
                 label={t('appointments.markCancelled')}
+                variant="secondary"
                 disabled={pending}
                 onPress={() => run('cancelled')}
-                style={styles.action}
               />
-            </>
-          ) : (
-            <Button
-              size="sm"
-              variant="secondary"
-              glyph={Glyph.clock}
-              label={t('appointments.reopen')}
-              loading={pending}
-              disabled={pending}
-              onPress={() => run('scheduled')}
-              style={styles.action}
-            />
-          )}
-        </View>
+            </View>
+          </View>
+        ) : (
+          <FigmaButton
+            label={t('appointments.reopen')}
+            variant="secondary"
+            loading={pending}
+            disabled={pending}
+            onPress={() => run('scheduled')}
+          />
+        )
       ) : null}
-    </Surface>
+    </FigmaFormCard>
   );
 }
 
@@ -304,53 +327,53 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
     }
   }
 
-  if (confirming) {
-    return (
-      <View style={styles.confirmRow}>
-        <Button
-          variant="danger"
-          label={t('common.confirmDelete')}
-          loading={pending}
-          onPress={onDelete}
-        />
-        <Button
-          variant="secondary"
-          label={t('common.cancel')}
-          disabled={pending}
-          onPress={() => setConfirming(false)}
-        />
-      </View>
-    );
-  }
-
   return (
-    <Button
-      variant="danger"
-      label={t('appointments.deleteAppointment')}
-      onPress={() => setConfirming(true)}
-    />
+    <FigmaFormCard>
+      {confirming ? (
+        <View style={styles.actionRow}>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('common.confirmDelete')}
+              variant="danger"
+              loading={pending}
+              onPress={onDelete}
+            />
+          </View>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('common.cancel')}
+              variant="secondary"
+              disabled={pending}
+              onPress={() => setConfirming(false)}
+            />
+          </View>
+        </View>
+      ) : (
+        <FigmaButton
+          label={t('appointments.deleteAppointment')}
+          variant="danger"
+          onPress={() => setConfirming(true)}
+        />
+      )}
+    </FigmaFormCard>
   );
 }
 
 const styles = StyleSheet.create({
-  fields: { gap: Spacing.three },
-  infoGroup: { gap: Spacing.two },
-  infoRow: { gap: Spacing.half },
-  statusCard: { gap: Spacing.two },
+  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
+  footer: { gap: Spacing.two },
+  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
+  title: { fontSize: 18, fontFamily: FigmaFont.bold },
+  row: { gap: 2 },
+  rowLabel: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  rowValue: { fontSize: 16, fontFamily: FigmaFont.regular },
   statusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
-    marginTop: Spacing.two,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: Spacing.three,
-  },
-  action: { flexGrow: 1, flexBasis: 96 },
-  confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
+  statusLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  actionRow: { flexDirection: 'row', gap: Spacing.two },
+  actionCol: { flex: 1 },
 });

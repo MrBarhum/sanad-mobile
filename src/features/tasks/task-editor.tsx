@@ -1,23 +1,28 @@
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
-import { FormActions } from '@/components/form-actions';
-import { FormField } from '@/components/form-field';
-import { LtrText } from '@/components/ltr-text';
-import { OptionSelect, type SelectOption } from '@/components/option-select';
-import { Screen } from '@/components/screen';
+import { FigmaButton } from '@/components/figma/figma-button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import {
+  FigmaChipSelect,
+  FigmaFormCard,
+  FigmaFormField,
+  FigmaFormScreen,
+  FigmaMutedNote,
+  FigmaToggleRow,
+} from '@/components/figma/figma-form-screen';
+import { FigmaFont } from '@/components/figma/figma-tokens';
+import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
-import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { TimeField } from '@/components/time-field';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { Spacing, TouchTarget } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
@@ -25,13 +30,7 @@ import { formatHm, hmFromInstant, ymdFromInstant } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
 
 import type { CareTask, TaskCategory, TaskPriority, TaskStatus } from './api';
-import {
-  useCancelTask,
-  useCompleteTask,
-  useDeleteTask,
-  useTask,
-  useUpdateTask,
-} from './hooks';
+import { useCancelTask, useCompleteTask, useDeleteTask, useTask, useUpdateTask } from './hooks';
 import { TASK_CATEGORIES, TASK_PRIORITIES, taskSchema } from './schema';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
@@ -50,7 +49,15 @@ const STATUS_GLYPH: Record<TaskStatus, string> = {
   cancelled: Glyph.cross,
 };
 
-/** Loads a task, then renders the view/edit screen with status + delete actions. */
+/**
+ * View / edit a single task — rebuilt in the Figma editor language (FigmaFormScreen
+ * header + grouped FigmaFormCards + body-rendered teal save CTA) to match the
+ * Add-Task form's section order (main info → due date/time → assignee → notes).
+ * Managers get editable fields + a status card + a two-step delete; others get a
+ * read-only layout (collaborators may still complete/cancel via the status card).
+ * Validation (taskSchema), the assign-to-me data flow, status transitions, delete,
+ * and permissions are all preserved unchanged.
+ */
 export function TaskEditor({
   circleId,
   canManage,
@@ -68,44 +75,47 @@ export function TaskEditor({
   if (task.isLoading) return <LoadingState />;
   if (task.isError) {
     return (
-      <ErrorState
-        message={t('tasks.loadError')}
-        retryLabel={t('retry')}
-        onRetry={() => task.refetch()}
-      />
+      <ErrorState message={t('tasks.loadError')} retryLabel={t('retry')} onRetry={() => task.refetch()} />
     );
   }
   if (!task.data) {
     return (
-      <Screen scroll={false} center>
+      <ThemedView style={styles.centered}>
         <EmptyState icon={Glyph.task} title={t('tasks.notFound')} />
-      </Screen>
+      </ThemedView>
     );
   }
 
   return (
-    <Screen>
+    <>
+      {/* The Figma editor draws its own header; hide the native one. */}
+      <Stack.Screen options={{ headerShown: false }} />
       {canManage ? (
-        <TaskFields key={task.data.id} circleId={circleId} initial={task.data} />
+        <TaskEditScreen
+          key={task.data.id}
+          circleId={circleId}
+          initial={task.data}
+          canCollaborate={canCollaborate}
+        />
       ) : (
-        <ReadOnlyTask task={task.data} />
+        <TaskViewScreen circleId={circleId} task={task.data} canCollaborate={canCollaborate} />
       )}
-
-      <StatusSection
-        circleId={circleId}
-        task={task.data}
-        canManage={canManage}
-        canCollaborate={canCollaborate}
-      />
-
-      {canManage ? <DeleteTaskRow circleId={circleId} id={task.data.id} /> : null}
-    </Screen>
+    </>
   );
 }
 
-function TaskFields({ circleId, initial }: { circleId: string; initial: CareTask }) {
+function TaskEditScreen({
+  circleId,
+  initial,
+  canCollaborate,
+}: {
+  circleId: string;
+  initial: CareTask;
+  canCollaborate: boolean;
+}) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const router = useRouter();
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const update = useUpdateTask(circleId);
@@ -135,14 +145,8 @@ function TaskFields({ circleId, initial }: { circleId: string; initial: CareTask
   });
   const submitting = update.isPending;
 
-  const categoryOptions: SelectOption<TaskCategory>[] = TASK_CATEGORIES.map((value) => ({
-    value,
-    label: t(`tasks.category.${value}`),
-  }));
-  const priorityOptions: SelectOption<TaskPriority>[] = TASK_PRIORITIES.map((value) => ({
-    value,
-    label: t(`tasks.priority.${value}`),
-  }));
+  const categoryOptions = TASK_CATEGORIES.map((value) => ({ value, label: t(`tasks.category.${value}`) }));
+  const priorityOptions = TASK_PRIORITIES.map((value) => ({ value, label: t(`tasks.priority.${value}`) }));
 
   function touch() {
     if (status !== 'idle') setStatus('idle');
@@ -203,108 +207,154 @@ function TaskFields({ circleId, initial }: { circleId: string; initial: CareTask
   }
 
   return (
-    <View style={styles.fields}>
+    <FigmaFormScreen title={t('tasks.detailTitle')} onBack={() => router.back()}>
       <UnsavedChangesGuard when={dirty} />
-      <FormField
-        label={t('tasks.fields.title')}
-        value={title}
-        onChangeText={(v) => {
-          setTitle(v);
-          touch();
-        }}
-        error={fieldError(errors.title)}
-      />
-      <FormField
-        label={t('tasks.fields.description')}
-        value={description}
-        onChangeText={(v) => {
-          setDescription(v);
-          touch();
-        }}
-        placeholder={t('tasks.placeholders.description')}
-        multiline
-        error={fieldError(errors.description)}
-      />
+      <FigmaMutedNote>{t('tasks.disclaimer')}</FigmaMutedNote>
 
-      <OptionSelect
-        label={t('tasks.fields.category')}
-        value={category}
-        options={categoryOptions}
-        onChange={(v) => {
-          setCategory(v);
-          touch();
-        }}
-      />
-      <OptionSelect
-        label={t('tasks.fields.priority')}
-        value={priority}
-        options={priorityOptions}
-        onChange={(v) => {
-          setPriority(v);
-          touch();
-        }}
-      />
+      {/* Main info */}
+      <FigmaFormCard>
+        <FigmaFormField
+          label={t('tasks.fields.title')}
+          value={title}
+          onChangeText={(v) => {
+            setTitle(v);
+            touch();
+          }}
+          required
+          error={fieldError(errors.title)}
+        />
+        <FigmaFormField
+          label={t('tasks.fields.description')}
+          value={description}
+          onChangeText={(v) => {
+            setDescription(v);
+            touch();
+          }}
+          placeholder={t('tasks.placeholders.description')}
+          multiline
+          error={fieldError(errors.description)}
+        />
+        <View style={styles.group}>
+          <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>{t('tasks.fields.category')}</Text>
+          <FigmaChipSelect
+            value={category}
+            options={categoryOptions}
+            onChange={(v) => {
+              setCategory(v);
+              touch();
+            }}
+          />
+        </View>
+        <View style={styles.group}>
+          <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>{t('tasks.fields.priority')}</Text>
+          <FigmaChipSelect
+            value={priority}
+            options={priorityOptions}
+            onChange={(v) => {
+              setPriority(v);
+              touch();
+            }}
+          />
+        </View>
+      </FigmaFormCard>
 
-      <DateField
-        label={t('tasks.fields.dueDate')}
-        value={dueDate}
-        onChange={(v) => {
-          setDueDate(v);
-          touch();
-        }}
-        clearable
-        error={fieldError(errors.due_date)}
-      />
-      <TimeField
-        label={t('tasks.fields.dueTime')}
-        value={dueTime}
-        onChange={(v) => {
-          setDueTime(v);
-          touch();
-        }}
-        clearable
-        error={fieldError(errors.due_time)}
-      />
+      {/* Due date / time */}
+      <FigmaFormCard label={t('tasks.dueTitle')}>
+        <View style={styles.row}>
+          <View style={styles.dateCol}>
+            <DateField
+              label={t('tasks.fields.dueDate')}
+              value={dueDate}
+              onChange={(v) => {
+                setDueDate(v);
+                touch();
+              }}
+              clearable
+              error={fieldError(errors.due_date)}
+            />
+          </View>
+          <View style={styles.timeCol}>
+            <TimeField
+              label={t('tasks.fields.dueTime')}
+              value={dueTime}
+              onChange={(v) => {
+                setDueTime(v);
+                touch();
+              }}
+              clearable
+              error={fieldError(errors.due_time)}
+            />
+          </View>
+        </View>
+      </FigmaFormCard>
 
-      <View style={styles.switchRow}>
-        <ThemedText type="smallBold">{t('tasks.fields.assignToMe')}</ThemedText>
-        <Switch
+      {/* Assignee — keeps the existing assign-to-me data flow (not the add form's
+          member picker) to preserve behavior. */}
+      <FigmaFormCard>
+        <FigmaToggleRow
+          label={t('tasks.fields.assignToMe')}
           value={assignToMe}
           onValueChange={(v) => {
             setAssignToMe(v);
             touch();
           }}
-          trackColor={{ true: theme.primary, false: theme.backgroundSelected }}
-          accessibilityLabel={t('tasks.fields.assignToMe')}
+        />
+      </FigmaFormCard>
+
+      {/* Notes */}
+      <FigmaFormCard>
+        <FigmaFormField
+          label={t('tasks.fields.notes')}
+          value={notes}
+          onChangeText={(v) => {
+            setNotes(v);
+            touch();
+          }}
+          placeholder={t('tasks.placeholders.notes')}
+          multiline
+          error={fieldError(errors.notes)}
+        />
+      </FigmaFormCard>
+
+      <StatusSection circleId={circleId} task={initial} canManage canCollaborate={canCollaborate} />
+
+      <DeleteTaskRow circleId={circleId} id={initial.id} />
+
+      {/* Save CTA — body-rendered (not the footer prop, which did not render on
+          Android). Final block, below the status + destructive delete cards. */}
+      <View style={styles.footer}>
+        {status === 'saved' ? (
+          <Text style={[styles.statusText, { color: theme.successFg }]} accessibilityLiveRegion="polite">
+            {t('tasks.saved')}
+          </Text>
+        ) : null}
+        {status === 'error' ? (
+          <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert">
+            {t('tasks.saveFailed')}
+          </Text>
+        ) : null}
+        <FigmaFooterPrimaryButton
+          label={t('common.saveChanges')}
+          onPress={onSubmit}
+          loading={submitting}
         />
       </View>
-
-      <FormField
-        label={t('tasks.fields.notes')}
-        value={notes}
-        onChangeText={(v) => {
-          setNotes(v);
-          touch();
-        }}
-        placeholder={t('tasks.placeholders.notes')}
-        multiline
-        error={fieldError(errors.notes)}
-      />
-
-      <FormActions
-        saveLabel={t('common.saveChanges')}
-        onSave={onSubmit}
-        saving={submitting}
-        status={status}
-        savedLabel={t('tasks.saved')}
-        errorLabel={t('tasks.saveFailed')}
-      />
-    </View>
+    </FigmaFormScreen>
   );
 }
 
-function ReadOnlyTask({ task }: { task: CareTask }) {
+function TaskViewScreen({
+  circleId,
+  task,
+  canCollaborate,
+}: {
+  circleId: string;
+  task: CareTask;
+  canCollaborate: boolean;
+}) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const router = useRouter();
   const due = task.due_date
     ? task.due_time
       ? `${task.due_date} ${formatHm(task.due_time)}`
@@ -312,33 +362,31 @@ function ReadOnlyTask({ task }: { task: CareTask }) {
     : t('tasks.noDueDate');
 
   return (
-    <View style={styles.fields}>
-      <Surface tone="info" style={styles.notice}>
-        <ThemedText type="small" themeColor="infoFg">
-          {t('tasks.readOnly')}
-        </ThemedText>
-      </Surface>
-      <ThemedText type="sectionTitle">{task.title}</ThemedText>
-      <View style={styles.infoGroup}>
-        <InfoRow label={t('tasks.fields.category')} value={t(`tasks.category.${task.category}`)} />
-        <InfoRow label={t('tasks.fields.priority')} value={t(`tasks.priority.${task.priority}`)} />
-        <InfoRow label={t('tasks.dueLabel')} value={due} />
+    <FigmaFormScreen title={t('tasks.detailTitle')} onBack={() => router.back()}>
+      <FigmaMutedNote>{t('tasks.readOnly')}</FigmaMutedNote>
+
+      <FigmaFormCard>
+        <Text style={[styles.title, { color: theme.text }]}>{task.title}</Text>
+        <ReadOnlyRow label={t('tasks.fields.category')} value={t(`tasks.category.${task.category}`)} />
+        <ReadOnlyRow label={t('tasks.fields.priority')} value={t(`tasks.priority.${task.priority}`)} />
+        <ReadOnlyRow label={t('tasks.dueLabel')} value={due} />
         {task.description ? (
-          <InfoRow label={t('tasks.fields.description')} value={task.description} />
+          <ReadOnlyRow label={t('tasks.fields.description')} value={task.description} />
         ) : null}
-        {task.notes ? <InfoRow label={t('tasks.fields.notes')} value={task.notes} /> : null}
-      </View>
-    </View>
+        {task.notes ? <ReadOnlyRow label={t('tasks.fields.notes')} value={task.notes} /> : null}
+      </FigmaFormCard>
+
+      <StatusSection circleId={circleId} task={task} canManage={false} canCollaborate={canCollaborate} />
+    </FigmaFormScreen>
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function ReadOnlyRow({ label, value }: { label: string; value: string }) {
+  const theme = useTheme();
   return (
-    <View style={styles.infoRow}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText type="default">{value}</ThemedText>
+    <View style={styles.row2}>
+      <Text style={[styles.rowLabel, { color: theme.textSecondary }]}>{label}</Text>
+      <Text style={[styles.rowValue, { color: theme.text }]}>{value}</Text>
     </View>
   );
 }
@@ -377,9 +425,9 @@ function StatusSection({
   }
 
   return (
-    <Surface style={styles.statusCard}>
+    <FigmaFormCard>
       <View style={styles.statusHeader}>
-        <ThemedText type="smallBold">{t('tasks.fields.status')}</ThemedText>
+        <Text style={[styles.statusLabel, { color: theme.text }]}>{t('tasks.fields.status')}</Text>
         <StatusBadge
           tone={STATUS_TONE[task.status]}
           glyph={STATUS_GLYPH[task.status]}
@@ -387,45 +435,39 @@ function StatusSection({
         />
       </View>
       {task.status === 'completed' && task.completed_at ? (
-        <ThemedText type="small" themeColor="textSecondary">
+        <Text style={[styles.statusMeta, { color: theme.textSecondary }]}>
           {t('tasks.completedAt')}:{' '}
-          <LtrText type="small" themeColor="textSecondary">
-            {`${ymdFromInstant(task.completed_at)} ${hmFromInstant(task.completed_at)}`}
-          </LtrText>
-        </ThemedText>
+          {isolateLtr(`${ymdFromInstant(task.completed_at)} ${hmFromInstant(task.completed_at)}`)}
+        </Text>
       ) : null}
       {task.status === 'cancelled' && task.cancelled_at ? (
-        <ThemedText type="small" themeColor="textSecondary">
+        <Text style={[styles.statusMeta, { color: theme.textSecondary }]}>
           {t('tasks.cancelledAt')}:{' '}
-          <LtrText type="small" themeColor="textSecondary">
-            {`${ymdFromInstant(task.cancelled_at)} ${hmFromInstant(task.cancelled_at)}`}
-          </LtrText>
-        </ThemedText>
+          {isolateLtr(`${ymdFromInstant(task.cancelled_at)} ${hmFromInstant(task.cancelled_at)}`)}
+        </Text>
       ) : null}
 
       {canAct ? (
-        <View style={[styles.actions, { borderTopColor: theme.divider }]}>
-          <Button
-            size="sm"
-            glyph={Glyph.check}
-            label={t('tasks.complete')}
-            loading={pending}
-            disabled={pending}
-            onPress={() => run('complete')}
-            style={styles.action}
-          />
-          <Button
-            size="sm"
-            variant="secondary"
-            glyph={Glyph.cross}
-            label={t('tasks.cancelTask')}
-            disabled={pending}
-            onPress={() => run('cancel')}
-            style={styles.action}
-          />
+        <View style={styles.actionRow}>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('tasks.complete')}
+              loading={pending}
+              disabled={pending}
+              onPress={() => run('complete')}
+            />
+          </View>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('tasks.cancelTask')}
+              variant="secondary"
+              disabled={pending}
+              onPress={() => run('cancel')}
+            />
+          </View>
         </View>
       ) : null}
-    </Surface>
+    </FigmaFormCard>
   );
 }
 
@@ -446,57 +488,55 @@ function DeleteTaskRow({ circleId, id }: { circleId: string; id: string }) {
     }
   }
 
-  if (confirming) {
-    return (
-      <View style={styles.confirmRow}>
-        <Button
-          variant="danger"
-          label={t('common.confirmDelete')}
-          loading={pending}
-          onPress={onDelete}
-        />
-        <Button
-          variant="secondary"
-          label={t('common.cancel')}
-          disabled={pending}
-          onPress={() => setConfirming(false)}
-        />
-      </View>
-    );
-  }
-
   return (
-    <Button variant="danger" label={t('tasks.deleteTask')} onPress={() => setConfirming(true)} />
+    <FigmaFormCard>
+      {confirming ? (
+        <View style={styles.actionRow}>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('common.confirmDelete')}
+              variant="danger"
+              loading={pending}
+              onPress={onDelete}
+            />
+          </View>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('common.cancel')}
+              variant="secondary"
+              disabled={pending}
+              onPress={() => setConfirming(false)}
+            />
+          </View>
+        </View>
+      ) : (
+        <FigmaButton label={t('tasks.deleteTask')} variant="danger" onPress={() => setConfirming(true)} />
+      )}
+    </FigmaFormCard>
   );
 }
 
 const styles = StyleSheet.create({
-  fields: { gap: Spacing.three },
-  notice: { padding: Spacing.three },
-  infoGroup: { gap: Spacing.two },
-  infoRow: { gap: Spacing.half },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
-    minHeight: TouchTarget.min,
-  },
-  statusCard: { gap: Spacing.two },
+  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
+  footer: { gap: Spacing.two },
+  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
+  title: { fontSize: 18, fontFamily: FigmaFont.bold },
+  group: { gap: Spacing.two },
+  groupLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  row: { flexDirection: 'row', gap: Spacing.three },
+  dateCol: { flex: 2 },
+  timeCol: { flex: 1 },
+  row2: { gap: 2 },
+  rowLabel: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  rowValue: { fontSize: 16, fontFamily: FigmaFont.regular },
   statusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
-    marginTop: Spacing.two,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: Spacing.three,
-  },
-  action: { flexGrow: 1, flexBasis: 96 },
-  confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
+  statusLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  statusMeta: { fontSize: 13, fontFamily: FigmaFont.regular },
+  actionRow: { flexDirection: 'row', gap: Spacing.two },
+  actionCol: { flex: 1 },
 });

@@ -1,17 +1,21 @@
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/button';
-import { FormActions } from '@/components/form-actions';
-import { FormField } from '@/components/form-field';
+import { FigmaButton } from '@/components/figma/figma-button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import {
+  FigmaFormCard,
+  FigmaFormField,
+  FigmaFormScreen,
+  FigmaMutedNote,
+  FigmaSwitch,
+} from '@/components/figma/figma-form-screen';
+import { FigmaFont } from '@/components/figma/figma-tokens';
 import { ItemActions } from '@/components/item-actions';
-import { Screen } from '@/components/screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge } from '@/components/status-badge';
-import { Section, Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
@@ -38,7 +42,18 @@ import { ScheduleSummary } from './schedule-summary';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
-/** Loads a medication + its schedules, then renders the view/edit screen. */
+/**
+ * View / edit a medication + its dose schedules — rebuilt in the Figma editor
+ * language (FigmaFormScreen header + gold non-diagnostic banner + grouped
+ * FigmaFormCards). The medication-info section mirrors the Add-Medication form's
+ * info card and saves with a body-rendered teal CTA; the dose-schedule manager
+ * (add / edit via the schedule modal, activate / deactivate, delete), the
+ * activation toggle, and the two-step delete keep their exact existing behavior —
+ * only their surfaces are restyled. Real hooks, schema validation, and permissions
+ * are unchanged. (Unlike the single-submit add form, this is a multi-section
+ * management screen, so the info save sits with the info section and schedules are
+ * managed live.)
+ */
 export function MedicationEditor({
   circleId,
   canManage,
@@ -67,41 +82,67 @@ export function MedicationEditor({
   }
   if (!medication.data) {
     return (
-      <Screen scroll={false} center>
+      <ThemedView style={styles.centered}>
         <EmptyState icon={Glyph.medication} title={t('medications.notFound')} />
-      </Screen>
+      </ThemedView>
     );
   }
 
   return (
-    <Screen>
-      {/* Section A — Medication information */}
-      <Section title={t('medications.medicationInfoTitle')}>
-        {canManage ? (
-          <MedicationFields key={medication.data.id} circleId={circleId} initial={medication.data} />
-        ) : (
-          <ReadOnlyMedication medication={medication.data} />
-        )}
-
-        {canManage ? <ActivationRow circleId={circleId} medication={medication.data} /> : null}
-      </Section>
-
-      <ThemedView type="border" style={styles.divider} />
-
-      {/* Section B — Dose schedules */}
-      <SchedulesManager
+    <>
+      {/* The Figma editor draws its own header; hide the native one. */}
+      <Stack.Screen options={{ headerShown: false }} />
+      <MedicationEditorScreen
+        key={medication.data.id}
         circleId={circleId}
-        medicationId={medication.data.id}
+        medication={medication.data}
         schedules={schedules.data ?? []}
         canManage={canManage}
       />
-
-      {canManage ? <DeleteMedicationRow circleId={circleId} id={medication.data.id} /> : null}
-    </Screen>
+    </>
   );
 }
 
-function MedicationFields({ circleId, initial }: { circleId: string; initial: Medication }) {
+function MedicationEditorScreen({
+  circleId,
+  medication,
+  schedules,
+  canManage,
+}: {
+  circleId: string;
+  medication: Medication;
+  schedules: MedicationSchedule[];
+  canManage: boolean;
+}) {
+  const { t } = useTranslation();
+  const router = useRouter();
+
+  return (
+    <FigmaFormScreen
+      title={t('medications.detailTitle')}
+      onBack={() => router.back()}
+      disclaimer={t('medications.disclaimer')}>
+      {canManage ? (
+        <MedicationInfoFields circleId={circleId} initial={medication} />
+      ) : (
+        <ReadOnlyMedicationInfo medication={medication} />
+      )}
+
+      {canManage ? <ActivationRow circleId={circleId} medication={medication} /> : null}
+
+      <SchedulesManager
+        circleId={circleId}
+        medicationId={medication.id}
+        schedules={schedules}
+        canManage={canManage}
+      />
+
+      {canManage ? <DeleteMedicationRow circleId={circleId} id={medication.id} /> : null}
+    </FigmaFormScreen>
+  );
+}
+
+function MedicationInfoFields({ circleId, initial }: { circleId: string; initial: Medication }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const update = useUpdateMedication(circleId);
@@ -167,109 +208,135 @@ function MedicationFields({ circleId, initial }: { circleId: string; initial: Me
   }
 
   return (
-    <View style={styles.fields}>
+    <>
       <UnsavedChangesGuard when={dirty} />
-      <FormField
-        label={t('medications.fields.name')}
-        value={name}
-        onChangeText={(v) => {
-          setName(v);
-          touch();
-        }}
-        error={fieldError(errors.name)}
-      />
-      <FormField
-        label={t('medications.fields.dosage')}
-        value={dosage}
-        onChangeText={(v) => {
-          setDosage(v);
-          touch();
-        }}
-        placeholder={t('medications.placeholders.dosage')}
-        error={fieldError(errors.dosage)}
-      />
-      <FormField
-        label={t('medications.fields.form')}
-        value={medForm}
-        onChangeText={(v) => {
-          setMedForm(v);
-          touch();
-        }}
-        placeholder={t('medications.placeholders.form')}
-        error={fieldError(errors.form)}
-      />
-      <FormField
-        label={t('medications.fields.instructions')}
-        value={instructions}
-        onChangeText={(v) => {
-          setInstructions(v);
-          touch();
-        }}
-        placeholder={t('medications.placeholders.instructions')}
-        multiline
-        error={fieldError(errors.instructions)}
-      />
-      <View style={styles.switchRow}>
-        <ThemedText type="smallBold">{t('medications.fields.withFood')}</ThemedText>
-        <Switch
-          value={withFood}
-          onValueChange={(v) => {
-            setWithFood(v);
+      <FigmaFormCard label={t('medications.medicationInfoTitle')}>
+        <FigmaFormField
+          label={t('medications.fields.name')}
+          value={name}
+          onChangeText={(v) => {
+            setName(v);
             touch();
           }}
-          trackColor={{ true: theme.primary, false: theme.backgroundSelected }}
-          accessibilityLabel={t('medications.fields.withFood')}
+          required
+          error={fieldError(errors.name)}
+        />
+        <FigmaFormField
+          label={t('medications.fields.dosage')}
+          value={dosage}
+          onChangeText={(v) => {
+            setDosage(v);
+            touch();
+          }}
+          placeholder={t('medications.placeholders.dosage')}
+          error={fieldError(errors.dosage)}
+        />
+        <FigmaFormField
+          label={t('medications.fields.form')}
+          value={medForm}
+          onChangeText={(v) => {
+            setMedForm(v);
+            touch();
+          }}
+          placeholder={t('medications.placeholders.form')}
+          error={fieldError(errors.form)}
+        />
+        <FigmaFormField
+          label={t('medications.fields.instructions')}
+          value={instructions}
+          onChangeText={(v) => {
+            setInstructions(v);
+            touch();
+          }}
+          placeholder={t('medications.placeholders.instructions')}
+          multiline
+          error={fieldError(errors.instructions)}
+        />
+
+        <View style={[styles.divider, { backgroundColor: theme.divider }]} />
+        <View style={styles.switchRow}>
+          <View style={styles.switchText}>
+            <Text style={[styles.switchLabel, { color: theme.text }]}>
+              {t('medications.fields.withFood')}
+            </Text>
+            <Text style={[styles.switchHint, { color: theme.textSecondary }]}>
+              {t('medications.withFoodReminder')}
+            </Text>
+          </View>
+          <FigmaSwitch
+            value={withFood}
+            onValueChange={(v) => {
+              setWithFood(v);
+              touch();
+            }}
+            accessibilityLabel={t('medications.fields.withFood')}
+          />
+        </View>
+      </FigmaFormCard>
+
+      {/* Info save CTA — body-rendered teal button. This is a multi-section
+          management screen, so the save belongs to the medication-info section
+          (schedules below are managed live via their own modal). */}
+      <View style={styles.footer}>
+        {status === 'saved' ? (
+          <Text style={[styles.statusText, { color: theme.successFg }]} accessibilityLiveRegion="polite">
+            {t('medications.saved')}
+          </Text>
+        ) : null}
+        {status === 'error' ? (
+          <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert">
+            {t('medications.saveFailed')}
+          </Text>
+        ) : null}
+        <FigmaFooterPrimaryButton
+          label={t('common.saveChanges')}
+          onPress={onSubmit}
+          loading={submitting}
         />
       </View>
-
-      <FormActions
-        saveLabel={t('common.saveChanges')}
-        onSave={onSubmit}
-        saving={submitting}
-        status={status}
-        savedLabel={t('medications.saved')}
-        errorLabel={t('medications.saveFailed')}
-      />
-    </View>
+    </>
   );
 }
 
-function ReadOnlyMedication({ medication }: { medication: Medication }) {
+function ReadOnlyMedicationInfo({ medication }: { medication: Medication }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   return (
-    <View style={styles.fields}>
-      <Surface tone="info" style={styles.notice}>
-        <ThemedText type="small" themeColor="infoFg">
-          {t('medications.readOnly')}
-        </ThemedText>
-      </Surface>
-      <ThemedText type="subtitle">{medication.name}</ThemedText>
-      {medication.dosage ? <InfoRow label={t('medications.fields.dosage')} value={medication.dosage} /> : null}
-      {medication.form ? <InfoRow label={t('medications.fields.form')} value={medication.form} /> : null}
-      <InfoRow
-        label={t('medications.fields.withFood')}
-        value={medication.with_food ? t('common.yes') : t('common.no')}
-      />
-      {medication.instructions ? (
-        <InfoRow label={t('medications.fields.instructions')} value={medication.instructions} />
-      ) : null}
-    </View>
+    <>
+      <FigmaMutedNote>{t('medications.readOnly')}</FigmaMutedNote>
+      <FigmaFormCard label={t('medications.medicationInfoTitle')}>
+        <Text style={[styles.title, { color: theme.text }]}>{medication.name}</Text>
+        {medication.dosage ? (
+          <InfoRow label={t('medications.fields.dosage')} value={medication.dosage} />
+        ) : null}
+        {medication.form ? (
+          <InfoRow label={t('medications.fields.form')} value={medication.form} />
+        ) : null}
+        <InfoRow
+          label={t('medications.fields.withFood')}
+          value={medication.with_food ? t('common.yes') : t('common.no')}
+        />
+        {medication.instructions ? (
+          <InfoRow label={t('medications.fields.instructions')} value={medication.instructions} />
+        ) : null}
+      </FigmaFormCard>
+    </>
   );
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const theme = useTheme();
   return (
     <View style={styles.infoRow}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText>{value}</ThemedText>
+      <Text style={[styles.rowLabel, { color: theme.textSecondary }]}>{label}</Text>
+      <Text style={[styles.rowValue, { color: theme.text }]}>{value}</Text>
     </View>
   );
 }
 
 function ActivationRow({ circleId, medication }: { circleId: string; medication: Medication }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const setActive = useSetMedicationActive(circleId);
   const [pending, setPending] = useState(false);
 
@@ -283,18 +350,18 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
   }
 
   return (
-    <Surface style={styles.activationCard}>
-      <ThemedText type="smallBold">
+    <FigmaFormCard>
+      <Text style={[styles.statusLabel, { color: theme.text }]}>
         {medication.is_active ? t('medications.activeLabel') : t('medications.inactiveLabel')}
-      </ThemedText>
-      <Button
+      </Text>
+      <FigmaButton
         variant="secondary"
         label={medication.is_active ? t('medications.deactivate') : t('medications.reactivate')}
         loading={pending}
         disabled={pending}
         onPress={toggle}
       />
-    </Surface>
+    </FigmaFormCard>
   );
 }
 
@@ -315,26 +382,35 @@ function DeleteMedicationRow({ circleId, id }: { circleId: string; id: string })
     }
   }
 
-  if (confirming) {
-    return (
-      <View style={styles.confirmRow}>
-        <Button variant="danger" label={t('common.confirmDelete')} loading={pending} onPress={onDelete} />
-        <Button
-          variant="secondary"
-          label={t('common.cancel')}
-          disabled={pending}
-          onPress={() => setConfirming(false)}
-        />
-      </View>
-    );
-  }
-
   return (
-    <Button
-      variant="danger"
-      label={t('medications.deleteMedication')}
-      onPress={() => setConfirming(true)}
-    />
+    <FigmaFormCard>
+      {confirming ? (
+        <View style={styles.actionRow}>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('common.confirmDelete')}
+              variant="danger"
+              loading={pending}
+              onPress={onDelete}
+            />
+          </View>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('common.cancel')}
+              variant="secondary"
+              disabled={pending}
+              onPress={() => setConfirming(false)}
+            />
+          </View>
+        </View>
+      ) : (
+        <FigmaButton
+          label={t('medications.deleteMedication')}
+          variant="danger"
+          onPress={() => setConfirming(true)}
+        />
+      )}
+    </FigmaFormCard>
   );
 }
 
@@ -350,6 +426,7 @@ function SchedulesManager({
   canManage: boolean;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const setActive = useSetScheduleActive(circleId);
   const del = useDeleteSchedule(circleId);
 
@@ -383,47 +460,40 @@ function SchedulesManager({
   }
 
   return (
-    <View style={styles.fields}>
-      <ThemedText type="sectionTitle" accessibilityRole="header">
+    <View style={styles.schedules}>
+      <Text style={[styles.sectionHeading, { color: theme.text }]} accessibilityRole="header">
         {t('medications.dosesSectionTitle')}
-      </ThemedText>
-
-      <ThemedText type="small" themeColor="textSecondary">
-        {t('medications.scheduleGroupsHelp')}
-      </ThemedText>
+      </Text>
+      <FigmaMutedNote>{t('medications.scheduleGroupsHelp')}</FigmaMutedNote>
 
       {schedules.length > 0 ? <ScheduleSummary schedules={schedules} /> : null}
 
       {schedules.length === 0 ? (
         <EmptyState title={t('medications.noSchedules')} />
       ) : (
-        <View style={styles.list}>
-          {schedules.map((schedule, index) => (
-            <ScheduleCard
-              key={schedule.id}
-              number={index + 1}
-              schedule={schedule}
-              canManage={canManage}
-              deleting={deletingId === schedule.id}
-              toggling={togglingId === schedule.id}
-              onEdit={() => setEditing(schedule)}
-              onDelete={() => onDelete(schedule.id)}
-              onToggleActive={() => toggleActive(schedule)}
-            />
-          ))}
-        </View>
+        schedules.map((schedule, index) => (
+          <ScheduleCard
+            key={schedule.id}
+            number={index + 1}
+            schedule={schedule}
+            canManage={canManage}
+            deleting={deletingId === schedule.id}
+            toggling={togglingId === schedule.id}
+            onEdit={() => setEditing(schedule)}
+            onDelete={() => onDelete(schedule.id)}
+            onToggleActive={() => toggleActive(schedule)}
+          />
+        ))
       )}
 
       {canManage ? (
         <>
-          <Button
+          <FigmaButton
             variant="secondary"
             label={t('medications.addScheduleAtMed')}
             onPress={() => setAdding(true)}
           />
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('medications.helpDifferentDays')}
-          </ThemedText>
+          <FigmaMutedNote>{t('medications.helpDifferentDays')}</FigmaMutedNote>
         </>
       ) : null}
 
@@ -461,6 +531,7 @@ function ScheduleCard({
   onToggleActive: () => void;
 }) {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const daysText =
     schedule.days_of_week.length >= 7
@@ -475,9 +546,9 @@ function ScheduleCard({
     : `${t('medications.fromDate')} ${schedule.start_date}`;
 
   return (
-    <Surface style={styles.scheduleCard}>
+    <FigmaFormCard>
       <View style={styles.scheduleHeader}>
-        <ThemedText type="smallBold">{t('medications.scheduleNumber', { number })}</ThemedText>
+        <Text style={[styles.statusLabel, { color: theme.text }]}>{t('medications.scheduleNumber', { number })}</Text>
         <StatusBadge
           tone={schedule.is_active ? 'success' : 'neutral'}
           label={
@@ -497,8 +568,7 @@ function ScheduleCard({
 
       {canManage ? (
         <View style={styles.scheduleActions}>
-          <Button
-            size="sm"
+          <FigmaButton
             variant="secondary"
             label={schedule.is_active ? t('medications.deactivate') : t('medications.reactivate')}
             loading={toggling}
@@ -518,24 +588,31 @@ function ScheduleCard({
           />
         </View>
       ) : null}
-    </Surface>
+    </FigmaFormCard>
   );
 }
 
 const styles = StyleSheet.create({
-  fields: { gap: Spacing.three },
-  notice: { padding: Spacing.three },
-  infoRow: { gap: Spacing.half },
+  centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
+  footer: { gap: Spacing.two },
+  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
+  title: { fontSize: 18, fontFamily: FigmaFont.bold },
+  sectionHeading: { fontSize: 16, fontFamily: FigmaFont.bold },
+  infoRow: { gap: 2 },
+  rowLabel: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  rowValue: { fontSize: 16, fontFamily: FigmaFont.regular },
+  statusLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.three,
   },
-  activationCard: { gap: Spacing.two },
-  divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
-  list: { gap: Spacing.three },
-  scheduleCard: { gap: Spacing.two },
+  switchText: { flex: 1, gap: 2 },
+  switchLabel: { fontSize: 15, fontFamily: FigmaFont.regular },
+  switchHint: { fontSize: 13, fontFamily: FigmaFont.regular },
+  schedules: { gap: Spacing.three },
   scheduleHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -543,5 +620,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   scheduleActions: { gap: Spacing.two, marginTop: Spacing.one },
-  confirmRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
+  actionRow: { flexDirection: 'row', gap: Spacing.two },
+  actionCol: { flex: 1 },
 });
