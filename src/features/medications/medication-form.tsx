@@ -13,6 +13,7 @@ import {
 import { FigmaFont } from '@/components/figma/figma-tokens';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Spacing } from '@/constants/theme';
+import { MemberSelect } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { todayYmd } from '@/utils/date';
@@ -44,13 +45,22 @@ export function MedicationForm({ circleId }: { circleId: string }) {
   const [medForm, setMedForm] = useState('');
   const [instructions, setInstructions] = useState('');
   const [withFood, setWithFood] = useState(false);
+  const [responsibleUserId, setResponsibleUserId] = useState('');
   const [schedule, setSchedule] = useState<ScheduleDraft>(() => defaultScheduleDraft());
   const [medErrors, setMedErrors] = useState<Partial<Record<string, string>>>({});
   const [scheduleErrors, setScheduleErrors] = useState<Partial<Record<string, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const { dirty } = useUnsavedChanges({ name, dosage, medForm, instructions, withFood, schedule });
+  const { dirty } = useUnsavedChanges({
+    name,
+    dosage,
+    medForm,
+    instructions,
+    withFood,
+    responsibleUserId,
+    schedule,
+  });
   const submitting = create.isPending;
   // Whether the schedule's add-flow date constraints hold (no past dates; end not
   // before start). The pickers enforce this; onSubmit re-checks before saving.
@@ -101,6 +111,7 @@ export function MedicationForm({ circleId }: { circleId: string }) {
           form: nullify(med.data.form),
           instructions: nullify(med.data.instructions),
           with_food: med.data.with_food,
+          responsible_user_id: responsibleUserId === '' ? null : responsibleUserId,
         },
         schedule: prepared.input,
       });
@@ -167,6 +178,16 @@ export function MedicationForm({ circleId }: { circleId: string }) {
             accessibilityLabel={t('medications.fields.withFood')}
           />
         </View>
+      </FigmaFormCard>
+
+      {/* Responsible person */}
+      <FigmaFormCard>
+        <MemberSelect
+          circleId={circleId}
+          value={responsibleUserId}
+          label={t('assignment.responsible')}
+          onChange={setResponsibleUserId}
+        />
       </FigmaFormCard>
 
       {/* Dose schedule */}

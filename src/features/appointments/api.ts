@@ -15,6 +15,7 @@ export type AppointmentInput = {
   ends_at: string | null;
   location: string | null;
   doctor_id: string | null;
+  assigned_to: string | null;
   notes: string | null;
 };
 

@@ -17,6 +17,7 @@ export type Database = {
       care_appointments: {
         Row: {
           appointment_type: Database["public"]["Enums"]["care_appointment_type"]
+          assigned_to: string | null
           circle_id: string
           created_at: string
           created_by: string | null
@@ -32,6 +33,7 @@ export type Database = {
         }
         Insert: {
           appointment_type?: Database["public"]["Enums"]["care_appointment_type"]
+          assigned_to?: string | null
           circle_id: string
           created_at?: string
           created_by?: string | null
@@ -47,6 +49,7 @@ export type Database = {
         }
         Update: {
           appointment_type?: Database["public"]["Enums"]["care_appointment_type"]
+          assigned_to?: string | null
           circle_id?: string
           created_at?: string
           created_by?: string | null
@@ -78,6 +81,13 @@ export type Database = {
           {
             foreignKeyName: "care_appointments_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_appointments_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -745,6 +755,7 @@ export type Database = {
           is_active: boolean
           name: string
           photo_url: string | null
+          responsible_user_id: string | null
           updated_at: string
           with_food: boolean
         }
@@ -758,6 +769,7 @@ export type Database = {
           is_active?: boolean
           name: string
           photo_url?: string | null
+          responsible_user_id?: string | null
           updated_at?: string
           with_food?: boolean
         }
@@ -771,6 +783,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           photo_url?: string | null
+          responsible_user_id?: string | null
           updated_at?: string
           with_food?: boolean
         }
@@ -780,6 +793,13 @@ export type Database = {
             columns: ["circle_id"]
             isOneToOne: false
             referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medications_responsible_user_id_fkey"
+            columns: ["responsible_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

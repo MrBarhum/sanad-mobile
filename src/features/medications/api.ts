@@ -14,6 +14,7 @@ export type MedicationInput = {
   form: string | null;
   instructions: string | null;
   with_food: boolean;
+  responsible_user_id: string | null;
 };
 
 /** Editable schedule fields. `times` are 'HH:MM'; dates are 'YYYY-MM-DD'. */

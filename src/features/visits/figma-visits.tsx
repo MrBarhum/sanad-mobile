@@ -19,6 +19,7 @@ import {
   type FigmaScheme,
 } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
+import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useAuth } from '@/providers';
 import { formatHm, todayYmd } from '@/utils/date';
 
@@ -80,6 +81,7 @@ export function FigmaVisits({
   const userId = user?.id ?? null;
   const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const c = FigmaColors[scheme];
+  const lookup = useMemberLookup(circleId);
 
   const visitsQuery = useVisits(circleId);
   const [tab, setTab] = useState<VisitTab>('upcoming');
@@ -147,6 +149,11 @@ export function FigmaVisits({
               key={visit.id}
               visit={visit}
               mine={visit.visitor_user_id !== null && visit.visitor_user_id === userId}
+              linkedName={
+                visit.visitor_user_id && visit.visitor_user_id !== userId
+                  ? (lookup(visit.visitor_user_id)?.label ?? null)
+                  : null
+              }
               chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
               scheme={scheme}
               onOpen={() => router.push(`/visits/${visit.id}`)}
@@ -161,12 +168,14 @@ export function FigmaVisits({
 function VisitCard({
   visit,
   mine,
+  linkedName,
   chipColor,
   scheme,
   onOpen,
 }: {
   visit: FamilyVisit;
   mine: boolean;
+  linkedName: string | null;
   chipColor: string;
   scheme: FigmaScheme;
   onOpen: () => void;
@@ -222,6 +231,13 @@ function VisitCard({
             <Home size={13} color={c.muted} />
             <Text style={[styles.metaText, { color: c.muted }]} numberOfLines={1}>
               {t('visits.mineLabel')}
+            </Text>
+          </View>
+        ) : linkedName ? (
+          <View style={styles.metaRow}>
+            <Users size={13} color={c.muted} />
+            <Text style={[styles.metaText, { color: c.muted }]} numberOfLines={1}>
+              {linkedName}
             </Text>
           </View>
         ) : null}

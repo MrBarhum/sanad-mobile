@@ -24,6 +24,7 @@ import {
   type FigmaScheme,
 } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
+import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useAuth } from '@/providers';
 import { formatHm, todayYmd } from '@/utils/date';
 
@@ -63,6 +64,7 @@ export function FigmaTasks({
   const c = FigmaColors[scheme];
   const { user } = useAuth();
   const userId = user?.id ?? null;
+  const lookup = useMemberLookup(circleId);
 
   const tasksQuery = useTasks(circleId);
   const complete = useCompleteTask(circleId);
@@ -143,6 +145,11 @@ export function FigmaTasks({
               scheme={scheme}
               mine={task.assigned_to !== null && task.assigned_to === userId}
               unassigned={task.assigned_to === null}
+              assigneeName={
+                task.assigned_to && task.assigned_to !== userId
+                  ? (lookup(task.assigned_to)?.label ?? null)
+                  : null
+              }
               canAct={canActOn(task)}
               pending={pendingId === task.id}
               onComplete={() => act(task, 'complete')}
@@ -161,6 +168,7 @@ function TaskRow({
   scheme,
   mine,
   unassigned,
+  assigneeName,
   canAct,
   pending,
   onComplete,
@@ -171,6 +179,7 @@ function TaskRow({
   scheme: FigmaScheme;
   mine: boolean;
   unassigned: boolean;
+  assigneeName: string | null;
   canAct: boolean;
   pending: boolean;
   onComplete: () => void;
@@ -193,7 +202,7 @@ function TaskRow({
     ? t('tasks.assignedToMe')
     : unassigned
       ? t('tasks.unassigned')
-      : t('tasks.assignedToMember');
+      : (assigneeName ?? t('tasks.assignedToMember'));
 
   // Checkbox: done = success tint + check; open = hairline outline; cancelled = X.
   const checkColor = isDone ? c.success : isCancelled ? c.error : c.muted;

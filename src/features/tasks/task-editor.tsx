@@ -12,7 +12,6 @@ import {
   FigmaFormField,
   FigmaFormScreen,
   FigmaMutedNote,
-  FigmaToggleRow,
 } from '@/components/figma/figma-form-screen';
 import { FigmaFont } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
@@ -25,6 +24,7 @@ import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useAuth } from '@/providers';
 import { formatHm, hmFromInstant, ymdFromInstant } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
@@ -116,8 +116,6 @@ function TaskEditScreen({
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
-  const { user } = useAuth();
-  const userId = user?.id ?? null;
   const update = useUpdateTask(circleId);
 
   const [title, setTitle] = useState(initial.title);
@@ -126,9 +124,7 @@ function TaskEditScreen({
   const [priority, setPriority] = useState<TaskPriority>(initial.priority);
   const [dueDate, setDueDate] = useState(initial.due_date ?? '');
   const [dueTime, setDueTime] = useState(initial.due_time ? formatHm(initial.due_time) : '');
-  const [assignToMe, setAssignToMe] = useState(
-    initial.assigned_to !== null && initial.assigned_to === userId,
-  );
+  const [assignedTo, setAssignedTo] = useState(initial.assigned_to ?? '');
   const [notes, setNotes] = useState(initial.notes ?? '');
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
@@ -140,7 +136,7 @@ function TaskEditScreen({
     priority,
     dueDate,
     dueTime,
-    assignToMe,
+    assignedTo,
     notes,
   });
   const submitting = update.isPending;
@@ -195,7 +191,7 @@ function TaskEditScreen({
           priority,
           due_date: nullify(parsed.data.due_date),
           due_time: nullify(parsed.data.due_time),
-          assigned_to: assignToMe ? userId : null,
+          assigned_to: assignedTo === '' ? null : assignedTo,
           notes: nullify(parsed.data.notes),
         },
       });
@@ -288,14 +284,16 @@ function TaskEditScreen({
         </View>
       </FigmaFormCard>
 
-      {/* Assignee — keeps the existing assign-to-me data flow (not the add form's
-          member picker) to preserve behavior. */}
+      {/* Assignee — full member picker (Phase 2B), seeded from the task's current
+          assignee. Replaces the old self-only toggle, which silently wiped another
+          member's assignment whenever a manager saved an edit. */}
       <FigmaFormCard>
-        <FigmaToggleRow
-          label={t('tasks.fields.assignToMe')}
-          value={assignToMe}
-          onValueChange={(v) => {
-            setAssignToMe(v);
+        <MemberSelect
+          circleId={circleId}
+          value={assignedTo}
+          label={t('tasks.fields.assignedTo')}
+          onChange={(v) => {
+            setAssignedTo(v);
             touch();
           }}
         />
@@ -355,6 +353,8 @@ function TaskViewScreen({
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
+  const lookup = useMemberLookup(circleId);
+  const responsible = lookup(task.assigned_to);
   const due = task.due_date
     ? task.due_time
       ? `${task.due_date} ${formatHm(task.due_time)}`
@@ -370,6 +370,10 @@ function TaskViewScreen({
         <ReadOnlyRow label={t('tasks.fields.category')} value={t(`tasks.category.${task.category}`)} />
         <ReadOnlyRow label={t('tasks.fields.priority')} value={t(`tasks.priority.${task.priority}`)} />
         <ReadOnlyRow label={t('tasks.dueLabel')} value={due} />
+        <ReadOnlyRow
+          label={t('assignment.responsible')}
+          value={responsible ? responsible.label : t('assignment.none')}
+        />
         {task.description ? (
           <ReadOnlyRow label={t('tasks.fields.description')} value={task.description} />
         ) : null}

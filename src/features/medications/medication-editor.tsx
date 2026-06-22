@@ -20,6 +20,7 @@ import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
+import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { formatHm } from '@/utils/date';
@@ -125,7 +126,7 @@ function MedicationEditorScreen({
       {canManage ? (
         <MedicationInfoFields circleId={circleId} initial={medication} />
       ) : (
-        <ReadOnlyMedicationInfo medication={medication} />
+        <ReadOnlyMedicationInfo circleId={circleId} medication={medication} />
       )}
 
       {canManage ? <ActivationRow circleId={circleId} medication={medication} /> : null}
@@ -152,10 +153,18 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
   const [medForm, setMedForm] = useState(initial.form ?? '');
   const [instructions, setInstructions] = useState(initial.instructions ?? '');
   const [withFood, setWithFood] = useState(initial.with_food);
+  const [responsibleUserId, setResponsibleUserId] = useState(initial.responsible_user_id ?? '');
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
-  const { dirty, markSaved } = useUnsavedChanges({ name, dosage, medForm, instructions, withFood });
+  const { dirty, markSaved } = useUnsavedChanges({
+    name,
+    dosage,
+    medForm,
+    instructions,
+    withFood,
+    responsibleUserId,
+  });
   const submitting = update.isPending;
 
   function touch() {
@@ -198,6 +207,7 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
           form: nullify(parsed.data.form),
           instructions: nullify(parsed.data.instructions),
           with_food: parsed.data.with_food,
+          responsible_user_id: responsibleUserId === '' ? null : responsibleUserId,
         },
       });
       markSaved();
@@ -274,6 +284,19 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
         </View>
       </FigmaFormCard>
 
+      {/* Responsible person */}
+      <FigmaFormCard>
+        <MemberSelect
+          circleId={circleId}
+          value={responsibleUserId}
+          label={t('assignment.responsible')}
+          onChange={(v) => {
+            setResponsibleUserId(v);
+            touch();
+          }}
+        />
+      </FigmaFormCard>
+
       {/* Info save CTA — body-rendered teal button. This is a multi-section
           management screen, so the save belongs to the medication-info section
           (schedules below are managed live via their own modal). */}
@@ -298,9 +321,16 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
   );
 }
 
-function ReadOnlyMedicationInfo({ medication }: { medication: Medication }) {
+function ReadOnlyMedicationInfo({
+  circleId,
+  medication,
+}: {
+  circleId: string;
+  medication: Medication;
+}) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const responsible = useMemberLookup(circleId)(medication.responsible_user_id);
   return (
     <>
       <FigmaMutedNote>{t('medications.readOnly')}</FigmaMutedNote>
@@ -316,6 +346,9 @@ function ReadOnlyMedicationInfo({ medication }: { medication: Medication }) {
           label={t('medications.fields.withFood')}
           value={medication.with_food ? t('common.yes') : t('common.no')}
         />
+        {responsible ? (
+          <InfoRow label={t('assignment.responsible')} value={responsible.label} />
+        ) : null}
         {medication.instructions ? (
           <InfoRow label={t('medications.fields.instructions')} value={medication.instructions} />
         ) : null}

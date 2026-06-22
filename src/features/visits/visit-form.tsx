@@ -8,11 +8,11 @@ import {
   FigmaFormCard,
   FigmaFormScreen,
   FigmaMutedNote,
-  FigmaToggleRow,
 } from '@/components/figma/figma-form-screen';
 import { FigmaFont } from '@/components/figma/figma-tokens';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Spacing } from '@/constants/theme';
+import { MemberSelect } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
@@ -37,19 +37,25 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
   const create = useCreateVisit(circleId);
 
   const [draft, setDraft] = useState<VisitDraft>(() => defaultVisitDraft());
-  const [linkToSelf, setLinkToSelf] = useState(!canManage);
+  // Managers may link the visit to any active doer member ('' = not linked);
+  // collaborators always record their own visit (forced self-link below).
+  const [linkedUserId, setLinkedUserId] = useState('');
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const { dirty } = useUnsavedChanges({ draft, linkToSelf });
+  const { dirty } = useUnsavedChanges({ draft, linkedUserId });
   const submitting = create.isPending;
 
   useEffect(() => {
     if (submitted) router.back();
   }, [submitted, router]);
-  // Collaborators always record their own visit; managers may opt in.
-  const visitorUserId = (canManage ? linkToSelf : true) ? (user?.id ?? null) : null;
+  // Collaborators always record their own visit; managers choose who to link.
+  const visitorUserId = canManage
+    ? linkedUserId === ''
+      ? null
+      : linkedUserId
+    : (user?.id ?? null);
 
   function patch(part: Partial<VisitDraft>) {
     setDraft((current) => ({ ...current, ...part }));
@@ -78,13 +84,15 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
         <FigmaVisitFields draft={draft} onChange={patch} errors={errors} />
 
         {canManage ? (
-          <FigmaToggleRow
-            topDivider
-            label={t('visits.fields.linkToMe')}
-            hint={t('visits.ownVisitNote')}
-            value={linkToSelf}
-            onValueChange={setLinkToSelf}
-          />
+          <View>
+            <View style={[styles.divider, { backgroundColor: theme.divider }]} />
+            <MemberSelect
+              circleId={circleId}
+              value={linkedUserId}
+              label={t('visits.fields.linkToMember')}
+              onChange={setLinkedUserId}
+            />
+          </View>
         ) : (
           <View>
             <View style={[styles.divider, { backgroundColor: theme.divider }]} />

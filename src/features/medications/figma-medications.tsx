@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Check, Clock, Pill, X } from 'lucide-react-native';
+import { Check, Clock, Pill, Users, X } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,7 @@ import {
   type FigmaScheme,
 } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
+import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { formatHm, todayYmd } from '@/utils/date';
 
 import type { Medication, MedicationLogStatus, MedicationSchedule } from './api';
@@ -76,6 +77,7 @@ export function FigmaMedications({
   const medications = useActiveMedications(circleId);
   const schedules = useActiveSchedules(circleId);
   const logDose = useLogDose(circleId);
+  const lookup = useMemberLookup(circleId);
 
   const [tab, setTab] = useState<TabKey>('today');
   const [openDoseKey, setOpenDoseKey] = useState<string | null>(null);
@@ -201,6 +203,11 @@ export function FigmaMedications({
               scheme={scheme}
               color={colorByMedId.get(medication.id) ?? FigmaCategory.blue}
               schedules={schedulesByMedId.get(medication.id) ?? []}
+              responsibleName={
+                medication.responsible_user_id
+                  ? (lookup(medication.responsible_user_id)?.label ?? null)
+                  : null
+              }
               onPress={() => router.push(`/medications/${medication.id}`)}
             />
           ))}
@@ -326,12 +333,14 @@ function MedicationRow({
   scheme,
   color,
   schedules,
+  responsibleName,
   onPress,
 }: {
   medication: Medication;
   scheme: FigmaScheme;
   color: string;
   schedules: MedicationSchedule[];
+  responsibleName: string | null;
   onPress: () => void;
 }) {
   const { t } = useTranslation();
@@ -411,6 +420,16 @@ function MedicationRow({
               </Text>
             </View>
           ))}
+        </View>
+      ) : null}
+      {responsibleName ? (
+        <View style={styles.responsibleRow}>
+          <Users size={12} color={c.muted} />
+          <Text
+            style={[styles.responsibleText, { color: c.muted, fontFamily: FigmaFont.regular }]}
+            numberOfLines={1}>
+            {responsibleName}
+          </Text>
         </View>
       ) : null}
     </Pressable>
@@ -507,4 +526,6 @@ const styles = StyleSheet.create({
   },
   chipTime: { fontSize: 12, fontFamily: FigmaFont.medium },
   chipDays: { fontSize: 11 },
+  responsibleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  responsibleText: { fontSize: 12 },
 });

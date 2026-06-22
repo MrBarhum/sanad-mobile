@@ -14,6 +14,7 @@ import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
+import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import type { Doctor } from '@/features/doctors/api';
 import { useDoctors } from '@/features/doctors/hooks';
 import { useTheme } from '@/hooks/use-theme';
@@ -157,7 +158,13 @@ function AppointmentEditScreen({
       <UnsavedChangesGuard when={dirty} />
       <FigmaMutedNote>{t('appointments.disclaimer')}</FigmaMutedNote>
 
-      <FigmaAppointmentFields draft={draft} onChange={patch} errors={errors} doctors={doctors} />
+      <FigmaAppointmentFields
+        circleId={circleId}
+        draft={draft}
+        onChange={patch}
+        errors={errors}
+        doctors={doctors}
+      />
 
       <StatusSection circleId={circleId} appointment={initial} canManage />
 
@@ -206,6 +213,7 @@ function AppointmentViewScreen({
   const doctorName = appointment.doctor_id
     ? (doctors.find((doctor) => doctor.id === appointment.doctor_id)?.name ?? null)
     : null;
+  const responsible = useMemberLookup(circleId)(appointment.assigned_to);
 
   return (
     <FigmaFormScreen title={t('appointments.detailTitle')} onBack={() => router.back()}>
@@ -222,6 +230,9 @@ function AppointmentViewScreen({
           <ReadOnlyRow label={t('appointments.locationLabel')} value={appointment.location} />
         ) : null}
         {doctorName ? <ReadOnlyRow label={t('appointments.doctorLabel')} value={doctorName} /> : null}
+        {responsible ? (
+          <ReadOnlyRow label={t('assignment.responsible')} value={responsible.label} />
+        ) : null}
         {appointment.notes ? (
           <ReadOnlyRow label={t('appointments.fields.notes')} value={appointment.notes} />
         ) : null}

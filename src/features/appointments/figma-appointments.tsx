@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Calendar, Check, Clock, MapPin } from 'lucide-react-native';
+import { Calendar, Check, Clock, MapPin, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
@@ -18,6 +18,7 @@ import {
   type FigmaScheme,
 } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
+import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useDoctors } from '@/features/doctors/hooks';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
@@ -69,6 +70,7 @@ export function FigmaAppointments({
     () => new Map((doctorsQuery.data ?? []).map((doctor) => [doctor.id, doctor.name])),
     [doctorsQuery.data],
   );
+  const lookup = useMemberLookup(circleId);
 
   const appointments = appointmentsQuery.data ?? [];
   // Tabs split by status, mirroring the center's scheduled vs. completed handling.
@@ -124,6 +126,9 @@ export function FigmaAppointments({
               doctorName={
                 appointment.doctor_id ? (doctorNames.get(appointment.doctor_id) ?? null) : null
               }
+              assigneeName={
+                appointment.assigned_to ? (lookup(appointment.assigned_to)?.label ?? null) : null
+              }
               chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
               scheme={scheme}
               onOpen={() => router.push(`/appointments/${appointment.id}`)}
@@ -138,12 +143,14 @@ export function FigmaAppointments({
 function AppointmentCard({
   appointment,
   doctorName,
+  assigneeName,
   chipColor,
   scheme,
   onOpen,
 }: {
   appointment: CareAppointment;
   doctorName: string | null;
+  assigneeName: string | null;
   chipColor: string;
   scheme: FigmaScheme;
   onOpen: () => void;
@@ -199,6 +206,14 @@ function AppointmentCard({
             <MapPin size={13} color={c.muted} />
             <Text style={[styles.metaText, { color: c.muted }]} numberOfLines={1}>
               {appointment.location}
+            </Text>
+          </View>
+        ) : null}
+        {assigneeName ? (
+          <View style={styles.metaRow}>
+            <Users size={13} color={c.muted} />
+            <Text style={[styles.metaText, { color: c.muted }]} numberOfLines={1}>
+              {assigneeName}
             </Text>
           </View>
         ) : null}

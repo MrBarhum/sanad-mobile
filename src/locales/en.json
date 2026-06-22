@@ -568,6 +568,15 @@
       "perDayNone": "—"
     }
   },
+  "assignment": {
+    "responsible": "Responsible",
+    "label": "Assign to",
+    "none": "Unassigned",
+    "me": "Me",
+    "assignedToMe": "Assigned to you",
+    "inactiveMember": "Former member",
+    "unknownMember": "Member"
+  },
   "tasks": {
     "title": "Tasks",
     "addTitle": "Add task",
@@ -754,8 +763,10 @@
     "deleteVisit": "Delete visit",
     "whenLabel": "When",
     "mineLabel": "Your visit",
+    "linkedToLabel": "Linked to",
     "fields": {
       "visitorName": "Visitor name",
+      "linkToMember": "Link to a member",
       "visitDate": "Visit date",
       "startTime": "Start time",
       "endTime": "End time",

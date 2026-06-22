@@ -568,6 +568,15 @@
       "perDayNone": "—"
     }
   },
+  "assignment": {
+    "responsible": "المسؤول",
+    "label": "تعيين إلى",
+    "none": "غير محدد",
+    "me": "أنا",
+    "assignedToMe": "معيّن لي",
+    "inactiveMember": "عضو سابق",
+    "unknownMember": "عضو"
+  },
   "tasks": {
     "title": "المهام",
     "addTitle": "إضافة مهمة",
@@ -754,8 +763,10 @@
     "deleteVisit": "حذف الزيارة",
     "whenLabel": "الموعد",
     "mineLabel": "زيارتك",
+    "linkedToLabel": "مرتبطة بـ",
     "fields": {
       "visitorName": "اسم الزائر",
+      "linkToMember": "ربط بعضو",
       "visitDate": "تاريخ الزيارة",
       "startTime": "وقت البدء",
       "endTime": "وقت الانتهاء",

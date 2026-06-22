@@ -12,6 +12,7 @@ import { FigmaFont } from '@/components/figma/figma-tokens';
 import { TimeField } from '@/components/time-field';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { MemberSelect } from '@/features/circle-members/member-assignment';
 import type { Doctor } from '@/features/doctors/api';
 
 import type { AppointmentType } from './api';
@@ -27,11 +28,13 @@ import { APPOINTMENT_TYPES } from './schema';
  * not-before-start by the schema. Date/time use the protected wheel pickers.
  */
 export function FigmaAppointmentFields({
+  circleId,
   draft,
   onChange,
   errors,
   doctors,
 }: {
+  circleId: string;
   draft: AppointmentDraft;
   onChange: (patch: Partial<AppointmentDraft>) => void;
   errors: Partial<Record<string, string>>;
@@ -149,6 +152,16 @@ export function FigmaAppointmentFields({
             />
           </View>
         ) : null}
+      </FigmaFormCard>
+
+      {/* Responsible person */}
+      <FigmaFormCard>
+        <MemberSelect
+          circleId={circleId}
+          value={draft.assignedTo}
+          label={t('assignment.responsible')}
+          onChange={(value) => onChange({ assignedTo: value })}
+        />
       </FigmaFormCard>
 
       {/* Notes */}

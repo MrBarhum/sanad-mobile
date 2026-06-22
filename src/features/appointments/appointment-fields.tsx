@@ -24,6 +24,7 @@ export type AppointmentDraft = {
   endTime: string;
   location: string;
   doctorId: string;
+  assignedTo: string;
   notes: string;
 };
 
@@ -36,6 +37,7 @@ export function defaultAppointmentDraft(): AppointmentDraft {
     endTime: '',
     location: '',
     doctorId: '',
+    assignedTo: '',
     notes: '',
   };
 }
@@ -50,6 +52,7 @@ export function appointmentDraftFromRow(row: CareAppointment): AppointmentDraft 
     endTime: row.ends_at ? hmFromInstant(row.ends_at) : '',
     location: row.location ?? '',
     doctorId: row.doctor_id ?? '',
+    assignedTo: row.assigned_to ?? '',
     notes: row.notes ?? '',
   };
 }
@@ -86,6 +89,7 @@ export function prepareAppointment(draft: AppointmentDraft): PreparedAppointment
       ends_at: endsAt,
       location: nullify(parsed.data.location),
       doctor_id: draft.doctorId === '' ? null : draft.doctorId,
+      assigned_to: draft.assignedTo === '' ? null : draft.assignedTo,
       notes: nullify(parsed.data.notes),
     },
   };

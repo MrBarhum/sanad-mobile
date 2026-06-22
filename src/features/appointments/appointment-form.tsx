@@ -69,6 +69,7 @@ export function AppointmentForm({ circleId }: { circleId: string }) {
       <FigmaMutedNote>{t('appointments.disclaimer')}</FigmaMutedNote>
 
       <FigmaAppointmentFields
+        circleId={circleId}
         draft={draft}
         onChange={patch}
         errors={errors}

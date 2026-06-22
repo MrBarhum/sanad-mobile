@@ -14,6 +14,7 @@ import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
+import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
@@ -85,7 +86,12 @@ export function VisitEditor({
       {/* The Figma editor draws its own header; hide the native one. */}
       <Stack.Screen options={{ headerShown: false }} />
       {canEdit ? (
-        <VisitEditScreen key={visit.data.id} circleId={circleId} initial={visit.data} />
+        <VisitEditScreen
+          key={visit.data.id}
+          circleId={circleId}
+          initial={visit.data}
+          canManage={canManage}
+        />
       ) : (
         <VisitViewScreen circleId={circleId} visit={visit.data} canAct={false} />
       )}
@@ -93,21 +99,37 @@ export function VisitEditor({
   );
 }
 
-function VisitEditScreen({ circleId, initial }: { circleId: string; initial: FamilyVisit }) {
+function VisitEditScreen({
+  circleId,
+  initial,
+  canManage,
+}: {
+  circleId: string;
+  initial: FamilyVisit;
+  canManage: boolean;
+}) {
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
   const update = useUpdateVisit(circleId);
 
   const [draft, setDraft] = useState<VisitDraft>(() => visitDraftFromRow(initial));
+  // Managers may relink the visit to any active doer member; collaborators keep
+  // their own account link (seeded from the row, preserved on save).
+  const [linkedUserId, setLinkedUserId] = useState(initial.visitor_user_id ?? '');
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
-  const { dirty, markSaved } = useUnsavedChanges(draft);
+  const { dirty, markSaved } = useUnsavedChanges({ draft, linkedUserId });
   const submitting = update.isPending;
 
   function patch(part: Partial<VisitDraft>) {
     setDraft((current) => ({ ...current, ...part }));
+    if (status !== 'idle') setStatus('idle');
+  }
+
+  function relink(value: string) {
+    setLinkedUserId(value);
     if (status !== 'idle') setStatus('idle');
   }
 
@@ -119,10 +141,16 @@ function VisitEditScreen({ circleId, initial }: { circleId: string; initial: Fam
       return;
     }
     try {
-      // Preserve the visitor account link so RLS (own-visit / manager) still holds.
+      // Managers may relink to any active member; collaborators keep their own
+      // link, so RLS (own-visit / manager) still holds either way.
+      const visitorUserId = canManage
+        ? linkedUserId === ''
+          ? null
+          : linkedUserId
+        : initial.visitor_user_id;
       await update.mutateAsync({
         id: initial.id,
-        patch: { ...prepared.value, visitor_user_id: initial.visitor_user_id },
+        patch: { ...prepared.value, visitor_user_id: visitorUserId },
       });
       markSaved();
       setStatus('saved');
@@ -138,6 +166,17 @@ function VisitEditScreen({ circleId, initial }: { circleId: string; initial: Fam
 
       <FigmaFormCard>
         <FigmaVisitFields draft={draft} onChange={patch} errors={errors} />
+        {canManage ? (
+          <View>
+            <View style={[styles.divider, { backgroundColor: theme.divider }]} />
+            <MemberSelect
+              circleId={circleId}
+              value={linkedUserId}
+              label={t('visits.fields.linkToMember')}
+              onChange={relink}
+            />
+          </View>
+        ) : null}
       </FigmaFormCard>
 
       <StatusSection circleId={circleId} visit={initial} canAct />
@@ -179,6 +218,7 @@ function VisitViewScreen({
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
+  const responsible = useMemberLookup(circleId)(visit.visitor_user_id);
   const timeParts = [];
   if (visit.start_time) timeParts.push(isolateLtr(formatHm(visit.start_time)));
   if (visit.end_time) timeParts.push(isolateLtr(formatHm(visit.end_time)));
@@ -192,6 +232,9 @@ function VisitViewScreen({
       <FigmaFormCard>
         <Text style={[styles.title, { color: theme.text }]}>{visit.visitor_name}</Text>
         <ReadOnlyRow label={t('visits.whenLabel')} value={when} />
+        {responsible ? (
+          <ReadOnlyRow label={t('visits.linkedToLabel')} value={responsible.label} />
+        ) : null}
         {visit.notes ? <ReadOnlyRow label={t('visits.fields.notes')} value={visit.notes} /> : null}
       </FigmaFormCard>
 
@@ -329,6 +372,7 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
 
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
+  divider: { height: StyleSheet.hairlineWidth, marginBottom: Spacing.three },
   footer: { gap: Spacing.two },
   statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
   title: { fontSize: 18, fontFamily: FigmaFont.bold },
