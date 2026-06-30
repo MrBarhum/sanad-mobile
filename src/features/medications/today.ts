@@ -18,6 +18,9 @@ export type DoseItem = {
   status: MedicationLogStatus | null;
   /** Existing log id, when this dose has already been recorded. */
   logId: string | null;
+  /** Responsible member for this dose's medication (medications.responsible_user_id).
+   * Threaded through so operational lists can scope by responsibility (UI-only). */
+  responsibleUserId: string | null;
 };
 
 export type DoseSummary = { total: number; given: number; remaining: number };
@@ -84,6 +87,7 @@ export function computeDoseItems(params: {
         scheduledTime: time,
         status: log?.status ?? null,
         logId: log?.id ?? null,
+        responsibleUserId: medication.responsible_user_id,
       });
     }
   }

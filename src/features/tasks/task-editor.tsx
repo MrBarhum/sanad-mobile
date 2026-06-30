@@ -353,6 +353,8 @@ function TaskViewScreen({
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const lookup = useMemberLookup(circleId);
   const responsible = lookup(task.assigned_to);
   const due = task.due_date
@@ -361,9 +363,18 @@ function TaskViewScreen({
       : task.due_date
     : t('tasks.noDueDate');
 
+  // A non-manager can't edit the task's fields, but the assignee can still update
+  // its status — so the banner must not claim "view only / no permission" then.
+  // Only the assignee (not unassigned) qualifies this pass.
+  const canUpdateStatus =
+    task.status === 'open' &&
+    canCollaborate &&
+    task.assigned_to !== null &&
+    task.assigned_to === userId;
+
   return (
     <FigmaFormScreen title={t('tasks.detailTitle')} onBack={() => router.back()}>
-      <FigmaMutedNote>{t('tasks.readOnly')}</FigmaMutedNote>
+      <FigmaMutedNote>{canUpdateStatus ? t('tasks.statusOnly') : t('tasks.readOnly')}</FigmaMutedNote>
 
       <FigmaFormCard>
         <Text style={[styles.title, { color: theme.text }]}>{task.title}</Text>
@@ -414,9 +425,11 @@ function StatusSection({
   const cancel = useCancelTask(circleId);
   const [pending, setPending] = useState(false);
 
+  // Managers act on any task; a non-manager only on a task assigned to them
+  // (unassigned tasks are manager-only this pass — no family pick-up here).
   const canAct =
     task.status === 'open' &&
-    (canManage || (canCollaborate && (task.assigned_to === null || task.assigned_to === userId)));
+    (canManage || (canCollaborate && task.assigned_to !== null && task.assigned_to === userId));
 
   async function run(kind: 'complete' | 'cancel') {
     setPending(true);
@@ -452,23 +465,23 @@ function StatusSection({
       ) : null}
 
       {canAct ? (
-        <View style={styles.actionRow}>
-          <View style={styles.actionCol}>
-            <FigmaButton
-              label={t('tasks.complete')}
-              loading={pending}
-              disabled={pending}
-              onPress={() => run('complete')}
-            />
-          </View>
-          <View style={styles.actionCol}>
-            <FigmaButton
-              label={t('tasks.cancelTask')}
-              variant="secondary"
-              disabled={pending}
-              onPress={() => run('cancel')}
-            />
-          </View>
+        <View style={styles.statusActions}>
+          {/* Primary status action: the PROVEN body-rendered filled-teal CTA
+              (FigmaFooterPrimaryButton). FigmaButton variant="primary" rendered
+              visually dark/disabled in this nested form context on the Android
+              device — the same reason the save CTA uses this component. "تم الإنجاز". */}
+          <FigmaFooterPrimaryButton
+            label={t('tasks.markComplete')}
+            onPress={() => run('complete')}
+            loading={pending}
+          />
+          {/* Secondary: clear and not destructive-by-accident — "تعذّر الإنجاز". */}
+          <FigmaButton
+            label={t('tasks.markUnable')}
+            variant="secondary"
+            disabled={pending}
+            onPress={() => run('cancel')}
+          />
         </View>
       ) : null}
     </FigmaFormCard>
@@ -543,4 +556,7 @@ const styles = StyleSheet.create({
   statusMeta: { fontSize: 13, fontFamily: FigmaFont.regular },
   actionRow: { flexDirection: 'row', gap: Spacing.two },
   actionCol: { flex: 1 },
+  // Status actions stack vertically: full-width filled-teal complete CTA on top,
+  // quiet secondary below — primary gets full prominence and thumb width.
+  statusActions: { gap: Spacing.two },
 });

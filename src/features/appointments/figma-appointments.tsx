@@ -20,6 +20,7 @@ import {
 import { isolateLtr } from '@/components/ltr-text';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useDoctors } from '@/features/doctors/hooks';
+import { useAuth } from '@/providers';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
 import type { CareAppointment } from './api';
@@ -53,12 +54,16 @@ const CHIP_COLORS = [
 export function FigmaAppointments({
   circleId,
   canManage,
+  canCollaborate,
 }: {
   circleId: string;
   canManage: boolean;
+  canCollaborate: boolean;
 }) {
   const { t } = useTranslation();
   const router = useRouter();
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const c = FigmaColors[scheme];
 
@@ -73,9 +78,16 @@ export function FigmaAppointments({
   const lookup = useMemberLookup(circleId);
 
   const appointments = appointmentsQuery.data ?? [];
+  // Family members (non-managers who can collaborate) see only appointments assigned
+  // to them; managers see all; read-only members see all (no action affordances).
+  // UI scoping only — RLS is unchanged.
+  const scopeToMine = !canManage && canCollaborate;
+  const visible = scopeToMine
+    ? appointments.filter((a) => a.assigned_to === userId)
+    : appointments;
   // Tabs split by status, mirroring the center's scheduled vs. completed handling.
   // Cancelled appointments are intentionally hidden (the Figma has no such tab).
-  const filtered = appointments.filter((a) =>
+  const filtered = visible.filter((a) =>
     tab === 'upcoming' ? a.status === 'scheduled' : a.status === 'completed',
   );
 

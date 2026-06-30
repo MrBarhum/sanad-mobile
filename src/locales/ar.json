@@ -575,7 +575,10 @@
     "me": "أنا",
     "assignedToMe": "معيّن لي",
     "inactiveMember": "عضو سابق",
-    "unknownMember": "عضو"
+    "unknownMember": "عضو",
+    "unassigned": "غير مسند",
+    "responsibleValue": "المسؤول: {{value}}",
+    "nameWithRole": "{{name}} - {{role}}"
   },
   "tasks": {
     "title": "المهام",
@@ -611,6 +614,13 @@
     "assignedToMember": "مُسندة إلى أحد الأعضاء",
     "completedAt": "اكتملت في",
     "cancelledAt": "أُلغيت في",
+    "markComplete": "تم الإنجاز",
+    "markUnable": "تعذّر الإنجاز",
+    "statusOnly": "يمكنك تحديث حالة المهمة فقط",
+    "confirmCompleteTitle": "تأكيد إنجاز المهمة؟",
+    "confirmCompleteBody": "هل تريد تعليم هذه المهمة كمُنجَزة؟",
+    "confirmUnableTitle": "تأكيد تعذّر إنجاز المهمة؟",
+    "confirmUnableBody": "هل تريد تسجيل هذه المهمة كمتعذّرة الإنجاز؟",
     "fields": {
       "title": "عنوان المهمة",
       "description": "الوصف",
@@ -1228,7 +1238,9 @@
         "open": "معلقة",
         "done": "مكتملة"
       },
-      "empty": "لا توجد مهام"
+      "empty": "لا توجد مهام",
+      "emptyMine": "لا مهام مُسندة إليك حالياً",
+      "scopeNote": "تظهر هنا المهام المُسندة إليك فقط."
     },
     "appointments": {
       "title": "المواعيد",

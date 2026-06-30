@@ -88,10 +88,14 @@ export function FigmaVisits({
 
   const canAdd = canManage || canCollaborate;
 
-  // Split today + future vs. past, matching the center's today/upcoming/recent
-  // buckets. The Figma has two tabs, so today + upcoming collapse into "upcoming".
+  // Family members (non-managers who can collaborate) see only visits linked to
+  // them; managers see all; read-only members see all (no action affordances). UI
+  // scoping only — RLS is unchanged. Then split today+future vs. past, matching the
+  // center's buckets (the Figma has two tabs, so today + upcoming collapse).
+  const scopeToMine = !canManage && canCollaborate;
   const { upcoming, recent } = useMemo(() => {
-    const visits = visitsQuery.data ?? [];
+    const all = visitsQuery.data ?? [];
+    const visits = scopeToMine ? all.filter((visit) => visit.visitor_user_id === userId) : all;
     const today = todayYmd();
     const upcomingList = visits
       .filter((visit) => visit.visit_date >= today)
@@ -100,7 +104,7 @@ export function FigmaVisits({
       .filter((visit) => visit.visit_date < today)
       .sort((a, b) => startSortKey(b).localeCompare(startSortKey(a)));
     return { upcoming: upcomingList, recent: recentList };
-  }, [visitsQuery.data]);
+  }, [visitsQuery.data, scopeToMine, userId]);
 
   const filtered = tab === 'upcoming' ? upcoming : recent;
 

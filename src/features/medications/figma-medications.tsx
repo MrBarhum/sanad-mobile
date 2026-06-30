@@ -20,7 +20,8 @@ import {
   type FigmaScheme,
 } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
-import { useMemberLookup } from '@/features/circle-members/member-assignment';
+import { useResponsibleLabel } from '@/features/circle-members/member-assignment';
+import { useAuth } from '@/providers';
 import { formatHm, todayYmd } from '@/utils/date';
 
 import type { Medication, MedicationLogStatus, MedicationSchedule } from './api';
@@ -73,18 +74,30 @@ export function FigmaMedications({
   const c = FigmaColors[scheme];
   const date = todayYmd();
 
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+
   const today = useTodayDoses(circleId, date);
   const medications = useActiveMedications(circleId);
   const schedules = useActiveSchedules(circleId);
   const logDose = useLogDose(circleId);
-  const lookup = useMemberLookup(circleId);
+  const responsibleLabel = useResponsibleLabel(circleId);
 
   const [tab, setTab] = useState<TabKey>('today');
   const [openDoseKey, setOpenDoseKey] = useState<string | null>(null);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
 
   const meds = useMemo(() => medications.data ?? [], [medications.data]);
-  const { total, given } = summarizeDoses(today.doses);
+
+  // Family members (non-managers who can log) only see/register doses for meds
+  // they are responsible for; managers see all; read-only members see all (and
+  // never get a register button). UI scoping only — RLS is unchanged.
+  const scopeToMine = !canManage && canLog;
+  const visibleDoses = useMemo(
+    () => (scopeToMine ? today.doses.filter((d) => d.responsibleUserId === userId) : today.doses),
+    [scopeToMine, today.doses, userId],
+  );
+  const { total, given } = summarizeDoses(visibleDoses);
 
   // Stable per-medication accent color (by index in the alphabetical list).
   const colorByMedId = useMemo(() => {
@@ -165,7 +178,7 @@ export function FigmaMedications({
           <ActivityIndicator color={c.primary} />
         </View>
       ) : tab === 'today' ? (
-        today.doses.length === 0 ? (
+        visibleDoses.length === 0 ? (
           <EmptyCard
             scheme={scheme}
             title={t('medications.noDosesTitle')}
@@ -173,13 +186,14 @@ export function FigmaMedications({
           />
         ) : (
           <View style={styles.list}>
-            {today.doses.map((dose) => (
+            {visibleDoses.map((dose) => (
               <DoseCard
                 key={dose.key}
                 dose={dose}
                 scheme={scheme}
                 color={colorByMedId.get(dose.medicationId) ?? FigmaCategory.blue}
-                canLog={canLog}
+                responsibleText={canManage ? responsibleLabel(dose.responsibleUserId) : null}
+                canLog={canLog && (canManage || dose.responsibleUserId === userId)}
                 open={openDoseKey === dose.key}
                 pending={pendingKey === dose.key}
                 onToggle={() => setOpenDoseKey((k) => (k === dose.key ? null : dose.key))}
@@ -203,11 +217,7 @@ export function FigmaMedications({
               scheme={scheme}
               color={colorByMedId.get(medication.id) ?? FigmaCategory.blue}
               schedules={schedulesByMedId.get(medication.id) ?? []}
-              responsibleName={
-                medication.responsible_user_id
-                  ? (lookup(medication.responsible_user_id)?.label ?? null)
-                  : null
-              }
+              responsibleText={canManage ? responsibleLabel(medication.responsible_user_id) : null}
               onPress={() => router.push(`/medications/${medication.id}`)}
             />
           ))}
@@ -236,6 +246,7 @@ function DoseCard({
   dose,
   scheme,
   color,
+  responsibleText,
   canLog,
   open,
   pending,
@@ -245,6 +256,7 @@ function DoseCard({
   dose: DoseItem;
   scheme: FigmaScheme;
   color: string;
+  responsibleText: string | null;
   canLog: boolean;
   open: boolean;
   pending: boolean;
@@ -291,6 +303,16 @@ function DoseCard({
               background={statusBg}
             />
           </View>
+          {responsibleText ? (
+            <View style={styles.responsibleRow}>
+              <Users size={12} color={c.muted} />
+              <Text
+                style={[styles.responsibleText, { color: c.muted, fontFamily: FigmaFont.regular }]}
+                numberOfLines={1}>
+                {responsibleText}
+              </Text>
+            </View>
+          ) : null}
         </View>
         {isPending && canLog ? (
           <Pressable
@@ -333,14 +355,14 @@ function MedicationRow({
   scheme,
   color,
   schedules,
-  responsibleName,
+  responsibleText,
   onPress,
 }: {
   medication: Medication;
   scheme: FigmaScheme;
   color: string;
   schedules: MedicationSchedule[];
-  responsibleName: string | null;
+  responsibleText: string | null;
   onPress: () => void;
 }) {
   const { t } = useTranslation();
@@ -422,13 +444,13 @@ function MedicationRow({
           ))}
         </View>
       ) : null}
-      {responsibleName ? (
+      {responsibleText ? (
         <View style={styles.responsibleRow}>
           <Users size={12} color={c.muted} />
           <Text
             style={[styles.responsibleText, { color: c.muted, fontFamily: FigmaFont.regular }]}
             numberOfLines={1}>
-            {responsibleName}
+            {responsibleText}
           </Text>
         </View>
       ) : null}

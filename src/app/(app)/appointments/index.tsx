@@ -6,7 +6,11 @@ export default function AppointmentsScreen() {
   return (
     <CircleGate>
       {(circle) => (
-        <FigmaAppointments circleId={circle.circleId} canManage={circle.canManage} />
+        <FigmaAppointments
+          circleId={circle.circleId}
+          canManage={circle.canManage}
+          canCollaborate={circle.canLogDoses}
+        />
       )}
     </CircleGate>
   );

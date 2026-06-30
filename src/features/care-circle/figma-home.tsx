@@ -36,7 +36,9 @@ import {
   type FigmaScheme,
 } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
-import { useTodayAppointmentSummary, useUpcomingAppointments } from '@/features/appointments/hooks';
+import { useUpcomingAppointments } from '@/features/appointments/hooks';
+import { countAppointmentsToday } from '@/features/care-activity/today';
+import { useResponsibleLabel } from '@/features/circle-members/member-assignment';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import type { ActiveCircle } from '@/features/circle-selection/permissions';
 import type { MedicationLogStatus } from '@/features/medications/api';
@@ -44,6 +46,7 @@ import { useLogDose, useTodayDoses } from '@/features/medications/hooks';
 import { summarizeDoses, type DoseItem } from '@/features/medications/today';
 import { useRecipient } from '@/features/recipient-profile/hooks';
 import { useTodayTaskSummary } from '@/features/tasks/hooks';
+import { useAuth } from '@/providers';
 import {
   approximateAgeYears,
   formatHm,
@@ -79,15 +82,34 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   const c = FigmaColors[scheme];
   const { width } = useWindowDimensions();
   const date = todayYmd();
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+
+  // Family members (non-managers who can log) see only doses/appointments they are
+  // responsible for; managers see all; read-only members see all (no actions). The
+  // care-loop, next-dose, dose list, next-appointment and today's-appointment count
+  // all reflect this scope so a family member's home shows THEIR day, not everyone's.
+  const scopeToMine = !circle.canManage && circle.canLogDoses;
 
   const { doses } = useTodayDoses(circle.circleId, date);
-  const { total, given } = summarizeDoses(doses);
-  const nextDose = doses.find((d) => d.status !== 'given') ?? null;
+  const visibleDoses = scopeToMine ? doses.filter((d) => d.responsibleUserId === userId) : doses;
+  const { total, given } = summarizeDoses(visibleDoses);
+  const nextDose = visibleDoses.find((d) => d.status !== 'given') ?? null;
 
-  const { summary: taskSummary } = useTodayTaskSummary(circle.circleId);
-  const { count: apptCount } = useTodayAppointmentSummary(circle.circleId);
+  // Scope the "tasks due today" stat the same way the doses/appointments above
+  // are scoped: a family member counts only their own assigned tasks; managers
+  // count the whole circle. Without this the stat showed the circle-wide count.
+  const { summary: taskSummary } = useTodayTaskSummary(
+    circle.circleId,
+    scopeToMine ? userId : null,
+  );
+  const responsibleLabel = useResponsibleLabel(circle.circleId);
   const appointments = useUpcomingAppointments(circle.circleId);
-  const nextAppt = (appointments.data ?? []).find((a) => a.status !== 'cancelled') ?? null;
+  const visibleAppts = scopeToMine
+    ? (appointments.data ?? []).filter((a) => a.assigned_to === userId)
+    : (appointments.data ?? []);
+  const apptCount = countAppointmentsToday(visibleAppts, date);
+  const nextAppt = visibleAppts.find((a) => a.status !== 'cancelled') ?? null;
 
   const recipient = useRecipient(circle.circleId).data ?? null;
   const { circles, activeCircleId, setActiveCircle } = useCircleSelection();
@@ -277,7 +299,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
 
             {total > 0 ? (
               <View style={styles.strip}>
-                {doses.slice(0, 5).map((d) => {
+                {visibleDoses.slice(0, 5).map((d) => {
                   const cfg = d.status ? DOSE_STATUS[d.status] : null;
                   const color = cfg ? cfg.color : c.muted;
                   const StripIcon = cfg ? cfg.Icon : Clock;
@@ -370,12 +392,13 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
             </Pressable>
           </View>
           <View style={styles.doseList}>
-            {doses.map((dose) => (
+            {visibleDoses.map((dose) => (
               <DoseRow
                 key={dose.key}
                 dose={dose}
                 scheme={scheme}
-                canLog={circle.canLogDoses}
+                responsibleText={circle.canManage ? responsibleLabel(dose.responsibleUserId) : null}
+                canLog={circle.canLogDoses && (circle.canManage || dose.responsibleUserId === userId)}
                 open={openDoseKey === dose.key}
                 pending={pendingKey === dose.key}
                 onToggle={() => setOpenDoseKey((k) => (k === dose.key ? null : dose.key))}
@@ -451,6 +474,7 @@ function StatCard({
 function DoseRow({
   dose,
   scheme,
+  responsibleText,
   canLog,
   open,
   pending,
@@ -459,6 +483,7 @@ function DoseRow({
 }: {
   dose: DoseItem;
   scheme: FigmaScheme;
+  responsibleText: string | null;
   canLog: boolean;
   open: boolean;
   pending: boolean;
@@ -494,6 +519,14 @@ function DoseRow({
               <Text style={[styles.doseTagText, { color: statusColor }]}>{statusLabel}</Text>
             </View>
           </View>
+          {responsibleText ? (
+            <View style={styles.doseResponsibleRow}>
+              <Users size={12} color={c.muted} />
+              <Text style={[styles.doseResponsibleText, { color: c.muted }]} numberOfLines={1}>
+                {responsibleText}
+              </Text>
+            </View>
+          ) : null}
         </View>
         {!status && canLog ? (
           <Pressable
@@ -603,6 +636,8 @@ const styles = StyleSheet.create({
   doseDosage: { fontSize: 12, fontFamily: FigmaFont.regular },
   doseMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   doseTime: { fontSize: 12, fontFamily: FigmaFont.regular },
+  doseResponsibleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  doseResponsibleText: { fontSize: 11, fontFamily: FigmaFont.regular, flexShrink: 1 },
   doseTag: { borderRadius: FigmaRadius.pill, paddingHorizontal: 8, paddingVertical: 2 },
   doseTagText: { fontSize: 10, fontFamily: FigmaFont.medium },
   logBtn: { borderRadius: FigmaRadius.pill, paddingHorizontal: 12, paddingVertical: 6, minHeight: 32, justifyContent: 'center' },

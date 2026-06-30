@@ -127,6 +127,10 @@ export type ResolvedMember = {
   isSelf: boolean;
   /** True when the member is no longer an active member of the circle. */
   isInactive: boolean;
+  /** The member's circle role, when known (null for self / unknown ids). */
+  role: CircleRole | null;
+  /** Localized role name (circleMembers.roles.*); null when the role is unknown. */
+  roleLabel: string | null;
 };
 
 /**
@@ -146,19 +150,48 @@ export function useMemberLookup(circleId: string): (userId: string | null) => Re
     (userId: string | null): ResolvedMember | null => {
       if (!userId) return null;
       if (selfId && userId === selfId) {
-        return { label: t('assignment.me'), isSelf: true, isInactive: false };
+        return { label: t('assignment.me'), isSelf: true, isInactive: false, role: null, roleLabel: null };
       }
       const member = members?.find((m) => m.userId === userId);
       if (!member) {
-        return { label: t('assignment.unknownMember'), isSelf: false, isInactive: false };
+        return { label: t('assignment.unknownMember'), isSelf: false, isInactive: false, role: null, roleLabel: null };
       }
       return {
         label: member.fullName ?? t('assignment.unknownMember'),
         isSelf: member.isSelf,
         isInactive: member.status !== 'active',
+        role: member.role,
+        roleLabel: t(`circleMembers.roles.${member.role}`),
       };
     },
     [members, selfId, t],
+  );
+}
+
+/**
+ * Returns a resolver that maps a stored `responsible_user_id` (or any assignee
+ * id) to a single localized line for read-only display on manager surfaces:
+ *   - unassigned (null id) → "غير مسند"
+ *   - the current user      → "المسؤول: أنا"
+ *   - another active member → "المسؤول: <name> - <role>"  (never an email)
+ * Built on top of `useMemberLookup`, so it inherits the same email-safe naming.
+ * Callers decide whether to render it (e.g. managers only); this only formats.
+ */
+export function useResponsibleLabel(circleId: string): (userId: string | null) => string {
+  const { t } = useTranslation();
+  const lookup = useMemberLookup(circleId);
+
+  return useCallback(
+    (userId: string | null): string => {
+      const resolved = lookup(userId);
+      if (!resolved) return t('assignment.unassigned');
+      const value =
+        resolved.isSelf || !resolved.roleLabel
+          ? resolved.label
+          : t('assignment.nameWithRole', { name: resolved.label, role: resolved.roleLabel });
+      return t('assignment.responsibleValue', { value });
+    },
+    [lookup, t],
   );
 }
 

@@ -575,7 +575,10 @@
     "me": "Me",
     "assignedToMe": "Assigned to you",
     "inactiveMember": "Former member",
-    "unknownMember": "Member"
+    "unknownMember": "Member",
+    "unassigned": "Unassigned",
+    "responsibleValue": "Responsible: {{value}}",
+    "nameWithRole": "{{name}} - {{role}}"
   },
   "tasks": {
     "title": "Tasks",
@@ -611,6 +614,13 @@
     "assignedToMember": "Assigned to a member",
     "completedAt": "Completed at",
     "cancelledAt": "Cancelled at",
+    "markComplete": "Mark complete",
+    "markUnable": "Couldn't complete",
+    "statusOnly": "You can update the task status only",
+    "confirmCompleteTitle": "Mark task complete?",
+    "confirmCompleteBody": "Mark this task as completed?",
+    "confirmUnableTitle": "Mark task as not completed?",
+    "confirmUnableBody": "Record this task as not completed?",
     "fields": {
       "title": "Task title",
       "description": "Description",
@@ -1228,7 +1238,9 @@
         "open": "Open",
         "done": "Done"
       },
-      "empty": "No tasks"
+      "empty": "No tasks",
+      "emptyMine": "No tasks assigned to you right now",
+      "scopeNote": "Showing only tasks assigned to you."
     },
     "appointments": {
       "title": "Appointments",

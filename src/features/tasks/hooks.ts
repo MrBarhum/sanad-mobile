@@ -42,13 +42,24 @@ export function useTask(id: string | undefined) {
   });
 }
 
-/** Today's task counts for the Home dashboard card. */
-export function useTodayTaskSummary(circleId: string | undefined) {
+/**
+ * Today's task counts for the Home dashboard card.
+ *
+ * Pass `scopeToUserId` to restrict every count to tasks assigned to that user —
+ * the family_member / collaborator scope, so the Home stat matches the scoped
+ * tasks list (only their assigned tasks; unassigned and others' tasks excluded).
+ * Managers pass `null`/`undefined` to count the whole circle. Completed and
+ * cancelled tasks are already excluded from the open/due counts by
+ * `summarizeTodayTasks`. Frontend scoping only — the underlying query is
+ * unchanged (RLS still returns the full circle set).
+ */
+export function useTodayTaskSummary(circleId: string | undefined, scopeToUserId?: string | null) {
   const tasks = useTasks(circleId);
-  const summary = useMemo(
-    () => summarizeTodayTasks(tasks.data ?? [], todayYmd()),
-    [tasks.data],
-  );
+  const summary = useMemo(() => {
+    const all = tasks.data ?? [];
+    const scoped = scopeToUserId ? all.filter((task) => task.assigned_to === scopeToUserId) : all;
+    return summarizeTodayTasks(scoped, todayYmd());
+  }, [tasks.data, scopeToUserId]);
   return { summary, isLoading: tasks.isLoading, isError: tasks.isError };
 }
 
