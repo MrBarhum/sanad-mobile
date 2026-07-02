@@ -19,6 +19,7 @@ import type { Doctor } from '@/features/doctors/api';
 import { useDoctors } from '@/features/doctors/hooks';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { useAuth } from '@/providers';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
 import type { AppointmentStatus, CareAppointment } from './api';
@@ -31,6 +32,7 @@ import { FigmaAppointmentFields } from './figma-appointment-fields';
 import {
   useAppointment,
   useDeleteAppointment,
+  useSetAppointmentOutcome,
   useSetAppointmentStatus,
   useUpdateAppointment,
 } from './hooks';
@@ -59,13 +61,16 @@ const STATUS_GLYPH: Record<AppointmentStatus, string> = {
 export function AppointmentEditor({
   circleId,
   canManage,
+  canCollaborate,
   appointmentId,
 }: {
   circleId: string;
   canManage: boolean;
+  canCollaborate: boolean;
   appointmentId: string;
 }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const appointment = useAppointment(appointmentId);
   const doctorsQuery = useDoctors(circleId);
 
@@ -88,6 +93,10 @@ export function AppointmentEditor({
   }
 
   const doctors = doctorsQuery.data ?? [];
+  // A non-manager who is the assignee may record the outcome (completed/cancelled)
+  // via the RPC, but never edit appointment details — managers keep the full editor.
+  const canMarkOutcome =
+    canCollaborate && !!user && appointment.data.assigned_to === user.id;
 
   return (
     <>
@@ -105,6 +114,7 @@ export function AppointmentEditor({
           circleId={circleId}
           appointment={appointment.data}
           doctors={doctors}
+          canMarkOutcome={canMarkOutcome}
         />
       )}
     </>
@@ -166,7 +176,7 @@ function AppointmentEditScreen({
         doctors={doctors}
       />
 
-      <StatusSection circleId={circleId} appointment={initial} canManage />
+      <StatusSection circleId={circleId} appointment={initial} canMarkOutcome canReopen />
 
       <DeleteAppointmentRow circleId={circleId} id={initial.id} />
 
@@ -197,10 +207,12 @@ function AppointmentViewScreen({
   circleId,
   appointment,
   doctors,
+  canMarkOutcome,
 }: {
   circleId: string;
   appointment: CareAppointment;
   doctors: Doctor[];
+  canMarkOutcome: boolean;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -217,7 +229,7 @@ function AppointmentViewScreen({
 
   return (
     <FigmaFormScreen title={t('appointments.detailTitle')} onBack={() => router.back()}>
-      <FigmaMutedNote>{t('appointments.readOnly')}</FigmaMutedNote>
+      <FigmaMutedNote>{t(canMarkOutcome ? 'appointments.statusOnly' : 'appointments.readOnly')}</FigmaMutedNote>
 
       <FigmaFormCard>
         <Text style={[styles.title, { color: theme.text }]}>{appointment.title}</Text>
@@ -238,7 +250,12 @@ function AppointmentViewScreen({
         ) : null}
       </FigmaFormCard>
 
-      <StatusSection circleId={circleId} appointment={appointment} canManage={false} />
+      <StatusSection
+        circleId={circleId}
+        appointment={appointment}
+        canMarkOutcome={canMarkOutcome}
+        canReopen={false}
+      />
     </FigmaFormScreen>
   );
 }
@@ -253,28 +270,50 @@ function ReadOnlyRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+/**
+ * Status card. `canMarkOutcome` (a manager, or the assigned member) may move a
+ * scheduled appointment to completed/cancelled through the
+ * `set_assigned_appointment_outcome` RPC — status only, no detail edits.
+ * `canReopen` (managers) may move a closed appointment back to scheduled via the
+ * direct manager update (the outcome RPC intentionally does not allow reopening).
+ */
 function StatusSection({
   circleId,
   appointment,
-  canManage,
+  canMarkOutcome,
+  canReopen,
 }: {
   circleId: string;
   appointment: CareAppointment;
-  canManage: boolean;
+  canMarkOutcome: boolean;
+  canReopen: boolean;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const setStatus = useSetAppointmentStatus(circleId);
+  const outcome = useSetAppointmentOutcome(circleId);
+  const reopenStatus = useSetAppointmentStatus(circleId);
   const [pending, setPending] = useState(false);
 
-  async function run(status: AppointmentStatus) {
+  async function mark(status: 'completed' | 'cancelled') {
     setPending(true);
     try {
-      await setStatus.mutateAsync({ id: appointment.id, status });
+      await outcome.mutateAsync({ id: appointment.id, status });
     } finally {
       setPending(false);
     }
   }
+
+  async function reopen() {
+    setPending(true);
+    try {
+      await reopenStatus.mutateAsync({ id: appointment.id, status: 'scheduled' as AppointmentStatus });
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const showOutcome = canMarkOutcome && appointment.status === 'scheduled';
+  const showReopen = canReopen && appointment.status !== 'scheduled';
 
   return (
     <FigmaFormCard>
@@ -287,35 +326,33 @@ function StatusSection({
         />
       </View>
 
-      {canManage ? (
-        appointment.status === 'scheduled' ? (
-          <View style={styles.actionRow}>
-            <View style={styles.actionCol}>
-              <FigmaButton
-                label={t('appointments.markCompleted')}
-                loading={pending}
-                disabled={pending}
-                onPress={() => run('completed')}
-              />
-            </View>
-            <View style={styles.actionCol}>
-              <FigmaButton
-                label={t('appointments.markCancelled')}
-                variant="secondary"
-                disabled={pending}
-                onPress={() => run('cancelled')}
-              />
-            </View>
+      {showOutcome ? (
+        <View style={styles.actionRow}>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('appointments.markCompleted')}
+              loading={pending}
+              disabled={pending}
+              onPress={() => mark('completed')}
+            />
           </View>
-        ) : (
-          <FigmaButton
-            label={t('appointments.reopen')}
-            variant="secondary"
-            loading={pending}
-            disabled={pending}
-            onPress={() => run('scheduled')}
-          />
-        )
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('appointments.markCancelled')}
+              variant="secondary"
+              disabled={pending}
+              onPress={() => mark('cancelled')}
+            />
+          </View>
+        </View>
+      ) : showReopen ? (
+        <FigmaButton
+          label={t('appointments.reopen')}
+          variant="secondary"
+          loading={pending}
+          disabled={pending}
+          onPress={reopen}
+        />
       ) : null}
     </FigmaFormCard>
   );

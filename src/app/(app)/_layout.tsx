@@ -53,6 +53,7 @@ export default function AppLayout() {
         <Stack.Screen name="tasks" options={{ headerShown: false }} />
         <Stack.Screen name="appointments" options={{ headerShown: false }} />
         <Stack.Screen name="visits" options={{ headerShown: false }} />
+        <Stack.Screen name="available-to-claim" options={{ headerShown: false }} />
         <Stack.Screen name="daily-logs" options={{ headerShown: false }} />
         <Stack.Screen name="vitals" options={{ headerShown: false }} />
         <Stack.Screen name="recipient-profile" options={{ title: t('recipientProfile.title') }} />

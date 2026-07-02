@@ -79,13 +79,16 @@ export function VisitEditor({
   }
 
   const isOwner = visit.data.visitor_user_id !== null && visit.data.visitor_user_id === userId;
-  const canEdit = canManage || (canCollaborate && isOwner);
+  // Only managers edit visit details, relink, or delete. A linked visitor may
+  // record the outcome (completed/cancelled) only — matching the server's
+  // status-only trigger and manager-only delete introduced in Phase 2E-1.
+  const canMarkOutcome = canCollaborate && isOwner;
 
   return (
     <>
       {/* The Figma editor draws its own header; hide the native one. */}
       <Stack.Screen options={{ headerShown: false }} />
-      {canEdit ? (
+      {canManage ? (
         <VisitEditScreen
           key={visit.data.id}
           circleId={circleId}
@@ -93,7 +96,7 @@ export function VisitEditor({
           canManage={canManage}
         />
       ) : (
-        <VisitViewScreen circleId={circleId} visit={visit.data} canAct={false} />
+        <VisitViewScreen circleId={circleId} visit={visit.data} canMarkOutcome={canMarkOutcome} />
       )}
     </>
   );
@@ -179,7 +182,7 @@ function VisitEditScreen({
         ) : null}
       </FigmaFormCard>
 
-      <StatusSection circleId={circleId} visit={initial} canAct />
+      <StatusSection circleId={circleId} visit={initial} canMarkOutcome canReopen />
 
       <DeleteVisitRow circleId={circleId} id={initial.id} />
 
@@ -209,11 +212,11 @@ function VisitEditScreen({
 function VisitViewScreen({
   circleId,
   visit,
-  canAct,
+  canMarkOutcome,
 }: {
   circleId: string;
   visit: FamilyVisit;
-  canAct: boolean;
+  canMarkOutcome: boolean;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -227,7 +230,7 @@ function VisitViewScreen({
 
   return (
     <FigmaFormScreen title={t('visits.detailTitle')} onBack={() => router.back()}>
-      <FigmaMutedNote>{t('visits.readOnly')}</FigmaMutedNote>
+      <FigmaMutedNote>{t(canMarkOutcome ? 'visits.statusOnly' : 'visits.readOnly')}</FigmaMutedNote>
 
       <FigmaFormCard>
         <Text style={[styles.title, { color: theme.text }]}>{visit.visitor_name}</Text>
@@ -238,7 +241,7 @@ function VisitViewScreen({
         {visit.notes ? <ReadOnlyRow label={t('visits.fields.notes')} value={visit.notes} /> : null}
       </FigmaFormCard>
 
-      <StatusSection circleId={circleId} visit={visit} canAct={canAct} />
+      <StatusSection circleId={circleId} visit={visit} canMarkOutcome={canMarkOutcome} canReopen={false} />
     </FigmaFormScreen>
   );
 }
@@ -253,14 +256,22 @@ function ReadOnlyRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+/**
+ * Status card. `canMarkOutcome` (a manager, or the linked visitor) may move a
+ * planned visit to completed/cancelled — a plain status write the server's
+ * status-only trigger permits for the linked visitor. `canReopen` (managers only)
+ * may move a closed visit back to planned; a linked visitor cannot reopen.
+ */
 function StatusSection({
   circleId,
   visit,
-  canAct,
+  canMarkOutcome,
+  canReopen,
 }: {
   circleId: string;
   visit: FamilyVisit;
-  canAct: boolean;
+  canMarkOutcome: boolean;
+  canReopen: boolean;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -276,6 +287,9 @@ function StatusSection({
     }
   }
 
+  const showOutcome = canMarkOutcome && visit.status === 'planned';
+  const showReopen = canReopen && visit.status !== 'planned';
+
   return (
     <FigmaFormCard>
       <View style={styles.statusHeader}>
@@ -287,35 +301,33 @@ function StatusSection({
         />
       </View>
 
-      {canAct ? (
-        visit.status === 'planned' ? (
-          <View style={styles.actionRow}>
-            <View style={styles.actionCol}>
-              <FigmaButton
-                label={t('visits.markCompleted')}
-                loading={pending}
-                disabled={pending}
-                onPress={() => run('completed')}
-              />
-            </View>
-            <View style={styles.actionCol}>
-              <FigmaButton
-                label={t('visits.markCancelled')}
-                variant="secondary"
-                disabled={pending}
-                onPress={() => run('cancelled')}
-              />
-            </View>
+      {showOutcome ? (
+        <View style={styles.actionRow}>
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('visits.markCompleted')}
+              loading={pending}
+              disabled={pending}
+              onPress={() => run('completed')}
+            />
           </View>
-        ) : (
-          <FigmaButton
-            label={t('visits.reopen')}
-            variant="secondary"
-            loading={pending}
-            disabled={pending}
-            onPress={() => run('planned')}
-          />
-        )
+          <View style={styles.actionCol}>
+            <FigmaButton
+              label={t('visits.markCancelled')}
+              variant="secondary"
+              disabled={pending}
+              onPress={() => run('cancelled')}
+            />
+          </View>
+        </View>
+      ) : showReopen ? (
+        <FigmaButton
+          label={t('visits.reopen')}
+          variant="secondary"
+          loading={pending}
+          disabled={pending}
+          onPress={() => run('planned')}
+        />
       ) : null}
     </FigmaFormCard>
   );

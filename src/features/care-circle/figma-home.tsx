@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   Clock,
   FileText,
+  HandHelping,
   ListChecks,
   Phone,
   Pill,
@@ -382,6 +383,29 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
         </View>
       </View>
 
+      {/* Available to claim — claim-capable members only (never remote/elder) */}
+      {circle.canManage || circle.canLogDoses ? (
+        <Pressable
+          onPress={() => router.push('/available-to-claim')}
+          accessibilityRole="button"
+          accessibilityLabel={t('claiming.entryTitle')}
+          style={[
+            styles.claimCard,
+            { backgroundColor: withAlpha(c.accent, 0.1), borderColor: withAlpha(c.accent, 0.22) },
+          ]}>
+          <View style={[styles.claimChip, { backgroundColor: withAlpha(c.accent, 0.15) }]}>
+            <HandHelping size={22} color={c.accent} />
+          </View>
+          <View style={styles.claimText}>
+            <Text style={[styles.claimTitle, { color: c.text }]}>{t('claiming.entryTitle')}</Text>
+            <Text style={[styles.claimSub, muted]} numberOfLines={1}>
+              {t('claiming.entrySubtitle')}
+            </Text>
+          </View>
+          <ChevronLeft size={18} color={c.muted} />
+        </Pressable>
+      ) : null}
+
       {/* Today's doses */}
       {total > 0 ? (
         <View>
@@ -645,6 +669,12 @@ const styles = StyleSheet.create({
   doseActions: { flexDirection: 'row', gap: 8, borderRadius: FigmaRadius.r16, borderWidth: StyleSheet.hairlineWidth, padding: 12, marginTop: 4 },
   doseAction: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: FigmaRadius.r12, paddingVertical: 10, minHeight: 44 },
   doseActionText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  // Available to claim
+  claimCard: { flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: FigmaRadius.r24, borderWidth: StyleSheet.hairlineWidth, padding: 16 },
+  claimChip: { width: 44, height: 44, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },
+  claimText: { flex: 1, gap: 2 },
+  claimTitle: { fontSize: 15, fontFamily: FigmaFont.bold },
+  claimSub: { fontSize: 12 },
   // Emergency
   emergency: { flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: FigmaRadius.r24, borderWidth: StyleSheet.hairlineWidth, padding: 16 },
   emergencyChip: { width: 44, height: 44, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },

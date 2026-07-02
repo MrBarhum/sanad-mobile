@@ -13,6 +13,7 @@ export default function AppointmentDetailScreen() {
         <AppointmentEditor
           circleId={circle.circleId}
           canManage={circle.canManage}
+          canCollaborate={circle.canLogDoses}
           appointmentId={String(id)}
         />
       )}

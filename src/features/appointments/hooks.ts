@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useMemo } from 'react';
 
 import { countAppointmentsToday } from '@/features/care-activity/today';
+import { setAssignedAppointmentOutcome } from '@/features/claiming/api';
 import { useAuth } from '@/providers';
 import { todayYmd } from '@/utils/date';
 
@@ -80,6 +81,22 @@ export function useSetAppointmentStatus(circleId: string) {
   return useMutation({
     mutationFn: (vars: { id: string; status: AppointmentStatus }) =>
       setAppointmentStatus(vars.id, vars.status),
+    onSuccess: () => invalidateAll(queryClient),
+  });
+}
+
+/**
+ * Records a scheduled appointment's outcome (completed / cancelled) through the
+ * `set_assigned_appointment_outcome` RPC. Server-side this allows a manager OR the
+ * assigned member and writes only the status — so an assigned family member can
+ * mark the outcome without permission to edit appointment details. Reopening
+ * (back to scheduled) stays on the manager-only direct update above.
+ */
+export function useSetAppointmentOutcome(circleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; status: 'completed' | 'cancelled' }) =>
+      setAssignedAppointmentOutcome(vars.id, vars.status),
     onSuccess: () => invalidateAll(queryClient),
   });
 }
