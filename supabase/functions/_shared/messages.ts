@@ -30,6 +30,16 @@ export function appointmentMessage(appointmentTitle: string, leadMinutes: number
   return { title: 'موعد قادم', body: `${appointmentTitle} — بعد ${lead}` };
 }
 
+/** Neutral: only states the family-entered task is still open past its time. */
+export function taskOverdueMessage(taskTitle: string): Message {
+  return { title: 'مهمة تجاوزت وقتها', body: `ما زالت مهمة ${taskTitle} مفتوحة.` };
+}
+
+export function visitUpcomingMessage(visitorName: string, leadMinutes: number): Message {
+  const lead = leadMinutes >= 60 ? `${Math.round(leadMinutes / 60)} ساعة` : `${leadMinutes} دقيقة`;
+  return { title: 'زيارة قادمة', body: `${visitorName} — بعد ${lead}` };
+}
+
 /**
  * Privacy-preserving copy for the REMOTE push payload (lock screen / provider).
  * It carries NO health detail — no medication name, dosage, vital, note, or
