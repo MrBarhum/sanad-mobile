@@ -16,6 +16,13 @@ export type NotificationPreferencesInput = {
   careUpdates: boolean;
   emergencyAlerts: boolean;
   remoteSummary: boolean;
+  /** Phase 2F responsibility-aware preferences. Always carried in the input (and
+   * sent on every upsert) so a saved DB value is preserved even where the settings
+   * UI does not yet expose a toggle for it. */
+  assignmentAlerts: boolean;
+  activityUpdates: boolean;
+  availableToClaimDigest: boolean;
+  visitReminders: boolean;
   quietHoursEnabled: boolean;
   /** 'HH:MM' or null. */
   quietHoursStart: string | null;
@@ -140,10 +147,15 @@ export async function upsertPreferences(
   circleId: string | null,
   input: NotificationPreferencesInput,
 ): Promise<NotificationPreferences> {
-  // Every param is positional (no SQL default), so all 13 must be sent; the
-  // nullable ones (circle/quiet-hours/timezone) are passed as null, not omitted.
+  // The SQL function accepts NULL for the circle (global scope), quiet-hours, and
+  // timezone, but the regenerated Args type narrows those four to a non-null
+  // `string` (the Supabase generator types required RPC args as non-null). We pass
+  // the real nullable values unchanged and assert `as string` on ONLY those four
+  // fields — a localized, arg-level cast, not a client-wide one, with no runtime
+  // change. The 4 responsibility params carry SQL defaults; we always send them so a
+  // stored value persists even for columns whose UI toggle is not yet exposed.
   const { data, error } = await supabase.rpc('upsert_notification_preferences', {
-    p_circle_id: circleId,
+    p_circle_id: circleId as string,
     p_medication_reminders: input.medicationReminders,
     p_missed_dose_alerts: input.missedDoseAlerts,
     p_task_reminders: input.taskReminders,
@@ -152,10 +164,14 @@ export async function upsertPreferences(
     p_care_updates: input.careUpdates,
     p_emergency_alerts: input.emergencyAlerts,
     p_remote_summary: input.remoteSummary,
+    p_assignment_alerts: input.assignmentAlerts,
+    p_activity_updates: input.activityUpdates,
+    p_available_to_claim_digest: input.availableToClaimDigest,
+    p_visit_reminders: input.visitReminders,
     p_quiet_hours_enabled: input.quietHoursEnabled,
-    p_quiet_hours_start: input.quietHoursStart,
-    p_quiet_hours_end: input.quietHoursEnd,
-    p_timezone: input.timezone,
+    p_quiet_hours_start: input.quietHoursStart as string,
+    p_quiet_hours_end: input.quietHoursEnd as string,
+    p_timezone: input.timezone as string,
   });
   if (error) throw error;
   return data as NotificationPreferences;
@@ -195,6 +211,10 @@ export function preferencesToInput(
     careUpdates: row?.care_updates ?? true,
     emergencyAlerts: row?.emergency_alerts ?? true,
     remoteSummary: row?.remote_summary ?? true,
+    assignmentAlerts: row?.assignment_alerts ?? true,
+    activityUpdates: row?.activity_updates ?? true,
+    availableToClaimDigest: row?.available_to_claim_digest ?? false,
+    visitReminders: row?.visit_reminders ?? true,
     quietHoursEnabled: row?.quiet_hours_enabled ?? false,
     quietHoursStart: row?.quiet_hours_start ? row.quiet_hours_start.slice(0, 5) : null,
     quietHoursEnd: row?.quiet_hours_end ? row.quiet_hours_end.slice(0, 5) : null,

@@ -1115,7 +1115,14 @@
       "visit_update": "Visit",
       "care_update": "Care update",
       "emergency": "Emergency",
-      "system": "Update"
+      "system": "Update",
+      "itemAssigned": "Assigned to you",
+      "taskOverdue": "Task overdue",
+      "visitUpcoming": "Upcoming visit",
+      "itemClaimed": "Picked up",
+      "itemCompleted": "Completed",
+      "itemCancelled": "Not completed",
+      "claimDigest": "Available to help"
     }
   },
   "notificationSettings": {
@@ -1147,6 +1154,10 @@
       "appointmentReminders": {
         "label": "Appointment reminders",
         "description": "Before an upcoming appointment."
+      },
+      "visitReminders": {
+        "label": "Visit reminders",
+        "description": "Before an upcoming family visit."
       },
       "visitUpdates": {
         "label": "Visit updates",

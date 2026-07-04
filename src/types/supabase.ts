@@ -65,17 +65,17 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "care_appointments_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "care_appointments_circle_id_fkey"
             columns: ["circle_id"]
             isOneToOne: false
             referencedRelation: "care_circles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "care_appointments_doctor_id_fkey"
-            columns: ["doctor_id"]
-            isOneToOne: false
-            referencedRelation: "doctors"
             referencedColumns: ["id"]
           },
           {
@@ -86,10 +86,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "care_appointments_assigned_to_fkey"
-            columns: ["assigned_to"]
+            foreignKeyName: "care_appointments_doctor_id_fkey"
+            columns: ["doctor_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "doctors"
             referencedColumns: ["id"]
           },
         ]
@@ -242,13 +242,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "care_tasks_circle_id_fkey"
-            columns: ["circle_id"]
-            isOneToOne: false
-            referencedRelation: "care_circles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "care_tasks_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
@@ -256,15 +249,22 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "care_tasks_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: "care_tasks_circle_id_fkey"
+            columns: ["circle_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "care_circles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "care_tasks_completed_by_fkey"
             columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_tasks_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -319,6 +319,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "circle_invitations_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "circle_invitations_circle_id_fkey"
             columns: ["circle_id"]
             isOneToOne: false
@@ -328,13 +335,6 @@ export type Database = {
           {
             foreignKeyName: "circle_invitations_created_by_fkey"
             columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "circle_invitations_accepted_by_fkey"
-            columns: ["accepted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -598,15 +598,15 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "family_visits_visitor_user_id_fkey"
-            columns: ["visitor_user_id"]
+            foreignKeyName: "family_visits_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "family_visits_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: "family_visits_visitor_user_id_fkey"
+            columns: ["visitor_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -672,17 +672,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "medication_logs_schedule_id_fkey"
-            columns: ["schedule_id"]
-            isOneToOne: false
-            referencedRelation: "medication_schedules"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "medication_logs_recorded_by_fkey"
             columns: ["recorded_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_logs_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "medication_schedules"
             referencedColumns: ["id"]
           },
         ]
@@ -804,99 +804,6 @@ export type Database = {
           },
         ]
       }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          dialect: string | null
-          full_name: string | null
-          id: string
-          locale: string
-          phone: string | null
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          dialect?: string | null
-          full_name?: string | null
-          id: string
-          locale?: string
-          phone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          dialect?: string | null
-          full_name?: string | null
-          id?: string
-          locale?: string
-          phone?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      vital_readings: {
-        Row: {
-          circle_id: string
-          created_at: string
-          diastolic: number | null
-          id: string
-          notes: string | null
-          numeric_value: number | null
-          reading_at: string
-          reading_type: Database["public"]["Enums"]["vital_reading_type"]
-          recorded_by: string | null
-          systolic: number | null
-          unit: string | null
-          updated_at: string
-        }
-        Insert: {
-          circle_id: string
-          created_at?: string
-          diastolic?: number | null
-          id?: string
-          notes?: string | null
-          numeric_value?: number | null
-          reading_at?: string
-          reading_type: Database["public"]["Enums"]["vital_reading_type"]
-          recorded_by?: string | null
-          systolic?: number | null
-          unit?: string | null
-          updated_at?: string
-        }
-        Update: {
-          circle_id?: string
-          created_at?: string
-          diastolic?: number | null
-          id?: string
-          notes?: string | null
-          numeric_value?: number | null
-          reading_at?: string
-          reading_type?: Database["public"]["Enums"]["vital_reading_type"]
-          recorded_by?: string | null
-          systolic?: number | null
-          unit?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "vital_readings_circle_id_fkey"
-            columns: ["circle_id"]
-            isOneToOne: false
-            referencedRelation: "care_circles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vital_readings_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       notification_outbox: {
         Row: {
           attempt_count: number
@@ -944,6 +851,93 @@ export type Database = {
           },
           {
             foreignKeyName: "notification_outbox_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          activity_updates: boolean
+          appointment_reminders: boolean
+          assignment_alerts: boolean
+          available_to_claim_digest: boolean
+          care_updates: boolean
+          circle_id: string | null
+          created_at: string
+          emergency_alerts: boolean
+          id: string
+          medication_reminders: boolean
+          missed_dose_alerts: boolean
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          remote_summary: boolean
+          task_reminders: boolean
+          timezone: string | null
+          updated_at: string
+          user_id: string
+          visit_reminders: boolean
+          visit_updates: boolean
+        }
+        Insert: {
+          activity_updates?: boolean
+          appointment_reminders?: boolean
+          assignment_alerts?: boolean
+          available_to_claim_digest?: boolean
+          care_updates?: boolean
+          circle_id?: string | null
+          created_at?: string
+          emergency_alerts?: boolean
+          id?: string
+          medication_reminders?: boolean
+          missed_dose_alerts?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          remote_summary?: boolean
+          task_reminders?: boolean
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+          visit_reminders?: boolean
+          visit_updates?: boolean
+        }
+        Update: {
+          activity_updates?: boolean
+          appointment_reminders?: boolean
+          assignment_alerts?: boolean
+          available_to_claim_digest?: boolean
+          care_updates?: boolean
+          circle_id?: string | null
+          created_at?: string
+          emergency_alerts?: boolean
+          id?: string
+          medication_reminders?: boolean
+          missed_dose_alerts?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          remote_summary?: boolean
+          task_reminders?: boolean
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+          visit_reminders?: boolean
+          visit_updates?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1023,81 +1017,6 @@ export type Database = {
           },
         ]
       }
-      notification_preferences: {
-        Row: {
-          appointment_reminders: boolean
-          care_updates: boolean
-          circle_id: string | null
-          created_at: string
-          emergency_alerts: boolean
-          id: string
-          medication_reminders: boolean
-          missed_dose_alerts: boolean
-          quiet_hours_enabled: boolean
-          quiet_hours_end: string | null
-          quiet_hours_start: string | null
-          remote_summary: boolean
-          task_reminders: boolean
-          timezone: string | null
-          updated_at: string
-          user_id: string
-          visit_updates: boolean
-        }
-        Insert: {
-          appointment_reminders?: boolean
-          care_updates?: boolean
-          circle_id?: string | null
-          created_at?: string
-          emergency_alerts?: boolean
-          id?: string
-          medication_reminders?: boolean
-          missed_dose_alerts?: boolean
-          quiet_hours_enabled?: boolean
-          quiet_hours_end?: string | null
-          quiet_hours_start?: string | null
-          remote_summary?: boolean
-          task_reminders?: boolean
-          timezone?: string | null
-          updated_at?: string
-          user_id: string
-          visit_updates?: boolean
-        }
-        Update: {
-          appointment_reminders?: boolean
-          care_updates?: boolean
-          circle_id?: string | null
-          created_at?: string
-          emergency_alerts?: boolean
-          id?: string
-          medication_reminders?: boolean
-          missed_dose_alerts?: boolean
-          quiet_hours_enabled?: boolean
-          quiet_hours_end?: string | null
-          quiet_hours_start?: string | null
-          remote_summary?: boolean
-          task_reminders?: boolean
-          timezone?: string | null
-          updated_at?: string
-          user_id?: string
-          visit_updates?: boolean
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notification_preferences_circle_id_fkey"
-            columns: ["circle_id"]
-            isOneToOne: false
-            referencedRelation: "care_circles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notification_preferences_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       notifications: {
         Row: {
           body: string
@@ -1158,6 +1077,39 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          dialect: string | null
+          full_name: string | null
+          id: string
+          locale: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          dialect?: string | null
+          full_name?: string | null
+          id: string
+          locale?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          dialect?: string | null
+          full_name?: string | null
+          id?: string
+          locale?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       push_tokens: {
         Row: {
           app_version: string | null
@@ -1205,6 +1157,66 @@ export type Database = {
           },
         ]
       }
+      vital_readings: {
+        Row: {
+          circle_id: string
+          created_at: string
+          diastolic: number | null
+          id: string
+          notes: string | null
+          numeric_value: number | null
+          reading_at: string
+          reading_type: Database["public"]["Enums"]["vital_reading_type"]
+          recorded_by: string | null
+          systolic: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          circle_id: string
+          created_at?: string
+          diastolic?: number | null
+          id?: string
+          notes?: string | null
+          numeric_value?: number | null
+          reading_at?: string
+          reading_type: Database["public"]["Enums"]["vital_reading_type"]
+          recorded_by?: string | null
+          systolic?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          circle_id?: string
+          created_at?: string
+          diastolic?: number | null
+          id?: string
+          notes?: string | null
+          numeric_value?: number | null
+          reading_at?: string
+          reading_type?: Database["public"]["Enums"]["vital_reading_type"]
+          recorded_by?: string | null
+          systolic?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vital_readings_circle_id_fkey"
+            columns: ["circle_id"]
+            isOneToOne: false
+            referencedRelation: "care_circles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vital_readings_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1222,11 +1234,145 @@ export type Database = {
         Args: { p_circle_id: string }
         Returns: Database["public"]["Enums"]["circle_role"]
       }
+      can_view_all_operational: {
+        Args: { p_circle_id: string }
+        Returns: boolean
+      }
+      circle_notification_recipients: {
+        Args: {
+          p_circle_id: string
+          p_type: Database["public"]["Enums"]["notification_type"]
+        }
+        Returns: {
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string
+          quiet_hours_start: string
+          timezone: string
+          user_id: string
+        }[]
+      }
+      claim_care_appointment: {
+        Args: { p_appointment_id: string }
+        Returns: {
+          appointment_type: Database["public"]["Enums"]["care_appointment_type"]
+          assigned_to: string | null
+          circle_id: string
+          created_at: string
+          created_by: string | null
+          doctor_id: string | null
+          ends_at: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          starts_at: string
+          status: Database["public"]["Enums"]["care_appointment_status"]
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "care_appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      claim_care_task: {
+        Args: { p_task_id: string }
+        Returns: {
+          assigned_to: string | null
+          cancelled_at: string | null
+          category: Database["public"]["Enums"]["care_task_category"]
+          circle_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          due_time: string | null
+          id: string
+          notes: string | null
+          priority: Database["public"]["Enums"]["care_task_priority"]
+          status: Database["public"]["Enums"]["care_task_status"]
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "care_tasks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      claim_family_visit: {
+        Args: { p_visit_id: string }
+        Returns: {
+          circle_id: string
+          created_at: string
+          created_by: string | null
+          end_time: string | null
+          id: string
+          notes: string | null
+          start_time: string | null
+          status: Database["public"]["Enums"]["family_visit_status"]
+          updated_at: string
+          visit_date: string
+          visitor_name: string
+          visitor_user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "family_visits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      claim_medication_responsibility: {
+        Args: { p_medication_id: string }
+        Returns: {
+          circle_id: string
+          created_at: string
+          dosage: string | null
+          form: string | null
+          id: string
+          instructions: string | null
+          is_active: boolean
+          name: string
+          photo_url: string | null
+          responsible_user_id: string | null
+          updated_at: string
+          with_food: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "medications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      claim_push_deliveries: {
+        Args: {
+          p_limit?: number
+          p_lock_timeout_seconds?: number
+          p_max_attempts?: number
+        }
+        Returns: {
+          attempt_count: number
+          circle_id: string
+          claim_token: string
+          deep_link: string
+          delivery_id: string
+          notification_id: string
+          push_token_id: string
+          token: string
+          type: Database["public"]["Enums"]["notification_type"]
+        }[]
+      }
       create_care_circle: {
         Args: {
           circle_name: string
-          recipient_full_name: string
           recipient_birth_date?: string
+          recipient_full_name: string
         }
         Returns: {
           circle_id: string
@@ -1236,17 +1382,74 @@ export type Database = {
       create_circle_invitation: {
         Args: {
           p_circle_id: string
-          p_role: Database["public"]["Enums"]["circle_role"]
-          p_invited_name?: string
           p_invited_email?: string
+          p_invited_name?: string
+          p_role: Database["public"]["Enums"]["circle_role"]
         }
         Returns: {
-          invitation_id: string
           code: string
-          role: Database["public"]["Enums"]["circle_role"]
           expires_at: string
+          invitation_id: string
+          role: Database["public"]["Enums"]["circle_role"]
         }[]
       }
+      deactivate_push_token: { Args: { p_token: string }; Returns: undefined }
+      deactivate_push_token_by_id: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      deactivate_push_token_value: {
+        Args: { p_token: string }
+        Returns: undefined
+      }
+      effective_notification_prefs: {
+        Args: { p_circle_id: string; p_user_id: string }
+        Returns: {
+          activity_updates: boolean
+          appointment_reminders: boolean
+          assignment_alerts: boolean
+          available_to_claim_digest: boolean
+          care_updates: boolean
+          emergency_alerts: boolean
+          medication_reminders: boolean
+          missed_dose_alerts: boolean
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string
+          quiet_hours_start: string
+          remote_summary: boolean
+          task_reminders: boolean
+          timezone: string
+          visit_reminders: boolean
+          visit_updates: boolean
+        }[]
+      }
+      enqueue_notification: {
+        Args: {
+          p_body: string
+          p_circle_id?: string
+          p_data?: Json
+          p_dedupe_key?: string
+          p_deep_link?: string
+          p_expires_at?: string
+          p_quiet_hours_enabled?: boolean
+          p_quiet_hours_end?: string
+          p_quiet_hours_start?: string
+          p_timezone?: string
+          p_title: string
+          p_type: Database["public"]["Enums"]["notification_type"]
+          p_user_id: string
+        }
+        Returns: string
+      }
+      fanout_due_notifications: {
+        Args: { p_limit?: number; p_max_attempts?: number }
+        Returns: {
+          deferred: number
+          fanned: number
+          skipped: number
+        }[]
+      }
+      generate_invitation_code: { Args: never; Returns: string }
       has_circle_role: {
         Args: {
           allowed_roles: Database["public"]["Enums"]["circle_role"][]
@@ -1254,7 +1457,45 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_invitation_code: { Args: { p_code: string }; Returns: string }
+      is_active_user_circle_member: {
+        Args: { p_circle_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_circle_doctor: {
+        Args: { p_circle_id: string; p_doctor_id: string }
+        Returns: boolean
+      }
+      is_circle_medication: {
+        Args: { p_circle_id: string; p_medication_id: string }
+        Returns: boolean
+      }
+      is_circle_medication_schedule: {
+        Args: { p_circle_id: string; p_schedule_id: string }
+        Returns: boolean
+      }
+      is_circle_medication_schedule_for_medication: {
+        Args: {
+          p_circle_id: string
+          p_medication_id: string
+          p_schedule_id: string
+        }
+        Returns: boolean
+      }
       is_circle_member: { Args: { target_circle_id: string }; Returns: boolean }
+      is_responsible_for_medication: {
+        Args: {
+          p_circle_id: string
+          p_medication_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      is_user_circle_member: {
+        Args: { p_circle_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_valid_timezone: { Args: { p_tz: string }; Returns: boolean }
       leave_care_circle: {
         Args: { p_circle_id: string }
         Returns: {
@@ -1262,36 +1503,166 @@ export type Database = {
           membership_id: string
         }[]
       }
+      list_available_to_claim: {
+        Args: { p_circle_id: string }
+        Returns: {
+          category: string
+          circle_id: string
+          created_at: string
+          date_value: string
+          item_id: string
+          item_type: string
+          priority: string
+          scheduled_at: string
+          status: string
+          subtitle: string
+          time_value: string
+          title: string
+        }[]
+      }
       list_circle_invitations: {
         Args: { p_circle_id: string }
         Returns: {
+          accepted_at: string
+          accepted_by: string
+          accepted_by_name: string
+          created_at: string
+          created_by: string
+          created_by_name: string
+          expires_at: string
           id: string
+          invited_email: string
+          invited_name: string
           role: Database["public"]["Enums"]["circle_role"]
           status: Database["public"]["Enums"]["invitation_status"]
-          invited_name: string | null
-          invited_email: string | null
-          created_by: string | null
-          created_by_name: string | null
-          accepted_by: string | null
-          accepted_by_name: string | null
-          accepted_at: string | null
-          expires_at: string
-          created_at: string
         }[]
       }
       list_circle_members: {
         Args: { p_circle_id: string }
         Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          is_owner: boolean
+          is_self: boolean
           member_id: string
-          user_id: string
           role: Database["public"]["Enums"]["circle_role"]
           status: Database["public"]["Enums"]["member_status"]
-          full_name: string | null
-          email: string | null
-          is_self: boolean
-          is_owner: boolean
-          created_at: string
+          user_id: string
         }[]
+      }
+      mark_all_notifications_read: {
+        Args: { p_circle_id?: string }
+        Returns: number
+      }
+      mark_delivery_failed: {
+        Args: {
+          p_claim_token: string
+          p_delivery_id: string
+          p_error?: string
+          p_retry_at?: string
+        }
+        Returns: boolean
+      }
+      mark_delivery_sent: {
+        Args: {
+          p_claim_token: string
+          p_delivery_id: string
+          p_ticket_id?: string
+        }
+        Returns: boolean
+      }
+      mark_delivery_skipped: {
+        Args: {
+          p_claim_token: string
+          p_delivery_id: string
+          p_reason?: string
+        }
+        Returns: boolean
+      }
+      mark_stale_receipts_unchecked: {
+        Args: { p_cutoff: string; p_limit?: number }
+        Returns: number
+      }
+      normalize_invitation_code: { Args: { p_code: string }; Returns: string }
+      notification_defer_until: {
+        Args: {
+          p_is_emergency: boolean
+          p_now: string
+          p_quiet_hours_enabled: boolean
+          p_quiet_hours_end: string
+          p_quiet_hours_start: string
+          p_timezone: string
+        }
+        Returns: string
+      }
+      notification_item_managers: {
+        Args: { p_circle_id: string }
+        Returns: {
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string
+          quiet_hours_start: string
+          timezone: string
+          user_id: string
+        }[]
+      }
+      notification_item_owner: {
+        Args: { p_entity: string; p_item_id: string }
+        Returns: string
+      }
+      notification_recipient_current: {
+        Args: { p_notification_id: string }
+        Returns: boolean
+      }
+      notification_recipient_eligible: {
+        Args: {
+          p_circle_id: string
+          p_type: Database["public"]["Enums"]["notification_type"]
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      notification_recipients_for_item_event: {
+        Args: {
+          p_circle_id: string
+          p_entity: string
+          p_item_id: string
+          p_type: Database["public"]["Enums"]["notification_type"]
+        }
+        Returns: {
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string
+          quiet_hours_start: string
+          timezone: string
+          user_id: string
+        }[]
+      }
+      notification_source_validity: {
+        Args: { p_notification_id: string }
+        Returns: {
+          reason: string
+          valid: boolean
+        }[]
+      }
+      record_delivery_receipt: {
+        Args: {
+          p_delivery_id: string
+          p_details: string
+          p_error_code: string
+          p_expected_ticket: string
+          p_receipt_id: string
+          p_status: string
+        }
+        Returns: boolean
+      }
+      register_push_token: {
+        Args: {
+          p_app_version?: string
+          p_device_id?: string
+          p_platform: string
+          p_token: string
+        }
+        Returns: string
       }
       revoke_circle_invitation: {
         Args: { p_invitation_id: string }
@@ -1299,6 +1670,42 @@ export type Database = {
           invitation_id: string
           status: Database["public"]["Enums"]["invitation_status"]
         }[]
+      }
+      set_assigned_appointment_outcome: {
+        Args: {
+          p_appointment_id: string
+          p_status: Database["public"]["Enums"]["care_appointment_status"]
+        }
+        Returns: {
+          appointment_type: Database["public"]["Enums"]["care_appointment_type"]
+          assigned_to: string | null
+          circle_id: string
+          created_at: string
+          created_by: string | null
+          doctor_id: string | null
+          ends_at: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          starts_at: string
+          status: Database["public"]["Enums"]["care_appointment_status"]
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "care_appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      set_circle_timezone: {
+        Args: { p_circle_id: string; p_timezone: string }
+        Returns: string
+      }
+      set_notification_read: {
+        Args: { p_notification_id: string; p_read: boolean }
+        Returns: undefined
       }
       transfer_circle_ownership: {
         Args: { p_circle_id: string; p_new_owner_user_id: string }
@@ -1329,192 +1736,55 @@ export type Database = {
           status: Database["public"]["Enums"]["member_status"]
         }[]
       }
-      register_push_token: {
-        Args: {
-          p_token: string
-          p_platform: string
-          p_device_id?: string
-          p_app_version?: string
-        }
-        Returns: string
-      }
-      deactivate_push_token: {
-        Args: { p_token: string }
-        Returns: undefined
-      }
-      deactivate_push_token_value: {
-        Args: { p_token: string }
-        Returns: undefined
-      }
-      is_valid_timezone: {
-        Args: { p_tz: string }
-        Returns: boolean
-      }
-      notification_defer_until: {
-        Args: {
-          p_now: string
-          p_timezone: string
-          p_quiet_hours_enabled: boolean
-          p_quiet_hours_start: string
-          p_quiet_hours_end: string
-          p_is_emergency: boolean
-        }
-        Returns: string
-      }
-      effective_notification_prefs: {
-        Args: { p_user_id: string; p_circle_id: string }
-        Returns: {
-          medication_reminders: boolean
-          missed_dose_alerts: boolean
-          task_reminders: boolean
-          appointment_reminders: boolean
-          visit_updates: boolean
-          care_updates: boolean
-          emergency_alerts: boolean
-          remote_summary: boolean
-          quiet_hours_enabled: boolean
-          quiet_hours_start: string | null
-          quiet_hours_end: string | null
-          timezone: string
-        }[]
-      }
-      circle_notification_recipients: {
-        Args: {
-          p_circle_id: string
-          p_type: Database["public"]["Enums"]["notification_type"]
-        }
-        Returns: {
-          user_id: string
-          timezone: string
-          quiet_hours_enabled: boolean
-          quiet_hours_start: string | null
-          quiet_hours_end: string | null
-        }[]
-      }
-      enqueue_notification: {
-        Args: {
-          p_user_id: string
-          p_type: Database["public"]["Enums"]["notification_type"]
-          p_title: string
-          p_body: string
-          p_circle_id?: string
-          p_data?: Json
-          p_deep_link?: string
-          p_dedupe_key?: string
-          p_expires_at?: string
-          p_timezone?: string
-          p_quiet_hours_enabled?: boolean
-          p_quiet_hours_start?: string
-          p_quiet_hours_end?: string
-        }
-        Returns: string
-      }
       upsert_notification_preferences: {
         Args: {
-          p_circle_id: string | null
+          p_activity_updates?: boolean
+          p_appointment_reminders: boolean
+          p_assignment_alerts?: boolean
+          p_available_to_claim_digest?: boolean
+          p_care_updates: boolean
+          p_circle_id: string
+          p_emergency_alerts: boolean
           p_medication_reminders: boolean
           p_missed_dose_alerts: boolean
-          p_task_reminders: boolean
-          p_appointment_reminders: boolean
-          p_visit_updates: boolean
-          p_care_updates: boolean
-          p_emergency_alerts: boolean
-          p_remote_summary: boolean
           p_quiet_hours_enabled: boolean
-          p_quiet_hours_start: string | null
-          p_quiet_hours_end: string | null
-          p_timezone: string | null
-        }
-        Returns: Database["public"]["Tables"]["notification_preferences"]["Row"]
-      }
-      set_notification_read: {
-        Args: { p_notification_id: string; p_read: boolean }
-        Returns: undefined
-      }
-      mark_all_notifications_read: {
-        Args: { p_circle_id?: string }
-        Returns: number
-      }
-      notification_recipient_eligible: {
-        Args: {
-          p_user_id: string
-          p_circle_id: string
-          p_type: Database["public"]["Enums"]["notification_type"]
-        }
-        Returns: boolean
-      }
-      notification_source_validity: {
-        Args: { p_notification_id: string }
-        Returns: {
-          valid: boolean
-          reason: string
-        }[]
-      }
-      fanout_due_notifications: {
-        Args: { p_limit?: number; p_max_attempts?: number }
-        Returns: {
-          fanned: number
-          skipped: number
-          deferred: number
-        }[]
-      }
-      claim_push_deliveries: {
-        Args: {
-          p_limit?: number
-          p_lock_timeout_seconds?: number
-          p_max_attempts?: number
+          p_quiet_hours_end: string
+          p_quiet_hours_start: string
+          p_remote_summary: boolean
+          p_task_reminders: boolean
+          p_timezone: string
+          p_visit_reminders?: boolean
+          p_visit_updates: boolean
         }
         Returns: {
-          delivery_id: string
-          claim_token: string
-          token: string
-          push_token_id: string
-          notification_id: string
+          activity_updates: boolean
+          appointment_reminders: boolean
+          assignment_alerts: boolean
+          available_to_claim_digest: boolean
+          care_updates: boolean
           circle_id: string | null
-          type: Database["public"]["Enums"]["notification_type"]
-          deep_link: string | null
-          attempt_count: number
-        }[]
-      }
-      mark_delivery_sent: {
-        Args: { p_delivery_id: string; p_claim_token: string; p_ticket_id?: string }
-        Returns: boolean
-      }
-      mark_delivery_failed: {
-        Args: {
-          p_delivery_id: string
-          p_claim_token: string
-          p_error?: string
-          p_retry_at?: string
+          created_at: string
+          emergency_alerts: boolean
+          id: string
+          medication_reminders: boolean
+          missed_dose_alerts: boolean
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          remote_summary: boolean
+          task_reminders: boolean
+          timezone: string | null
+          updated_at: string
+          user_id: string
+          visit_reminders: boolean
+          visit_updates: boolean
         }
-        Returns: boolean
-      }
-      mark_delivery_skipped: {
-        Args: { p_delivery_id: string; p_claim_token: string; p_reason?: string }
-        Returns: boolean
-      }
-      record_delivery_receipt: {
-        Args: {
-          p_delivery_id: string
-          p_expected_ticket: string
-          p_receipt_id: string
-          p_status: string
-          p_error_code: string
-          p_details: string
+        SetofOptions: {
+          from: "*"
+          to: "notification_preferences"
+          isOneToOne: true
+          isSetofReturn: false
         }
-        Returns: boolean
-      }
-      mark_stale_receipts_unchecked: {
-        Args: { p_cutoff: string; p_limit?: number }
-        Returns: number
-      }
-      deactivate_push_token_by_id: {
-        Args: { p_id: string }
-        Returns: undefined
-      }
-      set_circle_timezone: {
-        Args: { p_circle_id: string; p_timezone: string }
-        Returns: string
       }
     }
     Enums: {
@@ -1560,7 +1830,12 @@ export type Database = {
       invitation_status: "pending" | "accepted" | "revoked" | "expired"
       medication_log_status: "given" | "missed" | "postponed"
       member_status: "active" | "invited" | "removed"
-      mobility_level: "normal" | "limited" | "needs_help" | "bedbound" | "unknown"
+      mobility_level:
+        | "normal"
+        | "limited"
+        | "needs_help"
+        | "bedbound"
+        | "unknown"
       notification_channel: "push"
       notification_delivery_status:
         | "pending"
@@ -1578,6 +1853,13 @@ export type Database = {
         | "care_update"
         | "emergency"
         | "system"
+        | "item_assigned"
+        | "task_overdue"
+        | "visit_upcoming"
+        | "item_claimed"
+        | "item_completed"
+        | "item_cancelled"
+        | "claim_digest"
       sleep_quality: "good" | "fair" | "poor" | "unknown"
       vital_reading_type:
         | "blood_pressure"
@@ -1760,7 +2042,13 @@ export const Constants = {
       invitation_status: ["pending", "accepted", "revoked", "expired"],
       medication_log_status: ["given", "missed", "postponed"],
       member_status: ["active", "invited", "removed"],
-      mobility_level: ["normal", "limited", "needs_help", "bedbound", "unknown"],
+      mobility_level: [
+        "normal",
+        "limited",
+        "needs_help",
+        "bedbound",
+        "unknown",
+      ],
       notification_channel: ["push"],
       notification_delivery_status: [
         "pending",
@@ -1779,6 +2067,13 @@ export const Constants = {
         "care_update",
         "emergency",
         "system",
+        "item_assigned",
+        "task_overdue",
+        "visit_upcoming",
+        "item_claimed",
+        "item_completed",
+        "item_cancelled",
+        "claim_digest",
       ],
       sleep_quality: ["good", "fair", "poor", "unknown"],
       vital_reading_type: [

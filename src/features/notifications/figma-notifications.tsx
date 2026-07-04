@@ -3,10 +3,15 @@ import {
   Bell,
   Calendar,
   Check,
+  Clock,
   FileText,
+  Hand,
   Pill,
   Siren,
+  Sparkles,
   Stethoscope,
+  UserCheck,
+  XCircle,
 } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
@@ -55,6 +60,15 @@ const TYPE_ICON: Record<NotificationType, { Icon: IconCmp; color: string }> = {
   care_update: { Icon: FileText, color: FigmaCategory.purple },
   emergency: { Icon: Siren, color: FigmaStatus.error },
   system: { Icon: Bell, color: FigmaCategory.blue },
+  // Phase 2F responsibility-aware types. Decorative icon + calm category/status tint;
+  // item_cancelled uses a muted purple (NOT error red) so "not completed" doesn't alarm.
+  item_assigned: { Icon: UserCheck, color: FigmaCategory.blue },
+  task_overdue: { Icon: Clock, color: FigmaStatus.warning },
+  visit_upcoming: { Icon: Calendar, color: FigmaCategory.green },
+  item_claimed: { Icon: Hand, color: FigmaCategory.teal },
+  item_completed: { Icon: Check, color: FigmaStatus.success },
+  item_cancelled: { Icon: XCircle, color: FigmaCategory.purple },
+  claim_digest: { Icon: Sparkles, color: FigmaCategory.gold },
 };
 
 /**

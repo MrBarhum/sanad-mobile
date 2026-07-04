@@ -1115,7 +1115,14 @@
       "visit_update": "زيارة",
       "care_update": "تحديث رعاية",
       "emergency": "طارئ",
-      "system": "تحديث"
+      "system": "تحديث",
+      "itemAssigned": "مُسند إليك",
+      "taskOverdue": "مهمة متأخرة",
+      "visitUpcoming": "زيارة قادمة",
+      "itemClaimed": "تم التكفّل",
+      "itemCompleted": "تم الإنجاز",
+      "itemCancelled": "تعذّر الإنجاز",
+      "claimDigest": "عناصر متاحة"
     }
   },
   "notificationSettings": {
@@ -1147,6 +1154,10 @@
       "appointmentReminders": {
         "label": "تذكيرات المواعيد",
         "description": "قبل موعد قادم."
+      },
+      "visitReminders": {
+        "label": "تذكيرات الزيارات",
+        "description": "قبل زيارة عائلية قادمة."
       },
       "visitUpdates": {
         "label": "تحديثات الزيارات",

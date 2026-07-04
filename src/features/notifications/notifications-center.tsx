@@ -41,6 +41,15 @@ const TYPE_GLYPH: Record<NotificationType, { glyph: string; tone: GlyphChipTone 
   care_update: { glyph: Glyph.dailyLog, tone: 'primary' },
   emergency: { glyph: Glyph.emergency, tone: 'error' },
   system: { glyph: Glyph.system, tone: 'neutral' },
+  // Phase 2F responsibility-aware types. Calm tones: item_cancelled is NEUTRAL (not
+  // error) — "couldn't be completed" must not alarm; task_overdue is warning.
+  item_assigned: { glyph: Glyph.profile, tone: 'primary' },
+  task_overdue: { glyph: Glyph.clock, tone: 'warning' },
+  visit_upcoming: { glyph: Glyph.visit, tone: 'primary' },
+  item_claimed: { glyph: Glyph.members, tone: 'accent' },
+  item_completed: { glyph: Glyph.check, tone: 'success' },
+  item_cancelled: { glyph: Glyph.cross, tone: 'neutral' },
+  claim_digest: { glyph: Glyph.diamond, tone: 'accent' },
 };
 
 /** The /notifications screen body: a global, recent-first inbox with an optional

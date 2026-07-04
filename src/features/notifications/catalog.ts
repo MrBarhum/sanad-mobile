@@ -23,6 +23,18 @@ export const NOTIFICATION_TYPE_META: Record<NotificationType, NotificationTypeMe
   care_update: { labelKey: 'notifications.types.care_update', fallbackRoute: '/daily-logs' },
   emergency: { labelKey: 'notifications.types.emergency', fallbackRoute: '/emergency-card' },
   system: { labelKey: 'notifications.types.system', fallbackRoute: null },
+  // Phase 2F responsibility-aware types. Owner/assignment/awareness rows carry an
+  // explicit `deep_link` from the producer (entity varies), so their fallbackRoute
+  // is null — a tap without a deep link just opens the inbox. `claim_digest` has no
+  // itemId and its recipients cannot open an item detail via RLS, so it must fall
+  // back to the `/available-to-claim` feed, never an entity screen.
+  item_assigned: { labelKey: 'notifications.types.itemAssigned', fallbackRoute: null },
+  task_overdue: { labelKey: 'notifications.types.taskOverdue', fallbackRoute: '/tasks' },
+  visit_upcoming: { labelKey: 'notifications.types.visitUpcoming', fallbackRoute: '/visits' },
+  item_claimed: { labelKey: 'notifications.types.itemClaimed', fallbackRoute: null },
+  item_completed: { labelKey: 'notifications.types.itemCompleted', fallbackRoute: null },
+  item_cancelled: { labelKey: 'notifications.types.itemCancelled', fallbackRoute: null },
+  claim_digest: { labelKey: 'notifications.types.claimDigest', fallbackRoute: '/available-to-claim' },
 };
 
 export function notificationMeta(type: NotificationType): NotificationTypeMeta {

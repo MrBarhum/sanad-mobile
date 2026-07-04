@@ -13,6 +13,7 @@ export type BooleanPreferenceKey =
   | 'missedDoseAlerts'
   | 'taskReminders'
   | 'appointmentReminders'
+  | 'visitReminders'
   | 'visitUpdates'
   | 'careUpdates'
   | 'emergencyAlerts'
@@ -48,6 +49,16 @@ export const PREFERENCE_TOGGLES: PreferenceToggle[] = [
     key: 'appointmentReminders',
     labelKey: 'notificationSettings.toggles.appointmentReminders.label',
     descriptionKey: 'notificationSettings.toggles.appointmentReminders.description',
+  },
+  {
+    // Phase 2F: gates the new `visit_upcoming` reminder, whose Edge producer already
+    // exists, so this toggle is live now. The other 3 new preference columns
+    // (assignment_alerts / activity_updates / available_to_claim_digest) stay in the
+    // API input layer but are intentionally NOT shown here yet: their producers are
+    // deferred, so a visible toggle would be a dead switch (see the 2F-5A audit).
+    key: 'visitReminders',
+    labelKey: 'notificationSettings.toggles.visitReminders.label',
+    descriptionKey: 'notificationSettings.toggles.visitReminders.description',
   },
   {
     key: 'visitUpdates',
