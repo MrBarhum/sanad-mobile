@@ -10,6 +10,11 @@ export type ExpoMessage = {
   body: string;
   data?: Record<string, unknown>;
   channelId?: string;
+  // Notification category id → the app's registered action category (the "تم" /
+  // "ذكرني بعد 5 دقائق" buttons). Expo maps this to `categoryIdentifier` on the
+  // device; supported on Android and iOS. The category must be registered on the
+  // device (setNotificationCategoryAsync) before the notification arrives.
+  categoryId?: string;
   sound?: 'default' | null;
   priority?: 'default' | 'normal' | 'high';
 };

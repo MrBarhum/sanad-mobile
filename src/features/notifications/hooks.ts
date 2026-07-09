@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import { useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState } from 'react-native';
+import { Alert, AppState } from 'react-native';
 
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import { useAuth } from '@/providers';
+
+import { completeForNotification, doneMessage, type PushActionData } from './actions';
 
 import {
   deactivatePushToken,
@@ -26,13 +28,16 @@ import { notificationData, notificationRoute } from './catalog';
 import { getDeviceTimezone, getOrCreateDeviceId } from './device';
 import {
   ProjectIdMissingError,
+  SANAD_NOTIFICATION_ACTION,
   acquireExpoPushToken,
   configureForegroundHandler,
   deviceRegistrationInfo,
   ensureAndroidChannel,
+  ensureNotificationCategories,
   getPermission,
   pushSupport,
   requestPermission,
+  scheduleSnoozeNotification,
   type PushPermission,
   type PushSupport,
 } from './push-registration';
@@ -309,11 +314,20 @@ export function useNotificationObservers() {
   const open = useOpenNotification();
   const openRef = useRef(open);
   openRef.current = open;
+  // Latest user id for the action handlers (which live in a stable listener closure).
+  // Synced in an effect so the ref is not written during render.
+  const userIdRef = useRef(userId);
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
 
   // One-time native configuration.
   useEffect(() => {
     configureForegroundHandler();
     void ensureAndroidChannel();
+    // Register the "تم" / "ذكرني بعد 5 دقائق" action categories. Does not prompt for
+    // permission, so the explicit opt-in flow is preserved.
+    void ensureNotificationCategories();
   }, []);
 
   // Re-register the token on launch and whenever the app returns to foreground,
@@ -332,15 +346,63 @@ export function useNotificationObservers() {
   // response). A handled-id set prevents routing the same tap twice.
   useEffect(() => {
     const handled = new Set<string>();
+
+    const asString = (value: unknown): string | undefined =>
+      typeof value === 'string' && value.length > 0 ? value : undefined;
+
+    // "تم": run the safe type-specific completion; on anything but success, open the
+    // detail screen so the user can finish. Brief alert as feedback.
+    const runComplete = async (data: PushActionData) => {
+      const type = (data.type ?? 'system') as AppNotification['type'];
+      const outcome = await completeForNotification(type, data, userIdRef.current ?? null);
+      if (outcome === 'completed') {
+        queryClient.invalidateQueries();
+        Alert.alert('تم', doneMessage(type));
+        return;
+      }
+      openRef.current({ type, deep_link: data.deepLink ?? null, data });
+    };
+
+    // "ذكرني بعد 5 دقائق": reschedule the same reminder locally, 5 minutes out.
+    const runSnooze = async (content: Notifications.NotificationContent, data: PushActionData) => {
+      try {
+        await scheduleSnoozeNotification({
+          key: asString(data.notificationId) ?? asString(data.itemId) ?? 'reminder',
+          title: content.title ?? 'سند',
+          body: content.body ?? 'حان موعد تذكير جديد',
+          data,
+          categoryIdentifier: asString(data.categoryId),
+          minutes: 5,
+        });
+        Alert.alert('تم', 'سيصلك تذكير بعد 5 دقائق');
+      } catch {
+        // best-effort; a failed local schedule must not crash the handler
+      }
+    };
+
     const route = (response: Notifications.NotificationResponse) => {
-      const id = response.notification.request.identifier;
-      if (handled.has(id)) return;
-      handled.add(id);
-      const data = (response.notification.request.content.data ?? {}) as {
-        type?: AppNotification['type'];
-        deepLink?: string;
-      };
+      const content = response.notification.request.content;
+      const action = response.actionIdentifier;
+      // Dedupe per (notification, action, delivery time) so the cold-start replay and
+      // the live listener don't double-process the SAME interaction, while separate
+      // deliveries of a reused local id (e.g. re-snoozing, which reuses
+      // `sanad_snooze_<id>`) are still processed — they carry a fresh `date`.
+      const key = `${response.notification.request.identifier}:${action}:${response.notification.date}`;
+      if (handled.has(key)) return;
+      handled.add(key);
+
+      const data = (content.data ?? {}) as PushActionData;
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+
+      if (action === SANAD_NOTIFICATION_ACTION.snooze5) {
+        void runSnooze(content, data);
+        return;
+      }
+      if (action === SANAD_NOTIFICATION_ACTION.complete) {
+        void runComplete(data);
+        return;
+      }
+      // Default body tap (or any unknown action): existing deep-link behavior.
       openRef.current({ type: data.type ?? 'system', deep_link: data.deepLink ?? null, data });
     };
 
@@ -349,12 +411,18 @@ export function useNotificationObservers() {
     });
     const responded = Notifications.addNotificationResponseReceivedListener(route);
 
-    // Cold start: the app was launched by tapping a notification.
+    // Cold start: the app was launched by tapping a notification (or its action).
+    // Clear the native last-response after routing so it is consumed once and does
+    // NOT replay (re-navigate / re-run "تم") on a later observer remount
+    // (logout → login in the same process) or a JS reload.
     Notifications.getLastNotificationResponseAsync()
       .then((response) => {
         if (response) route(response);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        Notifications.clearLastNotificationResponseAsync().catch(() => {});
+      });
 
     return () => {
       received.remove();

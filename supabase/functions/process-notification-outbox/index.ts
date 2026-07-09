@@ -7,10 +7,17 @@
 //   B. send     — claim_push_deliveries is the AUTHORITATIVE send-time gate: every
 //      claim AND stale-lock reclaim RE-VALIDATES expiry, membership, role,
 //      preference, quiet hours and token state, stamps a fresh claim_token (lease),
-//      and returns ONLY rows still authorized to send. We send exactly those with a
-//      GENERIC payload, then record the result PRESENTING THE LEASE — a stale
-//      worker whose lock expired loses the lease and is logged `stale_claim`,
-//      never recorded as a false success over a newer worker.
+//      and returns ONLY rows still authorized to send. For those rows we read the
+//      stored notification content and send a DETAILED, ACTIONABLE payload
+//      (Phase 2F-11A: clear title/body + action-category), then record the result
+//      PRESENTING THE LEASE — a stale worker whose lock expired loses the lease and
+//      is logged `stale_claim`, never recorded as a false success over a newer worker.
+//
+// PRODUCT DECISION (2F-11A): the push now carries the reminder's real title/body
+// (e.g. "حان موعد دواء …") instead of a privacy-generic string, so the lock-screen
+// notification says what it is for. The generic copy remains only as a fallback when
+// the source row cannot be read. formatPushNotificationContent is the single place
+// that builds the payload.
 //
 // External push is AT-LEAST-ONCE: a network timeout after Expo accepts a request
 // can still cause a rare duplicate, and a stale-claim row is reclaimed + resent.
@@ -29,7 +36,10 @@ import {
   type ExpoTicket,
 } from '../_shared/expo.ts';
 import { log, logError } from '../_shared/log.ts';
-import { genericPushMessage } from '../_shared/messages.ts';
+import {
+  formatPushNotificationContent,
+  type NotificationContentRow,
+} from '../_shared/notification-content.ts';
 import { serviceClient } from '../_shared/supabase.ts';
 
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
@@ -94,6 +104,12 @@ async function deliver(sb: SupabaseClient, claimed: Claimed[]): Promise<Counters
   const c: Counters = { sent: 0, failed: 0, skipped: 0, stale: 0, recordErrors: 0, invalidTokens: 0 };
   const outgoing: Outgoing[] = [];
 
+  // Read the stored content for every claimed notification once (read-only). The
+  // detailed title/body live on the notifications row; the claim RPC returns only
+  // routing ids. A read failure is non-fatal — the formatter falls back to generic
+  // copy so a reminder still goes out.
+  const content = await fetchNotificationContent(sb, claimed);
+
   for (const d of claimed) {
     // The claim already guarantees an active token owned by the recipient; this
     // is only a format sanity check before handing the value to Expo.
@@ -101,7 +117,14 @@ async function deliver(sb: SupabaseClient, claimed: Claimed[]): Promise<Counters
       await markSkipped(sb, d.delivery_id, d.claim_token, 'token_format', c);
       continue;
     }
-    const generic = genericPushMessage();
+    // Detailed, actionable payload (2F-11A): the real title/body + action category
+    // resolved from the stored row, plus the occurrence context the app needs to
+    // run the "تم" / snooze actions and deep-link.
+    const push = formatPushNotificationContent(d.type, content.get(d.notification_id) ?? null, {
+      notificationId: d.notification_id,
+      circleId: d.circle_id,
+      deepLink: d.deep_link,
+    });
     outgoing.push({
       deliveryId: d.delivery_id,
       claimToken: d.claim_token,
@@ -110,13 +133,13 @@ async function deliver(sb: SupabaseClient, claimed: Claimed[]): Promise<Counters
       attempt: d.attempt_count,
       message: {
         to: d.token,
-        title: generic.title,
-        body: generic.body,
+        title: push.title,
+        body: push.body,
         channelId: 'default',
+        categoryId: push.categoryId,
         sound: 'default',
         priority: d.type === 'emergency' ? 'high' : 'default',
-        // Minimal routing identifiers only — no health detail.
-        data: { type: d.type, notificationId: d.notification_id, circleId: d.circle_id, deepLink: d.deep_link },
+        data: push.data,
       },
     });
   }
@@ -176,6 +199,37 @@ async function deliver(sb: SupabaseClient, claimed: Claimed[]): Promise<Counters
   }
 
   return c;
+}
+
+/**
+ * Batch-reads the stored content for the claimed notifications (read-only, service
+ * role). Returns a map notification_id → row. On error, returns an empty map so the
+ * formatter falls back to generic copy. Never logs title/body/health detail.
+ */
+async function fetchNotificationContent(
+  sb: SupabaseClient,
+  claimed: Claimed[],
+): Promise<Map<string, NotificationContentRow>> {
+  const ids = [...new Set(claimed.map((d) => d.notification_id))];
+  const map = new Map<string, NotificationContentRow>();
+  if (ids.length === 0) return map;
+  const { data, error } = await sb
+    .from('notifications')
+    .select('id, type, title, body, data')
+    .in('id', ids);
+  if (error) {
+    logError('fetch_notification_content_failed', error, { count: ids.length });
+    return map;
+  }
+  for (const row of data ?? []) {
+    map.set(row.id as string, {
+      type: row.type as string,
+      title: (row.title as string | null) ?? null,
+      body: (row.body as string | null) ?? null,
+      data: (row.data as Record<string, unknown> | null) ?? null,
+    });
+  }
+  return map;
 }
 
 async function markSkipped(
