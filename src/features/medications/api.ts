@@ -222,3 +222,25 @@ export async function deleteLog(id: string): Promise<void> {
   const { error } = await supabase.from('medication_logs').delete().eq('id', id);
   if (error) throw error;
 }
+
+/**
+ * The recorded status of one scheduled dose, or null if it hasn't been logged.
+ * Used to keep a notification "تم" honest: when a dose is already logged, we can tell
+ * a prior 'given' (report success) from a 'missed' / 'postponed' (open the detail so
+ * the caregiver reconciles it) instead of asserting it was recorded.
+ */
+export async function fetchScheduledDoseStatus(
+  scheduleId: string,
+  doseDate: string,
+  scheduledTime: string,
+): Promise<MedicationLogStatus | null> {
+  const { data, error } = await supabase
+    .from('medication_logs')
+    .select('status')
+    .eq('schedule_id', scheduleId)
+    .eq('dose_date', doseDate)
+    .eq('scheduled_time', scheduledTime)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.status as MedicationLogStatus | null) ?? null;
+}
