@@ -30,10 +30,9 @@ import {
   ProjectIdMissingError,
   SANAD_NOTIFICATION_ACTION,
   acquireExpoPushToken,
-  configureForegroundHandler,
+  bootstrapNotifications,
   deviceRegistrationInfo,
   ensureAndroidChannel,
-  ensureNotificationCategories,
   getPermission,
   pushSupport,
   requestPermission,
@@ -321,13 +320,13 @@ export function useNotificationObservers() {
     userIdRef.current = userId;
   }, [userId]);
 
-  // One-time native configuration.
+  // One-time native configuration. Also run at the root layout before the auth gate
+  // (src/app/_layout.tsx); this signed-in mount re-ensures it idempotently as a
+  // defense-in-depth backstop. Registers the foreground handler, Android channel and
+  // the "تم" / "ذكرني بعد 5 دقائق" action categories. Never prompts for permission,
+  // so the explicit opt-in flow is preserved.
   useEffect(() => {
-    configureForegroundHandler();
-    void ensureAndroidChannel();
-    // Register the "تم" / "ذكرني بعد 5 دقائق" action categories. Does not prompt for
-    // permission, so the explicit opt-in flow is preserved.
-    void ensureNotificationCategories();
+    void bootstrapNotifications();
   }, []);
 
   // Re-register the token on launch and whenever the app returns to foreground,

@@ -9,11 +9,13 @@ import {
 } from '@expo-google-fonts/cairo';
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { IconFonts } from '@/components/icon';
 import { Colors, FontFamily } from '@/constants/theme';
+import { bootstrapNotifications } from '@/features/notifications/push-registration';
 import { AppProviders } from '@/providers';
 
 // Match the navigation container to the Sanad canvas so headers, transitions
@@ -57,6 +59,15 @@ export default function RootLayout() {
     Cairo_700Bold,
     Cairo_800ExtraBold,
   });
+
+  // Populate the OS notification channel + action-category store at the earliest
+  // bootstrap point — BEFORE the auth gate in (app)/_layout.tsx — so a push that
+  // arrives on first launch or while signed out still renders its action buttons.
+  // Idempotent and never prompts for permission (preserves the explicit opt-in).
+  // Runs unconditionally (before the font gate below) to satisfy rules-of-hooks.
+  useEffect(() => {
+    void bootstrapNotifications();
+  }, []);
 
   // Keep the native splash up for the (sub-100ms) local font load so the UI
   // never flashes the fallback font.

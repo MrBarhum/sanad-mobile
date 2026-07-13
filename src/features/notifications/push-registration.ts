@@ -163,7 +163,12 @@ export const SANAD_NOTIFICATION_ACTION = {
   snooze5: 'snooze_5',
 } as const;
 
+// Registration state. `categoriesConfigured` flips to true ONLY after a fully
+// successful batch, so a partial/failed registration is retried on the next call
+// rather than being masked as "done". `categoriesInFlight` coalesces concurrent or
+// repeated startup calls (root layout + observer) onto a single registration.
 let categoriesConfigured = false;
+let categoriesInFlight: Promise<void> | null = null;
 
 /**
  * Registers the Sanad notification action categories ("تم" + "ذكرني بعد 5 دقائق").
@@ -171,11 +176,16 @@ let categoriesConfigured = false;
  * request notification permission, so this preserves the explicit opt-in flow.
  * The generic category carries snooze only ("تم" is meaningful only for the four
  * completable entities). No-op on web.
+ *
+ * Robustness: repeated/concurrent calls share one in-flight promise; every
+ * setNotificationCategoryAsync is awaited before the "configured" flag is set; a
+ * failed batch leaves the flag false so a later call retries and (in development)
+ * logs a clear, secret-free warning.
  */
 export async function ensureNotificationCategories(): Promise<void> {
   if (categoriesConfigured) return;
   if (pushSupport() === 'web-unsupported') return;
-  categoriesConfigured = true;
+  if (categoriesInFlight) return categoriesInFlight;
 
   const complete: Notifications.NotificationAction = {
     identifier: SANAD_NOTIFICATION_ACTION.complete,
@@ -189,19 +199,70 @@ export async function ensureNotificationCategories(): Promise<void> {
   };
   const entityActions = [complete, snooze];
 
+  categoriesInFlight = (async () => {
+    try {
+      // Await ALL registrations, then mark configured — never optimistically.
+      await Promise.all([
+        Notifications.setNotificationCategoryAsync(SANAD_NOTIFICATION_CATEGORY.medication, entityActions),
+        Notifications.setNotificationCategoryAsync(SANAD_NOTIFICATION_CATEGORY.task, entityActions),
+        Notifications.setNotificationCategoryAsync(SANAD_NOTIFICATION_CATEGORY.visit, entityActions),
+        Notifications.setNotificationCategoryAsync(SANAD_NOTIFICATION_CATEGORY.appointment, entityActions),
+        Notifications.setNotificationCategoryAsync(SANAD_NOTIFICATION_CATEGORY.generic, [snooze]),
+      ]);
+      categoriesConfigured = true;
+      if (__DEV__) await logRegisteredCategories();
+    } catch (err) {
+      // Non-critical: without categories the notification still shows and deep-links;
+      // it just won't render action buttons. Leave the flag false so a later startup
+      // call retries, and surface the failure in development. No secrets are involved —
+      // categories carry only the static button ids/titles above, never tokens.
+      if (__DEV__) {
+        console.warn('[sanad][notifications] action-category registration failed; buttons may not render', err);
+      }
+    } finally {
+      categoriesInFlight = null;
+    }
+  })();
+
+  return categoriesInFlight;
+}
+
+/**
+ * Dev-only observability: read the action categories back out of the OS store and
+ * log each id with its action ids, so a "buttons missing" retest can confirm at a
+ * glance whether registration actually landed on this device. Logs only the static
+ * category/action identifiers — never push tokens, user data, or secrets.
+ */
+async function logRegisteredCategories(): Promise<void> {
   try {
-    await Promise.all([
-      Notifications.setNotificationCategoryAsync(SANAD_NOTIFICATION_CATEGORY.medication, entityActions),
-      Notifications.setNotificationCategoryAsync(SANAD_NOTIFICATION_CATEGORY.task, entityActions),
-      Notifications.setNotificationCategoryAsync(SANAD_NOTIFICATION_CATEGORY.visit, entityActions),
-      Notifications.setNotificationCategoryAsync(SANAD_NOTIFICATION_CATEGORY.appointment, entityActions),
-      Notifications.setNotificationCategoryAsync(SANAD_NOTIFICATION_CATEGORY.generic, [snooze]),
-    ]);
-  } catch {
-    // Non-critical: without categories the notification still shows and deep-links;
-    // it just won't render action buttons. Allow a later retry.
-    categoriesConfigured = false;
+    const categories = await Notifications.getNotificationCategoriesAsync();
+    const summary = categories
+      .map((c) => `${c.identifier}[${c.actions.map((a) => a.identifier).join(',')}]`)
+      .sort();
+    console.log(`[sanad][notifications] registered categories (${categories.length}):`, summary);
+  } catch (err) {
+    console.warn('[sanad][notifications] could not read back registered categories', err);
   }
+}
+
+/**
+ * One-shot, idempotent startup bootstrap for the notification subsystem. SAFE to
+ * call from the ROOT layout, before the auth gate: nothing here prompts for
+ * permission, so the explicit opt-in flow is preserved. Registering the Android
+ * channel and the action categories this early populates the OS category store
+ * before the first push can arrive — even on a first launch or while signed out —
+ * so action buttons render regardless of when (or whether) the user has signed in.
+ * Cheap to repeat: the foreground handler and categories are guarded, and
+ * setNotificationChannelAsync simply upserts the channel.
+ */
+export async function bootstrapNotifications(): Promise<void> {
+  configureForegroundHandler();
+  try {
+    await ensureAndroidChannel();
+  } catch (err) {
+    if (__DEV__) console.warn('[sanad][notifications] android channel setup failed', err);
+  }
+  await ensureNotificationCategories();
 }
 
 /**
