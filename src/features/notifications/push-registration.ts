@@ -301,3 +301,37 @@ export async function scheduleSnoozeNotification(params: {
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// TEMPORARY — Phase 2F-11C Test A (dev-only local action-button discriminator)
+// ---------------------------------------------------------------------------
+
+/**
+ * DEV-ONLY discriminator for the "no action buttons on Android" investigation.
+ * Schedules a LOCAL notification that references the existing `sanad_task_reminder`
+ * category (buttons "تم" / "ذكرني بعد 5 دقائق"). A LOCAL notification is always built
+ * by expo-notifications, so — unlike a backgrounded REMOTE push, which Android renders
+ * as an FCM "Notification Message" without applying the category — its action buttons
+ * SHOULD render. This isolates the remote/background path (forensics report
+ * 2026-07-13) from the category setup. Creates NO server row and notifies no one else.
+ * Native only; call behind __DEV__. Remove with the dev button once the test concludes.
+ */
+export async function scheduleLocalActionButtonTest(seconds = 5): Promise<void> {
+  if (pushSupport() === 'web-unsupported') return;
+  // Self-contained: make sure the channel + categories exist before we reference them.
+  await ensureAndroidChannel();
+  await ensureNotificationCategories();
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'اختبار الأزرار',
+      body: 'محلي — يجب أن تظهر أزرار تم / ذكرني',
+      categoryIdentifier: SANAD_NOTIFICATION_CATEGORY.task,
+      data: { test: true, actionButtonTest: true },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds,
+      channelId: ANDROID_CHANNEL_ID,
+    },
+  });
+}

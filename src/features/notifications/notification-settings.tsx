@@ -16,7 +16,11 @@ import { useCircleSelection } from '@/features/circle-selection/provider';
 import { preferencesToInput, type NotificationPreferencesInput } from './api';
 import { getDeviceTimezone } from './device';
 import { useNotificationPreferences, useUpsertPreferences } from './hooks';
-import { scheduleLocalTestNotification, pushSupport } from './push-registration';
+import {
+  scheduleLocalActionButtonTest,
+  scheduleLocalTestNotification,
+  pushSupport,
+} from './push-registration';
 import { PushStatusCard } from './push-status-card';
 import { PREFERENCE_TOGGLES, quietHoursValid, type BooleanPreferenceKey } from './schema';
 
@@ -84,6 +88,19 @@ export function NotificationSettings() {
         t('notificationSettings.test.body'),
         5,
       );
+      setTestFeedback(t('notificationSettings.test.scheduled'));
+    } catch {
+      setTestFeedback(t('notificationSettings.test.failed'));
+    }
+  }
+
+  // TEMPORARY — Phase 2F-11C Test A: dev-only local notification carrying the
+  // sanad_task_reminder category, to confirm Android renders its action buttons for a
+  // locally-built notification. Remove with the dev-only button below once concluded.
+  async function onActionButtonTest() {
+    setTestFeedback(null);
+    try {
+      await scheduleLocalActionButtonTest(5);
       setTestFeedback(t('notificationSettings.test.scheduled'));
     } catch {
       setTestFeedback(t('notificationSettings.test.failed'));
@@ -216,6 +233,16 @@ export function NotificationSettings() {
             label={t('notificationSettings.test.action')}
             onPress={onTest}
           />
+          {/* TEMPORARY — Phase 2F-11C Test A (dev builds only): local notification
+              WITH the sanad_task_reminder category, to check that Android renders the
+              action buttons for a locally-built notification. Not shown in production. */}
+          {__DEV__ ? (
+            <Button
+              variant="secondary"
+              label="DEV · اختبار أزرار الإشعار (محلي)"
+              onPress={onActionButtonTest}
+            />
+          ) : null}
           {testFeedback ? (
             <ThemedText type="small" themeColor="textSecondary" accessibilityLiveRegion="polite">
               {testFeedback}
