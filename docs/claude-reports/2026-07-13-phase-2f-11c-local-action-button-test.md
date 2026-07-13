@@ -5,11 +5,31 @@
 
 ---
 
+## Observed result — Local Test A: **PASS** ✅
+
+Operator ran the dev-only test on the Samsung Galaxy S24:
+
+- The local notification appeared — **title:** `اختبار الأزرار`, **body:** `محلي — يجب أن تظهر أزرار تم / ذكرني`.
+- **Both action buttons rendered.** Screenshot evidence: the expanded notification showed the two actions.
+  - as rendered: **left:** `تم`  ·  **right:** `ذكرني بعد 5 دقائق`
+- **Confirms category/action registration works** — expo-notifications applies the `sanad_task_reminder` category (`complete` / `snooze_5`) to a locally-built notification exactly as designed.
+- **Confirms the remote root cause** — since the identical category renders buttons locally, the reason **remote** backgrounded pushes show no buttons is the FCM **Notification Message / OS-rendered** path (the OS displays the push without invoking expo-notifications' category builder), **not** the category setup. This closes out the forensics conclusion (2026-07-13 forensics report, root cause #1).
+
+### UX issue found + fixed this pass — RTL action order
+
+The buttons rendered in the wrong order for Arabic: `تم` was on the **left** and `ذكرني بعد 5 دقائق` on the **right**. Android lays action buttons out left→right in **registration order**, and the entity categories were registered `[complete, snooze]`. This pass swaps the registration order to `[snooze, complete]` so the natural Arabic reading order is produced:
+
+- desired (now): **right:** `تم`  ·  **left:** `ذكرني بعد 5 دقائق`
+
+Action **ids** (`complete`, `snooze_5`) and **labels** (`تم`, `ذكرني بعد 5 دقائق`) are unchanged, and response handling keys off the action id (order-independent) — so only the rendered button position changes. The generic (snooze-only) category is unchanged.
+
+---
+
 ## Environment
 
 - **cwd:** `E:\Projects\sanad-mobile-clean`
 - **Branch:** `master`
-- **HEAD:** `2a90fa1` — `docs(product): explain android remote action button limitation`
+- **HEAD:** `d78e44d` — `test(notifications): add dev local action button check`
 
 ---
 
@@ -17,10 +37,10 @@
 
 | File | Change |
 |---|---|
-| `src/features/notifications/push-registration.ts` | Added a temporary, dev-only exported helper `scheduleLocalActionButtonTest(seconds = 5)` that schedules a LOCAL notification with `categoryIdentifier: 'sanad_task_reminder'` (via the existing `SANAD_NOTIFICATION_CATEGORY.task` constant), channel `default`, 5s trigger. It first calls `ensureAndroidChannel()` + `ensureNotificationCategories()` so it is self-contained. Existing `scheduleLocalTestNotification` is untouched. |
-| `src/features/notifications/notification-settings.tsx` | Added a `__DEV__`-guarded secondary button in the existing "Local test" section (`DEV · اختبار أزرار الإشعار (محلي)`) wired to a new `onActionButtonTest()` handler that calls the helper and reuses the existing `test.scheduled` / `test.failed` feedback strings. The button does not render in production. |
+| `src/features/notifications/push-registration.ts` | **(1)** In `ensureNotificationCategories`, swapped the entity-category action order from `[complete, snooze]` to `[snooze, complete]` so Android renders `تم` on the RIGHT and `ذكرني بعد 5 دقائق` on the LEFT (correct RTL order). Ids/labels/response handling unchanged; generic (snooze-only) category unchanged. **(2)** (prior step) Added the temporary, dev-only exported helper `scheduleLocalActionButtonTest(seconds = 5)` that schedules a LOCAL notification with `categoryIdentifier: 'sanad_task_reminder'` (via `SANAD_NOTIFICATION_CATEGORY.task`), channel `default`, 5s trigger, self-contained via `ensureAndroidChannel()` + `ensureNotificationCategories()`. Existing `scheduleLocalTestNotification` untouched. |
+| `src/features/notifications/notification-settings.tsx` | (prior step) Added a `__DEV__`-guarded secondary button in the existing "Local test" section (`DEV · اختبار أزرار الإشعار (محلي)`) wired to a new `onActionButtonTest()` handler that calls the helper and reuses the existing `test.scheduled` / `test.failed` feedback strings. The button does not render in production. |
 
-**No new i18n keys, no new dependencies, no native config changes, no production-path changes.** Total: 2 files, +62 / −1.
+**No new i18n keys, no new dependencies, no native config changes.** The RTL order swap is the only change that affects a real (non-`__DEV__`) code path; it alters button position only.
 
 ### Why this placement is safe
 - The button lives inside the section already gated by `pushSupport() !== 'web-unsupported'` (native only) **and** an additional `__DEV__` guard — so it appears only on native **dev** builds and is compiled out of production behavior.
@@ -79,8 +99,8 @@ Client-only, read-only checks + edits:
 | `npm run check:mojibake` | **PASS** — 267 files scanned, no strong signatures (new Arabic strings clean) |
 | `git -c core.autocrlf=false diff --check` | **PASS** — no whitespace errors |
 | `npx tsc --noEmit` | **PASS** — exit 0 |
-| `git --no-pager status --short` | 2 modified source files + this untracked report; nothing staged |
-| `git --no-pager diff --stat` | 2 files changed, +62 / −1 |
+| `git --no-pager status --short` | this pass: `M push-registration.ts` (RTL order swap) + `M` this report; nothing staged. (The prior-step Test A instrumentation — the helper + `__DEV__` button — was committed at HEAD `d78e44d`.) |
+| `git --no-pager diff --stat` | this pass: 2 files changed, +29 / −4 (push-registration.ts +6/−1; report doc +23/−3) |
 
 ## Supabase commands run
 

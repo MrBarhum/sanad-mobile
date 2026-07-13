@@ -197,7 +197,12 @@ export async function ensureNotificationCategories(): Promise<void> {
     buttonTitle: 'ذكرني بعد 5 دقائق',
     options: { opensAppToForeground: true },
   };
-  const entityActions = [complete, snooze];
+  // RTL visual order: Android lays action buttons left→right in registration order.
+  // Registering snooze first then complete puts "ذكرني بعد 5 دقائق" on the LEFT and
+  // "تم" on the RIGHT — the natural reading order for Arabic (primary action at the
+  // start/right). Action ids and response handling are order-independent, so only the
+  // rendered position changes. The generic category keeps snooze only (below).
+  const entityActions = [snooze, complete];
 
   categoriesInFlight = (async () => {
     try {
