@@ -1,9 +1,11 @@
+import { useRouter } from 'expo-router';
 import {
   AlertCircle,
   AlertTriangle,
   Droplets,
   FileText,
   Heart,
+  Pencil,
   Phone,
   Shield,
   Siren,
@@ -53,8 +55,15 @@ const AVATAR_TINTS = [FigmaCategory.teal, FigmaCategory.purple, FigmaCategory.bl
  * info list, one-tap call rows for contacts and doctors, and the family
  * disclaimer. No add button, no SOS dial, no guaranteed-response copy.
  */
-export function FigmaEmergencyCard({ circleId }: { circleId: string }) {
+export function FigmaEmergencyCard({
+  circleId,
+  canManage = false,
+}: {
+  circleId: string;
+  canManage?: boolean;
+}) {
   const { t } = useTranslation();
+  const router = useRouter();
   const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const c = FigmaColors[scheme];
 
@@ -174,7 +183,11 @@ export function FigmaEmergencyCard({ circleId }: { circleId: string }) {
 
       {/* Medical information */}
       <View>
-        <Text style={[styles.sectionLabel, muted]}>{t('figma.emergency.medicalTitle')}</Text>
+        <SectionHeader
+          scheme={scheme}
+          label={t('figma.emergency.medicalTitle')}
+          onEdit={canManage ? () => router.push('/recipient-profile') : undefined}
+        />
         <FigmaCard tone="card" radius={FigmaRadius.r24} padding={0} style={{ borderColor: withAlpha(c.error, 0.2) }}>
           {medicalRows.map((row, index) => {
             const has = !!(row.value && row.value.trim() !== '');
@@ -205,7 +218,11 @@ export function FigmaEmergencyCard({ circleId }: { circleId: string }) {
 
       {/* Emergency contacts */}
       <View>
-        <Text style={[styles.sectionLabel, muted]}>{t('emergencyCard.contactsTitle')}</Text>
+        <SectionHeader
+          scheme={scheme}
+          label={t('emergencyCard.contactsTitle')}
+          onEdit={canManage ? () => router.push('/emergency-contacts') : undefined}
+        />
         {contactList.length === 0 ? (
           <FigmaCard tone="card" radius={FigmaRadius.r20} padding={16}>
             <Text style={[styles.emptyText, muted]}>{t('emergencyCard.noContacts')}</Text>
@@ -274,6 +291,41 @@ export function FigmaEmergencyCard({ circleId }: { circleId: string }) {
         <Text style={[styles.disclaimerText, muted]}>{t('emergencyCard.disclaimer')}</Text>
       </View>
     </FigmaScreen>
+  );
+}
+
+/**
+ * A section label with an optional manager-only edit shortcut. The card itself
+ * stays read-only; the shortcut just routes managers to the existing edit screen
+ * for that section (recipient profile / emergency contacts), which was otherwise
+ * unreachable from the live UI.
+ */
+function SectionHeader({
+  scheme,
+  label,
+  onEdit,
+}: {
+  scheme: FigmaScheme;
+  label: string;
+  onEdit?: () => void;
+}) {
+  const { t } = useTranslation();
+  const c = FigmaColors[scheme];
+  return (
+    <View style={styles.sectionHeader}>
+      <Text style={[styles.sectionLabelInline, { color: c.muted }]}>{label}</Text>
+      {onEdit ? (
+        <Pressable
+          onPress={onEdit}
+          accessibilityRole="button"
+          accessibilityLabel={`${t('common.edit')} ${label}`}
+          hitSlop={8}
+          style={styles.editLink}>
+          <Pencil size={14} color={c.primary} />
+          <Text style={[styles.editText, { color: c.primary }]}>{t('common.edit')}</Text>
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
 
@@ -358,6 +410,22 @@ const styles = StyleSheet.create({
 
   // Sections
   sectionLabel: { fontSize: 13, fontFamily: FigmaFont.semibold, marginBottom: 10 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 10,
+  },
+  sectionLabelInline: { fontSize: 13, fontFamily: FigmaFont.semibold, flexShrink: 1 },
+  editLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 44,
+    paddingHorizontal: 6,
+  },
+  editText: { fontSize: 13, fontFamily: FigmaFont.semibold },
   list: { gap: 8 },
   emptyText: { fontSize: 14 },
 

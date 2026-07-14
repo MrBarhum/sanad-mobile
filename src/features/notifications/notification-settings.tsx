@@ -11,6 +11,7 @@ import { TimeField } from '@/components/time-field';
 import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { CircleTimezoneCard } from '@/features/circle-selection/circle-timezone-card';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 
 import { preferencesToInput, type NotificationPreferencesInput } from './api';
@@ -222,6 +223,12 @@ export function NotificationSettings() {
           />
         </>
       ) : null}
+
+      {/* Care-circle timezone — the canonical zone that governs WHEN scheduled
+          reminders fire (distinct from the per-user quiet-hours timezone above).
+          Managers can change it here; others see it read-only. Was previously
+          unreachable (no importer). */}
+      <CircleTimezoneCard />
 
       {/* Local test (native only) */}
       {pushSupport() !== 'web-unsupported' ? (

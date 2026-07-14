@@ -1241,7 +1241,8 @@
         "dailyLogs": "Daily condition notes",
         "doctors": "Treating doctors and clinics",
         "emergency": "Vital info when it's needed",
-        "members": "Family and caregivers"
+        "members": "Family and caregivers",
+        "recipientProfile": "Medical details and the cared-for person's information"
       }
     },
     "account": {
