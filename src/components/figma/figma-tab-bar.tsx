@@ -98,5 +98,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: { fontSize: 11, lineHeight: 16 },
+  // Raised from the Figma export's 11 toward the older-adult floor. Kept at 13
+  // (not 14) because the three flex-1 tabs are layout-sensitive; a strict-14 bump
+  // is worth a device check.
+  label: { fontSize: 13, lineHeight: 16 },
 });

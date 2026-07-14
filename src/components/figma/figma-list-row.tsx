@@ -98,9 +98,10 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, paddingVertical: 16, minHeight: 68 },
   text: { flex: 1, gap: 2 },
   title: { fontSize: 16, fontFamily: FigmaFont.semibold },
-  subtitle: { fontSize: 12, fontFamily: FigmaFont.regular },
+  // Older-adult floor: meaningful secondary text ≥14 (was 12).
+  subtitle: { fontSize: 14, fontFamily: FigmaFont.regular },
   avatar: { width: 44, height: 44, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 18, fontFamily: FigmaFont.bold },
-  sectionLabel: { fontSize: 12, fontFamily: FigmaFont.bold, letterSpacing: 0.5, marginBottom: 10 },
+  sectionLabel: { fontSize: 13, fontFamily: FigmaFont.bold, letterSpacing: 0.5, marginBottom: 10 },
   pressed: { opacity: 0.85 },
 });

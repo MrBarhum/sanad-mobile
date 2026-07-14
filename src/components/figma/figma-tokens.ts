@@ -94,7 +94,12 @@ export const FigmaRadius = {
   pill: 999,
 } as const;
 
-/** Figma type scale (px). Intentionally smaller than Sanad's accessibility floor. */
+/**
+ * Figma type scale (px). `md` (14) is the older-adult floor for MEANINGFUL text —
+ * labels, values, status, list subtitles should be `md`+ (the shared primitives
+ * were raised to it). `xxs`/`xs`/`sm` remain only for decorative or layout-locked
+ * chrome (e.g. bottom-tab labels), never for content a caregiver must read.
+ */
 export const FigmaFontSize = {
   xxs: 10,
   xs: 11,

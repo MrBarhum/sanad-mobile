@@ -44,5 +44,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     alignSelf: 'flex-start',
   },
-  label: { fontSize: 11, lineHeight: 16, fontFamily: FigmaFont.medium },
+  // Status text carries meaning (status = icon + text + color) — keep it legible
+  // for older readers at the 14 floor rather than the Figma export's 11.
+  label: { fontSize: 14, lineHeight: 18, fontFamily: FigmaFont.medium },
 });
