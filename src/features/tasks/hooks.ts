@@ -61,7 +61,7 @@ export function useTodayTaskSummary(circleId: string | undefined, scopeToUserId?
     const scoped = scopeToUserId ? all.filter((task) => task.assigned_to === scopeToUserId) : all;
     return summarizeTodayTasks(scoped, todayYmd());
   }, [tasks.data, scopeToUserId]);
-  return { summary, isLoading: tasks.isLoading, isError: tasks.isError };
+  return { summary, isLoading: tasks.isLoading, isError: tasks.isError, refetch: tasks.refetch };
 }
 
 // ---------------------------------------------------------------------------

@@ -153,7 +153,9 @@
         "emergencyView": "View",
         "emergencyBlood": "Blood type: {{value}}",
         "emergencyAllergy": "Allergies: {{value}}",
-        "emergencySubtitle": "View the emergency card"
+        "emergencySubtitle": "View the emergency card",
+        "loadError": "Couldn't load today's data",
+        "logFailed": "Couldn't record the dose. Try again."
       },
       "manageTitle": "All care sections",
       "careTeamTitle": "Care team",

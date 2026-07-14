@@ -92,7 +92,11 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   // all reflect this scope so a family member's home shows THEIR day, not everyone's.
   const scopeToMine = !circle.canManage && circle.canLogDoses;
 
-  const { doses } = useTodayDoses(circle.circleId, date);
+  const {
+    doses,
+    isError: dosesError,
+    refetch: refetchDoses,
+  } = useTodayDoses(circle.circleId, date);
   const visibleDoses = scopeToMine ? doses.filter((d) => d.responsibleUserId === userId) : doses;
   const { total, given } = summarizeDoses(visibleDoses);
   const nextDose = visibleDoses.find((d) => d.status !== 'given') ?? null;
@@ -100,10 +104,11 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   // Scope the "tasks due today" stat the same way the doses/appointments above
   // are scoped: a family member counts only their own assigned tasks; managers
   // count the whole circle. Without this the stat showed the circle-wide count.
-  const { summary: taskSummary } = useTodayTaskSummary(
-    circle.circleId,
-    scopeToMine ? userId : null,
-  );
+  const {
+    summary: taskSummary,
+    isError: tasksError,
+    refetch: refetchTasks,
+  } = useTodayTaskSummary(circle.circleId, scopeToMine ? userId : null);
   const responsibleLabel = useResponsibleLabel(circle.circleId);
   const appointments = useUpcomingAppointments(circle.circleId);
   const visibleAppts = scopeToMine
@@ -119,15 +124,31 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [openDoseKey, setOpenDoseKey] = useState<string | null>(null);
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [logError, setLogError] = useState<string | null>(null);
 
   async function setStatus(dose: DoseItem, status: MedicationLogStatus) {
     setPendingKey(dose.key);
+    setLogError(null);
     try {
       await logDose.mutateAsync({ dose, status, date });
       setOpenDoseKey(null);
+    } catch {
+      // A failed dose log used to disappear silently — the row just reverted,
+      // which reads as "nothing happened." Surface it so the caregiver retries.
+      setLogError(t('careCircle.dashboard.today.logFailed'));
     } finally {
       setPendingKey(null);
     }
+  }
+
+  // Today's sub-queries (doses / tasks / appointments) each fail independently. If
+  // any errored, an empty dashboard would be indistinguishable from a genuinely
+  // clear day — so show one retry banner rather than silently hiding the failure.
+  const todayLoadError = dosesError || tasksError || appointments.isError;
+  function retryToday() {
+    refetchDoses();
+    refetchTasks();
+    appointments.refetch();
   }
 
   // Header subtitle from REAL recipient data (age + dialect); falls back to the
@@ -222,6 +243,36 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
           </Pressable>
         </View>
       </View>
+
+      {/* Today's-data load failure — a retryable banner so a failed fetch never
+          masquerades as an empty day. */}
+      {todayLoadError ? (
+        <Pressable
+          onPress={retryToday}
+          accessibilityRole="button"
+          accessibilityLabel={t('retry')}
+          style={[
+            styles.notice,
+            { backgroundColor: withAlpha(c.error, 0.1), borderColor: withAlpha(c.error, 0.25) },
+          ]}>
+          <AlertCircle size={16} color={c.error} />
+          <Text style={[styles.noticeText, { color: c.error }]}>
+            {t('careCircle.dashboard.today.loadError')}
+          </Text>
+          <Text style={[styles.noticeAction, { color: c.error }]}>{t('retry')}</Text>
+        </Pressable>
+      ) : logError ? (
+        <View
+          style={[
+            styles.notice,
+            { backgroundColor: withAlpha(c.error, 0.1), borderColor: withAlpha(c.error, 0.25) },
+          ]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite">
+          <AlertCircle size={16} color={c.error} />
+          <Text style={[styles.noticeText, { color: c.error }]}>{logError}</Text>
+        </View>
+      ) : null}
 
       {/* Compact circle dropdown (real circles + join) */}
       {switcherOpen ? (
@@ -602,6 +653,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Today's-data error / dose-log error banner
+  notice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: FigmaRadius.r12,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 48,
+  },
+  noticeText: { flex: 1, fontSize: 14, fontFamily: FigmaFont.medium },
+  noticeAction: { fontSize: 14, fontFamily: FigmaFont.bold },
   // Circle dropdown
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, minHeight: 48 },
   switchName: { fontSize: 15, fontFamily: FigmaFont.medium, flexShrink: 1 },

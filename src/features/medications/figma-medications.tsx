@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Check, Clock, Pill, Users, X } from 'lucide-react-native';
+import { AlertCircle, Check, Clock, Pill, Users, X } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -86,6 +86,7 @@ export function FigmaMedications({
   const [tab, setTab] = useState<TabKey>('today');
   const [openDoseKey, setOpenDoseKey] = useState<string | null>(null);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
+  const [logError, setLogError] = useState<string | null>(null);
 
   const meds = useMemo(() => medications.data ?? [], [medications.data]);
 
@@ -119,9 +120,13 @@ export function FigmaMedications({
 
   async function setStatus(dose: DoseItem, status: MedicationLogStatus) {
     setPendingKey(dose.key);
+    setLogError(null);
     try {
       await logDose.mutateAsync({ dose, status, date });
       setOpenDoseKey(null);
+    } catch {
+      // Surface a failed dose log instead of silently reverting the row.
+      setLogError(t('careCircle.dashboard.today.logFailed'));
     } finally {
       setPendingKey(null);
     }
@@ -161,6 +166,19 @@ export function FigmaMedications({
         activeKey={tab}
         onChange={(key) => setTab(key as TabKey)}
       />
+
+      {logError ? (
+        <View
+          style={[
+            styles.logErrorBanner,
+            { backgroundColor: withAlpha(c.error, 0.1), borderColor: withAlpha(c.error, 0.25) },
+          ]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite">
+          <AlertCircle size={16} color={c.error} />
+          <Text style={[styles.logErrorText, { color: c.error }]}>{logError}</Text>
+        </View>
+      ) : null}
 
       {/* Content */}
       {today.isError ? (
@@ -461,6 +479,17 @@ function MedicationRow({
 const styles = StyleSheet.create({
   list: { gap: 12 },
   loading: { paddingVertical: 40, alignItems: 'center' },
+  logErrorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: FigmaRadius.r12,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 48,
+  },
+  logErrorText: { flex: 1, fontSize: 14, fontFamily: FigmaFont.medium },
   // Summary pill
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   summaryText: { flex: 1, gap: 2 },
