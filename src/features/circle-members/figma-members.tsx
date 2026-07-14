@@ -1,17 +1,11 @@
 import { useRouter } from 'expo-router';
-import { Crown, Edit3, Eye, UserMinus } from 'lucide-react-native';
+import { Crown, Edit3, Eye, MoreHorizontal } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  useColorScheme,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 
+import { FigmaButton } from '@/components/figma/figma-button';
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
@@ -25,9 +19,10 @@ import {
 } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
 
-import { memberErrorKey, type CircleMember, type CircleRole } from './api';
-import { useCircleMembers, useUpdateMemberStatus } from './hooks';
-import { canChangeStatus, isLastActiveAdmin, isManagerRole } from './permissions';
+import type { CircleMember, CircleRole } from './api';
+import { MemberActionsSheet, memberHasActions } from './figma-member-actions';
+import { useCircleMembers } from './hooks';
+import { isManagerRole } from './permissions';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
@@ -39,10 +34,7 @@ type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: numb
  * (family_member / caregiver) as Edit3+gold, view-only (remote_member / elder)
  * as Eye+purple. Labels still come from `circleMembers.roles.*` verbatim.
  */
-function roleVisual(
-  role: CircleRole,
-  primary: string,
-): { Icon: IconCmp; color: string } {
+function roleVisual(role: CircleRole, primary: string): { Icon: IconCmp; color: string } {
   if (role === 'admin' || role === 'primary_caregiver') {
     return { Icon: Crown, color: primary };
   }
@@ -61,15 +53,17 @@ function initialOf(name: string): string {
  * The Figma Make Members screen (`MembersScreen.tsx`), recreated as literally as
  * possible in React Native and wired to real Sanad data. Mirrors the export:
  * a back/title/teal-invite header, a circle summary line, letter-avatar member
- * rows (name + you-badge + role icon/label + email, with a UserMinus remove for
- * non-self members when permitted), and a plain-language role legend card.
+ * rows (name + you-badge + role icon/label + email), and a plain-language role
+ * legend card.
  *
- * Reuses `MembersManager`'s hooks and permission gating verbatim
- * (`useCircleMembers`, `useUpdateMemberStatus`, `isManagerRole`,
- * `canChangeStatus`, `isLastActiveAdmin`); the RPCs stay authoritative. The
- * invite "+" routes to the existing `/circle-members/invite` flow — no form is
- * rebuilt here. Cairo + Figma tokens, RTL. No old Sanad
- * Screen/Surface/Section/GlyphChip/StatusBadge/Button.
+ * Beyond the export, every membership action that previously lived only in the
+ * unrouted legacy MembersManager is now reachable here: tapping a member the
+ * viewer can act on opens {@link MemberActionsSheet} (change role, reactivate,
+ * remove, transfer ownership); a member's own row opens the same sheet to leave
+ * the circle; and managers get a link into the invitations list. Removed members
+ * are shown to managers so they can be reactivated. The membership RPCs stay
+ * authoritative; the gates here (`memberHasActions`, `isManagerRole`) only decide
+ * what to surface.
  */
 export function FigmaMembers({
   circleId,
@@ -88,34 +82,98 @@ export function FigmaMembers({
   const c = FigmaColors[scheme];
 
   const members = useCircleMembers(circleId);
-  const updateStatus = useUpdateMemberStatus(circleId);
 
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<CircleMember | null>(null);
 
   const canManage = isManagerRole(actorRole);
 
-  async function removeMember(member: CircleMember) {
-    setActionError(null);
-    setPendingId(member.memberId);
-    try {
-      await updateStatus.mutateAsync({ memberId: member.memberId, status: 'removed' });
-    } catch (error) {
-      setActionError(t(memberErrorKey(error)));
-    } finally {
-      setPendingId(null);
-    }
-  }
-
   const all = members.data ?? [];
-  // The Figma roster shows the active care team; the summary count matches it.
   const active = all.filter((m) => m.status === 'active');
+  // Managers can reactivate removed members, so they see the inactive list too.
+  const inactive = canManage ? all.filter((m) => m.status !== 'active') : [];
 
   const summaryName = recipientName?.trim() || circleName;
-  const summary = t('figma.members.summary', {
-    name: summaryName,
-    count: active.length,
-  });
+  const summary = t('figma.members.summary', { name: summaryName, count: active.length });
+
+  function renderRow(member: CircleMember) {
+    const displayName = member.fullName?.trim() || member.email || t('circleMembers.unnamed');
+    const visual = roleVisual(member.role, c.primary);
+    const actionable = memberHasActions(member, all, actorRole);
+    // Only show the email line when it adds info beyond the name.
+    const emailLine = member.email && member.fullName ? member.email : null;
+    const dim = member.status !== 'active';
+
+    const content = (
+      <>
+        <View style={[styles.avatar, { backgroundColor: withAlpha(visual.color, 0.15) }]}>
+          <Text style={[styles.avatarText, { color: visual.color }]}>{initialOf(displayName)}</Text>
+        </View>
+
+        <View style={styles.info}>
+          <View style={styles.nameRow}>
+            <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>
+              {displayName}
+            </Text>
+            {member.isSelf ? (
+              <View style={[styles.youBadge, { backgroundColor: c.mutedSurface }]}>
+                <Text style={[styles.youText, { color: c.muted }]}>{t('circleMembers.you')}</Text>
+              </View>
+            ) : null}
+          </View>
+          <View style={styles.metaRow}>
+            <visual.Icon size={11} color={visual.color} />
+            <Text style={[styles.roleText, { color: visual.color }]}>
+              {t(`circleMembers.roles.${member.role}`)}
+            </Text>
+            {dim ? (
+              <>
+                <Text style={[styles.metaDot, { color: c.muted }]}>·</Text>
+                <Text style={[styles.statusText, { color: c.muted }]}>
+                  {t(`circleMembers.status.${member.status}`)}
+                </Text>
+              </>
+            ) : null}
+            {emailLine ? (
+              <>
+                <Text style={[styles.metaDot, { color: c.muted }]}>·</Text>
+                <Text style={[styles.email, { color: c.muted }]} numberOfLines={1} selectable>
+                  {isolateLtr(emailLine)}
+                </Text>
+              </>
+            ) : null}
+          </View>
+        </View>
+
+        {actionable ? <MoreHorizontal size={20} color={c.muted} /> : null}
+      </>
+    );
+
+    const rowStyle = [
+      styles.row,
+      { backgroundColor: c.card, borderColor: c.border },
+      dim && styles.rowDim,
+    ];
+
+    if (!actionable) {
+      return (
+        <View key={member.memberId} style={rowStyle}>
+          {content}
+        </View>
+      );
+    }
+
+    return (
+      <Pressable
+        key={member.memberId}
+        onPress={() => setSelected(member)}
+        accessibilityRole="button"
+        accessibilityLabel={displayName}
+        accessibilityHint={t('circleMembers.manage')}
+        style={({ pressed }) => [...rowStyle, pressed && styles.rowPressed]}>
+        {content}
+      </Pressable>
+    );
+  }
 
   return (
     <FigmaScreen>
@@ -150,90 +208,26 @@ export function FigmaMembers({
             <Text style={[styles.summaryText, { color: c.muted }]}>{summary}</Text>
           </View>
 
-          {actionError ? (
-            <Text
-              style={[styles.actionError, { color: c.error }]}
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite">
-              {actionError}
-            </Text>
+          {canManage ? (
+            <FigmaButton
+              variant="secondary"
+              label={t('circleMembers.manageInvitations')}
+              onPress={() => router.push('/circle-members/invitations')}
+            />
           ) : null}
 
-          {/* Member rows */}
-          <View style={styles.list}>
-            {active.map((member) => {
-              const displayName =
-                member.fullName?.trim() || member.email || t('circleMembers.unnamed');
-              const visual = roleVisual(member.role, c.primary);
-              const lastAdmin = isLastActiveAdmin(member, all);
-              // Remove gating mirrors MembersManager.MemberCard's `showRemove`.
-              const showRemove =
-                !member.isSelf &&
-                canChangeStatus(actorRole, member) &&
-                member.status === 'active' &&
-                !lastAdmin &&
-                !member.isOwner;
-              const busy = pendingId === member.memberId;
-              // Only show the email line when it adds info beyond the name.
-              const emailLine = member.email && member.fullName ? member.email : null;
+          {/* Active member rows */}
+          <View style={styles.list}>{active.map(renderRow)}</View>
 
-              return (
-                <View
-                  key={member.memberId}
-                  style={[styles.row, { backgroundColor: c.card, borderColor: c.border }]}>
-                  <View style={[styles.avatar, { backgroundColor: withAlpha(visual.color, 0.15) }]}>
-                    <Text style={[styles.avatarText, { color: visual.color }]}>
-                      {initialOf(displayName)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.info}>
-                    <View style={styles.nameRow}>
-                      <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>
-                        {displayName}
-                      </Text>
-                      {member.isSelf ? (
-                        <View style={[styles.youBadge, { backgroundColor: c.mutedSurface }]}>
-                          <Text style={[styles.youText, { color: c.muted }]}>
-                            {t('circleMembers.you')}
-                          </Text>
-                        </View>
-                      ) : null}
-                    </View>
-                    <View style={styles.metaRow}>
-                      <visual.Icon size={11} color={visual.color} />
-                      <Text style={[styles.roleText, { color: visual.color }]}>
-                        {t(`circleMembers.roles.${member.role}`)}
-                      </Text>
-                      {emailLine ? (
-                        <>
-                          <Text style={[styles.metaDot, { color: c.muted }]}>·</Text>
-                          <Text style={[styles.email, { color: c.muted }]} numberOfLines={1} selectable>
-                            {isolateLtr(emailLine)}
-                          </Text>
-                        </>
-                      ) : null}
-                    </View>
-                  </View>
-
-                  {showRemove ? (
-                    <Pressable
-                      onPress={() => removeMember(member)}
-                      disabled={busy}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${t('circleMembers.remove')} ${displayName}`}
-                      style={[styles.removeBtn, busy && styles.dim]}>
-                      {busy ? (
-                        <ActivityIndicator size="small" color={c.muted} />
-                      ) : (
-                        <UserMinus size={18} color={c.muted} />
-                      )}
-                    </Pressable>
-                  ) : null}
-                </View>
-              );
-            })}
-          </View>
+          {/* Removed members (managers only) — reachable so they can be reactivated. */}
+          {inactive.length > 0 ? (
+            <>
+              <Text style={[styles.sectionLabel, { color: c.muted }]}>
+                {t('circleMembers.inactiveTitle')}
+              </Text>
+              <View style={styles.list}>{inactive.map(renderRow)}</View>
+            </>
+          ) : null}
 
           {/* Role legend (plain-language) */}
           <FigmaCard tone="card" radius={FigmaRadius.r24} padding={16}>
@@ -259,6 +253,18 @@ export function FigmaMembers({
           </FigmaCard>
         </>
       )}
+
+      <MemberActionsSheet
+        member={selected}
+        all={all}
+        actorRole={actorRole}
+        circleId={circleId}
+        onClose={() => setSelected(null)}
+        onLeft={() => {
+          setSelected(null);
+          router.replace('/');
+        }}
+      />
     </FigmaScreen>
   );
 }
@@ -283,8 +289,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  summaryText: { fontSize: 13, fontFamily: FigmaFont.regular },
-  actionError: { fontSize: 13, fontFamily: FigmaFont.medium },
+  summaryText: { fontSize: 14, fontFamily: FigmaFont.regular, lineHeight: 21 },
+  sectionLabel: { fontSize: 13, fontFamily: FigmaFont.semibold, marginTop: 4 },
   // Member rows
   list: { gap: 8 },
   row: {
@@ -295,7 +301,10 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     paddingVertical: 14,
+    minHeight: 56,
   },
+  rowDim: { opacity: 0.65 },
+  rowPressed: { opacity: 0.7 },
   avatar: {
     width: 48,
     height: 48,
@@ -308,22 +317,16 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   name: { fontSize: 15, fontFamily: FigmaFont.semibold, flexShrink: 1 },
   youBadge: { borderRadius: FigmaRadius.pill, paddingHorizontal: 8, paddingVertical: 2 },
-  youText: { fontSize: 10, fontFamily: FigmaFont.medium },
+  youText: { fontSize: 11, fontFamily: FigmaFont.medium },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
   roleText: { fontSize: 12, fontFamily: FigmaFont.medium },
   metaDot: { fontSize: 11, fontFamily: FigmaFont.regular },
-  email: { fontSize: 11, fontFamily: FigmaFont.regular, flexShrink: 1 },
-  removeBtn: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dim: { opacity: 0.5 },
+  statusText: { fontSize: 12, fontFamily: FigmaFont.regular },
+  email: { fontSize: 12, fontFamily: FigmaFont.regular, flexShrink: 1 },
   // Role legend
-  legendTitle: { fontSize: 13, fontFamily: FigmaFont.bold, marginBottom: 10 },
+  legendTitle: { fontSize: 14, fontFamily: FigmaFont.bold, marginBottom: 10 },
   legendRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
   legendDot: { width: 8, height: 8, borderRadius: FigmaRadius.pill, marginTop: 6 },
-  legendText: { flex: 1, fontSize: 13, fontFamily: FigmaFont.regular, lineHeight: 20 },
+  legendText: { flex: 1, fontSize: 14, fontFamily: FigmaFont.regular, lineHeight: 21 },
   legendRole: { fontFamily: FigmaFont.semibold },
 });
