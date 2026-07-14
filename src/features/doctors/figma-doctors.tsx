@@ -1,4 +1,4 @@
-import { Phone, Stethoscope } from 'lucide-react-native';
+import { Pencil, Phone, Stethoscope, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -28,7 +28,7 @@ import { isolateLtr } from '@/components/ltr-text';
 
 import type { Doctor } from './api';
 import { DoctorFormModal } from './doctors-manager';
-import { useDoctors } from './hooks';
+import { useDeleteDoctor, useDoctors } from './hooks';
 
 /** Per-doctor Stethoscope-chip accent, cycled by index (Figma uses varied hues). */
 const CHIP_COLORS = [
@@ -45,26 +45,45 @@ const CHIP_COLORS = [
  * header and a list of bordered cards — each a Stethoscope icon chip (category
  * color), the doctor name, specialty, and clinic/hospital line, plus a round
  * one-tap CALL button (tel: via Linking) and a quiet phone well with the number
- * LTR-isolated. Reuses the `DoctorsManager` data (`useDoctors`, the Doctor fields)
- * verbatim and the existing `tel:` call pattern; the "+" reuses the manager's
- * validated `DoctorFormModal` (no add form rebuilt). Cairo + Figma tokens, RTL.
- * No old Sanad Screen/Surface/Section/ContactCard/Button.
+ * LTR-isolated.
+ *
+ * Managers additionally get Edit and Delete actions on each card (delete behind a
+ * two-step inline confirm) — previously these lived only in the unrouted legacy
+ * DoctorsManager, so a manager could add and call a doctor but never correct or
+ * remove one. Reuses the manager's validated `DoctorFormModal` for both add and
+ * edit and the `useDeleteDoctor` hook; Cairo + Figma tokens, RTL.
  */
-export function FigmaDoctors({
-  circleId,
-  canManage,
-}: {
-  circleId: string;
-  canManage: boolean;
-}) {
+export function FigmaDoctors({ circleId, canManage }: { circleId: string; canManage: boolean }) {
   const { t } = useTranslation();
   const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const c = FigmaColors[scheme];
 
   const doctorsQuery = useDoctors(circleId);
+  const deleteDoctor = useDeleteDoctor(circleId);
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<Doctor | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const doctors = doctorsQuery.data ?? [];
+  const modalOpen = adding || editing !== null;
+
+  function closeModal() {
+    setAdding(false);
+    setEditing(null);
+  }
+
+  async function onDelete(id: string) {
+    setDeleteError(null);
+    setDeletingId(id);
+    try {
+      await deleteDoctor.mutateAsync(id);
+    } catch {
+      setDeleteError(t('doctors.saveFailed'));
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <>
@@ -102,21 +121,40 @@ export function FigmaDoctors({
             ) : null}
           </View>
         ) : (
-          <View style={styles.list}>
-            {doctors.map((doctor, index) => (
-              <DoctorCard
-                key={doctor.id}
-                doctor={doctor}
-                chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
-                scheme={scheme}
-              />
-            ))}
-          </View>
+          <>
+            {deleteError ? (
+              <Text
+                style={[styles.deleteError, { color: c.error }]}
+                accessibilityRole="alert"
+                accessibilityLiveRegion="polite">
+                {deleteError}
+              </Text>
+            ) : null}
+            <View style={styles.list}>
+              {doctors.map((doctor, index) => (
+                <DoctorCard
+                  key={doctor.id}
+                  doctor={doctor}
+                  chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
+                  scheme={scheme}
+                  canManage={canManage}
+                  deleting={deletingId === doctor.id}
+                  onEdit={() => setEditing(doctor)}
+                  onDelete={() => onDelete(doctor.id)}
+                />
+              ))}
+            </View>
+          </>
         )}
       </FigmaScreen>
 
-      {adding ? (
-        <DoctorFormModal circleId={circleId} initial={null} onClose={() => setAdding(false)} />
+      {modalOpen ? (
+        <DoctorFormModal
+          key={editing?.id ?? 'new'}
+          circleId={circleId}
+          initial={editing}
+          onClose={closeModal}
+        />
       ) : null}
     </>
   );
@@ -126,13 +164,22 @@ function DoctorCard({
   doctor,
   chipColor,
   scheme,
+  canManage,
+  deleting,
+  onEdit,
+  onDelete,
 }: {
   doctor: Doctor;
   chipColor: string;
   scheme: FigmaScheme;
+  canManage: boolean;
+  deleting: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const { t } = useTranslation();
   const c = FigmaColors[scheme];
+  const [confirming, setConfirming] = useState(false);
 
   const phone = doctor.phone ?? null;
   const specialty = doctor.specialty ?? null;
@@ -194,13 +241,106 @@ function DoctorCard({
           </Text>
         </View>
       ) : null}
+
+      {canManage ? (
+        <View style={[styles.actions, { borderTopColor: c.border }]}>
+          {confirming ? (
+            <>
+              <ActionButton
+                Icon={Trash2}
+                label={t('common.confirmDelete')}
+                tone="danger"
+                filled
+                loading={deleting}
+                onPress={onDelete}
+                scheme={scheme}
+              />
+              <ActionButton
+                label={t('common.cancel')}
+                tone="muted"
+                disabled={deleting}
+                onPress={() => setConfirming(false)}
+                scheme={scheme}
+              />
+            </>
+          ) : (
+            <>
+              <ActionButton
+                Icon={Pencil}
+                label={t('common.edit')}
+                tone="muted"
+                onPress={onEdit}
+                scheme={scheme}
+              />
+              <ActionButton
+                Icon={Trash2}
+                label={t('common.delete')}
+                tone="danger"
+                onPress={() => setConfirming(true)}
+                scheme={scheme}
+              />
+            </>
+          )}
+        </View>
+      ) : null}
     </FigmaCard>
+  );
+}
+
+/** A compact card-footer action pill (≥48dp), icon + label, RTL-safe, theme-tinted. */
+function ActionButton({
+  label,
+  Icon,
+  tone,
+  filled = false,
+  loading = false,
+  disabled = false,
+  onPress,
+  scheme,
+}: {
+  label: string;
+  Icon?: typeof Pencil;
+  tone: 'muted' | 'danger';
+  filled?: boolean;
+  loading?: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+  scheme: FigmaScheme;
+}) {
+  const c = FigmaColors[scheme];
+  const danger = tone === 'danger';
+  const fg = filled ? '#FFFFFF' : danger ? c.error : c.text;
+  const bg = filled ? c.error : danger ? withAlpha(c.error, 0.1) : c.elevated;
+  const border = filled ? 'transparent' : danger ? withAlpha(c.error, 0.25) : c.border;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={loading || disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: loading || disabled, busy: loading }}
+      style={({ pressed }) => [
+        styles.actionBtn,
+        { backgroundColor: bg, borderColor: border },
+        (pressed || disabled) && styles.pressed,
+      ]}>
+      {loading ? (
+        <ActivityIndicator size="small" color={fg} />
+      ) : (
+        <>
+          {Icon ? <Icon size={16} color={fg} /> : null}
+          <Text style={[styles.actionLabel, { color: fg }]}>{label}</Text>
+        </>
+      )}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
   errorText: { fontSize: 14, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  deleteError: { fontSize: 14, fontFamily: FigmaFont.medium },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
@@ -213,13 +353,13 @@ const styles = StyleSheet.create({
   retryText: { fontSize: 13, fontFamily: FigmaFont.semibold },
   empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
   emptyTitle: { fontSize: 16, fontFamily: FigmaFont.semibold, textAlign: 'center' },
-  emptySubtitle: { fontSize: 13, fontFamily: FigmaFont.regular, textAlign: 'center' },
+  emptySubtitle: { fontSize: 14, fontFamily: FigmaFont.regular, textAlign: 'center' },
   list: { gap: 12 },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   cardInfo: { flex: 1, gap: 2 },
   cardName: { fontSize: 17, fontFamily: FigmaFont.bold },
-  cardSpecialty: { fontSize: 13, fontFamily: FigmaFont.regular },
-  cardClinic: { fontSize: 12, fontFamily: FigmaFont.regular },
+  cardSpecialty: { fontSize: 14, fontFamily: FigmaFont.regular },
+  cardClinic: { fontSize: 13, fontFamily: FigmaFont.regular },
   callButton: {
     width: FigmaLayout.iconChip.xl,
     height: FigmaLayout.iconChip.xl,
@@ -236,4 +376,24 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   phoneText: { fontSize: 13, fontFamily: FigmaFont.regular, writingDirection: 'ltr' },
+  // Manager actions footer
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    minHeight: 48,
+    borderRadius: FigmaRadius.r12,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 12,
+  },
+  actionLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
 });
