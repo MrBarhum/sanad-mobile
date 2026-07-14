@@ -308,18 +308,20 @@ export async function scheduleSnoozeNotification(params: {
 }
 
 // ---------------------------------------------------------------------------
-// TEMPORARY — Phase 2F-11C Test A (dev-only local action-button discriminator)
+// QA-only — local notification action-button check (Phase 2F-11C Test A)
 // ---------------------------------------------------------------------------
 
 /**
- * DEV-ONLY discriminator for the "no action buttons on Android" investigation.
- * Schedules a LOCAL notification that references the existing `sanad_task_reminder`
- * category (buttons "تم" / "ذكرني بعد 5 دقائق"). A LOCAL notification is always built
- * by expo-notifications, so — unlike a backgrounded REMOTE push, which Android renders
- * as an FCM "Notification Message" without applying the category — its action buttons
- * SHOULD render. This isolates the remote/background path (forensics report
- * 2026-07-13) from the category setup. Creates NO server row and notifies no one else.
- * Native only; call behind __DEV__. Remove with the dev button once the test concludes.
+ * QA-only regression check for Android notification action buttons (Phase 2F-11C
+ * Test A). Schedules a LOCAL notification that references the existing
+ * `sanad_task_reminder` category (buttons "تم" / "ذكرني بعد 5 دقائق"). A LOCAL
+ * notification is always built by expo-notifications, so — unlike a backgrounded REMOTE
+ * push, which Android renders as an FCM "Notification Message" without applying the
+ * category — its action buttons SHOULD render. Retained as a QA regression tool for
+ * notification categories/actions (forensics + closeout, 2026-07-13); the MVP accepts
+ * the backgrounded-remote button limitation to preserve reminder delivery reliability.
+ * Creates NO server row and notifies no one else. Native only; exposed behind __DEV__
+ * (never in production).
  */
 export async function scheduleLocalActionButtonTest(seconds = 5): Promise<void> {
   if (pushSupport() === 'web-unsupported') return;

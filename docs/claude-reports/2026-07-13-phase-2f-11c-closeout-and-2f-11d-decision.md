@@ -3,6 +3,8 @@
 **Type:** Report only — decision brief. **No code edits. No Supabase, no SQL, no deploy, no cron, no secrets. Nothing staged or committed.**
 **Scope of the investigation it closes:** why Android does not render the `تم` / `ذكرني بعد 5 دقائق` action buttons on a **backgrounded remote push**, and what to do about it.
 
+> **PRODUCT DECISION (2026-07-14) — Option A for MVP.** The **MVP accepts the Android backgrounded-remote action-button limitation to preserve reminder delivery reliability.** Sanad keeps the reliable remote **Notification Message** path (detailed text + tap-to-open + working in-app complete/snooze); it does **not** implement the data-only / background-task approach now. The dev-only local action-button test is **retained as a QA-only** regression tool. Lock-screen action buttons remain a possible future **2F-11D prototype**, pursued only behind a QA flag with a Samsung reliability gate.
+
 ---
 
 ## Environment
@@ -93,13 +95,12 @@ Own the `FirebaseMessagingService` (custom native module or a bare workflow) and
 
 ---
 
-## 6. Cleanup recommendation — the temporary dev-only local action test
+## 6. Cleanup — the dev-only local action test (DECIDED: keep as QA-only)
 
-The Test A instrumentation (`scheduleLocalActionButtonTest` in `push-registration.ts` + the `__DEV__`-guarded button in `notification-settings.tsx`, committed at `d78e44d`) is currently marked `TEMPORARY — Phase 2F-11C Test A`.
+The Test A instrumentation (`scheduleLocalActionButtonTest` in `push-registration.ts` + the `__DEV__`-guarded button in `notification-settings.tsx`, committed at `d78e44d`) was originally marked `TEMPORARY — Phase 2F-11C Test A`.
 
-- It is already **`__DEV__`-gated and native-only**, so it is **production-safe** (compiled out of release builds) and creates no server rows.
-- **Recommendation: KEEP it, re-labeled as QA-only** rather than "TEMPORARY." It is a cheap, reusable regression check for notification categories/actions (useful again in 2F-11D and any future notification work). Concretely: change the `TEMPORARY — Phase 2F-11C Test A` markers to `QA-only — local notification action-button check` and note it in the notifications QA doc.
-- **Alternative:** if the team prefers a minimal surface, remove the helper + button in a small follow-up. Either is safe; keeping it (documented as QA-only) is the higher-value default.
+- It is **`__DEV__`-gated and native-only**, so it is **production-safe** (compiled out of release builds) and creates no server rows.
+- **Decision (2026-07-14): KEEP it as a QA-only regression tool.** The `TEMPORARY — Phase 2F-11C Test A` markers were renamed to **`QA-only — local notification action-button check`** in both files. It is a cheap, reusable check for notification categories/actions (useful again in any future notification work, including a possible 2F-11D prototype).
 
 ---
 

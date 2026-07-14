@@ -94,9 +94,10 @@ export function NotificationSettings() {
     }
   }
 
-  // TEMPORARY — Phase 2F-11C Test A: dev-only local notification carrying the
-  // sanad_task_reminder category, to confirm Android renders its action buttons for a
-  // locally-built notification. Remove with the dev-only button below once concluded.
+  // QA-only — local notification action-button check (Phase 2F-11C Test A): dev-only
+  // local notification carrying the sanad_task_reminder category, to confirm Android
+  // renders its action buttons for a locally-built notification. Retained as a QA
+  // regression tool (MVP accepts the backgrounded-remote button limitation).
   async function onActionButtonTest() {
     setTestFeedback(null);
     try {
@@ -233,9 +234,10 @@ export function NotificationSettings() {
             label={t('notificationSettings.test.action')}
             onPress={onTest}
           />
-          {/* TEMPORARY — Phase 2F-11C Test A (dev builds only): local notification
-              WITH the sanad_task_reminder category, to check that Android renders the
-              action buttons for a locally-built notification. Not shown in production. */}
+          {/* QA-only — local notification action-button check (Phase 2F-11C Test A, dev
+              builds only): local notification WITH the sanad_task_reminder category, to
+              check that Android renders the action buttons for a locally-built
+              notification. Retained as a QA regression tool; not shown in production. */}
           {__DEV__ ? (
             <Button
               variant="secondary"
