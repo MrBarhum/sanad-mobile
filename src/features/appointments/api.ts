@@ -24,6 +24,7 @@ export type CreateAppointmentInput = AppointmentInput & { created_by: string | n
 export const appointmentKeys = {
   all: ['appointments'] as const,
   upcoming: (circleId: string | undefined) => ['appointments', 'upcoming', circleId] as const,
+  completed: (circleId: string | undefined) => ['appointments', 'completed', circleId] as const,
   detail: (id: string | undefined) => ['appointments', 'detail', id] as const,
 };
 
@@ -39,6 +40,24 @@ export async function fetchUpcomingAppointments(circleId: string): Promise<CareA
     .eq('circle_id', circleId)
     .gte('starts_at', startOfTodayInstant())
     .order('starts_at', { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+/**
+ * Completed appointments for a circle, most recent first, across ALL dates
+ * (past included). The upcoming query is future-only, so without this the
+ * "completed" tab could only ever show appointments completed today or later —
+ * i.e. essentially nothing. This backs the completed history tab.
+ */
+export async function fetchCompletedAppointments(circleId: string): Promise<CareAppointment[]> {
+  const { data, error } = await supabase
+    .from('care_appointments')
+    .select('*')
+    .eq('circle_id', circleId)
+    .eq('status', 'completed')
+    .order('starts_at', { ascending: false });
 
   if (error) throw error;
   return data ?? [];

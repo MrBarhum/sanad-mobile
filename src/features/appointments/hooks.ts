@@ -11,6 +11,7 @@ import {
   createAppointment,
   deleteAppointment,
   fetchAppointment,
+  fetchCompletedAppointments,
   fetchUpcomingAppointments,
   setAppointmentStatus,
   updateAppointment,
@@ -40,6 +41,19 @@ export function useAppointment(id: string | undefined) {
     queryKey: appointmentKeys.detail(id),
     queryFn: () => fetchAppointment(id as string),
     enabled: Boolean(id),
+  });
+}
+
+/**
+ * Completed appointments (all dates, newest first). Backs the "completed" tab so
+ * it can show past history — the upcoming query is future-only. Lazily enabled so
+ * we only fetch it once the user actually opens that tab.
+ */
+export function useCompletedAppointments(circleId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: appointmentKeys.completed(circleId),
+    queryFn: () => fetchCompletedAppointments(circleId as string),
+    enabled: Boolean(circleId) && enabled,
   });
 }
 

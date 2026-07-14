@@ -30,7 +30,14 @@ import { formatHm, hmFromInstant, ymdFromInstant } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
 
 import type { CareTask, TaskCategory, TaskPriority, TaskStatus } from './api';
-import { useCancelTask, useCompleteTask, useDeleteTask, useTask, useUpdateTask } from './hooks';
+import {
+  useCancelTask,
+  useCompleteTask,
+  useDeleteTask,
+  useReopenTask,
+  useTask,
+  useUpdateTask,
+} from './hooks';
 import { TASK_CATEGORIES, TASK_PRIORITIES, taskSchema } from './schema';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
@@ -423,19 +430,43 @@ function StatusSection({
   const userId = user?.id ?? null;
   const complete = useCompleteTask(circleId);
   const cancel = useCancelTask(circleId);
+  const reopen = useReopenTask(circleId);
   const [pending, setPending] = useState(false);
+  // Two-step confirm for the outcome actions — a stray tap must not irreversibly
+  // complete/cancel a care task (matches the list's confirm sheet).
+  const [confirm, setConfirm] = useState<'complete' | 'cancel' | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Managers act on any task; a non-manager only on a task assigned to them
   // (unassigned tasks are manager-only this pass — no family pick-up here).
   const canAct =
     task.status === 'open' &&
     (canManage || (canCollaborate && task.assigned_to !== null && task.assigned_to === userId));
+  // Managers can undo a mistaken completion/cancellation (tasks were terminal
+  // with no reopen; appointments/visits already allow it). RLS keeps it managers-only.
+  const canReopen = canManage && task.status !== 'open';
 
   async function run(kind: 'complete' | 'cancel') {
     setPending(true);
+    setError(null);
     try {
       if (kind === 'complete') await complete.mutateAsync(task.id);
       else await cancel.mutateAsync(task.id);
+      setConfirm(null);
+    } catch {
+      setError(t('tasks.saveFailed'));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function doReopen() {
+    setPending(true);
+    setError(null);
+    try {
+      await reopen.mutateAsync(task.id);
+    } catch {
+      setError(t('tasks.saveFailed'));
     } finally {
       setPending(false);
     }
@@ -464,23 +495,66 @@ function StatusSection({
         </Text>
       ) : null}
 
+      {error ? (
+        <Text
+          style={[styles.statusMeta, { color: theme.errorFg }]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
+
       {canAct ? (
+        confirm ? (
+          <View style={styles.statusActions}>
+            <Text style={[styles.statusMeta, { color: theme.textSecondary }]}>
+              {t(confirm === 'complete' ? 'tasks.confirmCompleteBody' : 'tasks.confirmUnableBody')}
+            </Text>
+            {/* The confirm CTA mirrors the list sheet: complete = teal primary,
+                cancel = red danger. Complete uses the proven body-rendered CTA
+                (FigmaButton variant="primary" renders dark in this nested form). */}
+            {confirm === 'complete' ? (
+              <FigmaFooterPrimaryButton
+                label={t('tasks.markComplete')}
+                onPress={() => run('complete')}
+                loading={pending}
+              />
+            ) : (
+              <FigmaButton
+                label={t('tasks.markUnable')}
+                variant="danger"
+                loading={pending}
+                onPress={() => run('cancel')}
+              />
+            )}
+            <FigmaButton
+              label={t('common.cancel')}
+              variant="secondary"
+              disabled={pending}
+              onPress={() => setConfirm(null)}
+            />
+          </View>
+        ) : (
+          <View style={styles.statusActions}>
+            <FigmaFooterPrimaryButton
+              label={t('tasks.markComplete')}
+              onPress={() => setConfirm('complete')}
+            />
+            <FigmaButton
+              label={t('tasks.markUnable')}
+              variant="secondary"
+              onPress={() => setConfirm('cancel')}
+            />
+          </View>
+        )
+      ) : canReopen ? (
         <View style={styles.statusActions}>
-          {/* Primary status action: the PROVEN body-rendered filled-teal CTA
-              (FigmaFooterPrimaryButton). FigmaButton variant="primary" rendered
-              visually dark/disabled in this nested form context on the Android
-              device — the same reason the save CTA uses this component. "تم الإنجاز". */}
-          <FigmaFooterPrimaryButton
-            label={t('tasks.markComplete')}
-            onPress={() => run('complete')}
-            loading={pending}
-          />
-          {/* Secondary: clear and not destructive-by-accident — "تعذّر الإنجاز". */}
           <FigmaButton
-            label={t('tasks.markUnable')}
+            label={t('tasks.reopen')}
             variant="secondary"
+            loading={pending}
             disabled={pending}
-            onPress={() => run('cancel')}
+            onPress={doReopen}
           />
         </View>
       ) : null}

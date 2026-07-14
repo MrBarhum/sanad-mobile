@@ -275,13 +275,21 @@ function StatusSection({
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const setStatus = useSetVisitStatus(circleId);
+  const setVisitStatus = useSetVisitStatus(circleId);
   const [pending, setPending] = useState(false);
+  // Two-step confirm on the outcome (a stray tap must not irreversibly close a
+  // visit); reopening is already an explicit, reversible manager action.
+  const [confirm, setConfirm] = useState<'completed' | 'cancelled' | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function run(status: VisitStatus) {
     setPending(true);
+    setError(null);
     try {
-      await setStatus.mutateAsync({ id: visit.id, status });
+      await setVisitStatus.mutateAsync({ id: visit.id, status });
+      setConfirm(null);
+    } catch {
+      setError(t('visits.saveFailed'));
     } finally {
       setPending(false);
     }
@@ -301,25 +309,52 @@ function StatusSection({
         />
       </View>
 
+      {error ? (
+        <Text
+          style={[styles.statusError, { color: theme.errorFg }]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
+
       {showOutcome ? (
-        <View style={styles.actionRow}>
-          <View style={styles.actionCol}>
+        confirm ? (
+          <View style={styles.confirmStack}>
+            <Text style={[styles.confirmBody, { color: theme.textSecondary }]}>
+              {t(
+                confirm === 'completed'
+                  ? 'visits.confirmCompletedBody'
+                  : 'visits.confirmCancelledBody',
+              )}
+            </Text>
             <FigmaButton
-              label={t('visits.markCompleted')}
+              label={t(confirm === 'completed' ? 'visits.markCompleted' : 'visits.markCancelled')}
+              variant={confirm === 'completed' ? 'primary' : 'danger'}
               loading={pending}
-              disabled={pending}
-              onPress={() => run('completed')}
+              onPress={() => run(confirm)}
             />
-          </View>
-          <View style={styles.actionCol}>
             <FigmaButton
-              label={t('visits.markCancelled')}
+              label={t('common.cancel')}
               variant="secondary"
               disabled={pending}
-              onPress={() => run('cancelled')}
+              onPress={() => setConfirm(null)}
             />
           </View>
-        </View>
+        ) : (
+          <View style={styles.actionRow}>
+            <View style={styles.actionCol}>
+              <FigmaButton label={t('visits.markCompleted')} onPress={() => setConfirm('completed')} />
+            </View>
+            <View style={styles.actionCol}>
+              <FigmaButton
+                label={t('visits.markCancelled')}
+                variant="secondary"
+                onPress={() => setConfirm('cancelled')}
+              />
+            </View>
+          </View>
+        )
       ) : showReopen ? (
         <FigmaButton
           label={t('visits.reopen')}
@@ -398,6 +433,9 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   statusLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  statusError: { fontSize: 14, fontFamily: FigmaFont.semibold },
   actionRow: { flexDirection: 'row', gap: Spacing.two },
   actionCol: { flex: 1 },
+  confirmStack: { gap: Spacing.two },
+  confirmBody: { fontSize: 14, fontFamily: FigmaFont.regular, lineHeight: 21 },
 });

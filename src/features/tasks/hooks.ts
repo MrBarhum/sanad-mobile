@@ -12,6 +12,7 @@ import {
   deleteTask,
   fetchTask,
   fetchTasks,
+  reopenTask,
   taskKeys,
   updateTask,
   type TaskInput,
@@ -98,6 +99,14 @@ export function useCancelTask(circleId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => cancelTask(id, new Date().toISOString()),
+    onSuccess: () => invalidateAll(queryClient),
+  });
+}
+
+export function useReopenTask(circleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => reopenTask(id),
     onSuccess: () => invalidateAll(queryClient),
   });
 }

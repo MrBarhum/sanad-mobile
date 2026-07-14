@@ -24,7 +24,7 @@ import { useAuth } from '@/providers';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
 import type { CareAppointment } from './api';
-import { useUpcomingAppointments } from './hooks';
+import { useCompletedAppointments, useUpcomingAppointments } from './hooks';
 
 type ApptTab = 'upcoming' | 'completed';
 
@@ -47,9 +47,10 @@ const CHIP_COLORS = [
  * status/type locale keys verbatim. Cairo + Figma tokens, RTL. No old Sanad
  * Screen/Surface/Section/Button/StatusBadge.
  *
- * Note: `useUpcomingAppointments` only returns items from local midnight today
- * onward, so the "completed" tab shows appointments completed today/later. Past
- * appointments are intentionally excluded by the data source (unchanged).
+ * The "upcoming" tab uses the future-only `useUpcomingAppointments`; the
+ * "completed" tab uses `useCompletedAppointments`, which returns completed
+ * appointments across ALL dates (newest first) so past history actually shows
+ * (the future-only source could never populate it).
  */
 export function FigmaAppointments({
   circleId,
@@ -67,9 +68,12 @@ export function FigmaAppointments({
   const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const c = FigmaColors[scheme];
 
-  const appointmentsQuery = useUpcomingAppointments(circleId);
-  const doctorsQuery = useDoctors(circleId);
   const [tab, setTab] = useState<ApptTab>('upcoming');
+  const upcomingQuery = useUpcomingAppointments(circleId);
+  // Completed history only loads once the user opens that tab (lazy).
+  const completedQuery = useCompletedAppointments(circleId, tab === 'completed');
+  const appointmentsQuery = tab === 'completed' ? completedQuery : upcomingQuery;
+  const doctorsQuery = useDoctors(circleId);
 
   const doctorNames = useMemo(
     () => new Map((doctorsQuery.data ?? []).map((doctor) => [doctor.id, doctor.name])),

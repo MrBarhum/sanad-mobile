@@ -84,6 +84,20 @@ export async function cancelTask(id: string, cancelledAt: string): Promise<void>
   if (error) throw error;
 }
 
+/**
+ * Reopens a completed/cancelled task back to `open`. RLS + the collaborator-scope
+ * trigger restrict this to managers (admin / primary_caregiver), who "may change
+ * anything". Clears the terminal timestamps so the status/timestamp CHECK
+ * constraints (`*_at_consistent`, `completed_by_consistent`) stay satisfied.
+ */
+export async function reopenTask(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('care_tasks')
+    .update({ status: 'open', completed_at: null, completed_by: null, cancelled_at: null })
+    .eq('id', id);
+  if (error) throw error;
+}
+
 /** Deletes a task. RLS restricts this to admin / primary_caregiver. */
 export async function deleteTask(id: string): Promise<void> {
   const { error } = await supabase.from('care_tasks').delete().eq('id', id);
