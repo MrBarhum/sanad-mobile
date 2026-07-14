@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { Bell, LogOut, Plus, User, Users } from 'lucide-react-native';
 import { useState } from 'react';
@@ -153,7 +154,11 @@ export default function AccountScreen() {
           disabled={signingOut}
           onPress={onSignOut}
         />
-        <Text style={[styles.version, muted]}>{t('figma.account.version', { version: '1.0.0' })}</Text>
+        <Text style={[styles.version, muted]}>
+          {t('figma.account.version', {
+            version: Constants.expoConfig?.version ?? '1.0.0',
+          })}
+        </Text>
       </View>
     </FigmaScreen>
   );

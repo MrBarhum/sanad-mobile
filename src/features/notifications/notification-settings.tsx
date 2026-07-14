@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, Switch, View } from 'react-native';
 
@@ -8,6 +8,7 @@ import { Screen } from '@/components/screen';
 import { Section, Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { TimeField } from '@/components/time-field';
+import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -41,15 +42,22 @@ export function NotificationSettings() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [testFeedback, setTestFeedback] = useState<string | null>(null);
+  // Baseline of the last loaded/saved preferences, to detect unsaved edits and
+  // warn before the caregiver navigates away (the screen had no such guard).
+  const baseline = useRef<string | null>(null);
 
   // Sync the editable form from the loaded row whenever the scope/row changes.
   useEffect(() => {
     if (prefsQuery.isSuccess) {
-      setInput(preferencesToInput(prefsQuery.data ?? null));
+      const loaded = preferencesToInput(prefsQuery.data ?? null);
+      setInput(loaded);
+      baseline.current = JSON.stringify(loaded);
       setSaved(false);
       setError(null);
     }
   }, [prefsQuery.data, prefsQuery.isSuccess, scope]);
+
+  const dirty = input !== null && baseline.current !== null && JSON.stringify(input) !== baseline.current;
 
   const timezone = input?.timezone ?? getDeviceTimezone();
 
@@ -75,6 +83,7 @@ export function NotificationSettings() {
     }
     try {
       await upsert.mutateAsync({ ...input, timezone });
+      baseline.current = JSON.stringify(input);
       setSaved(true);
     } catch {
       setError(t('notificationSettings.saveError'));
@@ -111,6 +120,7 @@ export function NotificationSettings() {
 
   return (
     <Screen maxWidth={MaxFormWidth} gap={Spacing.four}>
+      <UnsavedChangesGuard when={dirty} />
       <PushStatusCard />
 
       {/* Scope: global default or a specific circle */}
