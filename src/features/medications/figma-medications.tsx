@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { AlertCircle, Check, Clock, Pill, Users, X } from 'lucide-react-native';
 import type { ComponentType } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 
@@ -99,6 +99,13 @@ export function FigmaMedications({
     [scopeToMine, today.doses, userId],
   );
   const { total, given } = summarizeDoses(visibleDoses);
+  // Display order (A7): unlogged doses first so what still needs action leads;
+  // chronological order is preserved within each group (stable sort). Summaries
+  // and counts keep using the time-ordered list above.
+  const orderedDoses = useMemo(
+    () => [...visibleDoses].sort((a, b) => (a.status === null ? 0 : 1) - (b.status === null ? 0 : 1)),
+    [visibleDoses],
+  );
 
   // Stable per-medication accent color (by index in the alphabetical list).
   const colorByMedId = useMemo(() => {
@@ -204,7 +211,7 @@ export function FigmaMedications({
           />
         ) : (
           <View style={styles.list}>
-            {visibleDoses.map((dose) => (
+            {orderedDoses.map((dose) => (
               <DoseCard
                 key={dose.key}
                 dose={dose}
@@ -292,23 +299,39 @@ function DoseCard({
   const statusLabel = status
     ? t(`medications.status.${status}`)
     : t('figma.medications.doseUnlogged');
-  const isPending = !status;
+  const isLogged = status !== null;
+
+  // Correcting an already-logged dose asks for a confirm before overwriting the
+  // record; the first log of an unlogged dose still applies on a single tap.
+  const [confirmStatus, setConfirmStatus] = useState<MedicationLogStatus | null>(null);
+  useEffect(() => {
+    if (!open) setConfirmStatus(null);
+  }, [open]);
+
+  function pick(s: MedicationLogStatus) {
+    if (!isLogged) {
+      onSetStatus(s);
+    } else if (s === status) {
+      onToggle(); // same status chosen → nothing to change, just close the tray
+    } else {
+      setConfirmStatus(s);
+    }
+  }
 
   return (
     <View>
       <View style={[styles.doseCard, { backgroundColor: c.card, borderColor: c.border }]}>
         <IconChip Icon={Pill} color={color} size={44} radius={FigmaRadius.pill} iconSize={20} tintOpacity={0.12} />
         <View style={styles.doseInfo}>
-          <View style={styles.doseNameRow}>
-            <Text style={[styles.doseName, { color: c.text }]} numberOfLines={1}>
-              {dose.medicationName}
+          {/* Name wraps to two lines (never truncated); dosage on its own line. */}
+          <Text style={[styles.doseName, { color: c.text }]} numberOfLines={2}>
+            {dose.medicationName}
+          </Text>
+          {dose.dosage ? (
+            <Text style={[styles.doseDosage, { color: c.muted, fontFamily: FigmaFont.regular }]} numberOfLines={1}>
+              {dose.dosage}
             </Text>
-            {dose.dosage ? (
-              <Text style={[styles.doseDosage, { color: c.muted, fontFamily: FigmaFont.regular }]} numberOfLines={1}>
-                {dose.dosage}
-              </Text>
-            ) : null}
-          </View>
+          ) : null}
           <View style={styles.doseMetaRow}>
             <Clock size={12} color={c.muted} />
             <Text style={[styles.doseTime, { color: c.muted, fontFamily: FigmaFont.regular }]}>
@@ -332,38 +355,118 @@ function DoseCard({
             </View>
           ) : null}
         </View>
-        {isPending && canLog ? (
+        {canLog ? (
+          // Unlogged → filled "تسجيل"; already logged → quiet "تعديل الحالة" so a
+          // mis-tapped or corrected dose can be fixed (P2-4).
           <Pressable
             onPress={onToggle}
             accessibilityRole="button"
-            accessibilityLabel={`${t('figma.medications.logAction')} ${dose.medicationName}`}
-            style={[styles.logBtn, { backgroundColor: c.primary }]}>
-            <Text style={[styles.logBtnText, { color: c.onPrimary }]}>{t('figma.medications.logAction')}</Text>
+            accessibilityLabel={`${isLogged ? t('medications.editStatus') : t('figma.medications.logAction')} ${dose.medicationName}`}
+            style={
+              isLogged
+                ? [styles.editBtn, { borderColor: withAlpha(c.primary, 0.4) }]
+                : [styles.logBtn, { backgroundColor: c.primary }]
+            }>
+            <Text
+              style={[
+                styles.logBtnText,
+                { color: isLogged ? c.primary : c.onPrimary },
+              ]}>
+              {isLogged ? t('medications.editStatus') : t('figma.medications.logAction')}
+            </Text>
           </Pressable>
         ) : null}
       </View>
-      {open && isPending && canLog ? (
+      {open && canLog ? (
         <View style={[styles.doseActions, { backgroundColor: c.elevated, borderColor: c.border }]}>
-          {DOSE_ACTIONS.map((s) => {
-            const a = DOSE_STATUS[s];
-            const ActionIcon = a.Icon;
-            return (
-              <Pressable
-                key={s}
-                disabled={pending}
-                onPress={() => onSetStatus(s)}
-                accessibilityRole="button"
-                style={[
-                  styles.doseAction,
-                  { backgroundColor: withAlpha(a.color, 0.12), opacity: pending ? 0.5 : 1 },
-                ]}>
-                <ActionIcon size={14} color={a.color} />
-                <Text style={[styles.doseActionText, { color: a.color }]}>{t(`medications.status.${s}`)}</Text>
-              </Pressable>
-            );
-          })}
+          {confirmStatus ? (
+            <DoseCorrectionConfirm
+              scheme={scheme}
+              nextStatus={confirmStatus}
+              pending={pending}
+              onConfirm={() => onSetStatus(confirmStatus)}
+              onCancel={() => setConfirmStatus(null)}
+            />
+          ) : (
+            DOSE_ACTIONS.map((s) => {
+              const a = DOSE_STATUS[s];
+              const ActionIcon = a.Icon;
+              const selected = s === status;
+              return (
+                <Pressable
+                  key={s}
+                  disabled={pending}
+                  onPress={() => pick(s)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  style={[
+                    styles.doseAction,
+                    {
+                      backgroundColor: withAlpha(a.color, selected ? 0.22 : 0.12),
+                      opacity: pending ? 0.5 : 1,
+                    },
+                  ]}>
+                  <ActionIcon size={14} color={a.color} />
+                  <Text style={[styles.doseActionText, { color: a.color }]}>{t(`medications.status.${s}`)}</Text>
+                </Pressable>
+              );
+            })
+          )}
         </View>
       ) : null}
+    </View>
+  );
+}
+
+/**
+ * Inline confirm shown inside the dose tray when a logged dose's status is being
+ * changed — a correction overwrites a real record, so it never applies on a lone
+ * tap. Reused visual language: teal confirm + quiet cancel, announced politely.
+ */
+function DoseCorrectionConfirm({
+  scheme,
+  nextStatus,
+  pending,
+  onConfirm,
+  onCancel,
+}: {
+  scheme: FigmaScheme;
+  nextStatus: MedicationLogStatus;
+  pending: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const c = FigmaColors[scheme];
+
+  return (
+    <View style={styles.correctionRow}>
+      <Text
+        style={[styles.correctionText, { color: c.text }]}
+        accessibilityRole="alert"
+        accessibilityLiveRegion="polite">
+        {t('medications.confirmChangeStatus', { status: t(`medications.status.${nextStatus}`) })}
+      </Text>
+      <View style={styles.correctionActions}>
+        <Pressable
+          onPress={onConfirm}
+          disabled={pending}
+          accessibilityRole="button"
+          style={[styles.correctionConfirm, { backgroundColor: c.primary, opacity: pending ? 0.6 : 1 }]}>
+          {pending ? (
+            <ActivityIndicator size="small" color={c.onPrimary} />
+          ) : (
+            <Text style={[styles.correctionConfirmText, { color: c.onPrimary }]}>{t('common.save')}</Text>
+          )}
+        </Pressable>
+        <Pressable
+          onPress={onCancel}
+          disabled={pending}
+          accessibilityRole="button"
+          style={[styles.correctionCancel, { borderColor: c.border }]}>
+          <Text style={[styles.correctionCancelText, { color: c.muted }]}>{t('common.cancel')}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -421,7 +524,8 @@ function MedicationRow({
       <View style={styles.medTop}>
         <IconChip Icon={Pill} color={color} size={48} radius={FigmaRadius.r16} iconSize={22} tintOpacity={0.12} />
         <View style={styles.medText}>
-          <Text style={[styles.medName, { color: c.text }]} numberOfLines={1}>
+          {/* Name wraps to two lines (never truncated); dosage already on its own line. */}
+          <Text style={[styles.medName, { color: c.text }]} numberOfLines={2}>
             {medication.name}
           </Text>
           {medication.dosage ? (
@@ -532,6 +636,14 @@ const styles = StyleSheet.create({
     minHeight: 40,
     justifyContent: 'center',
   },
+  editBtn: {
+    borderRadius: FigmaRadius.r12,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    minHeight: 40,
+    justifyContent: 'center',
+  },
   logBtnText: { fontSize: 13, fontFamily: FigmaFont.semibold },
   doseActions: {
     flexDirection: 'row',
@@ -541,6 +653,28 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 6,
   },
+  // Dose correction confirm (inside the tray)
+  correctionRow: { flex: 1, gap: 10 },
+  correctionText: { fontSize: 14, fontFamily: FigmaFont.semibold, lineHeight: 20 },
+  correctionActions: { flexDirection: 'row', gap: 8 },
+  correctionConfirm: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: FigmaRadius.r12,
+    minHeight: 44,
+  },
+  correctionConfirmText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  correctionCancel: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: FigmaRadius.r12,
+    borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 44,
+  },
+  correctionCancelText: { fontSize: 13, fontFamily: FigmaFont.semibold },
   doseAction: {
     flex: 1,
     flexDirection: 'row',

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Check, Clock, X } from 'lucide-react-native';
+import { Check, Clock, HandHelping, X } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -26,8 +26,10 @@ import {
   type FigmaScheme,
 } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
+import { useClaimTask } from '@/features/claiming/hooks';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useAuth } from '@/providers';
+import { confirmAction } from '@/utils/confirm';
 import { formatHm, todayYmd } from '@/utils/date';
 
 import type { CareTask } from './api';
@@ -36,12 +38,33 @@ import { useCancelTask, useCompleteTask, useTasks } from './hooks';
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
 type TaskTab = 'today' | 'open' | 'done';
+type TaskScope = 'mine' | 'all';
 type QuickAction = 'complete' | 'cancel';
 type QuickConfirm = { task: CareTask; kind: QuickAction };
+/** Non-blocking claim result surfaced in a bottom sheet (race / failure only). */
+type ClaimNote = { tone: 'warning' | 'error'; title: string; body: string | null };
 
 /** Sort key mirroring the center: due date, then due time, missing last. */
 function dueSortKey(task: CareTask): string {
   return `${task.due_date ?? '9999-99-99'} ${task.due_time ?? '99:99:99'}`;
+}
+
+/** Priority → weight (urgent surfaces first). Unknown priorities sort as normal. */
+const PRIORITY_WEIGHT: Record<string, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
+
+/**
+ * Open-task ordering (A7): overdue first, then by priority (urgent → low), then
+ * chronological by due date/time. Surfaces what needs attention now instead of a
+ * flat date sort that buries an urgent, overdue task under earlier calm ones.
+ */
+function compareOpenTasks(a: CareTask, b: CareTask, today: string): number {
+  const aOverdue = a.due_date && a.due_date < today ? 0 : 1;
+  const bOverdue = b.due_date && b.due_date < today ? 0 : 1;
+  if (aOverdue !== bOverdue) return aOverdue - bOverdue;
+  const aPriority = PRIORITY_WEIGHT[a.priority] ?? 2;
+  const bPriority = PRIORITY_WEIGHT[b.priority] ?? 2;
+  if (aPriority !== bPriority) return aPriority - bPriority;
+  return dueSortKey(a).localeCompare(dueSortKey(b));
 }
 
 /**
@@ -78,43 +101,94 @@ export function FigmaTasks({
   const tasksQuery = useTasks(circleId);
   const complete = useCompleteTask(circleId);
   const cancel = useCancelTask(circleId);
+  const claim = useClaimTask();
   const [confirm, setConfirm] = useState<QuickConfirm | null>(null);
   const [acting, setActing] = useState(false);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [claimNote, setClaimNote] = useState<ClaimNote | null>(null);
   const [tab, setTab] = useState<TaskTab>('today');
 
   const tasks = tasksQuery.data ?? [];
   const today = todayYmd();
 
-  // Actionable non-managers (family_member / caregiver) are scoped to their own
-  // work so they don't default to the whole circle's task list. Managers see all;
-  // read-only members (remote/elder) keep the existing full read-only view.
-  const scopeToMine = !canManage && canCollaborate;
+  // Transparent-circle visibility: every active member can SEE the whole circle's
+  // tasks (mirrors the server `can_view_all_operational` posture). Instead of
+  // hiding others' work from non-managers, we offer an explicit «مهامي» / «كل
+  // المهام» scope toggle. Anyone who can be assigned work (managers + collaborators)
+  // gets the toggle and defaults to their own tasks; managers default to «all»;
+  // pure followers (remote/elder) have no "mine" set, so they only ever see «all».
+  const canBeAssigned = canManage || canCollaborate;
+  const canClaim = canManage || canCollaborate;
+  const [scope, setScope] = useState<TaskScope>(canManage ? 'all' : 'mine');
+  const effectiveScope: TaskScope = canBeAssigned ? scope : 'all';
 
-  /** A task is "mine" when it's assigned to me, or I completed it (history).
-   * Unassigned tasks are manager-only this pass — a non-manager does NOT see them
-   * by default (a later "available to claim" workflow may change this). */
+  /** A task is "mine" when it's assigned to me, or I completed it (history). */
   function isMine(task: CareTask): boolean {
     if (!userId) return false;
     if (task.assigned_to === userId) return true;
     return task.completed_by === userId;
   }
 
-  const visible = scopeToMine ? tasks.filter(isMine) : tasks;
+  const visible = effectiveScope === 'mine' ? tasks.filter(isMine) : tasks;
   const openTasks = visible.filter((task) => task.status === 'open');
   // today = open & due today; open = all open; done = completed/cancelled.
-  const filtered = (
-    tab === 'today'
-      ? openTasks.filter((task) => task.due_date === today)
-      : tab === 'open'
-        ? openTasks
-        : visible.filter((task) => task.status !== 'open')
-  ).sort((a, b) => dueSortKey(a).localeCompare(dueSortKey(b)));
+  // Open tabs use the priority-aware sort (urgent/overdue first); the done tab
+  // stays chronological.
+  const filtered =
+    tab === 'done'
+      ? visible
+          .filter((task) => task.status !== 'open')
+          .sort((a, b) => dueSortKey(a).localeCompare(dueSortKey(b)))
+      : (tab === 'today'
+          ? openTasks.filter((task) => task.due_date === today)
+          : openTasks
+        ).sort((a, b) => compareOpenTasks(a, b, today));
 
   function canActOn(task: CareTask): boolean {
     if (task.status !== 'open') return false;
     if (canManage) return true;
     // Non-managers act only on tasks assigned to them (not unassigned) this pass.
     return canCollaborate && task.assigned_to !== null && task.assigned_to === userId;
+  }
+
+  function onClaim(task: CareTask) {
+    if (claimingId) return;
+    // Taking responsibility is a real commitment — confirm before the one tap
+    // assigns the task to me (A4).
+    confirmAction(
+      {
+        title: t('claiming.confirmTitle'),
+        message: t('claiming.confirmMessage', { title: task.title }),
+        confirm: t('claiming.cta'),
+        cancel: t('common.cancel'),
+      },
+      () => {
+        void runClaim(task);
+      },
+    );
+  }
+
+  async function runClaim(task: CareTask) {
+    setClaimingId(task.id);
+    setClaimNote(null);
+    try {
+      await claim.mutateAsync(task.id);
+      // Success needs no sheet — the row re-renders as "assigned to me" (or moves
+      // into «مهامي») once the tasks query invalidates.
+    } catch (error) {
+      const code = (error as { code?: string } | null)?.code;
+      if (code === '23505') {
+        setClaimNote({
+          tone: 'warning',
+          title: t('claiming.alreadyClaimed'),
+          body: t('claiming.alreadyClaimedBody'),
+        });
+      } else {
+        setClaimNote({ tone: 'error', title: t('claiming.claimFailed'), body: null });
+      }
+    } finally {
+      setClaimingId(null);
+    }
   }
 
   async function runConfirmed() {
@@ -137,6 +211,11 @@ export function FigmaTasks({
     { key: 'done', label: t('figma.tasks.tabs.done') },
   ];
 
+  const scopeTabs: { key: TaskScope; label: string }[] = [
+    { key: 'mine', label: t('figma.tasks.scope.mine') },
+    { key: 'all', label: t('figma.tasks.scope.all') },
+  ];
+
   return (
     <>
       <FigmaScreen>
@@ -148,8 +227,16 @@ export function FigmaTasks({
 
         <FigmaSegmentedTabs tabs={tabs} activeKey={tab} onChange={(key) => setTab(key as TaskTab)} />
 
-        {scopeToMine ? (
-          <Text style={[styles.scopeNote, { color: c.muted }]}>{t('figma.tasks.scopeNote')}</Text>
+        {/* «مهامي / كل المهام» — an explicit scope choice replaces the old implicit
+            role-based filter, so every member can reach the full circle list. */}
+        {canBeAssigned ? (
+          <View style={styles.scopeRow}>
+            <FigmaSegmentedTabs
+              tabs={scopeTabs}
+              activeKey={effectiveScope}
+              onChange={(key) => setScope(key as TaskScope)}
+            />
+          </View>
         ) : null}
 
         {tasksQuery.isLoading ? (
@@ -170,7 +257,7 @@ export function FigmaTasks({
           <View style={styles.empty}>
             <Check size={40} color={c.muted} strokeWidth={1} />
             <Text style={[styles.emptyText, { color: c.muted }]}>
-              {t(scopeToMine ? 'figma.tasks.emptyMine' : 'figma.tasks.empty')}
+              {t(effectiveScope === 'mine' ? 'figma.tasks.emptyMine' : 'figma.tasks.empty')}
             </Text>
           </View>
         ) : (
@@ -188,6 +275,9 @@ export function FigmaTasks({
                     : null
                 }
                 canAct={canActOn(task)}
+                canClaim={canClaim}
+                claiming={claimingId === task.id}
+                onClaim={() => onClaim(task)}
                 onComplete={() => setConfirm({ task, kind: 'complete' })}
                 onCancel={() => setConfirm({ task, kind: 'cancel' })}
                 onOpen={() => router.push(`/tasks/${task.id}`)}
@@ -206,7 +296,42 @@ export function FigmaTasks({
           if (!acting) setConfirm(null);
         }}
       />
+
+      <ClaimNoteSheet note={claimNote} scheme={scheme} onClose={() => setClaimNote(null)} />
     </>
+  );
+}
+
+/**
+ * Bottom-anchored notice for a failed / raced inline claim (a successful claim
+ * needs none — the row simply becomes "assigned to me"). Status is icon + text +
+ * color and announced as an alert, matching the claim-feed feedback sheet.
+ */
+function ClaimNoteSheet({
+  note,
+  scheme,
+  onClose,
+}: {
+  note: ClaimNote | null;
+  scheme: FigmaScheme;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const c = FigmaColors[scheme];
+  const color = note?.tone === 'warning' ? c.accent : c.error;
+
+  return (
+    <FigmaBottomSheet visible={note !== null} onClose={onClose} title={note?.title ?? ''}>
+      {note?.body ? (
+        <Text
+          style={[styles.confirmBody, { color: c.muted }]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive">
+          {note.body}
+        </Text>
+      ) : null}
+      <FigmaButton label={t('common.ok')} variant="secondary" onPress={onClose} />
+    </FigmaBottomSheet>
   );
 }
 
@@ -273,6 +398,9 @@ function TaskRow({
   unassigned,
   assigneeName,
   canAct,
+  canClaim,
+  claiming,
+  onClaim,
   onComplete,
   onCancel,
   onOpen,
@@ -283,12 +411,18 @@ function TaskRow({
   unassigned: boolean;
   assigneeName: string | null;
   canAct: boolean;
+  canClaim: boolean;
+  claiming: boolean;
+  onClaim: () => void;
   onComplete: () => void;
   onCancel: () => void;
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
   const c = FigmaColors[scheme];
+
+  // An unassigned open task can be picked up inline by any claim-capable member.
+  const showClaim = canClaim && unassigned && task.status === 'open';
 
   const isDone = task.status === 'completed';
   const isCancelled = task.status === 'cancelled';
@@ -372,6 +506,27 @@ function TaskRow({
           {due ? <Text style={[styles.metaText, { color: c.muted }]}>·</Text> : null}
           <Text style={[styles.metaText, { color: c.primary }]}>{assignText}</Text>
         </View>
+
+        {/* Inline "أنا متكفّل" — a claim-capable member takes an unassigned task
+            without leaving the list. Hidden once the task has an owner. */}
+        {showClaim ? (
+          <Pressable
+            onPress={onClaim}
+            disabled={claiming}
+            accessibilityRole="button"
+            accessibilityLabel={t('claiming.cta')}
+            accessibilityHint={t('claiming.ctaHint')}
+            style={[styles.claimBtn, { borderColor: withAlpha(c.primary, 0.4) }]}>
+            {claiming ? (
+              <ActivityIndicator size="small" color={c.primary} />
+            ) : (
+              <>
+                <HandHelping size={14} color={c.primary} />
+                <Text style={[styles.claimText, { color: c.primary }]}>{t('claiming.cta')}</Text>
+              </>
+            )}
+          </Pressable>
+        ) : null}
       </View>
 
       {task.status === 'open' && canAct ? (
@@ -401,7 +556,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   retryText: { fontSize: 13, fontFamily: FigmaFont.semibold },
-  scopeNote: { fontSize: 12, lineHeight: 18, fontFamily: FigmaFont.regular },
+  scopeRow: { marginTop: 4 },
   empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
   emptyText: { fontSize: 16, fontFamily: FigmaFont.medium },
   list: { gap: 8 },
@@ -429,6 +584,19 @@ const styles = StyleSheet.create({
   note: { fontSize: 12, fontFamily: FigmaFont.regular },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   metaText: { fontSize: 12, fontFamily: FigmaFont.regular },
+  claimBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    marginTop: 10,
+    minHeight: 36,
+    paddingHorizontal: 12,
+    borderRadius: FigmaRadius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  claimText: { fontSize: 13, fontFamily: FigmaFont.semibold },
   cancelBtn: {
     width: 28,
     height: 28,

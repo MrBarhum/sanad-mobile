@@ -9,6 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 
 import type { CircleMember, CircleRole } from './api';
+import { memberDisplayName } from './display-name';
 import { useCircleMembers } from './hooks';
 
 /**
@@ -66,7 +67,7 @@ function buildOptions(
     if (member.isSelf || member.userId === selfId) continue;
     options.push({
       value: member.userId,
-      label: member.fullName ?? member.email ?? t('assignment.unknownMember'),
+      label: memberDisplayName(member, t('assignment.unknownMember')),
     });
   }
 
@@ -74,7 +75,9 @@ function buildOptions(
     const existing = members.find((m) => m.userId === current);
     const base = existing?.isSelf
       ? t('assignment.me')
-      : (existing?.fullName ?? t('assignment.unknownMember'));
+      : existing
+        ? memberDisplayName(existing, t('assignment.unknownMember'))
+        : t('assignment.unknownMember');
     const label =
       existing && existing.status !== 'active'
         ? `${base} (${t('assignment.inactiveMember')})`
@@ -157,7 +160,7 @@ export function useMemberLookup(circleId: string): (userId: string | null) => Re
         return { label: t('assignment.unknownMember'), isSelf: false, isInactive: false, role: null, roleLabel: null };
       }
       return {
-        label: member.fullName ?? t('assignment.unknownMember'),
+        label: memberDisplayName(member, t('assignment.unknownMember')),
         isSelf: member.isSelf,
         isInactive: member.status !== 'active',
         role: member.role,

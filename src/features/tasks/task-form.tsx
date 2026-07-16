@@ -16,10 +16,9 @@ import { FigmaFont } from '@/components/figma/figma-tokens';
 import { TimeField } from '@/components/time-field';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Spacing } from '@/constants/theme';
-import { useCircleMembers } from '@/features/circle-members/hooks';
+import { MemberSelect } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
-import { useAuth } from '@/providers';
 import { fieldErrors } from '@/utils/form';
 
 import type { TaskCategory, TaskPriority } from './api';
@@ -41,9 +40,7 @@ export function TaskForm({ circleId }: { circleId: string }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
-  const { user } = useAuth();
   const create = useCreateTask(circleId);
-  const membersQuery = useCircleMembers(circleId);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -82,16 +79,6 @@ export function TaskForm({ circleId }: { circleId: string }) {
     value,
     label: t(`tasks.priority.${value}`),
   }));
-  // "تعيين إلى" options: no-assignment, the current user ("أنا"), and every other
-  // ACTIVE circle member by their REAL name/email — no invented names. "أنا" sets
-  // the same self id the old toggle did; assigned_to already accepts a user id.
-  const assigneeOptions = [
-    { value: '', label: t('tasks.assignNone') },
-    ...(user ? [{ value: user.id, label: t('tasks.assignMe') }] : []),
-    ...(membersQuery.data ?? [])
-      .filter((member) => member.status === 'active' && !member.isSelf && (member.fullName || member.email))
-      .map((member) => ({ value: member.userId, label: member.fullName ?? member.email ?? '' })),
-  ];
 
   function fieldError(code?: string): string | undefined {
     switch (code) {
@@ -198,14 +185,15 @@ export function TaskForm({ circleId }: { circleId: string }) {
         </View>
       </FigmaFormCard>
 
-      {/* Assignee — real circle members only */}
+      {/* Assignee — shared MemberSelect so create and edit offer the SAME choices
+          (active "doer" roles only, a single «أنا» chip, one «no assignee» copy). */}
       <FigmaFormCard>
-        <View style={styles.group}>
-          <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>
-            {t('tasks.fields.assignedTo')}
-          </Text>
-          <FigmaChipSelect value={assignedTo} options={assigneeOptions} onChange={setAssignedTo} />
-        </View>
+        <MemberSelect
+          circleId={circleId}
+          value={assignedTo}
+          label={t('tasks.fields.assignedTo')}
+          onChange={setAssignedTo}
+        />
       </FigmaFormCard>
 
       {/* Notes */}

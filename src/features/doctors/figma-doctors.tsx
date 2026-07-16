@@ -27,7 +27,7 @@ import {
 import { isolateLtr } from '@/components/ltr-text';
 
 import type { Doctor } from './api';
-import { DoctorFormModal } from './doctors-manager';
+import { DoctorFormModal } from './doctor-form-modal';
 import { useDeleteDoctor, useDoctors } from './hooks';
 
 /** Per-doctor Stethoscope-chip accent, cycled by index (Figma uses varied hues). */

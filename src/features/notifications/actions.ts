@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import { setAssignedAppointmentOutcome } from '@/features/claiming/api';
 import { fetchScheduledDoseStatus, insertLog } from '@/features/medications/api';
 import { completeTask } from '@/features/tasks/api';
@@ -134,21 +135,21 @@ export async function completeForNotification(
   }
 }
 
-/** Short Arabic confirmation shown after a successful "تم" action. */
+/** Short confirmation shown after a successful "تم" action (localized via i18n). */
 export function doneMessage(type: AppNotification['type']): string {
   switch (type) {
     case 'task_due':
     case 'task_overdue':
-      return 'تم إكمال المهمة';
+      return i18n.t('notifications.actions.done.task');
     case 'medication_due':
     case 'medication_missed':
-      return 'تم تسجيل الجرعة';
+      return i18n.t('notifications.actions.done.dose');
     case 'visit_upcoming':
     case 'visit_update':
-      return 'تم تسجيل الزيارة';
+      return i18n.t('notifications.actions.done.visit');
     case 'appointment_upcoming':
-      return 'تم تسجيل الموعد';
+      return i18n.t('notifications.actions.done.appointment');
     default:
-      return 'تم';
+      return i18n.t('notifications.actions.done.generic');
   }
 }

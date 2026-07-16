@@ -97,8 +97,9 @@ export function useCompleteTask(circleId: string) {
 
 export function useCancelTask(circleId: string) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
-    mutationFn: (id: string) => cancelTask(id, new Date().toISOString()),
+    mutationFn: (id: string) => cancelTask(id, new Date().toISOString(), user?.id ?? null),
     onSuccess: () => invalidateAll(queryClient),
   });
 }

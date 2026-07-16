@@ -75,12 +75,21 @@ export async function completeTask(
   if (error) throw error;
 }
 
-/** Marks a task cancelled, recording when. */
-export async function cancelTask(id: string, cancelledAt: string): Promise<void> {
-  const { error } = await supabase
-    .from('care_tasks')
-    .update({ status: 'cancelled', cancelled_at: cancelledAt })
-    .eq('id', id);
+/** Marks a task cancelled, recording when AND who cancelled it. */
+export async function cancelTask(
+  id: string,
+  cancelledAt: string,
+  cancelledBy: string | null,
+): Promise<void> {
+  // `cancelled_by` ships in the milestone-4 migration and is intentionally not in
+  // the generated types yet (types aren't regenerated this phase), so this single
+  // update payload is cast through `unknown`. The runtime object keeps the field.
+  const patch = {
+    status: 'cancelled',
+    cancelled_at: cancelledAt,
+    cancelled_by: cancelledBy,
+  } as unknown as Database['public']['Tables']['care_tasks']['Update'];
+  const { error } = await supabase.from('care_tasks').update(patch).eq('id', id);
   if (error) throw error;
 }
 
@@ -91,10 +100,17 @@ export async function cancelTask(id: string, cancelledAt: string): Promise<void>
  * constraints (`*_at_consistent`, `completed_by_consistent`) stay satisfied.
  */
 export async function reopenTask(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('care_tasks')
-    .update({ status: 'open', completed_at: null, completed_by: null, cancelled_at: null })
-    .eq('id', id);
+  // Clears cancelled_by too (added by the milestone-4 migration; cast as in
+  // cancelTask above). Harmless if the column is absent pre-migration only in that
+  // the whole update would fail — apply the migration first (runbook).
+  const patch = {
+    status: 'open',
+    completed_at: null,
+    completed_by: null,
+    cancelled_at: null,
+    cancelled_by: null,
+  } as unknown as Database['public']['Tables']['care_tasks']['Update'];
+  const { error } = await supabase.from('care_tasks').update(patch).eq('id', id);
   if (error) throw error;
 }
 

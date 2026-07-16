@@ -33,7 +33,7 @@ export function useUpdateEmergencyContact(circleId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: EmergencyContactInput }) =>
-      updateEmergencyContact(id, input),
+      updateEmergencyContact(circleId, id, input),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: emergencyContactKeys.byCircle(circleId) }),
   });

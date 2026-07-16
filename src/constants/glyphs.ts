@@ -12,7 +12,7 @@
  *
  * These are deliberately NON-emoji marks: they inherit the app's text color and
  * brand font, stay calm/monochrome, and never carry meaning alone (a text label
- * always accompanies them — see GlyphChip / StatusBadge / NavCard).
+ * always accompanies them — see GlyphChip / StatusBadge).
  */
 const cp = (code: number) => String.fromCodePoint(code);
 
@@ -28,6 +28,7 @@ export const Glyph = {
   cross: cp(0x2715), // ✕  cancelled / close / missed
   clock: cp(0x25f7), // ◷  pending / upcoming / postponed
   plus: cp(0xff0b), // ＋ add (fullwidth, balances Arabic weight)
+  minus: cp(0xff0d), // － remove / decrement (fullwidth, matches plus)
   info: 'i', //     informational (already ASCII-safe)
   warn: '!', //     warning (already ASCII-safe)
 

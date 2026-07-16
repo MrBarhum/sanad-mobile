@@ -1,4 +1,4 @@
-import { Platform, Share } from 'react-native';
+import { Linking, Platform, Share } from 'react-native';
 
 /**
  * Best-effort "share" of an invitation code/message. Native uses the OS share
@@ -22,6 +22,30 @@ export async function shareInviteMessage(message: string): Promise<void> {
     return;
   }
   await Share.share({ message });
+}
+
+/**
+ * Shares a message via WhatsApp, falling back to the generic share sheet when
+ * WhatsApp isn't installed / reachable. Native uses the `whatsapp://send` scheme;
+ * web opens wa.me in a new tab. Never logs the message (it carries the raw code).
+ */
+export async function shareViaWhatsApp(message: string): Promise<void> {
+  const text = encodeURIComponent(message);
+  if (Platform.OS === 'web') {
+    const opener = (globalThis as { open?: (url: string, target?: string) => unknown }).open;
+    if (opener) {
+      opener(`https://wa.me/?text=${text}`, '_blank');
+      return;
+    }
+    await shareInviteMessage(message);
+    return;
+  }
+  try {
+    await Linking.openURL(`whatsapp://send?text=${text}`);
+  } catch {
+    // WhatsApp not installed / scheme unhandled — fall back to the OS share sheet.
+    await shareInviteMessage(message);
+  }
 }
 
 /**

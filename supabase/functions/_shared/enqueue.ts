@@ -23,6 +23,7 @@ export type NotificationTypeName =
   | 'item_completed'
   | 'item_cancelled'
   | 'claim_digest'
+  | 'daily_summary'
   | 'emergency'
   | 'system';
 

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { claimAvailableItem, listAvailableToClaim } from './api';
+import { claimAvailableItem, claimCareTask, listAvailableToClaim } from './api';
 import type { AvailableClaimItem } from './types';
 
 export const availableToClaimKeys = {
@@ -33,6 +33,23 @@ export function useClaimItem() {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       queryClient.invalidateQueries({ queryKey: ['medications'] });
       queryClient.invalidateQueries({ queryKey: ['visits'] });
+    },
+  });
+}
+
+/**
+ * Claims a single task by id — the inline "أنا متكفّل" affordance on the tasks
+ * list (a non-manager taking an unassigned task without visiting the claim feed).
+ * Mirrors {@link useClaimItem}'s invalidation for tasks. Callers branch on
+ * `error.code === '23505'` (someone else claimed it first).
+ */
+export function useClaimTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (taskId: string) => claimCareTask(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: availableToClaimKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
 }

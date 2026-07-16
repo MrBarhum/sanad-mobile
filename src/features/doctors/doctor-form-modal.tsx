@@ -1,146 +1,23 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
 
-import { Button } from '@/components/button';
-import { ContactCard } from '@/components/contact-card';
 import { FormField } from '@/components/form-field';
 import { FormModal } from '@/components/form-modal';
-import { ItemActions } from '@/components/item-actions';
-import { Screen } from '@/components/screen';
-import { EmptyState, ErrorState, LoadingState } from '@/components/states';
-import { Glyph } from '@/constants/glyphs';
-import { Spacing } from '@/constants/theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { confirmDiscard } from '@/utils/confirm';
 import { fieldErrors } from '@/utils/form';
 
 import type { Doctor } from './api';
-import { useCreateDoctor, useDeleteDoctor, useDoctors, useUpdateDoctor } from './hooks';
+import { useCreateDoctor, useUpdateDoctor } from './hooks';
 import { doctorSchema } from './schema';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
-/** Doctors list with add/edit/delete (managers only can mutate). */
-export function DoctorsManager({ circleId, canManage }: { circleId: string; canManage: boolean }) {
-  const { t } = useTranslation();
-  const doctors = useDoctors(circleId);
-  const deleteDoctor = useDeleteDoctor(circleId);
-
-  const [adding, setAdding] = useState(false);
-  const [editing, setEditing] = useState<Doctor | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const modalOpen = adding || editing !== null;
-  const closeModal = () => {
-    setAdding(false);
-    setEditing(null);
-  };
-
-  async function onDelete(id: string) {
-    setDeletingId(id);
-    try {
-      await deleteDoctor.mutateAsync(id);
-    } finally {
-      setDeletingId(null);
-    }
-  }
-
-  if (doctors.isLoading) return <LoadingState />;
-  if (doctors.isError) {
-    return (
-      <ErrorState
-        message={t('doctors.loadError')}
-        retryLabel={t('retry')}
-        onRetry={() => doctors.refetch()}
-      />
-    );
-  }
-
-  const items = doctors.data ?? [];
-
-  return (
-    <>
-      <Screen>
-        {canManage ? (
-          <Button glyph={Glyph.plus} label={t('doctors.add')} onPress={() => setAdding(true)} />
-        ) : null}
-
-        {items.length === 0 ? (
-          <EmptyState
-            icon={Glyph.doctor}
-            title={t('doctors.emptyTitle')}
-            subtitle={canManage ? t('doctors.emptySubtitle') : undefined}
-          />
-        ) : (
-          <View style={styles.list}>
-            {items.map((doctor) => (
-              <DoctorCard
-                key={doctor.id}
-                doctor={doctor}
-                canManage={canManage}
-                deleting={deletingId === doctor.id}
-                onEdit={() => setEditing(doctor)}
-                onDelete={() => onDelete(doctor.id)}
-              />
-            ))}
-          </View>
-        )}
-      </Screen>
-
-      {modalOpen ? (
-        <DoctorFormModal
-          key={editing?.id ?? 'new'}
-          circleId={circleId}
-          initial={editing}
-          onClose={closeModal}
-        />
-      ) : null}
-    </>
-  );
-}
-
-function DoctorCard({
-  doctor,
-  canManage,
-  deleting,
-  onEdit,
-  onDelete,
-}: {
-  doctor: Doctor;
-  canManage: boolean;
-  deleting: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <ContactCard
-      name={doctor.name}
-      subtitle={doctor.specialty}
-      details={[doctor.clinic_name]}
-      phone={doctor.phone}
-      callLabel={doctor.phone ? `${t('common.call')} ${doctor.name}` : undefined}
-      notes={doctor.notes}>
-      {canManage ? (
-        <ItemActions
-          deleting={deleting}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          labels={{
-            edit: t('common.edit'),
-            delete: t('common.delete'),
-            confirm: t('common.confirmDelete'),
-            cancel: t('common.cancel'),
-          }}
-        />
-      ) : null}
-    </ContactCard>
-  );
-}
-
-/** The validated add/edit doctor form modal (also reused by the Figma screen). */
+/**
+ * The validated add/edit doctor form modal — the live Figma doctors screen mounts
+ * this for both adding and editing a doctor. Extracted from the (now removed)
+ * legacy DoctorsManager so the one surviving piece stands on its own.
+ */
 export function DoctorFormModal({
   circleId,
   initial,
@@ -274,7 +151,3 @@ export function DoctorFormModal({
     </FormModal>
   );
 }
-
-const styles = StyleSheet.create({
-  list: { gap: Spacing.three },
-});

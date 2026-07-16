@@ -1,10 +1,11 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { Bell, LogOut, Plus, User, Users } from 'lucide-react-native';
-import { useState } from 'react';
+import { Bell, Edit3, LogOut, Plus, User, Users } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, useColorScheme } from 'react-native';
 
+import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { FigmaButton } from '@/components/figma/figma-button';
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
@@ -14,14 +15,18 @@ import {
   FigmaColors,
   FigmaFont,
   FigmaRadius,
+  withAlpha,
   type FigmaScheme,
 } from '@/components/figma/figma-tokens';
 import { IconChip } from '@/components/figma/icon-chip';
 import { LtrText } from '@/components/ltr-text';
+import { emailLocalPart } from '@/features/circle-members/display-name';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import { deactivatePushToken } from '@/features/notifications/api';
 import { getRememberedToken } from '@/features/notifications/hooks';
+import { useMyProfile, useUpdateMyName } from '@/features/profile/hooks';
 import { useAuth } from '@/providers';
+import { confirmAction } from '@/utils/confirm';
 
 import { supabase } from '../../../../lib/supabase';
 
@@ -42,10 +47,34 @@ export default function AccountScreen() {
   const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const c = FigmaColors[scheme];
   const { activeCircle } = useCircleSelection();
+  const profile = useMyProfile(user?.id);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
 
-  async function onSignOut() {
+  // Name shown in the header: the profile's real name, else the email local-part,
+  // else a gentle "add your name" prompt (never a bare email or blank).
+  const profileName = profile.data?.fullName?.trim() || null;
+  const displayName = profileName || emailLocalPart(user?.email) || t('account.noName');
+
+  // Signing out ends the session (and stops this device's reminders) — a stray
+  // tap must not do it silently, so confirm first (A4).
+  function onSignOut() {
+    confirmAction(
+      {
+        title: t('account.confirmSignOutTitle'),
+        message: t('account.confirmSignOutMessage'),
+        confirm: t('account.signOut'),
+        cancel: t('common.cancel'),
+      },
+      () => {
+        void doSignOut();
+      },
+      { destructive: true },
+    );
+  }
+
+  async function doSignOut() {
     setError(null);
     setSigningOut(true);
     // Stop this device receiving pushes for the account before the session ends
@@ -93,14 +122,23 @@ export default function AccountScreen() {
           />
           <View style={styles.profileText}>
             <Text style={[styles.profileLabel, muted]}>{t('account.signedInAs')}</Text>
+            <Text style={[styles.profileName, { color: c.text }]} numberOfLines={1}>
+              {displayName}
+            </Text>
             {user?.email ? (
-              <LtrText selectable style={[styles.profileEmail, { color: c.text }]}>
+              <LtrText selectable style={[styles.profileEmailSub, muted]}>
                 {user.email}
               </LtrText>
-            ) : (
-              <Text style={[styles.profileEmail, { color: c.text }]}>{t('account.noEmail')}</Text>
-            )}
+            ) : null}
           </View>
+          <Pressable
+            onPress={() => setEditingName(true)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('account.editName')}
+            style={[styles.editBtn, { backgroundColor: withAlpha(c.primary, 0.1) }]}>
+            <Edit3 size={18} color={c.primary} />
+          </Pressable>
         </View>
       </FigmaCard>
 
@@ -160,7 +198,85 @@ export default function AccountScreen() {
           })}
         </Text>
       </View>
+
+      <NameEditSheet
+        visible={editingName}
+        scheme={scheme}
+        userId={user?.id}
+        initialName={profileName ?? ''}
+        onClose={() => setEditingName(false)}
+      />
     </FigmaScreen>
+  );
+}
+
+/**
+ * Bottom-sheet editor for the current user's display name. Writes
+ * `profiles.full_name` for the signed-in user (RLS = own row only). A save
+ * refreshes the roster so the new name propagates everywhere the user appears.
+ */
+function NameEditSheet({
+  visible,
+  scheme,
+  userId,
+  initialName,
+  onClose,
+}: {
+  visible: boolean;
+  scheme: FigmaScheme;
+  userId: string | undefined;
+  initialName: string;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const c = FigmaColors[scheme];
+  const update = useUpdateMyName(userId);
+  const [name, setName] = useState(initialName);
+  const [error, setError] = useState<string | null>(null);
+
+  // Reseed the field whenever the sheet (re)opens so it reflects the latest name.
+  useEffect(() => {
+    if (visible) {
+      setName(initialName);
+      setError(null);
+    }
+  }, [visible, initialName]);
+
+  async function onSave() {
+    setError(null);
+    try {
+      await update.mutateAsync(name);
+      onClose();
+    } catch {
+      setError(t('account.nameError'));
+    }
+  }
+
+  return (
+    <FigmaBottomSheet visible={visible} onClose={onClose} title={t('account.editName')}>
+      <Text style={[styles.sheetLabel, { color: c.muted }]}>{t('account.nameLabel')}</Text>
+      <TextInput
+        value={name}
+        onChangeText={setName}
+        placeholder={t('account.namePlaceholder')}
+        placeholderTextColor={c.muted}
+        autoCapitalize="words"
+        accessibilityLabel={t('account.nameLabel')}
+        style={[styles.sheetInput, { color: c.text, borderColor: c.border, backgroundColor: c.mutedSurface }]}
+      />
+      {error ? (
+        <Text style={[styles.error, { color: c.error }]} accessibilityRole="alert">
+          {error}
+        </Text>
+      ) : null}
+      <FigmaButton label={t('common.save')} loading={update.isPending} onPress={onSave} />
+      <FigmaButton
+        label={t('common.cancel')}
+        variant="secondary"
+        disabled={update.isPending}
+        onPress={onClose}
+      />
+    </FigmaBottomSheet>
   );
 }
 
@@ -169,7 +285,25 @@ const styles = StyleSheet.create({
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   profileText: { flex: 1, gap: 2 },
   profileLabel: { fontSize: 12 },
-  profileEmail: { fontSize: 16, fontFamily: FigmaFont.bold },
+  profileName: { fontSize: 18, fontFamily: FigmaFont.bold },
+  profileEmailSub: { fontSize: 13 },
+  editBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: FigmaRadius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Name edit sheet
+  sheetLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  sheetInput: {
+    minHeight: 52,
+    borderWidth: 1.5,
+    borderRadius: FigmaRadius.r12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontFamily: FigmaFont.regular,
+  },
   // Danger zone
   dangerBlock: { gap: 12 },
   error: { fontSize: 13, fontFamily: FigmaFont.medium },

@@ -4,6 +4,7 @@ import { useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, AppState } from 'react-native';
 
+import i18n from '@/i18n';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import { useAuth } from '@/providers';
 
@@ -356,7 +357,7 @@ export function useNotificationObservers() {
       const outcome = await completeForNotification(type, data, userIdRef.current ?? null);
       if (outcome === 'completed') {
         queryClient.invalidateQueries();
-        Alert.alert('تم', doneMessage(type));
+        Alert.alert(i18n.t('notifications.actions.doneTitle'), doneMessage(type));
         return;
       }
       openRef.current({ type, deep_link: data.deepLink ?? null, data });
@@ -367,13 +368,16 @@ export function useNotificationObservers() {
       try {
         await scheduleSnoozeNotification({
           key: asString(data.notificationId) ?? asString(data.itemId) ?? 'reminder',
-          title: content.title ?? 'سند',
-          body: content.body ?? 'حان موعد تذكير جديد',
+          title: content.title ?? i18n.t('notifications.actions.fallbackTitle'),
+          body: content.body ?? i18n.t('notifications.actions.fallbackBody'),
           data,
           categoryIdentifier: asString(data.categoryId),
           minutes: 5,
         });
-        Alert.alert('تم', 'سيصلك تذكير بعد 5 دقائق');
+        Alert.alert(
+          i18n.t('notifications.actions.doneTitle'),
+          i18n.t('notifications.actions.snoozeConfirm'),
+        );
       } catch {
         // best-effort; a failed local schedule must not crash the handler
       }

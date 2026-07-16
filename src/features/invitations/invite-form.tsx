@@ -1,3 +1,4 @@
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,12 +16,16 @@ import {
 import { FigmaFont } from '@/components/figma/figma-tokens';
 import { LtrText } from '@/components/ltr-text';
 import { Spacing } from '@/constants/theme';
+import { emailLocalPart } from '@/features/circle-members/display-name';
+import { useCircleSelection } from '@/features/circle-selection/provider';
+import { useMyProfile } from '@/features/profile/hooks';
 import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/providers';
 import { ymdFromInstant } from '@/utils/date';
 
 import { invitableRoles, type CircleRole, type CreatedInvitation } from './api';
 import { useCreateInvitation } from './hooks';
-import { copyInviteCode, shareInviteMessage } from './share';
+import { copyInviteCode, shareInviteMessage, shareViaWhatsApp } from './share';
 
 /**
  * Create an invitation — an exact-copy rebuild in the Figma form language (header
@@ -116,13 +121,34 @@ export function InviteForm({ circleId, actorRole }: { circleId: string; actorRol
 function CreatedCard({ created, onReset }: { created: CreatedInvitation; onReset: () => void }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { activeCircle } = useCircleSelection();
+  const { user } = useAuth();
+  const profile = useMyProfile(user?.id);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const shareMessage = t('invitations.shareMessage', { code: created.code });
+  // Rich WhatsApp message: circle, who invited, the code, join steps, and a deep
+  // link that pre-fills the code on /join-circle. Universal https links are out of
+  // scope this phase (the app scheme only opens for people who have Sanad).
+  const circleName = activeCircle?.circleName?.trim() || t('circleMembers.title');
+  const inviterName =
+    profile.data?.fullName?.trim() || emailLocalPart(user?.email) || t('assignment.unknownMember');
+  const joinLink = Linking.createURL('/join-circle', { queryParams: { code: created.code } });
+  const whatsappMessage = t('invitations.whatsappMessage', {
+    circle: circleName,
+    inviter: inviterName,
+    code: created.code,
+    link: joinLink,
+  });
 
   async function onCopy() {
     const ok = await copyInviteCode(created.code);
     setFeedback(ok ? t('invitations.copied') : null);
+  }
+
+  async function onWhatsApp() {
+    await shareViaWhatsApp(whatsappMessage);
+    setFeedback(t('invitations.shared'));
   }
 
   async function onShare() {
@@ -161,7 +187,8 @@ function CreatedCard({ created, onReset }: { created: CreatedInvitation; onReset
       ) : null}
 
       <View style={styles.actions}>
-        <FigmaButton label={t('invitations.copy')} onPress={onCopy} />
+        <FigmaButton label={t('invitations.shareWhatsApp')} onPress={onWhatsApp} />
+        <FigmaButton label={t('invitations.copy')} variant="secondary" onPress={onCopy} />
         <FigmaButton label={t('invitations.share')} variant="secondary" onPress={onShare} />
         <FigmaButton label={t('invitations.createAnother')} variant="secondary" onPress={onReset} />
       </View>

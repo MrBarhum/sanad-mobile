@@ -9,6 +9,7 @@ import {
   Pill,
   Stethoscope,
   Users,
+  Waves,
 } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -132,6 +133,14 @@ const SECTIONS: ExploreSection[] = [
     id: 'careCircle',
     titleKey: 'figma.explore.groups.careCircle',
     items: [
+      {
+        id: 'pulse',
+        route: '/pulse',
+        titleKey: 'pulse.title',
+        subtitleKey: 'pulse.subtitle',
+        color: FigmaCategory.teal,
+        Icon: Waves,
+      },
       {
         id: 'members',
         route: '/circle-members',

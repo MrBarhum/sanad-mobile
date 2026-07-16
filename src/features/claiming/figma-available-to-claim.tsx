@@ -20,6 +20,7 @@ import {
   type FigmaScheme,
 } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
+import { confirmAction } from '@/utils/confirm';
 import { formatHm, hmFromInstant, ymdFromInstant } from '@/utils/date';
 
 import { useAvailableToClaim, useClaimItem } from './hooks';
@@ -87,8 +88,23 @@ export function FigmaAvailableToClaim({
     [items],
   );
 
-  async function onClaim(item: AvailableClaimItem) {
+  function onClaim(item: AvailableClaimItem) {
     if (pendingId) return;
+    // Claiming assigns the item to me immediately — confirm the commitment first (A4).
+    confirmAction(
+      {
+        title: t('claiming.confirmTitle'),
+        message: t('claiming.confirmMessage', { title: item.title }),
+        confirm: t('claiming.cta'),
+        cancel: t('common.cancel'),
+      },
+      () => {
+        void runClaim(item);
+      },
+    );
+  }
+
+  async function runClaim(item: AvailableClaimItem) {
     setPendingId(item.item_id);
     setFeedback(null);
     try {

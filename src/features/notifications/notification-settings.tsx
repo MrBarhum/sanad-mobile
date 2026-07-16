@@ -13,6 +13,13 @@ import { Glyph } from '@/constants/glyphs';
 import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { CircleTimezoneCard } from '@/features/circle-selection/circle-timezone-card';
+import {
+  MISSED_DOSE_GRACE_MAX,
+  MISSED_DOSE_GRACE_MIN,
+  MISSED_DOSE_GRACE_STEP,
+  useMissedDoseGrace,
+  useSetMissedDoseGrace,
+} from '@/features/circle-selection/missed-dose-grace';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 
 import { preferencesToInput, type NotificationPreferencesInput } from './api';
@@ -31,7 +38,7 @@ import { PREFERENCE_TOGGLES, quietHoursValid, type BooleanPreferenceKey } from '
 export function NotificationSettings() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { circles, activeCircleId } = useCircleSelection();
+  const { circles, activeCircleId, activeCircle } = useCircleSelection();
 
   // null scope = the user's global default; otherwise a specific circle.
   const [scope, setScope] = useState<string | null>(activeCircleId ?? null);
@@ -240,6 +247,12 @@ export function NotificationSettings() {
           unreachable (no importer). */}
       <CircleTimezoneCard />
 
+      {/* Missed-dose grace — managers only. The wait after a dose time before the
+          responsible person is alerted (managers escalate at 2×). Per-circle. */}
+      {activeCircle && activeCircle.canManage ? (
+        <MissedDoseGraceCard circleId={activeCircle.circleId} />
+      ) : null}
+
       {/* Local test (native only) */}
       {pushSupport() !== 'web-unsupported' ? (
         <Section title={t('notificationSettings.test.sectionTitle')} gap={Spacing.two}>
@@ -270,6 +283,117 @@ export function NotificationSettings() {
         </Section>
       ) : null}
     </Screen>
+  );
+}
+
+/**
+ * Managers-only stepper for the circle's missed-dose grace (minutes). The
+ * responsible person is alerted at dose + grace; managers escalate at dose +
+ * 2×grace. Local state is seeded from the stored value; ±5-min steps are clamped,
+ * and Save commits via the manager-only RPC.
+ */
+function MissedDoseGraceCard({ circleId }: { circleId: string }) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const graceQuery = useMissedDoseGrace(circleId);
+  const setGrace = useSetMissedDoseGrace(circleId);
+  const [minutes, setMinutes] = useState<number | null>(null);
+  const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+
+  useEffect(() => {
+    if (graceQuery.isSuccess) setMinutes(graceQuery.data);
+  }, [graceQuery.isSuccess, graceQuery.data]);
+
+  if (minutes === null) return null;
+
+  const dirty = graceQuery.data !== undefined && minutes !== graceQuery.data;
+
+  function step(delta: number) {
+    setStatus('idle');
+    setMinutes((cur) => {
+      const next = (cur ?? MISSED_DOSE_GRACE_MIN) + delta;
+      return Math.max(MISSED_DOSE_GRACE_MIN, Math.min(MISSED_DOSE_GRACE_MAX, next));
+    });
+  }
+
+  async function onSave() {
+    if (minutes === null) return;
+    setStatus('idle');
+    try {
+      const saved = await setGrace.mutateAsync(minutes);
+      setMinutes(saved);
+      setStatus('saved');
+    } catch {
+      setStatus('error');
+    }
+  }
+
+  const atMin = minutes <= MISSED_DOSE_GRACE_MIN;
+  const atMax = minutes >= MISSED_DOSE_GRACE_MAX;
+
+  return (
+    <Surface style={styles.graceCard}>
+      <ThemedText type="smallBold">{t('notificationSettings.missedDoseGrace.title')}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('notificationSettings.missedDoseGrace.description')}
+      </ThemedText>
+
+      <View style={styles.stepperRow}>
+        <Pressable
+          onPress={() => step(-MISSED_DOSE_GRACE_STEP)}
+          disabled={atMin}
+          accessibilityRole="button"
+          accessibilityLabel={t('notificationSettings.missedDoseGrace.decrease')}
+          style={[
+            styles.stepBtn,
+            { borderColor: theme.border, opacity: atMin ? 0.4 : 1 },
+          ]}>
+          <ThemedText type="cardTitle">{Glyph.minus}</ThemedText>
+        </Pressable>
+        <View style={[styles.stepValue, { backgroundColor: theme.backgroundSunken }]}>
+          <ThemedText type="cardTitle">
+            {t('notificationSettings.missedDoseGrace.minutes', { count: minutes })}
+          </ThemedText>
+        </View>
+        <Pressable
+          onPress={() => step(MISSED_DOSE_GRACE_STEP)}
+          disabled={atMax}
+          accessibilityRole="button"
+          accessibilityLabel={t('notificationSettings.missedDoseGrace.increase')}
+          style={[
+            styles.stepBtn,
+            { borderColor: theme.border, opacity: atMax ? 0.4 : 1 },
+          ]}>
+          <ThemedText type="cardTitle">{Glyph.plus}</ThemedText>
+        </Pressable>
+      </View>
+
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('notificationSettings.missedDoseGrace.tierHint', {
+          tier2: minutes,
+          tier3: minutes * 2,
+        })}
+      </ThemedText>
+
+      {status === 'saved' ? (
+        <ThemedText type="small" themeColor="successFg" accessibilityLiveRegion="polite">
+          {t('notificationSettings.missedDoseGrace.saved')}
+        </ThemedText>
+      ) : null}
+      {status === 'error' ? (
+        <ThemedText type="small" themeColor="errorFg" accessibilityRole="alert">
+          {t('notificationSettings.missedDoseGrace.saveError')}
+        </ThemedText>
+      ) : null}
+
+      <Button
+        variant="secondary"
+        label={t('notificationSettings.save')}
+        onPress={onSave}
+        loading={setGrace.isPending}
+        disabled={setGrace.isPending || !dirty}
+      />
+    </Surface>
   );
 }
 
@@ -376,4 +500,22 @@ const styles = StyleSheet.create({
   quietCol: { flexGrow: 1, flexBasis: 140 },
   tzCard: { gap: Spacing.two },
   tzWell: { borderRadius: Radius.md, padding: Spacing.three },
+  graceCard: { gap: Spacing.two },
+  stepperRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, marginVertical: Spacing.one },
+  stepBtn: {
+    width: TouchTarget.min,
+    height: TouchTarget.min,
+    borderRadius: Radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepValue: {
+    flex: 1,
+    minHeight: TouchTarget.min,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.three,
+  },
 });

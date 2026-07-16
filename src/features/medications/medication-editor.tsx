@@ -23,6 +23,7 @@ import { Spacing } from '@/constants/theme';
 import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { confirmAction } from '@/utils/confirm';
 import { formatHm } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
 
@@ -372,11 +373,37 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
   const theme = useTheme();
   const setActive = useSetMedicationActive(circleId);
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const willDeactivate = medication.is_active;
 
-  async function toggle() {
+  // Deactivating stops this medication's reminders — confirm before the one tap,
+  // and surface a failure instead of leaving the toggle looking unchanged (A4).
+  function onToggle() {
+    confirmAction(
+      {
+        title: willDeactivate
+          ? t('medications.confirmDeactivateTitle')
+          : t('medications.confirmReactivateTitle'),
+        message: willDeactivate
+          ? t('medications.confirmDeactivateMessage')
+          : t('medications.confirmReactivateMessage'),
+        confirm: willDeactivate ? t('medications.deactivate') : t('medications.reactivate'),
+        cancel: t('common.cancel'),
+      },
+      () => {
+        void runToggle();
+      },
+      { destructive: willDeactivate },
+    );
+  }
+
+  async function runToggle() {
     setPending(true);
+    setError(null);
     try {
       await setActive.mutateAsync({ id: medication.id, isActive: !medication.is_active });
+    } catch {
+      setError(t('medications.toggleFailed'));
     } finally {
       setPending(false);
     }
@@ -387,12 +414,17 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
       <Text style={[styles.statusLabel, { color: theme.text }]}>
         {medication.is_active ? t('medications.activeLabel') : t('medications.inactiveLabel')}
       </Text>
+      {error ? (
+        <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
       <FigmaButton
         variant="secondary"
         label={medication.is_active ? t('medications.deactivate') : t('medications.reactivate')}
         loading={pending}
         disabled={pending}
-        onPress={toggle}
+        onPress={onToggle}
       />
     </FigmaFormCard>
   );
@@ -400,23 +432,33 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
 
 function DeleteMedicationRow({ circleId, id }: { circleId: string; id: string }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const router = useRouter();
   const del = useDeleteMedication(circleId);
   const [confirming, setConfirming] = useState(false);
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onDelete() {
     setPending(true);
+    setError(null);
     try {
       await del.mutateAsync(id);
       router.back();
     } catch {
+      // Surface the failure instead of silently resetting the button (A4).
+      setError(t('medications.deleteFailed'));
       setPending(false);
     }
   }
 
   return (
     <FigmaFormCard>
+      {error ? (
+        <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
       {confirming ? (
         <View style={styles.actionRow}>
           <View style={styles.actionCol}>
@@ -467,6 +509,7 @@ function SchedulesManager({
   const [editing, setEditing] = useState<MedicationSchedule | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const modalOpen = adding || editing !== null;
   const closeModal = () => {
@@ -476,17 +519,44 @@ function SchedulesManager({
 
   async function onDelete(id: string) {
     setDeletingId(id);
+    setActionError(null);
     try {
       await del.mutateAsync(id);
+    } catch {
+      setActionError(t('medications.scheduleActionFailed'));
     } finally {
       setDeletingId(null);
     }
   }
 
-  async function toggleActive(schedule: MedicationSchedule) {
+  // Deactivating a schedule stops its reminders — confirm before the tap (A4).
+  function toggleActive(schedule: MedicationSchedule) {
+    const willDeactivate = schedule.is_active;
+    confirmAction(
+      {
+        title: willDeactivate
+          ? t('medications.confirmScheduleDeactivateTitle')
+          : t('medications.confirmScheduleReactivateTitle'),
+        message: willDeactivate
+          ? t('medications.confirmScheduleDeactivateMessage')
+          : t('medications.confirmScheduleReactivateMessage'),
+        confirm: willDeactivate ? t('medications.deactivate') : t('medications.reactivate'),
+        cancel: t('common.cancel'),
+      },
+      () => {
+        void runToggle(schedule);
+      },
+      { destructive: willDeactivate },
+    );
+  }
+
+  async function runToggle(schedule: MedicationSchedule) {
     setTogglingId(schedule.id);
+    setActionError(null);
     try {
       await setActive.mutateAsync({ id: schedule.id, isActive: !schedule.is_active });
+    } catch {
+      setActionError(t('medications.scheduleActionFailed'));
     } finally {
       setTogglingId(null);
     }
@@ -498,6 +568,11 @@ function SchedulesManager({
         {t('medications.dosesSectionTitle')}
       </Text>
       <FigmaMutedNote>{t('medications.scheduleGroupsHelp')}</FigmaMutedNote>
+      {actionError ? (
+        <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          {actionError}
+        </Text>
+      ) : null}
 
       {schedules.length > 0 ? <ScheduleSummary schedules={schedules} /> : null}
 

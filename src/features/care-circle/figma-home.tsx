@@ -13,15 +13,24 @@ import {
   ListChecks,
   Phone,
   Pill,
+  Share2,
   Stethoscope,
   UserPlus,
   Users,
   X,
 } from 'lucide-react-native';
 import type { ComponentType } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, View, useColorScheme, useWindowDimensions } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+  useWindowDimensions,
+} from 'react-native';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaScreen } from '@/components/figma/figma-screen';
@@ -45,6 +54,16 @@ import type { ActiveCircle } from '@/features/circle-selection/permissions';
 import type { MedicationLogStatus } from '@/features/medications/api';
 import { useLogDose, useTodayDoses } from '@/features/medications/hooks';
 import { summarizeDoses, type DoseItem } from '@/features/medications/today';
+import { useUnreadCount } from '@/features/notifications/hooks';
+import { useCareActivity } from '@/features/pulse/hooks';
+import {
+  composePulseShareText,
+  pulseDescription,
+  pulseEventVisual,
+  pulseRouteFor,
+  sharePulseSummary,
+  usePulseActorLabel,
+} from '@/features/pulse/present';
 import { useRecipient } from '@/features/recipient-profile/hooks';
 import { useTodayTaskSummary } from '@/features/tasks/hooks';
 import { useAuth } from '@/providers';
@@ -100,6 +119,11 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   const visibleDoses = scopeToMine ? doses.filter((d) => d.responsibleUserId === userId) : doses;
   const { total, given } = summarizeDoses(visibleDoses);
   const nextDose = visibleDoses.find((d) => d.status !== 'given') ?? null;
+  // Display order (A7): unlogged doses lead; time order preserved within groups
+  // (stable). Summary + "next dose" above keep the chronological list.
+  const orderedDoses = [...visibleDoses].sort(
+    (a, b) => (a.status === null ? 0 : 1) - (b.status === null ? 0 : 1),
+  );
 
   // Scope the "tasks due today" stat the same way the doses/appointments above
   // are scoped: a family member counts only their own assigned tasks; managers
@@ -121,6 +145,8 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   const { circles, activeCircleId, setActiveCircle } = useCircleSelection();
 
   const logDose = useLogDose(circle.circleId);
+  const unread = useUnreadCount();
+  const unreadCount = unread.data ?? 0;
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [openDoseKey, setOpenDoseKey] = useState<string | null>(null);
   const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -186,15 +212,18 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
 
   // Quick access to every important reachable area (2 rows of 4). Order is the
   // natural RTL reading order; the wrap grid places the first item top-right.
+  // Canonical Sanad ordering (meds → tasks → appointments → vitals → visits →
+  // daily logs → doctors → members). The RTL wrap grid places the first item
+  // top-right, so medications — the highest-stakes surface — leads (A7).
   const quickActions: { id: string; route: string; label: string; color: string; Icon: IconCmp }[] = [
-    { id: 'vitals', route: '/vitals', label: t('careCircle.dashboard.sections.vitals.title'), color: FigmaCategory.blue, Icon: Activity },
-    { id: 'logs', route: '/daily-logs', label: t('careCircle.dashboard.sections.dailyLogs.title'), color: FigmaCategory.purple, Icon: FileText },
-    { id: 'doctors', route: '/doctors', label: t('careCircle.dashboard.sections.doctors.title'), color: FigmaCategory.green, Icon: Stethoscope },
-    { id: 'members', route: '/circle-members', label: t('circleMembers.title'), color: FigmaCategory.gold, Icon: Users },
     { id: 'medications', route: '/medications', label: t('careCircle.dashboard.sections.medications.title'), color: FigmaCategory.teal, Icon: Pill },
     { id: 'tasks', route: '/tasks', label: t('careCircle.dashboard.sections.tasks.title'), color: FigmaCategory.blue, Icon: ListChecks },
     { id: 'appointments', route: '/appointments', label: t('careCircle.dashboard.sections.appointments.title'), color: FigmaCategory.purple, Icon: Calendar },
+    { id: 'vitals', route: '/vitals', label: t('careCircle.dashboard.sections.vitals.title'), color: FigmaCategory.blue, Icon: Activity },
     { id: 'visits', route: '/visits', label: t('careCircle.dashboard.sections.visits.title'), color: FigmaCategory.green, Icon: UserPlus },
+    { id: 'logs', route: '/daily-logs', label: t('careCircle.dashboard.sections.dailyLogs.title'), color: FigmaCategory.purple, Icon: FileText },
+    { id: 'doctors', route: '/doctors', label: t('careCircle.dashboard.sections.doctors.title'), color: FigmaCategory.green, Icon: Stethoscope },
+    { id: 'members', route: '/circle-members', label: t('circleMembers.title'), color: FigmaCategory.gold, Icon: Users },
   ];
   // Exact 4-up tile width (screen minus the FigmaScreen gutters minus 3 column gaps).
   const quickTileWidth = (width - FigmaLayout.gutter * 2 - 12 * 3) / 4;
@@ -227,9 +256,20 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
           <Pressable
             onPress={() => router.push('/notifications')}
             accessibilityRole="button"
-            accessibilityLabel={t('notifications.title')}
+            accessibilityLabel={
+              unreadCount > 0
+                ? t('notifications.openCenterWithCount', { count: unreadCount })
+                : t('notifications.title')
+            }
             style={[styles.action, { backgroundColor: c.elevated, borderColor: c.border }]}>
             <Bell size={20} color={c.muted} />
+            {unreadCount > 0 ? (
+              <View style={[styles.badge, { backgroundColor: c.error, borderColor: c.background }]}>
+                <Text style={styles.badgeText} numberOfLines={1}>
+                  {isolateLtr(unreadCount > 9 ? '9+' : String(unreadCount))}
+                </Text>
+              </View>
+            ) : null}
           </Pressable>
           <Pressable
             onPress={() => router.push('/emergency-card')}
@@ -467,7 +507,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
             </Pressable>
           </View>
           <View style={styles.doseList}>
-            {visibleDoses.map((dose) => (
+            {orderedDoses.map((dose) => (
               <DoseRow
                 key={dose.key}
                 dose={dose}
@@ -483,6 +523,9 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
           </View>
         </View>
       ) : null}
+
+      {/* Care Pulse — a few most-recent circle events, tap through to /pulse */}
+      <PulseSection circleId={circle.circleId} scheme={scheme} />
 
       {/* Emergency banner */}
       <Pressable
@@ -574,6 +617,20 @@ function DoseRow({
   // Pending/unlogged = solid cream/elevated (Figma `--muted`); logged = a tint.
   const statusBg = cfg ? withAlpha(statusColor, 0.12) : c.mutedSurface;
   const statusLabel = status ? t(`medications.status.${status}`) : t('careCircle.dashboard.today.doseUnlogged');
+  const isLogged = status !== null;
+
+  // A logged dose stays correctable (P2-4): the tray reopens for a manager /
+  // responsible logger and a status change is confirmed before it overwrites.
+  const [confirmStatus, setConfirmStatus] = useState<MedicationLogStatus | null>(null);
+  useEffect(() => {
+    if (!open) setConfirmStatus(null);
+  }, [open]);
+
+  function pick(s: MedicationLogStatus) {
+    if (!isLogged) onSetStatus(s);
+    else if (s === status) onToggle();
+    else setConfirmStatus(s);
+  }
 
   return (
     <View>
@@ -582,12 +639,11 @@ function DoseRow({
           <StatusIcon size={16} color={statusColor} />
         </View>
         <View style={styles.doseInfo}>
-          <View style={styles.doseNameRow}>
-            <Text style={[styles.doseName, { color: c.text }]} numberOfLines={1}>
-              {dose.medicationName}
-            </Text>
-            {dose.dosage ? <Text style={[styles.doseDosage, { color: c.muted }]}>{dose.dosage}</Text> : null}
-          </View>
+          {/* Name wraps to two lines (never truncated); dosage on its own line. */}
+          <Text style={[styles.doseName, { color: c.text }]} numberOfLines={2}>
+            {dose.medicationName}
+          </Text>
+          {dose.dosage ? <Text style={[styles.doseDosage, { color: c.muted }]}>{dose.dosage}</Text> : null}
           <View style={styles.doseMetaRow}>
             <Text style={[styles.doseTime, { color: c.muted }]}>{isolateLtr(formatHm(dose.scheduledTime))}</Text>
             <View style={[styles.doseTag, { backgroundColor: statusBg }]}>
@@ -603,35 +659,159 @@ function DoseRow({
             </View>
           ) : null}
         </View>
-        {!status && canLog ? (
+        {canLog ? (
           <Pressable
             onPress={onToggle}
             accessibilityRole="button"
-            accessibilityLabel={`${t('careCircle.dashboard.today.logAction')} ${dose.medicationName}`}
-            style={[styles.logBtn, { backgroundColor: c.primary }]}>
-            <Text style={[styles.logBtnText, { color: c.onPrimary }]}>{t('careCircle.dashboard.today.logAction')}</Text>
+            accessibilityLabel={`${isLogged ? t('medications.editStatus') : t('careCircle.dashboard.today.logAction')} ${dose.medicationName}`}
+            style={
+              isLogged
+                ? [styles.editBtn, { borderColor: withAlpha(c.primary, 0.4) }]
+                : [styles.logBtn, { backgroundColor: c.primary }]
+            }>
+            <Text style={[styles.logBtnText, { color: isLogged ? c.primary : c.onPrimary }]}>
+              {isLogged ? t('medications.editStatus') : t('careCircle.dashboard.today.logAction')}
+            </Text>
           </Pressable>
         ) : null}
       </View>
-      {open && !status && canLog ? (
+      {open && canLog ? (
         <View style={[styles.doseActions, { backgroundColor: c.elevated, borderColor: c.border }]}>
-          {DOSE_ACTIONS.map((s) => {
-            const a = DOSE_STATUS[s];
-            const ActionIcon = a.Icon;
-            return (
-              <Pressable
-                key={s}
-                disabled={pending}
-                onPress={() => onSetStatus(s)}
-                accessibilityRole="button"
-                style={[styles.doseAction, { backgroundColor: withAlpha(a.color, 0.15), opacity: pending ? 0.5 : 1 }]}>
-                <ActionIcon size={14} color={a.color} />
-                <Text style={[styles.doseActionText, { color: a.color }]}>{t(`medications.status.${s}`)}</Text>
-              </Pressable>
-            );
-          })}
+          {confirmStatus ? (
+            <View style={styles.correctionRow}>
+              <Text
+                style={[styles.correctionText, { color: c.text }]}
+                accessibilityRole="alert"
+                accessibilityLiveRegion="polite">
+                {t('medications.confirmChangeStatus', {
+                  status: t(`medications.status.${confirmStatus}`),
+                })}
+              </Text>
+              <View style={styles.correctionActions}>
+                <Pressable
+                  onPress={() => onSetStatus(confirmStatus)}
+                  disabled={pending}
+                  accessibilityRole="button"
+                  style={[styles.correctionConfirm, { backgroundColor: c.primary, opacity: pending ? 0.6 : 1 }]}>
+                  {pending ? (
+                    <ActivityIndicator size="small" color={c.onPrimary} />
+                  ) : (
+                    <Text style={[styles.correctionConfirmText, { color: c.onPrimary }]}>{t('common.save')}</Text>
+                  )}
+                </Pressable>
+                <Pressable
+                  onPress={() => setConfirmStatus(null)}
+                  disabled={pending}
+                  accessibilityRole="button"
+                  style={[styles.correctionCancel, { borderColor: c.border }]}>
+                  <Text style={[styles.correctionCancelText, { color: c.muted }]}>{t('common.cancel')}</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            DOSE_ACTIONS.map((s) => {
+              const a = DOSE_STATUS[s];
+              const ActionIcon = a.Icon;
+              const selected = s === status;
+              return (
+                <Pressable
+                  key={s}
+                  disabled={pending}
+                  onPress={() => pick(s)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  style={[
+                    styles.doseAction,
+                    {
+                      backgroundColor: withAlpha(a.color, selected ? 0.24 : 0.15),
+                      opacity: pending ? 0.5 : 1,
+                    },
+                  ]}>
+                  <ActionIcon size={14} color={a.color} />
+                  <Text style={[styles.doseActionText, { color: a.color }]}>{t(`medications.status.${s}`)}</Text>
+                </Pressable>
+              );
+            })
+          )}
         </View>
       ) : null}
+    </View>
+  );
+}
+
+/**
+ * Home's compact Care Pulse strip: the few most-recent circle events with a
+ * «عرض الكل» link into /pulse. Kept quiet on Home — it renders nothing while
+ * loading, on error, or when the feed is empty (or the RPC isn't enabled yet), so
+ * a not-yet-migrated backend never shows an error here.
+ */
+function PulseSection({ circleId, scheme }: { circleId: string; scheme: FigmaScheme }) {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const c = FigmaColors[scheme];
+  const activity = useCareActivity(circleId, 5);
+  const actorLabel = usePulseActorLabel(circleId);
+  const events = activity.data ?? [];
+
+  if (activity.isLoading || activity.isError || events.length === 0) return null;
+
+  return (
+    <View>
+      <View style={styles.dosesHeader}>
+        <Text style={[styles.sectionLabel, { color: c.muted, fontFamily: FigmaFont.regular, marginBottom: 0 }]}>
+          {t('pulse.sectionTitle')}
+        </Text>
+        <View style={styles.pulseHeaderActions}>
+          <Pressable
+            onPress={() => sharePulseSummary(composePulseShareText(events, t, actorLabel))}
+            accessibilityRole="button"
+            accessibilityLabel={t('pulse.share')}
+            hitSlop={8}>
+            <Share2 size={16} color={c.primary} />
+          </Pressable>
+          <Pressable onPress={() => router.push('/pulse')} accessibilityRole="button">
+            <Text style={[styles.link, { color: c.primary }]}>{t('pulse.viewAll')}</Text>
+          </Pressable>
+        </View>
+      </View>
+      <View style={styles.pulseList}>
+        {events.map((event) => {
+          const visual = pulseEventVisual(event);
+          return (
+            <Pressable
+              key={`${event.event_type}:${event.event_id}`}
+              onPress={() => router.push(pulseRouteFor(event.item_type, event.item_id))}
+              accessibilityRole="button"
+              accessibilityHint={t('common.details')}
+              style={({ pressed }) => [
+                styles.pulseRow,
+                { backgroundColor: c.card, borderColor: c.border },
+                pressed && { opacity: 0.7 },
+              ]}>
+              <IconChip
+                Icon={visual.Icon}
+                color={visual.color}
+                size={40}
+                radius={FigmaRadius.r12}
+                iconSize={18}
+                tintOpacity={0.12}
+              />
+              <View style={styles.pulseInfo}>
+                <Text style={[styles.pulseDesc, { color: c.text }]} numberOfLines={2}>
+                  {pulseDescription(event, t, actorLabel)}
+                </Text>
+                <Text style={[styles.pulseTime, { color: c.muted }]}>
+                  {isolateLtr(
+                    ymdFromInstant(event.occurred_at) === todayYmd()
+                      ? hmFromInstant(event.occurred_at)
+                      : ymdFromInstant(event.occurred_at),
+                  )}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -653,6 +833,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Unread badge on the bell (app-wide unread indicator)
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: { fontSize: 10, lineHeight: 12, fontFamily: FigmaFont.bold, color: '#FFFFFF' },
   // Today's-data error / dose-log error banner
   notice: {
     flexDirection: 'row',
@@ -713,6 +907,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   quickLabel: { fontSize: 10, lineHeight: 13, textAlign: 'center' },
+  // Care Pulse (Home strip)
+  pulseHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  pulseList: { gap: 8 },
+  pulseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: FigmaRadius.r16,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  pulseInfo: { flex: 1, gap: 2 },
+  pulseDesc: { fontSize: 13, fontFamily: FigmaFont.medium, lineHeight: 19 },
+  pulseTime: { fontSize: 11, fontFamily: FigmaFont.regular },
   // Doses
   dosesHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   doseList: { gap: 8 },
@@ -729,10 +938,40 @@ const styles = StyleSheet.create({
   doseTag: { borderRadius: FigmaRadius.pill, paddingHorizontal: 8, paddingVertical: 2 },
   doseTagText: { fontSize: 10, fontFamily: FigmaFont.medium },
   logBtn: { borderRadius: FigmaRadius.pill, paddingHorizontal: 12, paddingVertical: 6, minHeight: 32, justifyContent: 'center' },
+  editBtn: {
+    borderRadius: FigmaRadius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    minHeight: 32,
+    justifyContent: 'center',
+  },
   logBtnText: { fontSize: 12, fontFamily: FigmaFont.semibold },
   doseActions: { flexDirection: 'row', gap: 8, borderRadius: FigmaRadius.r16, borderWidth: StyleSheet.hairlineWidth, padding: 12, marginTop: 4 },
   doseAction: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: FigmaRadius.r12, paddingVertical: 10, minHeight: 44 },
   doseActionText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  // Dose correction confirm (inside the tray)
+  correctionRow: { flex: 1, gap: 10 },
+  correctionText: { fontSize: 14, fontFamily: FigmaFont.semibold, lineHeight: 20 },
+  correctionActions: { flexDirection: 'row', gap: 8 },
+  correctionConfirm: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: FigmaRadius.r12,
+    minHeight: 44,
+  },
+  correctionConfirmText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  correctionCancel: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: FigmaRadius.r12,
+    borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 44,
+  },
+  correctionCancelText: { fontSize: 13, fontFamily: FigmaFont.semibold },
   // Available to claim
   claimCard: { flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: FigmaRadius.r24, borderWidth: StyleSheet.hairlineWidth, padding: 16 },
   claimChip: { width: 44, height: 44, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },

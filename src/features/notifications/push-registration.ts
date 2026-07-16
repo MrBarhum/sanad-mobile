@@ -3,6 +3,8 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
+import i18n from '@/i18n';
+
 import { getAppVersion, getDeviceTimezone, getOrCreateDeviceId } from './device';
 
 /**
@@ -189,12 +191,12 @@ export async function ensureNotificationCategories(): Promise<void> {
 
   const complete: Notifications.NotificationAction = {
     identifier: SANAD_NOTIFICATION_ACTION.complete,
-    buttonTitle: 'تم',
+    buttonTitle: i18n.t('notifications.actions.completeButton'),
     options: { opensAppToForeground: true },
   };
   const snooze: Notifications.NotificationAction = {
     identifier: SANAD_NOTIFICATION_ACTION.snooze5,
-    buttonTitle: 'ذكرني بعد 5 دقائق',
+    buttonTitle: i18n.t('notifications.actions.snoozeButton'),
     options: { opensAppToForeground: true },
   };
   // RTL visual order: Android lays action buttons left→right in registration order.

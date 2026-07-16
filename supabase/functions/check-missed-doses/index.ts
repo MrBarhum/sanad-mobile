@@ -37,6 +37,8 @@ import { medicationMissedMessage } from '../_shared/messages.ts';
 import { serviceClient } from '../_shared/supabase.ts';
 import { localWeekday, localYmd, parseHms, wallTimeToInstant, ymdInRange } from '../_shared/time.ts';
 
+import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 }
@@ -46,12 +48,11 @@ Deno.serve(async (req) => {
 
   const sb = serviceClient();
   const now = new Date();
-  const graceEnd = new Date(now.getTime() - REMINDER_CONFIG.missedDoseGraceMinutes * 60000);
+  // The max-age backstop stays global (never backfill ancient doses). The grace
+  // window is now PER-CIRCLE (care_circles.missed_dose_grace_minutes): the tier-2
+  // owner alert fires at dose+grace and the tier-3 manager escalation at dose+2×
+  // grace, computed per schedule below from graceByCircle.
   const oldest = new Date(now.getTime() - REMINDER_CONFIG.missedDoseMaxAgeMinutes * 60000);
-  // Managers are notified once the dose is this many minutes past its time (tier-2).
-  const escalationEnd = new Date(
-    now.getTime() - REMINDER_CONFIG.missedDoseManagerEscalationMinutes * 60000,
-  );
 
   // Owner recipients vary by MEDICATION (not per circle), so they are cached per item.
   const ownerCache = new Map<string, Recipient[]>();
@@ -77,6 +78,7 @@ Deno.serve(async (req) => {
   let escalated = 0;
   try {
     const circleTz = await fetchCircleTimezones(sb);
+    const graceByCircle = await fetchCircleGrace(sb);
     const { data: schedules, error } = await sb
       .from('medication_schedules')
       .select(
@@ -90,6 +92,11 @@ Deno.serve(async (req) => {
     for (const s of schedules ?? []) {
       const tz = circleTz.get(s.circle_id) ?? 'UTC';
       const med = s.medications as { name: string; is_active: boolean; responsible_user_id: string | null };
+
+      // Per-circle grace: tier-2 owner alert at dose+grace, tier-3 managers at dose+2×grace.
+      const graceMs = (graceByCircle.get(s.circle_id) ?? 30) * 60000;
+      const graceEnd = new Date(now.getTime() - graceMs);
+      const escalationEnd = new Date(now.getTime() - 2 * graceMs);
 
       // A dose past grace could be earlier today or late yesterday (circle-local).
       const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -196,3 +203,14 @@ Deno.serve(async (req) => {
   log('check_missed_doses_done', { missed: count, escalated });
   return json({ ok: true, missed: count, escalated });
 });
+
+/** Map of circle_id → missed-dose grace minutes (default 30 if unset). */
+async function fetchCircleGrace(sb: SupabaseClient): Promise<Map<string, number>> {
+  const { data, error } = await sb.from('care_circles').select('id, missed_dose_grace_minutes');
+  if (error) throw error;
+  const map = new Map<string, number>();
+  for (const row of data ?? []) {
+    map.set(row.id, (row.missed_dose_grace_minutes as number | null) ?? 30);
+  }
+  return map;
+}

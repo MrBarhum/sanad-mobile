@@ -20,6 +20,7 @@ import {
 import { isolateLtr } from '@/components/ltr-text';
 
 import type { CircleMember, CircleRole } from './api';
+import { memberDisplayName } from './display-name';
 import { MemberActionsSheet, memberHasActions } from './figma-member-actions';
 import { useCircleMembers } from './hooks';
 import { isManagerRole } from './permissions';
@@ -96,7 +97,7 @@ export function FigmaMembers({
   const summary = t('figma.members.summary', { name: summaryName, count: active.length });
 
   function renderRow(member: CircleMember) {
-    const displayName = member.fullName?.trim() || member.email || t('circleMembers.unnamed');
+    const displayName = memberDisplayName(member, t('circleMembers.unnamed'));
     const visual = roleVisual(member.role, c.primary);
     const actionable = memberHasActions(member, all, actorRole);
     // Only show the email line when it adds info beyond the name.

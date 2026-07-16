@@ -88,6 +88,7 @@ function DailyLogEditScreen({ circleId, initial }: { circleId: string; initial: 
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { dirty, markSaved } = useUnsavedChanges(draft);
   const submitting = update.isPending;
@@ -115,10 +116,13 @@ function DailyLogEditScreen({ circleId, initial }: { circleId: string; initial: 
 
   async function onDelete() {
     setDeleting(true);
+    setDeleteError(null);
     try {
       await del.mutateAsync(initial.id);
       router.back();
     } catch {
+      // Surface the failure instead of silently resetting the confirm (A4).
+      setDeleteError(t('dailyLogs.deleteFailed'));
       setDeleting(false);
     }
   }
@@ -133,6 +137,11 @@ function DailyLogEditScreen({ circleId, initial }: { circleId: string; initial: 
 
       {/* Delete — destructive, separate from save, two-step confirm. */}
       <FigmaFormCard>
+        {deleteError ? (
+          <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
+            {deleteError}
+          </Text>
+        ) : null}
         {confirming ? (
           <View style={styles.confirmRow}>
             <View style={styles.confirmCol}>

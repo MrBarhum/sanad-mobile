@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -30,10 +30,22 @@ export function JoinCircleForm() {
   const router = useRouter();
   const accept = useAcceptInvitation();
   const { setPreferredCircleId } = useCircleSelection();
+  // A WhatsApp invite deep link (sanadmobile://join-circle?code=…) pre-fills the code.
+  const params = useLocalSearchParams<{ code?: string }>();
 
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [prefilled, setPrefilled] = useState(false);
+
+  // Seed the code from the deep link ONCE, without clobbering anything the user types.
+  useEffect(() => {
+    const linkCode = typeof params.code === 'string' ? params.code : '';
+    if (!prefilled && linkCode && code === '') {
+      setCode(linkCode);
+      setPrefilled(true);
+    }
+  }, [params.code, prefilled, code]);
 
   async function onSubmit() {
     setError(null);
