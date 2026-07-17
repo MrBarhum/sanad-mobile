@@ -99,8 +99,13 @@ export function pulseDescription(event: PulseEvent, t: Translate, actorLabel: Ac
           : 'pulse.events.appointmentCompleted',
         { actor, title },
       );
-    case 'visit_completed':
-      return t('pulse.events.visitCompleted', { actor });
+    case 'visit_completed': {
+      // The visitor IS the subject. When they have no linked account the RPC still
+      // supplies their name via `title` (visitor_name), so prefer it over the
+      // generic «أحد الأعضاء» fallback; a linked visitor keeps their roster name.
+      const visitor = event.actor_user_id ? actor : title || actor;
+      return t('pulse.events.visitCompleted', { actor: visitor });
+    }
     case 'vital_recorded':
       // The RPC puts the reading_type in `title`; localize it via the shared
       // vitals labels (falling back to the raw type for an unknown value).

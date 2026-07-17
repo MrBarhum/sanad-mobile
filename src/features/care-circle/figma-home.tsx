@@ -72,6 +72,7 @@ import {
   formatHm,
   formatLongDate,
   hmFromInstant,
+  hmInTimeZone,
   todayYmd,
   todayYmdInTimeZone,
   ymdFromInstant,
@@ -87,6 +88,10 @@ const DOSE_STATUS: Record<MedicationLogStatus, { color: string; Icon: IconCmp }>
   missed: { color: '#C45050', Icon: X },
 };
 const DOSE_ACTIONS: MedicationLogStatus[] = ['given', 'postponed', 'missed'];
+
+/** Home Care-Pulse strip: fetch a small buffer, then filter-to-today and cap at 5. */
+const HOME_PULSE_FETCH = 20;
+const HOME_PULSE_MAX = 5;
 
 /**
  * The Figma Make Home, recreated as literally as possible in React Native and
@@ -760,7 +765,10 @@ function PulseSection({
   const { t } = useTranslation();
   const router = useRouter();
   const c = FigmaColors[scheme];
-  const activity = useCareActivity(circleId, 5);
+  // Fetch a small buffer (not just 5): a deliberately future-dated event sorts
+  // ahead of today's by occurred_at and would otherwise squeeze a real today event
+  // out of a 5-row page. We filter to today and cap at 5 below.
+  const activity = useCareActivity(circleId, HOME_PULSE_FETCH);
   const actorLabel = usePulseActorLabel(circleId);
 
   // Refresh the strip when Home regains focus so an action taken on another screen
@@ -773,13 +781,12 @@ function PulseSection({
     }, [refetch]),
   );
 
-  // Scope to TODAY in the CIRCLE's local day (D2). The RPC returns the newest
-  // events first, and today's are always the most recent, so filtering the fetched
-  // page yields today's most-recent events (capped at 5). No events today → quiet.
+  // Scope to TODAY in the CIRCLE's local day (D2), then cap at 5. No events today
+  // → quiet (renders nothing).
   const today = todayYmdInTimeZone(timezone);
-  const events = (activity.data ?? []).filter(
-    (e) => ymdInTimeZone(e.occurred_at, timezone) === today,
-  );
+  const events = (activity.data ?? [])
+    .filter((e) => ymdInTimeZone(e.occurred_at, timezone) === today)
+    .slice(0, HOME_PULSE_MAX);
 
   if (activity.isLoading || activity.isError || events.length === 0) return null;
 
@@ -829,7 +836,7 @@ function PulseSection({
                   {pulseDescription(event, t, actorLabel)}
                 </Text>
                 <Text style={[styles.pulseTime, { color: c.muted }]}>
-                  {isolateLtr(hmFromInstant(event.occurred_at))}
+                  {isolateLtr(hmInTimeZone(event.occurred_at, timezone))}
                 </Text>
               </View>
             </Pressable>

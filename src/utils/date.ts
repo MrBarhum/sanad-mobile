@@ -142,6 +142,33 @@ export function todayYmdInTimeZone(timeZone: string): string {
   return ymdInTimeZone(new Date().toISOString(), timeZone);
 }
 
+/**
+ * Local 'HH:MM' (24h) for an ISO instant in a SPECIFIC IANA timezone — the
+ * circle-local companion to `ymdInTimeZone`, so a Pulse row's time reads in the
+ * same frame as the day it's grouped under (avoids "today" header + a clock from
+ * a different local day when the device zone differs from the circle's). Falls
+ * back to the device-local `hmFromInstant` if the runtime can't resolve the zone.
+ */
+export function hmInTimeZone(iso: string, timeZone: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(d);
+    const get = (type: string) => parts.find((p) => p.type === type)?.value;
+    const hour = get('hour');
+    const minute = get('minute');
+    if (hour && minute) return `${hour}:${minute}`;
+  } catch {
+    // Runtime without IANA-zone support — fall through to device-local below.
+  }
+  return hmFromInstant(iso);
+}
+
 /** ISO timestamp for local midnight today — used to fetch upcoming items. */
 export function startOfTodayInstant(): string {
   const d = new Date();

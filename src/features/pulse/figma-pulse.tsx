@@ -16,7 +16,7 @@ import {
   type FigmaScheme,
 } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
-import { hmFromInstant, todayYmd, ymdFromInstant } from '@/utils/date';
+import { hmInTimeZone, todayYmdInTimeZone, ymdInTimeZone } from '@/utils/date';
 
 import { useCareActivity } from './hooks';
 import {
@@ -63,9 +63,10 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
   const canLoadMore = events.length >= limit;
 
   function whenLabel(occurredAt: string): string {
-    const ymd = ymdFromInstant(occurredAt);
-    const hm = hmFromInstant(occurredAt);
-    if (ymd === todayYmd()) return isolateLtr(hm);
+    // Circle-local frame so a row's date + time match the feed's day grouping.
+    const ymd = ymdInTimeZone(occurredAt, timezone);
+    const hm = hmInTimeZone(occurredAt, timezone);
+    if (ymd === todayYmdInTimeZone(timezone)) return isolateLtr(hm);
     return `${isolateLtr(ymd)} · ${isolateLtr(hm)}`;
   }
 
