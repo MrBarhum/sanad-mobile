@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  shareText: { fontSize: 13, fontFamily: FontFamily.semibold },
+  shareText: { fontSize: 14, fontFamily: FontFamily.semibold },
   center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
   errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
   retry: {
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 13, fontFamily: FontFamily.semibold },
+  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
   empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
   emptyText: { fontSize: 16, fontFamily: FontFamily.medium, textAlign: 'center' },
   list: { gap: 8 },
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   rowPressed: { opacity: 0.7 },
   info: { flex: 1, gap: 3 },
   desc: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 20 },
-  time: { fontSize: 12, fontFamily: FontFamily.regular },
+  time: { fontSize: 14, fontFamily: FontFamily.regular },
   loadMore: {
     alignSelf: 'center',
     borderWidth: StyleSheet.hairlineWidth,

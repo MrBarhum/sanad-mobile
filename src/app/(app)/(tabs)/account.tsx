@@ -274,9 +274,9 @@ const styles = StyleSheet.create({
   // Profile header
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   profileText: { flex: 1, gap: 2 },
-  profileLabel: { fontSize: 12 },
+  profileLabel: { fontSize: 14 },
   profileName: { fontSize: 18, fontFamily: FontFamily.bold },
-  profileEmailSub: { fontSize: 13 },
+  profileEmailSub: { fontSize: 14 },
   editBtn: {
     width: 40,
     height: 40,
@@ -296,6 +296,6 @@ const styles = StyleSheet.create({
   },
   // Danger zone
   dangerBlock: { gap: 12 },
-  error: { fontSize: 13, fontFamily: FontFamily.medium },
-  version: { fontSize: 12, textAlign: 'center', marginTop: 4 },
+  error: { fontSize: 14, fontFamily: FontFamily.medium },
+  version: { fontSize: 14, textAlign: 'center', marginTop: 4 },
 });

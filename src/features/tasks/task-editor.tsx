@@ -609,7 +609,7 @@ function DeleteTaskRow({ circleId, id }: { circleId: string; id: string }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
   title: { fontSize: 18, fontFamily: FontFamily.bold },
   group: { gap: Spacing.two },
   groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
   dateCol: { flex: 2 },
   timeCol: { flex: 1 },
   row2: { gap: 2 },
-  rowLabel: { fontSize: 13, fontFamily: FontFamily.semibold },
+  rowLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
   statusHeader: {
     flexDirection: 'row',
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   statusLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
-  statusMeta: { fontSize: 13, fontFamily: FontFamily.regular },
+  statusMeta: { fontSize: 14, fontFamily: FontFamily.regular },
   actionRow: { flexDirection: 'row', gap: Spacing.two },
   actionCol: { flex: 1 },
   // Status actions stack vertically: full-width filled-teal complete CTA on top,

@@ -198,7 +198,7 @@ function CreatedCard({ created, onReset }: { created: CreatedInvitation; onReset
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
   groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
-  error: { fontSize: 13, fontFamily: FontFamily.regular },
+  error: { fontSize: 14, fontFamily: FontFamily.regular },
   codeBox: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   },
   code: { fontSize: 28, lineHeight: 42, fontFamily: FontFamily.bold, letterSpacing: 2, textAlign: 'center' },
   metaRow: { gap: 4 },
-  meta: { fontSize: 13, fontFamily: FontFamily.regular },
-  feedback: { fontSize: 13, fontFamily: FontFamily.regular },
+  meta: { fontSize: 14, fontFamily: FontFamily.regular },
+  feedback: { fontSize: 14, fontFamily: FontFamily.regular },
   actions: { gap: Spacing.two },
 });

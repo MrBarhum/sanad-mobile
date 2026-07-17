@@ -229,7 +229,7 @@ function VitalViewScreen({ reading }: { reading: VitalReading }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
   confirmRow: { flexDirection: 'row', gap: Spacing.two },
   confirmCol: { flex: 1 },
   value: { fontSize: 16, fontFamily: FontFamily.regular },

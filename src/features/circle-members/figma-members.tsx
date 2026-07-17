@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 13, fontFamily: FontFamily.semibold },
+  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
   // Summary line
   summary: {
     borderRadius: Radius.lg,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   summaryText: { fontSize: 14, fontFamily: FontFamily.regular, lineHeight: 21 },
-  sectionLabel: { fontSize: 13, fontFamily: FontFamily.semibold, marginTop: 4 },
+  sectionLabel: { fontSize: 14, fontFamily: FontFamily.semibold, marginTop: 4 },
   // Member rows
   list: { gap: 8 },
   row: {
@@ -316,12 +316,12 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   name: { fontSize: 15, fontFamily: FontFamily.semibold, flexShrink: 1 },
   youBadge: { borderRadius: Radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
-  youText: { fontSize: 11, fontFamily: FontFamily.medium },
+  youText: { fontSize: 14, fontFamily: FontFamily.medium },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
-  roleText: { fontSize: 12, fontFamily: FontFamily.medium },
-  metaDot: { fontSize: 11, fontFamily: FontFamily.regular },
-  statusText: { fontSize: 12, fontFamily: FontFamily.regular },
-  email: { fontSize: 12, fontFamily: FontFamily.regular, flexShrink: 1 },
+  roleText: { fontSize: 14, fontFamily: FontFamily.medium },
+  metaDot: { fontSize: 14, fontFamily: FontFamily.regular },
+  statusText: { fontSize: 14, fontFamily: FontFamily.regular },
+  email: { fontSize: 14, fontFamily: FontFamily.regular, flexShrink: 1 },
   // Role legend
   legendTitle: { fontSize: 14, fontFamily: FontFamily.bold, marginBottom: 10 },
   legendRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },

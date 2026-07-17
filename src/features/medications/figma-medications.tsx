@@ -581,11 +581,11 @@ const styles = StyleSheet.create({
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   summaryText: { flex: 1, gap: 2 },
   summaryTitle: { fontSize: 14, fontFamily: FontFamily.semibold },
-  summarySub: { fontSize: 12 },
+  summarySub: { fontSize: 14 },
   // Empty / error
   empty: { alignItems: 'center', gap: 10 },
   emptyTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
-  emptySub: { fontSize: 13, textAlign: 'center' },
+  emptySub: { fontSize: 14, textAlign: 'center' },
   retryBtn: {
     marginTop: 12,
     alignSelf: 'center',
@@ -609,9 +609,9 @@ const styles = StyleSheet.create({
   doseInfo: { flex: 1, gap: 4 },
   doseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   doseName: { fontSize: 15, fontFamily: FontFamily.semibold, flexShrink: 1 },
-  doseDosage: { fontSize: 12, flexShrink: 1 },
+  doseDosage: { fontSize: 14, flexShrink: 1 },
   doseMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  doseTime: { fontSize: 12 },
+  doseTime: { fontSize: 14 },
   logBtn: {
     borderRadius: Radius.md,
     paddingHorizontal: 14,
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
     justifyContent: 'center',
   },
-  logBtnText: { fontSize: 13, fontFamily: FontFamily.semibold },
+  logBtnText: { fontSize: 14, fontFamily: FontFamily.semibold },
   doseActions: {
     flexDirection: 'row',
     gap: 8,
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     minHeight: 44,
   },
-  correctionConfirmText: { fontSize: 13, fontFamily: FontFamily.semibold },
+  correctionConfirmText: { fontSize: 14, fontFamily: FontFamily.semibold },
   correctionCancel: {
     flex: 1,
     alignItems: 'center',
@@ -657,7 +657,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     minHeight: 44,
   },
-  correctionCancelText: { fontSize: 13, fontFamily: FontFamily.semibold },
+  correctionCancelText: { fontSize: 14, fontFamily: FontFamily.semibold },
   doseAction: {
     flex: 1,
     flexDirection: 'row',
@@ -668,7 +668,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     minHeight: 44,
   },
-  doseActionText: { fontSize: 12, fontFamily: FontFamily.semibold },
+  doseActionText: { fontSize: 14, fontFamily: FontFamily.semibold },
   // Medication row (all)
   medCard: {
     borderRadius: Radius.card,
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
   medName: { fontSize: 16, fontFamily: FontFamily.bold },
   medDosage: { fontSize: 14 },
   activeBadge: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
-  activeBadgeText: { fontSize: 11, fontFamily: FontFamily.semibold },
+  activeBadgeText: { fontSize: 14, fontFamily: FontFamily.semibold },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   scheduleChip: {
     flexDirection: 'row',
@@ -692,8 +692,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  chipTime: { fontSize: 12, fontFamily: FontFamily.medium },
-  chipDays: { fontSize: 11 },
+  chipTime: { fontSize: 14, fontFamily: FontFamily.medium },
+  chipDays: { fontSize: 14 },
   responsibleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  responsibleText: { fontSize: 12 },
+  responsibleText: { fontSize: 14 },
 });

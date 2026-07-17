@@ -226,7 +226,7 @@ export function MedicationForm({ circleId }: { circleId: string }) {
 
 const styles = StyleSheet.create({
   footer: { gap: Spacing.two },
-  footerError: { fontSize: 13, fontFamily: FontFamily.regular, textAlign: 'center' },
+  footerError: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
   divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
   switchRow: {
     flexDirection: 'row',
@@ -236,5 +236,5 @@ const styles = StyleSheet.create({
   },
   switchText: { flex: 1, gap: 2 },
   switchLabel: { fontSize: 15, fontFamily: FontFamily.regular },
-  switchHint: { fontSize: 13, fontFamily: FontFamily.regular },
+  switchHint: { fontSize: 14, fontFamily: FontFamily.regular },
 });

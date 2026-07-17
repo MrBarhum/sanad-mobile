@@ -87,5 +87,5 @@ export function VitalForm({ circleId }: { circleId: string }) {
 
 const styles = StyleSheet.create({
   footer: { gap: Spacing.two },
-  footerError: { fontSize: 13, fontFamily: FontFamily.regular, textAlign: 'center' },
+  footerError: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
 });

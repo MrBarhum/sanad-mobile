@@ -116,5 +116,5 @@ const styles = StyleSheet.create({
   // Keep "given/total" in LTR order even inside the RTL UI (it is a numeric run).
   count: { fontFamily: FontFamily.bold, fontSize: 26, lineHeight: 30, writingDirection: 'ltr' },
   total: { fontFamily: FontFamily.regular, fontSize: 15 },
-  label: { fontFamily: FontFamily.regular, fontSize: 11, lineHeight: 16, marginTop: 2 },
+  label: { fontFamily: FontFamily.regular, fontSize: 14, lineHeight: 16, marginTop: 2 },
 });

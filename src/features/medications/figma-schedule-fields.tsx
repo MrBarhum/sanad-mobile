@@ -290,9 +290,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dayChipText: { fontSize: 11 },
+  dayChipText: { fontSize: 14 },
   everyDay: { alignSelf: 'flex-start', paddingVertical: 2 },
-  everyDayText: { fontSize: 12, fontFamily: FontFamily.medium },
+  everyDayText: { fontSize: 14, fontFamily: FontFamily.medium },
   timeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
   timeField: { flex: 1 },
   removeTime: {
@@ -315,8 +315,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   addTimeText: { fontSize: 14, fontFamily: FontFamily.medium },
-  help: { fontSize: 13, fontFamily: FontFamily.regular },
-  fieldError: { fontSize: 13, fontFamily: FontFamily.regular },
+  help: { fontSize: 14, fontFamily: FontFamily.regular },
+  fieldError: { fontSize: 14, fontFamily: FontFamily.regular },
   dateRow: { flexDirection: 'row', gap: Spacing.three },
   dateCol: { flex: 1 },
 });

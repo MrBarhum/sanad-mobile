@@ -450,10 +450,10 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
   title: { fontSize: 18, fontFamily: FontFamily.bold },
   row: { gap: 2 },
-  rowLabel: { fontSize: 13, fontFamily: FontFamily.semibold },
+  rowLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
   statusHeader: {
     flexDirection: 'row',

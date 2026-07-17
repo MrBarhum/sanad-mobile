@@ -702,11 +702,11 @@ function ScheduleCard({
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
   title: { fontSize: 18, fontFamily: FontFamily.bold },
   sectionHeading: { fontSize: 16, fontFamily: FontFamily.bold },
   infoRow: { gap: 2 },
-  rowLabel: { fontSize: 13, fontFamily: FontFamily.semibold },
+  rowLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
   statusLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   },
   switchText: { flex: 1, gap: 2 },
   switchLabel: { fontSize: 15, fontFamily: FontFamily.regular },
-  switchHint: { fontSize: 13, fontFamily: FontFamily.regular },
+  switchHint: { fontSize: 14, fontFamily: FontFamily.regular },
   schedules: { gap: Spacing.three },
   scheduleHeader: {
     flexDirection: 'row',

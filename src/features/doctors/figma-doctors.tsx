@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 13, fontFamily: FontFamily.semibold },
+  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
   empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
   emptyTitle: { fontSize: 16, fontFamily: FontFamily.semibold, textAlign: 'center' },
   emptySubtitle: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   cardInfo: { flex: 1, gap: 2 },
   cardName: { fontSize: 17, fontFamily: FontFamily.bold },
   cardSpecialty: { fontSize: 14, fontFamily: FontFamily.regular },
-  cardClinic: { fontSize: 13, fontFamily: FontFamily.regular },
+  cardClinic: { fontSize: 14, fontFamily: FontFamily.regular },
   callButton: {
     width: ChipSize.xl,
     height: ChipSize.xl,
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  phoneText: { fontSize: 13, fontFamily: FontFamily.regular, writingDirection: 'ltr' },
+  phoneText: { fontSize: 14, fontFamily: FontFamily.regular, writingDirection: 'ltr' },
   // Manager actions footer
   actions: {
     flexDirection: 'row',

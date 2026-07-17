@@ -260,7 +260,7 @@ export function FigmaDailyLogFields({
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
   divider: { height: StyleSheet.hairlineWidth },
-  painHint: { fontSize: 12, lineHeight: 18, fontFamily: FontFamily.regular },
+  painHint: { fontSize: 14, lineHeight: 18, fontFamily: FontFamily.regular },
   noneChip: {
     minHeight: TouchTarget.min,
     borderRadius: Radius.pill,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'flex-start',
   },
-  noneChipText: { fontSize: 13 },
+  noneChipText: { fontSize: 14 },
   stepperRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   stepButton: {
     width: 44,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   },
   stepValue: { flex: 1, alignItems: 'center' },
   painBig: { fontSize: 36, fontFamily: FontFamily.bold, writingDirection: 'ltr' },
-  painOutOf: { fontSize: 12, fontFamily: FontFamily.regular },
+  painOutOf: { fontSize: 14, fontFamily: FontFamily.regular },
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between' },
   scaleChip: {
     width: 26,
@@ -292,5 +292,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scaleChipText: { fontSize: 11 },
+  scaleChipText: { fontSize: 14 },
 });

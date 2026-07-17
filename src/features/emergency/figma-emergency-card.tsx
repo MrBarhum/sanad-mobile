@@ -387,16 +387,16 @@ const styles = StyleSheet.create({
   // Hero
   heroBlock: { borderRadius: Radius.xl, padding: 20, gap: 16 },
   shieldNote: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  shieldText: { fontSize: 12, color: '#C45050', fontFamily: FontFamily.semibold, flexShrink: 1 },
+  shieldText: { fontSize: 14, color: '#C45050', fontFamily: FontFamily.semibold, flexShrink: 1 },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   heroChip: { width: 56, height: 56, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   heroText: { flex: 1, gap: 2 },
   heroTitle: { fontSize: 24, color: '#C45050', fontFamily: FontFamily.bold },
   heroName: { fontSize: 16, fontFamily: FontFamily.semibold },
-  heroSub: { fontSize: 13 },
+  heroSub: { fontSize: 14 },
 
   // Sections
-  sectionLabel: { fontSize: 13, fontFamily: FontFamily.semibold, marginBottom: 10 },
+  sectionLabel: { fontSize: 14, fontFamily: FontFamily.semibold, marginBottom: 10 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10,
   },
-  sectionLabelInline: { fontSize: 13, fontFamily: FontFamily.semibold, flexShrink: 1 },
+  sectionLabelInline: { fontSize: 14, fontFamily: FontFamily.semibold, flexShrink: 1 },
   editLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: 6,
   },
-  editText: { fontSize: 13, fontFamily: FontFamily.semibold },
+  editText: { fontSize: 14, fontFamily: FontFamily.semibold },
   list: { gap: 8 },
   emptyText: { fontSize: 14 },
 
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   medRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingVertical: 16 },
   medChip: { width: 36, height: 36, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
   medText: { flex: 1, gap: 2 },
-  medLabel: { fontSize: 12 },
+  medLabel: { fontSize: 14 },
   medValue: { fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 24 },
 
   // Call rows
@@ -429,11 +429,11 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 16, fontFamily: FontFamily.bold },
   callText: { flex: 1, gap: 2 },
   callName: { fontSize: 15, fontFamily: FontFamily.semibold },
-  callSub: { fontSize: 12 },
-  callPhone: { fontSize: 13, fontFamily: FontFamily.medium, marginTop: 2 },
+  callSub: { fontSize: 14 },
+  callPhone: { fontSize: 14, fontFamily: FontFamily.medium, marginTop: 2 },
   callBtn: { width: 48, height: 48, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
 
   // Disclaimer
   disclaimer: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingVertical: 14 },
-  disclaimerText: { flex: 1, fontSize: 12, lineHeight: 18 },
+  disclaimerText: { flex: 1, fontSize: 14, lineHeight: 18 },
 });

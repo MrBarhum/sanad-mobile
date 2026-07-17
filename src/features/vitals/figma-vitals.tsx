@@ -225,18 +225,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  disclaimerText: { fontSize: 12, lineHeight: 19, fontFamily: FontFamily.regular },
+  disclaimerText: { fontSize: 14, lineHeight: 19, fontFamily: FontFamily.regular },
   // 2-column grid.
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   cell: { width: '47%', flexGrow: 1 },
   cellChip: { marginBottom: 12 },
-  type: { fontSize: 11, fontFamily: FontFamily.regular },
+  type: { fontSize: 14, fontFamily: FontFamily.regular },
   valueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 2 },
   value: { fontSize: 22, fontFamily: FontFamily.bold, lineHeight: 26 },
-  unit: { fontSize: 11, fontFamily: FontFamily.regular },
-  time: { fontSize: 10, fontFamily: FontFamily.regular, marginTop: 4 },
+  unit: { fontSize: 14, fontFamily: FontFamily.regular },
+  time: { fontSize: 14, fontFamily: FontFamily.regular, marginTop: 4 },
   // States.
   stateTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
-  stateSub: { fontSize: 12, fontFamily: FontFamily.regular, textAlign: 'center' },
+  stateSub: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
   emptyInner: { alignItems: 'center', gap: 10 },
 });

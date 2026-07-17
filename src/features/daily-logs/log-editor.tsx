@@ -241,10 +241,10 @@ function DailyLogViewScreen({ log }: { log: DailyCareLog }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
   confirmRow: { flexDirection: 'row', gap: Spacing.two },
   confirmCol: { flex: 1 },
   row: { gap: 2 },
-  rowLabel: { fontSize: 13, fontFamily: FontFamily.semibold },
+  rowLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
 });

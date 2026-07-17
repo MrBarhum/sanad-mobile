@@ -228,18 +228,18 @@ function muted(c: ReturnType<typeof useTheme>) {
 
 const styles = StyleSheet.create({
   markAll: { paddingVertical: 4, justifyContent: 'center' },
-  markAllText: { fontSize: 13, fontFamily: FontFamily.medium },
+  markAllText: { fontSize: 14, fontFamily: FontFamily.medium },
   banner: {
     borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  bannerText: { fontSize: 12, fontFamily: FontFamily.semibold },
+  bannerText: { fontSize: 14, fontFamily: FontFamily.semibold },
   center: { paddingVertical: 48, alignItems: 'center' },
   stateBody: { alignItems: 'center', gap: 8 },
   stateTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
-  stateSubtitle: { fontSize: 13, textAlign: 'center', lineHeight: 20 },
+  stateSubtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
   list: { gap: 8, marginTop: 4 },
   row: {
     flexDirection: 'row',
@@ -255,8 +255,8 @@ const styles = StyleSheet.create({
   titleLine: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
   title: { fontSize: 14, flexShrink: 1 },
   dot: { width: 8, height: 8, borderRadius: Radius.pill, marginTop: 5, flexShrink: 0 },
-  bodyText: { fontSize: 13, lineHeight: 20, marginTop: 2 },
-  time: { fontSize: 11, marginTop: 4 },
+  bodyText: { fontSize: 14, lineHeight: 20, marginTop: 2 },
+  time: { fontSize: 14, marginTop: 4 },
   loadMore: {
     borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
