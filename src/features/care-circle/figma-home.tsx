@@ -791,7 +791,7 @@ function PulseSection({
         </Text>
         <View style={styles.pulseHeaderActions}>
           <Pressable
-            onPress={() => sharePulseSummary(composePulseShareText(events, t, actorLabel))}
+            onPress={() => sharePulseSummary(composePulseShareText(events, t, actorLabel, timezone))}
             accessibilityRole="button"
             accessibilityLabel={t('pulse.share')}
             hitSlop={8}>

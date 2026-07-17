@@ -38,7 +38,7 @@ const PAGE = 20;
  * source item. Handles loading / generic error / RPC-not-yet-enabled / empty /
  * load-more. RTL, Cairo, Figma tokens.
  */
-export function FigmaPulse({ circleId }: { circleId: string }) {
+export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
@@ -70,7 +70,7 @@ export function FigmaPulse({ circleId }: { circleId: string }) {
   }
 
   async function onShare() {
-    await sharePulseSummary(composePulseShareText(events, t, actorLabel));
+    await sharePulseSummary(composePulseShareText(events, t, actorLabel, timezone));
   }
 
   return (

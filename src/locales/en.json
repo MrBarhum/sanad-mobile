@@ -1161,15 +1161,17 @@
     "loadMore": "Load more",
     "someone": "A member",
     "events": {
-      "doseLogged": "{{actor}} logged a dose of {{title}}",
-      "taskCompleted": "{{actor}} completed a task: {{title}}",
-      "taskCancelled": "{{actor}} couldn't complete a task: {{title}}",
-      "appointmentCompleted": "{{actor}} completed an appointment: {{title}}",
-      "appointmentCancelled": "{{actor}} couldn't attend an appointment: {{title}}",
-      "visitCompleted": "{{actor}} completed a visit: {{title}}",
-      "vitalRecorded": "{{actor}} recorded a vital reading",
-      "dailyLogAdded": "{{actor}} added a daily log",
-      "memberJoined": "{{actor}} joined the circle"
+      "doseGiven": "{{actor}} · Dose recorded: {{title}}",
+      "dosePostponed": "{{actor}} · Dose postponed: {{title}}",
+      "doseMissed": "{{actor}} · Missed dose: {{title}}",
+      "taskCompleted": "{{actor}} · Task completed: {{title}}",
+      "taskCancelled": "{{actor}} · Task not completed: {{title}}",
+      "appointmentCompleted": "{{actor}} · Appointment outcome: {{title}}",
+      "appointmentCancelled": "{{actor}} · Appointment cancelled: {{title}}",
+      "visitCompleted": "{{actor}} · Family visit",
+      "vitalRecorded": "{{actor}} · Recorded {{vital}}",
+      "dailyLogAdded": "{{actor}} · Daily log added",
+      "memberJoined": "{{actor}} · Joined the circle"
     }
   },
   "notifications": {

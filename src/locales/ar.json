@@ -1161,15 +1161,17 @@
     "loadMore": "تحميل المزيد",
     "someone": "أحد الأعضاء",
     "events": {
-      "doseLogged": "{{actor}} سجّل جرعة {{title}}",
-      "taskCompleted": "{{actor}} أكمل مهمة: {{title}}",
-      "taskCancelled": "{{actor}} تعذّر عليه إكمال مهمة: {{title}}",
-      "appointmentCompleted": "{{actor}} أتمّ موعد: {{title}}",
-      "appointmentCancelled": "{{actor}} تعذّر عليه موعد: {{title}}",
-      "visitCompleted": "{{actor}} أتمّ زيارة: {{title}}",
-      "vitalRecorded": "{{actor}} سجّل قياساً",
-      "dailyLogAdded": "{{actor}} أضاف سجلاً يومياً",
-      "memberJoined": "{{actor}} انضم إلى الدائرة"
+      "doseGiven": "{{actor}} · تسجيل جرعة {{title}}",
+      "dosePostponed": "{{actor}} · تأجيل جرعة {{title}}",
+      "doseMissed": "{{actor}} · جرعة فائتة: {{title}}",
+      "taskCompleted": "{{actor}} · إكمال مهمة: {{title}}",
+      "taskCancelled": "{{actor}} · تعذّر إكمال مهمة: {{title}}",
+      "appointmentCompleted": "{{actor}} · نتيجة موعد: {{title}}",
+      "appointmentCancelled": "{{actor}} · إلغاء موعد: {{title}}",
+      "visitCompleted": "{{actor}} · زيارة عائلية",
+      "vitalRecorded": "{{actor}} · تسجيل {{vital}}",
+      "dailyLogAdded": "{{actor}} · إضافة سجل يومي",
+      "memberJoined": "{{actor}} · انضمام إلى الدائرة"
     }
   },
   "notifications": {

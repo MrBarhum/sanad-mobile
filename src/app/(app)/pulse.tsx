@@ -7,5 +7,9 @@ import { FigmaPulse } from '@/features/pulse/figma-pulse';
  * are no actions here, so no role branching is needed.
  */
 export default function PulseScreen() {
-  return <CircleGate>{(circle) => <FigmaPulse circleId={circle.circleId} />}</CircleGate>;
+  return (
+    <CircleGate>
+      {(circle) => <FigmaPulse circleId={circle.circleId} timezone={circle.timezone} />}
+    </CircleGate>
+  );
 }

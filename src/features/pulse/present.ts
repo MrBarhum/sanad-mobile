@@ -17,8 +17,7 @@ import { Platform, Share } from 'react-native';
 import { FigmaCategory } from '@/components/figma/figma-tokens';
 import { memberDisplayName } from '@/features/circle-members/display-name';
 import { useCircleMembers } from '@/features/circle-members/hooks';
-import { useAuth } from '@/providers';
-import { todayYmd, ymdFromInstant } from '@/utils/date';
+import { todayYmdInTimeZone, ymdInTimeZone } from '@/utils/date';
 
 import type { PulseEvent, PulseItemType } from './types';
 
@@ -69,13 +68,26 @@ export function pulseRouteFor(itemType: PulseItemType, itemId: string): Href {
 type Translate = (key: string, opts?: Record<string, unknown>) => string;
 type ActorLabel = (id: string | null, storedName: string | null) => string;
 
-/** Localized "{actor} {action}" line for an event. */
+/**
+ * Localized "{actor} · {phrase}" line for an event. Every phrase is a gender-
+ * neutral verbal noun (masdar) with the actor's resolved name first, which removes
+ * both the old first-person «أنا» reading and any verb gender-agreement problem
+ * (D3). The same helper feeds the feed rows and the WhatsApp share.
+ */
 export function pulseDescription(event: PulseEvent, t: Translate, actorLabel: ActorLabel): string {
   const actor = actorLabel(event.actor_user_id, event.actor_name);
   const title = event.title ?? '';
   switch (event.event_type) {
     case 'dose_logged':
-      return t('pulse.events.doseLogged', { actor, title });
+      // The dose status (given / postponed / missed) shifts the noun, still nominal.
+      return t(
+        event.status === 'missed'
+          ? 'pulse.events.doseMissed'
+          : event.status === 'postponed'
+            ? 'pulse.events.dosePostponed'
+            : 'pulse.events.doseGiven',
+        { actor, title },
+      );
     case 'task_completed':
       return t('pulse.events.taskCompleted', { actor, title });
     case 'task_cancelled':
@@ -88,9 +100,14 @@ export function pulseDescription(event: PulseEvent, t: Translate, actorLabel: Ac
         { actor, title },
       );
     case 'visit_completed':
-      return t('pulse.events.visitCompleted', { actor, title });
+      return t('pulse.events.visitCompleted', { actor });
     case 'vital_recorded':
-      return t('pulse.events.vitalRecorded', { actor });
+      // The RPC puts the reading_type in `title`; localize it via the shared
+      // vitals labels (falling back to the raw type for an unknown value).
+      return t('pulse.events.vitalRecorded', {
+        actor,
+        vital: event.title ? t(`vitals.type.${event.title}`, { defaultValue: event.title }) : '',
+      });
     case 'daily_log_added':
       return t('pulse.events.dailyLogAdded', { actor });
     case 'member_joined':
@@ -99,40 +116,45 @@ export function pulseDescription(event: PulseEvent, t: Translate, actorLabel: Ac
 }
 
 /**
- * Resolver that turns an actor id into a display name using the SAME rules as the
- * rest of the app: self → "أنا", an active member → their `memberDisplayName`, a
- * since-removed member → the stored actor_name, else a neutral fallback.
+ * Resolver that turns an actor id into a display NAME, reusing the same roster the
+ * pickers use and the shared `memberDisplayName()` (full name → email local-part →
+ * neutral). Unlike assignment pickers it never returns «أنا» — even the current
+ * user reads by their real name, so the masdar headlines are gender- and
+ * person-neutral (D3). Never a bare «عضو»: a since-removed actor falls back to
+ * their stored name, else the neutral «عضو سابق».
  */
 export function usePulseActorLabel(circleId: string): ActorLabel {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const members = useCircleMembers(circleId).data;
-  const selfId = user?.id ?? null;
 
   return useCallback(
     (id: string | null, storedName: string | null) => {
       if (!id) return t('pulse.someone');
-      if (id === selfId) return t('assignment.me');
       const member = members?.find((m) => m.userId === id);
-      const fallback = storedName?.trim() || t('assignment.unknownMember');
-      return member ? memberDisplayName(member, fallback) : fallback;
+      if (member) return memberDisplayName(member, t('pulse.someone'));
+      // Actor no longer in the roster (e.g. a removed member): prefer their stored
+      // real name, else a neutral «عضو سابق» — never a bare «عضو».
+      return storedName?.trim() || t('assignment.inactiveMember');
     },
-    [members, selfId, t],
+    [members, t],
   );
 }
 
 /**
- * Composes a plain-text "today's summary" for the OS share sheet from the loaded
- * pulse events — client-side, so no extra fetch. Lists today's events (circle-
- * local) as bullet lines under a dated header; a calm day yields a gentle note.
+ * Composes a plain-text "today's summary" for the OS / WhatsApp share sheet from
+ * the loaded pulse events — client-side, so no extra fetch. Lists today's events
+ * (the circle's local day, matching the Home strip's scope) as bullet lines under
+ * a dated header; a calm day yields a gentle note. Uses the corrected masdar+name
+ * headlines via `pulseDescription`, so the shared text is named and gender-neutral.
  */
 export function composePulseShareText(
   events: PulseEvent[],
   t: Translate,
   actorLabel: ActorLabel,
+  timezone: string,
 ): string {
-  const today = todayYmd();
-  const todays = events.filter((e) => ymdFromInstant(e.occurred_at) === today);
+  const today = todayYmdInTimeZone(timezone);
+  const todays = events.filter((e) => ymdInTimeZone(e.occurred_at, timezone) === today);
   const header = t('pulse.shareHeader', { date: today });
   if (todays.length === 0) {
     return `${header}\n${t('pulse.shareEmpty')}`;
