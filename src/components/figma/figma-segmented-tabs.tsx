@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FigmaColors, FigmaFont, FigmaRadius } from './figma-tokens';
+import { FontFamily, Radius } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 type Tab = { key: string; label: string };
 
@@ -11,13 +12,12 @@ type FigmaSegmentedTabsProps = {
 };
 
 /**
- * The Figma in-screen segmented control (today/all, today/open/done,
- * upcoming/completed). Active = filled teal + white; inactive = card + hairline +
- * muted. Equal-width tabs, ≥48dp tall.
+ * The in-screen segmented control (today/all, today/open/done,
+ * upcoming/completed). Active = filled teal + on-primary; inactive = card +
+ * hairline + secondary. Equal-width tabs, ≥44dp tall.
  */
 export function FigmaSegmentedTabs({ tabs, activeKey, onChange }: FigmaSegmentedTabsProps) {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   return (
     <View style={styles.row}>
@@ -33,12 +33,15 @@ export function FigmaSegmentedTabs({ tabs, activeKey, onChange }: FigmaSegmented
               styles.tab,
               active
                 ? { backgroundColor: c.primary, borderColor: c.primary }
-                : { backgroundColor: c.card, borderColor: c.border },
+                : { backgroundColor: c.backgroundElement, borderColor: c.border },
             ]}>
             <Text
               style={[
                 styles.label,
-                { color: active ? c.onPrimary : c.muted, fontFamily: active ? FigmaFont.semibold : FigmaFont.medium },
+                {
+                  color: active ? c.onPrimary : c.textSecondary,
+                  fontFamily: active ? FontFamily.semibold : FontFamily.medium,
+                },
               ]}>
               {tab.label}
             </Text>
@@ -54,7 +57,7 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     minHeight: 44,
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',

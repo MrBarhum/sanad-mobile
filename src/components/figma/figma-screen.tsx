@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { FigmaColors, FigmaLayout } from './figma-tokens';
+import { Gutter } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 type FigmaScreenProps = {
   children: ReactNode;
@@ -13,19 +14,17 @@ type FigmaScreenProps = {
 };
 
 /**
- * The Figma exact-copy screen container: a full-bleed, RTL-aware column with the
- * Figma background, the Figma 20px gutter, and the device safe-area on top/bottom
- * (replacing the export's fake `pt-14` status-bar inset). No max-width centering
- * — the Figma screens are full-bleed phone layouts. Use this instead of the
- * legacy `Screen` primitive on Figma-faithful screens.
+ * The list/detail screen container: a full-bleed, RTL-aware column with the
+ * themed background, the 20px gutter, and the device safe-area on top/bottom. No
+ * max-width centering — these are full-bleed phone layouts. Use this instead of
+ * the legacy `Screen` primitive on the redesigned feature screens.
  */
 export function FigmaScreen({ children, scroll = true, gap = 16 }: FigmaScreenProps) {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const insets = useSafeAreaInsets();
 
   const padding = {
-    paddingHorizontal: FigmaLayout.gutter,
+    paddingHorizontal: Gutter,
     paddingTop: insets.top + 8,
     paddingBottom: insets.bottom + 24,
   };

@@ -1,9 +1,10 @@
 import { ChevronLeft } from 'lucide-react-native';
 import type { ComponentType, ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { FontFamily, Radius, withAlpha } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { IconChip } from './icon-chip';
-import { FigmaColors, FigmaFont, FigmaRadius, withAlpha } from './figma-tokens';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
@@ -24,10 +25,9 @@ type FigmaListRowProps = {
 };
 
 /**
- * A Figma grouped-list row: a tinted icon chip (or letter avatar) + title +
- * optional subtitle + a trailing chevron. Designed to sit inside a `FigmaCard`
- * (padding 0) as a hairline-separated group — the Figma Explore / Account /
- * Members list idiom.
+ * A grouped-list row: a tinted icon chip (or letter avatar) + title + optional
+ * subtitle + a trailing chevron. Designed to sit inside a `FigmaCard` (padding 0)
+ * as a hairline-separated group — the Explore / Account / Members list idiom.
  */
 export function FigmaListRow({
   Icon,
@@ -39,14 +39,13 @@ export function FigmaListRow({
   trailing,
   topDivider = false,
 }: FigmaListRowProps) {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const accent = color ?? c.primary;
 
   const body = (
     <>
       {Icon ? (
-        <IconChip Icon={Icon} color={accent} size={44} radius={FigmaRadius.r16} iconSize={22} />
+        <IconChip Icon={Icon} color={accent} size={44} radius={Radius.lg} iconSize={22} />
       ) : avatarText != null ? (
         <View style={[styles.avatar, { backgroundColor: withAlpha(accent, 0.15) }]}>
           <Text style={[styles.avatarText, { color: accent }]}>{avatarText}</Text>
@@ -57,12 +56,16 @@ export function FigmaListRow({
           {title}
         </Text>
         {subtitle ? (
-          <Text style={[styles.subtitle, { color: c.muted }]} numberOfLines={1}>
+          <Text style={[styles.subtitle, { color: c.textSecondary }]} numberOfLines={1}>
             {subtitle}
           </Text>
         ) : null}
       </View>
-      {trailing !== undefined ? trailing : onPress ? <ChevronLeft size={18} color={c.muted} /> : null}
+      {trailing !== undefined ? (
+        trailing
+      ) : onPress ? (
+        <ChevronLeft size={18} color={c.textSecondary} />
+      ) : null}
     </>
   );
 
@@ -78,7 +81,7 @@ export function FigmaListRow({
         accessibilityRole="button"
         accessibilityLabel={title}
         accessibilityHint={subtitle}
-        android_ripple={{ color: c.elevated }}
+        android_ripple={{ color: c.backgroundSunken }}
         style={({ pressed }) => [rowStyle, pressed && styles.pressed]}>
         {body}
       </Pressable>
@@ -87,21 +90,21 @@ export function FigmaListRow({
   return <View style={rowStyle}>{body}</View>;
 }
 
-/** A small Figma section label (eyebrow) above a grouped list. */
+/** A small section label (eyebrow) above a grouped list. */
 export function FigmaSectionLabel({ label }: { label: string }) {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
-  return <Text style={[styles.sectionLabel, { color: c.muted }]}>{label}</Text>;
+  const c = useTheme();
+  return <Text style={[styles.sectionLabel, { color: c.textSecondary }]}>{label}</Text>;
 }
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, paddingVertical: 16, minHeight: 68 },
   text: { flex: 1, gap: 2 },
-  title: { fontSize: 16, fontFamily: FigmaFont.semibold },
-  // Older-adult floor: meaningful secondary text ≥14 (was 12).
-  subtitle: { fontSize: 14, fontFamily: FigmaFont.regular },
-  avatar: { width: 44, height: 44, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 18, fontFamily: FigmaFont.bold },
-  sectionLabel: { fontSize: 13, fontFamily: FigmaFont.bold, letterSpacing: 0.5, marginBottom: 10 },
+  title: { fontSize: 16, fontFamily: FontFamily.semibold },
+  // Older-adult floor: meaningful secondary text ≥14.
+  subtitle: { fontSize: 14, fontFamily: FontFamily.regular },
+  avatar: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontSize: 18, fontFamily: FontFamily.bold },
+  // Section eyebrow raised 13 -> 14 to meet the content floor.
+  sectionLabel: { fontSize: 14, fontFamily: FontFamily.bold, letterSpacing: 0.5, marginBottom: 10 },
   pressed: { opacity: 0.85 },
 });
