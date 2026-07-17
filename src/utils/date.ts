@@ -109,6 +109,39 @@ export function hmFromInstant(iso: string): string {
   return `${hours}:${minutes}`;
 }
 
+/**
+ * Local 'YYYY-MM-DD' for an ISO instant in a SPECIFIC IANA timezone (e.g. a
+ * circle's canonical zone), independent of the device's zone. Uses `Intl`; on a
+ * runtime that can't resolve the zone it falls back to the device-local calendar
+ * (`ymdFromInstant`), matching the app's default local-time assumption. Lets the
+ * Care Pulse scope "today" to the circle's day, mirroring the server's digest.
+ */
+export function ymdInTimeZone(iso: string, timeZone: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(d);
+    const get = (type: string) => parts.find((p) => p.type === type)?.value;
+    const year = get('year');
+    const month = get('month');
+    const day = get('day');
+    if (year && month && day) return `${year}-${month}-${day}`;
+  } catch {
+    // Runtime without IANA-zone support — fall through to device-local below.
+  }
+  return ymdFromInstant(iso);
+}
+
+/** Circle-local 'YYYY-MM-DD' for the current instant in the given IANA timezone. */
+export function todayYmdInTimeZone(timeZone: string): string {
+  return ymdInTimeZone(new Date().toISOString(), timeZone);
+}
+
 /** ISO timestamp for local midnight today — used to fetch upcoming items. */
 export function startOfTodayInstant(): string {
   const d = new Date();

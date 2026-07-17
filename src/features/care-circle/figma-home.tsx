@@ -73,7 +73,9 @@ import {
   formatLongDate,
   hmFromInstant,
   todayYmd,
+  todayYmdInTimeZone,
   ymdFromInstant,
+  ymdInTimeZone,
 } from '@/utils/date';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
@@ -524,8 +526,8 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
         </View>
       ) : null}
 
-      {/* Care Pulse — a few most-recent circle events, tap through to /pulse */}
-      <PulseSection circleId={circle.circleId} scheme={scheme} />
+      {/* Care Pulse — today's most-recent circle events, tap through to the log */}
+      <PulseSection circleId={circle.circleId} scheme={scheme} timezone={circle.timezone} />
 
       {/* Emergency banner */}
       <Pressable
@@ -740,18 +742,26 @@ function DoseRow({
 }
 
 /**
- * Home's compact Care Pulse strip: the few most-recent circle events with a
- * «عرض الكل» link into /pulse. Kept quiet on Home — it renders nothing while
- * loading, on error, or when the feed is empty (or the RPC isn't enabled yet), so
- * a not-yet-migrated backend never shows an error here.
+ * Home's compact «نبض اليوم» strip: TODAY's most-recent circle events (scoped to
+ * the circle's local day) with a «عرض الكل» link into the full activity log
+ * (/pulse). Kept quiet on Home — it renders nothing while loading, on error, or
+ * when there's no activity today (or the RPC isn't enabled yet), so a quiet day —
+ * or a not-yet-migrated backend — never shows an error here.
  */
-function PulseSection({ circleId, scheme }: { circleId: string; scheme: FigmaScheme }) {
+function PulseSection({
+  circleId,
+  scheme,
+  timezone,
+}: {
+  circleId: string;
+  scheme: FigmaScheme;
+  timezone: string;
+}) {
   const { t } = useTranslation();
   const router = useRouter();
   const c = FigmaColors[scheme];
   const activity = useCareActivity(circleId, 5);
   const actorLabel = usePulseActorLabel(circleId);
-  const events = activity.data ?? [];
 
   // Refresh the strip when Home regains focus so an action taken on another screen
   // (and the pulse-key invalidation those mutations now fire) is reflected without
@@ -761,6 +771,14 @@ function PulseSection({ circleId, scheme }: { circleId: string; scheme: FigmaSch
     useCallback(() => {
       refetch();
     }, [refetch]),
+  );
+
+  // Scope to TODAY in the CIRCLE's local day (D2). The RPC returns the newest
+  // events first, and today's are always the most recent, so filtering the fetched
+  // page yields today's most-recent events (capped at 5). No events today → quiet.
+  const today = todayYmdInTimeZone(timezone);
+  const events = (activity.data ?? []).filter(
+    (e) => ymdInTimeZone(e.occurred_at, timezone) === today,
   );
 
   if (activity.isLoading || activity.isError || events.length === 0) return null;
@@ -811,11 +829,7 @@ function PulseSection({ circleId, scheme }: { circleId: string; scheme: FigmaSch
                   {pulseDescription(event, t, actorLabel)}
                 </Text>
                 <Text style={[styles.pulseTime, { color: c.muted }]}>
-                  {isolateLtr(
-                    ymdFromInstant(event.occurred_at) === todayYmd()
-                      ? hmFromInstant(event.occurred_at)
-                      : ymdFromInstant(event.occurred_at),
-                  )}
+                  {isolateLtr(hmFromInstant(event.occurred_at))}
                 </Text>
               </View>
             </Pressable>
