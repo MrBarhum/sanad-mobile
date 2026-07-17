@@ -35,8 +35,10 @@ export const Colors = {
     // Surfaces & text — warm porcelain canvas, white cards, warm hairlines.
     text: '#1A1714',
     textSecondary: '#6B6258',
-    /** Quieter than textSecondary — metadata/timestamps only, never body text. */
-    textMuted: '#8A837A',
+    /** Quieter than textSecondary — metadata/timestamps only, never body text.
+     * Darkened #8A837A → #6D6760 so it clears AA 4.5:1 even on the deepest light
+     * well (backgroundSunken) — kills the documented grey-on-grey failure. */
+    textMuted: '#6D6760',
     background: '#F7F3EE',
     backgroundElement: '#FFFFFF',
     /** Pressed/selected fill — a step deeper than backgroundSunken (derived). */
@@ -46,9 +48,13 @@ export const Colors = {
     border: '#E1DDD8',
     /** Softer than border — separators between rows inside one surface. */
     divider: '#ECE7DF',
+    /** Care-loop ring un-filled track (decorative SVG stroke; contrast N/A). */
+    ringTrack: 'rgba(26, 23, 20, 0.08)',
 
     // Brand — one confident teal (Figma Make parity; was brand blue #1B5FBE).
-    primary: '#2E8A7B',
+    // Nudged darker #2E8A7B → #2A7F71 so white onPrimary clears AA 4.5:1 on the
+    // filled primary button (was 4.17). Same teal identity, generous contrast.
+    primary: '#2A7F71',
     primaryPressed: '#256F63',
     onPrimary: '#FFFFFF',
     primaryBg: '#EAF3F1', // tinted teal surface (chips/links/active)
@@ -72,7 +78,7 @@ export const Colors = {
     // still UNUSED by screens; kept key-symmetric for the ThemeColor type.
     accentSolid: '#C8904A', // Figma Make gold accent fill
     accentText: '#7A4E12', // sand text/eyebrow on the canvas (AA)
-    onAccent: '#FFFFFF', // text/icon on accentSolid
+    onAccent: '#2A1D05', // dark text on the gold accentSolid fill (white failed AA at 2.78)
     dangerSolid: '#C45050', // softer Figma Make destructive fill (NOT the bell badge red #D92D20)
     onError: '#FFFFFF',
     onSuccess: '#FFFFFF',
@@ -88,20 +94,23 @@ export const Colors = {
     categoryBlue: '#5A8ABF',
     categoryPurple: '#8B6FA8',
     categoryGreen: '#4A9A75',
-    categoryGold: '#C8904A',
+    categoryGold: '#BA8645', // darkened from #C8904A so the icon tint clears 3:1 UI on a card
     categoryTeal: '#2E8A7B',
   },
   dark: {
     // Warm graphite — near-black canvas, lifted cards (Figma Make parity).
     text: '#EDE8DF',
     textSecondary: '#ACA89D',
-    textMuted: '#8A837A',
+    /** Lightened #8A837A → #908981 so metadata clears AA 4.5:1 on dark sunken wells. */
+    textMuted: '#908981',
     background: '#0F0E0C',
     backgroundElement: '#1A1916',
     backgroundSelected: '#322E27',
     backgroundSunken: '#26231E',
     border: '#2E2A24',
     divider: '#211F1B',
+    /** Care-loop ring un-filled track (decorative SVG stroke; contrast N/A). */
+    ringTrack: 'rgba(237, 232, 223, 0.10)',
 
     primary: '#4BA898',
     primaryPressed: '#3E9384',
@@ -181,6 +190,55 @@ export const Fonts = Platform.select({
 });
 
 /**
+ * TYPE SCALE — the single source of text sizing for the whole app.
+ *
+ * LAW: 14 is the ABSOLUTE FLOOR. Nothing a caregiver must read renders below 14
+ * anywhere, ever (older-adult readability). Body is 16. Arabic line-heights are
+ * ≥1.5×. The ONLY sanctioned sub-14 uses are pure decorative chrome that is NOT
+ * content (a superscript count badge, a «·» meta separator) — never a label,
+ * value, timestamp, status, hint, or body line.
+ *
+ * `FontSize` is the raw numeric scale; `Type` bundles size + line-height + the
+ * matching IBM Plex family into ready-to-spread TextStyle presets. Prefer
+ * spreading a `Type.*` preset over hand-setting fontSize/lineHeight/fontFamily.
+ */
+export const FontSize = {
+  caption: 14,
+  body: 16,
+  cardTitle: 18,
+  sectionTitle: 20,
+  subtitle: 22,
+  hero: 26,
+  display: 30,
+  displayXL: 34,
+} as const;
+
+export const Type = {
+  /** THE 14 floor — metadata, timestamps, hints, helper/error text, pill + chip labels. */
+  caption: { fontFamily: FontFamily.regular, fontSize: 14, lineHeight: 22 },
+  /** 14 emphasized — field labels, section eyebrows (add letterSpacing at the site), active tab. */
+  captionStrong: { fontFamily: FontFamily.semibold, fontSize: 14, lineHeight: 22 },
+  /** Default reading text / paragraph copy. */
+  body: { fontFamily: FontFamily.regular, fontSize: 16, lineHeight: 26 },
+  /** Emphasized body, list-row values, primary button label, inline links. */
+  bodyStrong: { fontFamily: FontFamily.semibold, fontSize: 16, lineHeight: 26 },
+  /** List-row + card/section-item titles. */
+  cardTitle: { fontFamily: FontFamily.semibold, fontSize: 18, lineHeight: 28 },
+  /** Section headings / group labels. */
+  sectionTitle: { fontFamily: FontFamily.bold, fontSize: 20, lineHeight: 30 },
+  /** Sub-hero headings and large single stats. */
+  subtitle: { fontFamily: FontFamily.bold, fontSize: 22, lineHeight: 32 },
+  /** Screen hero heading. */
+  hero: { fontFamily: FontFamily.bold, fontSize: 26, lineHeight: 38 },
+  /** Flagship greeting / dashboard hero. */
+  display: { fontFamily: FontFamily.bold, fontSize: 30, lineHeight: 42 },
+  /** Reserved oversized hero (additive; currently unused). */
+  displayXL: { fontFamily: FontFamily.bold, fontSize: 34, lineHeight: 46 },
+  /** Monospace / technical (invite codes, IDs) — raised to the 14 floor. */
+  code: { fontFamily: Fonts?.mono ?? 'monospace', fontSize: 14, lineHeight: 21 },
+} as const;
+
+/**
  * 4-pt spacing scale. Names are historical (one = 4pt … six = 64pt); prefer the
  * scale over magic numbers everywhere.
  */
@@ -207,6 +265,18 @@ export const IconSize = {
   md: 20,
   lg: 28,
   xl: 40,
+} as const;
+
+/**
+ * Icon-chip DIAMETERS (dp) for the tinted feature/identity chips — distinct from
+ * IconSize (the glyph that sits inside them). Geometry, identical in both themes.
+ */
+export const ChipSize = {
+  xs: 28,
+  sm: 36,
+  md: 40,
+  lg: 44,
+  xl: 48,
 } as const;
 
 /** Corner-radius scale. `card` is the standard panel radius; `pill` a stadium. */
@@ -261,3 +331,17 @@ export const TopTabInset = Platform.select({ web: Spacing.five }) ?? 0;
 export const MaxContentWidth = 720;
 /** Narrower max width for form/settings layouts so they stay readable on web/tablet. */
 export const MaxFormWidth = 480;
+
+/**
+ * Build an `rgba(r, g, b, a)` string from a `#RRGGBB` hex — used to derive the
+ * low-opacity (0.08–0.22) tint fills/borders for category & status chips from the
+ * ramp solids. Relocated here from the retired figma-tokens layer so tint
+ * derivation has a home on the single token system.
+ */
+export function withAlpha(hex: string, alpha: number): string {
+  const value = parseInt(hex.replace('#', ''), 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
