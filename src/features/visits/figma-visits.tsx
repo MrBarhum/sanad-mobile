@@ -1,6 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Check, Clock, Home, Users, X } from 'lucide-react-native';
-import type { ComponentType } from 'react';
+import { Clock, Home, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -9,10 +8,10 @@ import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
-import { FigmaStatusPill } from '@/components/figma/figma-status-pill';
 import { IconChip } from '@/components/figma/icon-chip';
 import { isolateLtr } from '@/components/ltr-text';
-import { FontFamily, Radius, type ThemeColor } from '@/constants/theme';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { FontFamily, Radius } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
@@ -21,7 +20,6 @@ import { formatHm, todayYmd } from '@/utils/date';
 import type { FamilyVisit, VisitStatus } from './api';
 import { useVisits } from './hooks';
 
-type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 type VisitTab = 'upcoming' | 'recent';
 
 /** Per-visit chip accent, cycled by index (the Figma varies card hues). */
@@ -38,9 +36,9 @@ const CHIP_COLORS = [
  * `VisitsCenter` STATUS_TONE mapping (completed = success/green, cancelled =
  * error/red).
  */
-const VISIT_STATUS: Record<Exclude<VisitStatus, 'planned'>, { color: ThemeColor; Icon: IconCmp }> = {
-  completed: { color: 'successFg', Icon: Check },
-  cancelled: { color: 'errorFg', Icon: X },
+const VISIT_STATUS: Record<Exclude<VisitStatus, 'planned'>, { tone: StatusTone }> = {
+  completed: { tone: 'success' },
+  cancelled: { tone: 'error' },
 };
 
 /** `${date} ${start}` sort key, matching the center's `startSortKey`. */
@@ -206,11 +204,7 @@ function VisitCard({
           </Text>
         </View>
         {statusConfig ? (
-          <FigmaStatusPill
-            label={t(`visits.status.${visit.status}`)}
-            color={c[statusConfig.color]}
-            Icon={statusConfig.Icon}
-          />
+          <StatusBadge tone={statusConfig.tone} label={t(`visits.status.${visit.status}`)} />
         ) : null}
       </View>
 

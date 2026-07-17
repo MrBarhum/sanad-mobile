@@ -9,9 +9,10 @@ import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
-import { FigmaStatusPill } from '@/components/figma/figma-status-pill';
 import { IconChip } from '@/components/figma/icon-chip';
 import { isolateLtr } from '@/components/ltr-text';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { type IconName } from '@/constants/icons';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useResponsibleLabel } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
@@ -32,6 +33,13 @@ const DOSE_STATUS: Record<MedicationLogStatus, { color: string; Icon: IconCmp }>
   missed: { color: '#C45050', Icon: X },
 };
 const DOSE_ACTIONS: MedicationLogStatus[] = ['given', 'postponed', 'missed'];
+
+/** Dose status → StatusBadge tone (+ icon override where the tone icon isn't apt). */
+const DOSE_TONE: Record<MedicationLogStatus, { tone: StatusTone; iconName?: IconName }> = {
+  given: { tone: 'success' },
+  postponed: { tone: 'warning', iconName: 'clock' },
+  missed: { tone: 'error' },
+};
 
 /** Per-medication category tint, cycled by index (mirrors the Figma color field). */
 const MED_COLORS = [
@@ -278,11 +286,9 @@ function DoseCard({
   const { t } = useTranslation();
   const c = useTheme();
   const status = dose.status;
-  const cfg = status ? DOSE_STATUS[status] : null;
-  const StatusIcon = cfg ? cfg.Icon : Clock;
-  const statusColor = cfg ? cfg.color : c.textSecondary;
-  // Pending/unlogged = solid cream/elevated (mutedSurface); logged = a 12% tint.
-  const statusBg = cfg ? withAlpha(statusColor, 0.12) : c.backgroundSunken;
+  // Logged doses use their status tone; an unlogged dose is a calm neutral pill
+  // with a clock (still icon + text, never color-only).
+  const pill = status ? DOSE_TONE[status] : { tone: 'neutral' as const, iconName: 'clock' as const };
   const statusLabel = status
     ? t(`medications.status.${status}`)
     : t('figma.medications.doseUnlogged');
@@ -324,12 +330,7 @@ function DoseCard({
             <Text style={[styles.doseTime, { color: c.textSecondary, fontFamily: FontFamily.regular }]}>
               {isolateLtr(formatHm(dose.scheduledTime))}
             </Text>
-            <FigmaStatusPill
-              label={statusLabel}
-              color={statusColor}
-              Icon={StatusIcon}
-              background={statusBg}
-            />
+            <StatusBadge tone={pill.tone} iconName={pill.iconName} label={statusLabel} />
           </View>
           {responsibleText ? (
             <View style={styles.responsibleRow}>

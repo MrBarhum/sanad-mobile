@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Calendar, Check, Clock, MapPin, Users } from 'lucide-react-native';
+import { Calendar, Clock, MapPin, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -8,7 +8,7 @@ import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
-import { FigmaStatusPill } from '@/components/figma/figma-status-pill';
+import { StatusBadge } from '@/components/status-badge';
 import { IconChip } from '@/components/figma/icon-chip';
 import { isolateLtr } from '@/components/ltr-text';
 import { FontFamily, Radius } from '@/constants/theme';
@@ -195,11 +195,7 @@ function AppointmentCard({
           </Text>
         </View>
         {isCompleted ? (
-          <FigmaStatusPill
-            label={t('appointments.status.completed')}
-            color={c.successFg}
-            Icon={Check}
-          />
+          <StatusBadge tone="success" label={t('appointments.status.completed')} />
         ) : null}
       </View>
 
