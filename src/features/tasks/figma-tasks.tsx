@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { Button } from '@/components/button';
@@ -233,9 +234,7 @@ export function FigmaTasks({
         ) : null}
 
         {tasksQuery.isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={c.primary} />
-          </View>
+          <SkeletonList />
         ) : tasksQuery.isError ? (
           <FigmaCard tone="card" radius={Radius.lg}>
             <Text style={[styles.errorText, { color: c.errorFg }]}>{t('tasks.loadError')}</Text>

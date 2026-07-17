@@ -2,6 +2,7 @@ import { Pencil, Phone, Stethoscope, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
@@ -79,9 +80,7 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
         />
 
         {doctorsQuery.isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={c.primary} />
-          </View>
+          <SkeletonList />
         ) : doctorsQuery.isError ? (
           <FigmaCard tone="card" radius={Radius.lg}>
             <Text style={[styles.errorText, { color: c.errorFg }]}>{t('doctors.loadError')}</Text>

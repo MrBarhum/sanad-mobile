@@ -2,7 +2,8 @@ import { useRouter } from 'expo-router';
 import { Calendar, Clock, MapPin, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
@@ -105,9 +106,7 @@ export function FigmaAppointments({
       <FigmaSegmentedTabs tabs={tabs} activeKey={tab} onChange={(key) => setTab(key as ApptTab)} />
 
       {appointmentsQuery.isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={c.primary} />
-        </View>
+        <SkeletonList />
       ) : appointmentsQuery.isError ? (
         <FigmaCard tone="card" radius={Radius.lg}>
           <Text style={[styles.errorText, { color: c.errorFg }]}>{t('appointments.loadError')}</Text>

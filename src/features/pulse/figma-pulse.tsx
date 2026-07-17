@@ -3,6 +3,7 @@ import { Activity, Share2 } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
@@ -86,9 +87,7 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
       </View>
 
       {activity.isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={c.primary} />
-        </View>
+        <SkeletonList />
       ) : activity.isError ? (
         <FigmaCard tone="card" radius={Radius.lg}>
           <Text style={[styles.errorText, { color: c.errorFg }]}>

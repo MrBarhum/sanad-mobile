@@ -4,6 +4,7 @@ import type { ComponentType } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
@@ -200,9 +201,7 @@ export function FigmaMedications({
           </Pressable>
         </FigmaCard>
       ) : today.isLoading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={c.primary} />
-        </View>
+        <SkeletonList />
       ) : tab === 'today' ? (
         visibleDoses.length === 0 ? (
           <EmptyCard

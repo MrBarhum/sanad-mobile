@@ -14,7 +14,8 @@ import {
   XCircle,
 } from 'lucide-react-native';
 import type { ComponentType } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 import { useTranslation } from 'react-i18next';
 
 import { FigmaCard } from '@/components/figma/figma-card';
@@ -134,9 +135,7 @@ export function FigmaNotifications() {
       ) : null}
 
       {list.isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={c.primary} />
-        </View>
+        <SkeletonList />
       ) : list.isError ? (
         <FigmaCard radius={Radius.card} padding={20}>
           <View style={styles.stateBody}>

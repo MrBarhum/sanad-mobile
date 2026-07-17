@@ -3,7 +3,8 @@ import { Crown, Edit3, Eye, MoreHorizontal } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
 import { Button } from '@/components/button';
 import { FigmaCard } from '@/components/figma/figma-card';
@@ -183,9 +184,7 @@ export function FigmaMembers({
       />
 
       {members.isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={c.primary} />
-        </View>
+        <SkeletonList />
       ) : members.isError ? (
         <FigmaCard tone="card" radius={Radius.lg}>
           <Text style={[styles.errorText, { color: c.errorFg }]}>{t('circleMembers.loadError')}</Text>

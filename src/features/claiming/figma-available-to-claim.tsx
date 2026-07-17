@@ -3,7 +3,8 @@ import { AlertCircle, Calendar, Check, Clock, HandHelping, ListChecks, Pill, Use
 import type { ComponentType } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { Button } from '@/components/button';
@@ -136,9 +137,7 @@ export function FigmaAvailableToClaim({
             <Text style={[styles.emptyText, { color: c.textSecondary }]}>{t('claiming.notAllowed')}</Text>
           </View>
         ) : feed.isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={c.primary} />
-          </View>
+          <SkeletonList />
         ) : feed.isError ? (
           <FigmaCard tone="card" radius={Radius.lg}>
             <Text style={[styles.errorText, { color: c.errorFg }]}>{t('claiming.loadError')}</Text>
