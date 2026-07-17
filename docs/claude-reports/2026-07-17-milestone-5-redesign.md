@@ -15,8 +15,8 @@
 | D — moments of care | 🔧 | completion moment done (no gamification); motion respects reduced-motion; warm-copy catalog awaits owner wording |
 | E — sweep + verify | 🔧 | **E1 done → P1-8 closed** (132 sites raised); E2 a11y done; E3 font-scale → device checklist |
 
-**Closed backlog items:** P1-8 (type floor), P2-2 (two token systems + button impls), P2-13 (tab-bar web-guard), part of P2-3 (semantic icons for the migrated buttons), P2-5-adjacent (vitals/daily-logs error recovery), the Explore light-mode scheme bug.
-**Deferred (documented, non-regressions):** the remaining component dedups (card/field/chip/empty/sheet/header), hardcoded dose-status hex tokenization, the 131-string warm-copy pass (owner sign-off), a pure-JS Skeleton, and the P2-1 dead-code deletion. All quartet-green; every commit is on `milestone-5-redesign` (no push).
+**Closed backlog items:** P1-8 (type floor), P2-2 (two token systems + button impls), P2-13 (tab-bar web-guard), part of P2-3 (semantic icons for the migrated buttons), P2-5-adjacent (vitals/daily-logs error recovery), the Explore light-mode scheme bug, all hardcoded status-color hex (now tokens), and loading skeletons.
+**Deferred (needs owner input or a device, documented, non-regressions):** the remaining component dedups (card/field/chip/empty/sheet/header — each a per-screen "which look wins" call), the ~128-string warm-copy pass (owner wording sign-off), the per-index category cycles (decorative), the E3 font-scale device QA, and the P2-1 dead-code deletion. All quartet-green; every commit is on `milestone-5-redesign` (no push).
 
 ---
 
