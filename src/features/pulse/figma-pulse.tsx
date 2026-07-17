@@ -1,6 +1,6 @@
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Activity, Share2 } from 'lucide-react-native';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 
@@ -47,6 +47,17 @@ export function FigmaPulse({ circleId }: { circleId: string }) {
 
   const [limit, setLimit] = useState(PAGE);
   const activity = useCareActivity(circleId, limit);
+
+  // Refetch on focus so returning to the log after acting elsewhere reconciles the
+  // feed (matches the available-to-claim convention; FigmaScreen has no pull-to-
+  // refresh). Mutations also invalidate the pulse key, so an in-place action shows
+  // up immediately (D1).
+  const refetch = activity.refetch;
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const events = activity.data ?? [];
   const canLoadMore = events.length >= limit;

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useMemo } from 'react';
 
 import { countVisitsToday } from '@/features/care-activity/today';
+import { pulseKeys } from '@/features/pulse/hooks';
 import { useAuth } from '@/providers';
 import { todayYmd } from '@/utils/date';
 
@@ -75,7 +76,11 @@ export function useSetVisitStatus(circleId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: string; status: VisitStatus }) => setVisitStatus(vars.id, vars.status),
-    onSuccess: () => invalidateAll(queryClient),
+    onSuccess: () => {
+      invalidateAll(queryClient);
+      // A completed visit is a Care Pulse event — refresh the feed (D1).
+      queryClient.invalidateQueries({ queryKey: pulseKeys.all });
+    },
   });
 }
 

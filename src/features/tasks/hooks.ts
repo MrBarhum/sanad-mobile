@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useMemo } from 'react';
 
 import { summarizeTodayTasks } from '@/features/care-activity/today';
+import { pulseKeys } from '@/features/pulse/hooks';
 import { useAuth } from '@/providers';
 import { todayYmd } from '@/utils/date';
 
@@ -21,6 +22,16 @@ import {
 /** Invalidate every task query (list, detail) after a mutation. */
 function invalidateAll(queryClient: QueryClient) {
   return queryClient.invalidateQueries({ queryKey: taskKeys.all });
+}
+
+/**
+ * Invalidate the task queries AND the Care Pulse feed. A completion / cancellation
+ * / reopen adds or removes a pulse event, so the Home «نبض اليوم» strip and the
+ * activity log must refresh alongside the task lists (D1).
+ */
+function invalidateWithPulse(queryClient: QueryClient) {
+  invalidateAll(queryClient);
+  queryClient.invalidateQueries({ queryKey: pulseKeys.all });
 }
 
 // ---------------------------------------------------------------------------
@@ -91,7 +102,7 @@ export function useCompleteTask(circleId: string) {
   const { user } = useAuth();
   return useMutation({
     mutationFn: (id: string) => completeTask(id, user?.id ?? null, new Date().toISOString()),
-    onSuccess: () => invalidateAll(queryClient),
+    onSuccess: () => invalidateWithPulse(queryClient),
   });
 }
 
@@ -100,7 +111,7 @@ export function useCancelTask(circleId: string) {
   const { user } = useAuth();
   return useMutation({
     mutationFn: (id: string) => cancelTask(id, new Date().toISOString(), user?.id ?? null),
-    onSuccess: () => invalidateAll(queryClient),
+    onSuccess: () => invalidateWithPulse(queryClient),
   });
 }
 
@@ -108,7 +119,7 @@ export function useReopenTask(circleId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => reopenTask(id),
-    onSuccess: () => invalidateAll(queryClient),
+    onSuccess: () => invalidateWithPulse(queryClient),
   });
 }
 

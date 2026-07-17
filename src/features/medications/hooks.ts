@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
+import { pulseKeys } from '@/features/pulse/hooks';
 import { useAuth } from '@/providers';
 import { todayYmd } from '@/utils/date';
 
@@ -216,7 +217,11 @@ export function useLogDose(circleId: string) {
         });
       }
     },
-    onSuccess: (_data, vars) =>
-      queryClient.invalidateQueries({ queryKey: medicationKeys.logs(circleId, vars.date) }),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: medicationKeys.logs(circleId, vars.date) });
+      // A logged/corrected dose is a Care Pulse event — refresh the feed so the
+      // Home «نبض اليوم» strip and the activity log reflect it without a reload.
+      queryClient.invalidateQueries({ queryKey: pulseKeys.all });
+    },
   });
 }

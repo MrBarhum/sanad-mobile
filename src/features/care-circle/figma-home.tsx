@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import {
   Activity,
   AlertCircle,
@@ -20,7 +20,7 @@ import {
   X,
 } from 'lucide-react-native';
 import type { ComponentType } from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -752,6 +752,16 @@ function PulseSection({ circleId, scheme }: { circleId: string; scheme: FigmaSch
   const activity = useCareActivity(circleId, 5);
   const actorLabel = usePulseActorLabel(circleId);
   const events = activity.data ?? [];
+
+  // Refresh the strip when Home regains focus so an action taken on another screen
+  // (and the pulse-key invalidation those mutations now fire) is reflected without
+  // leaving and re-entering Home (D1).
+  const refetch = activity.refetch;
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   if (activity.isLoading || activity.isError || events.length === 0) return null;
 

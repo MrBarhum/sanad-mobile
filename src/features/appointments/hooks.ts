@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { countAppointmentsToday } from '@/features/care-activity/today';
 import { setAssignedAppointmentOutcome } from '@/features/claiming/api';
+import { pulseKeys } from '@/features/pulse/hooks';
 import { useAuth } from '@/providers';
 import { todayYmd } from '@/utils/date';
 
@@ -22,6 +23,16 @@ import {
 /** Invalidate every appointment query (upcoming, detail) after a mutation. */
 function invalidateAll(queryClient: QueryClient) {
   return queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+}
+
+/**
+ * Invalidate the appointment queries AND the Care Pulse feed. Recording an
+ * outcome (completed / cancelled) adds a pulse event, so the Home «نبض اليوم»
+ * strip and the activity log must refresh alongside the appointment lists (D1).
+ */
+function invalidateWithPulse(queryClient: QueryClient) {
+  invalidateAll(queryClient);
+  queryClient.invalidateQueries({ queryKey: pulseKeys.all });
 }
 
 // ---------------------------------------------------------------------------
@@ -95,7 +106,7 @@ export function useSetAppointmentStatus(circleId: string) {
   return useMutation({
     mutationFn: (vars: { id: string; status: AppointmentStatus }) =>
       setAppointmentStatus(vars.id, vars.status),
-    onSuccess: () => invalidateAll(queryClient),
+    onSuccess: () => invalidateWithPulse(queryClient),
   });
 }
 
@@ -111,7 +122,7 @@ export function useSetAppointmentOutcome(circleId: string) {
   return useMutation({
     mutationFn: (vars: { id: string; status: 'completed' | 'cancelled' }) =>
       setAssignedAppointmentOutcome(vars.id, vars.status),
-    onSuccess: () => invalidateAll(queryClient),
+    onSuccess: () => invalidateWithPulse(queryClient),
   });
 }
 

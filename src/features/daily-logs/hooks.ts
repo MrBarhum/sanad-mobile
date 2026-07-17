@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useMemo } from 'react';
 
 import { summarizeTodayLogs } from '@/features/care-activity/today';
+import { pulseKeys } from '@/features/pulse/hooks';
 import { useAuth } from '@/providers';
 import { todayYmd } from '@/utils/date';
 
@@ -57,7 +58,11 @@ export function useCreateDailyLog(circleId: string) {
   return useMutation({
     mutationFn: (input: DailyLogInput) =>
       createDailyLog(circleId, { ...input, recorded_by: user?.id ?? null }),
-    onSuccess: () => invalidateAll(queryClient),
+    onSuccess: () => {
+      invalidateAll(queryClient);
+      // A new daily log is a Care Pulse event — refresh the feed (D1).
+      queryClient.invalidateQueries({ queryKey: pulseKeys.all });
+    },
   });
 }
 
