@@ -10,7 +10,7 @@ import {
 } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
@@ -94,13 +94,31 @@ export function FigmaVitals({
   );
 
   // Loading / error / empty states — calm, never a guessed value.
+  if (vitalsQuery.isLoading) {
+    return (
+      <FigmaScreen>
+        {header}
+        {disclaimer}
+        <View style={styles.center}>
+          <ActivityIndicator color={c.primary} />
+        </View>
+      </FigmaScreen>
+    );
+  }
+
   if (vitalsQuery.isError) {
     return (
       <FigmaScreen>
         {header}
         {disclaimer}
         <FigmaCard radius={Radius.xl} padding={20}>
-          <Text style={[styles.stateTitle, { color: c.text }]}>{t('vitals.loadError')}</Text>
+          <Text style={[styles.stateTitle, { color: c.errorFg }]}>{t('vitals.loadError')}</Text>
+          <Pressable
+            onPress={() => vitalsQuery.refetch()}
+            accessibilityRole="button"
+            style={[styles.retry, { backgroundColor: c.primary }]}>
+            <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
+          </Pressable>
         </FigmaCard>
       </FigmaScreen>
     );
@@ -239,4 +257,7 @@ const styles = StyleSheet.create({
   stateTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
   stateSub: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
   emptyInner: { alignItems: 'center', gap: 10 },
+  center: { paddingVertical: 64, alignItems: 'center', justifyContent: 'center' },
+  retry: { marginTop: 16, minHeight: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+  retryText: { fontSize: 16, fontFamily: FontFamily.semibold },
 });

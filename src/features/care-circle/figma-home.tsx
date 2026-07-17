@@ -362,9 +362,13 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
             {total === 0 ? (
               <Text style={[styles.heroMuted, muted]}>{t('careCircle.dashboard.today.loopNone')}</Text>
             ) : given >= total ? (
-              <View style={[styles.allDone, { backgroundColor: withAlpha('#5AAE85', 0.12) }]}>
-                <Check size={16} color="#5AAE85" />
-                <Text style={styles.allDoneText}>{t('careCircle.dashboard.today.allDosesGiven')}</Text>
+              // Moment of care: a quiet "today's doses are complete" — a calm check
+              // + reassurance on the ring, never a score or streak (no gamification).
+              <View style={[styles.allDone, { backgroundColor: withAlpha(c.successFg, 0.12) }]}>
+                <Check size={16} color={c.successFg} />
+                <Text style={[styles.allDoneText, { color: c.successFg }]}>
+                  {t('careCircle.dashboard.today.allDosesGiven')}
+                </Text>
               </View>
             ) : nextDose ? (
               <View>
@@ -886,7 +890,7 @@ const styles = StyleSheet.create({
   heroRight: { flex: 1, gap: 8 },
   heroMuted: { fontSize: 14 },
   allDone: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: Radius.lg, paddingHorizontal: 12, paddingVertical: 8 },
-  allDoneText: { fontSize: 14, color: '#5AAE85', fontFamily: FontFamily.semibold },
+  allDoneText: { fontSize: 14, fontFamily: FontFamily.semibold },
   nextLabel: { fontSize: 14 },
   nextDose: { marginTop: 6, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 12, paddingVertical: 10 },
   nextDoseTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },

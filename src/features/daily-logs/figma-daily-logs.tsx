@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { Activity, Droplets, Moon, Smile, Utensils } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
@@ -101,9 +101,19 @@ export function FigmaDailyLogs({
       </View>
 
       {isLoading ? (
-        <Text style={[styles.empty, { color: c.textSecondary }]}>{t('figma.dailylogs.loading')}</Text>
+        <View style={styles.center}>
+          <ActivityIndicator color={c.primary} />
+        </View>
       ) : isError ? (
-        <Text style={[styles.empty, { color: c.errorFg }]}>{t('dailyLogs.loadError')}</Text>
+        <FigmaCard radius={Radius.xl} padding={20}>
+          <Text style={[styles.emptyTitle, { color: c.errorFg }]}>{t('dailyLogs.loadError')}</Text>
+          <Pressable
+            onPress={() => logsQuery.refetch()}
+            accessibilityRole="button"
+            style={[styles.retry, { backgroundColor: c.primary }]}>
+            <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
+          </Pressable>
+        </FigmaCard>
       ) : logs.length === 0 ? (
         <FigmaCard radius={Radius.xl} padding={20}>
           <Text style={[styles.emptyTitle, { color: c.text }]}>{t('dailyLogs.noTodayTitle')}</Text>
@@ -216,6 +226,9 @@ const styles = StyleSheet.create({
   },
   disclaimerText: { fontSize: 14, lineHeight: 19, fontFamily: FontFamily.regular },
   empty: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center', marginTop: 8 },
+  center: { paddingVertical: 64, alignItems: 'center', justifyContent: 'center' },
+  retry: { marginTop: 16, minHeight: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+  retryText: { fontSize: 16, fontFamily: FontFamily.semibold },
   emptyTitle: { fontSize: 15, fontFamily: FontFamily.semibold },
   emptySub: { fontSize: 14, fontFamily: FontFamily.regular, marginTop: 4 },
   // Log card
