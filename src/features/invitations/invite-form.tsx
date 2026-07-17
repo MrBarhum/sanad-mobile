@@ -13,9 +13,8 @@ import {
   FigmaFormScreen,
   FigmaMutedNote,
 } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
 import { LtrText } from '@/components/ltr-text';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Spacing } from '@/constants/theme';
 import { emailLocalPart } from '@/features/circle-members/display-name';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import { useMyProfile } from '@/features/profile/hooks';
@@ -198,8 +197,8 @@ function CreatedCard({ created, onReset }: { created: CreatedInvitation; onReset
 
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
-  groupLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
-  error: { fontSize: 13, fontFamily: FigmaFont.regular },
+  groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  error: { fontSize: 13, fontFamily: FontFamily.regular },
   codeBox: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
@@ -207,9 +206,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     alignItems: 'center',
   },
-  code: { fontSize: 28, lineHeight: 42, fontFamily: FigmaFont.bold, letterSpacing: 2, textAlign: 'center' },
+  code: { fontSize: 28, lineHeight: 42, fontFamily: FontFamily.bold, letterSpacing: 2, textAlign: 'center' },
   metaRow: { gap: 4 },
-  meta: { fontSize: 13, fontFamily: FigmaFont.regular },
-  feedback: { fontSize: 13, fontFamily: FigmaFont.regular },
+  meta: { fontSize: 13, fontFamily: FontFamily.regular },
+  feedback: { fontSize: 13, fontFamily: FontFamily.regular },
   actions: { gap: Spacing.two },
 });

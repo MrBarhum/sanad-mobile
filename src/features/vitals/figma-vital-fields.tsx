@@ -9,9 +9,8 @@ import {
   FigmaFormCard,
   FigmaFormField,
 } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
 import { TimeField } from '@/components/time-field';
-import { Radius, Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { VitalReadingType } from './api';
@@ -231,10 +230,10 @@ export function FigmaVitalFields({
 
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
-  subLabel: { fontSize: 14, fontFamily: FigmaFont.regular },
+  subLabel: { fontSize: 14, fontFamily: FontFamily.regular },
   bpRow: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.three },
   bpCol: { flex: 1, gap: 4 },
-  bpSlash: { fontSize: 28, fontFamily: FigmaFont.regular, paddingBottom: 8 },
+  bpSlash: { fontSize: 28, fontFamily: FontFamily.regular, paddingBottom: 8 },
   valueRow: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.three },
   valueMain: { flex: 2 },
   bigInput: {
@@ -243,7 +242,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
     fontSize: 22,
-    fontFamily: FigmaFont.semibold,
+    fontFamily: FontFamily.semibold,
     textAlign: 'center',
     writingDirection: 'ltr',
   },
@@ -254,10 +253,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 10,
     fontSize: 13,
-    fontFamily: FigmaFont.regular,
+    fontFamily: FontFamily.regular,
     textAlign: 'center',
   },
-  error: { fontSize: 13, fontFamily: FigmaFont.regular },
+  error: { fontSize: 13, fontFamily: FontFamily.regular },
   dateTimeRow: { flexDirection: 'row', gap: Spacing.three },
   dateCol: { flex: 2 },
   timeCol: { flex: 1 },

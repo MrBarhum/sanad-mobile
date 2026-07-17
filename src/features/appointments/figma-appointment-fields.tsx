@@ -8,9 +8,8 @@ import {
   FigmaFormCard,
   FigmaFormField,
 } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
 import { TimeField } from '@/components/time-field';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { MemberSelect } from '@/features/circle-members/member-assignment';
 import type { Doctor } from '@/features/doctors/api';
@@ -181,7 +180,7 @@ export function FigmaAppointmentFields({
 
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
-  groupLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   field: { gap: Spacing.two },
   row: { flexDirection: 'row', gap: Spacing.three },
   col: { flex: 1, gap: Spacing.two },

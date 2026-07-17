@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FigmaChipSelect } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 
@@ -200,5 +199,5 @@ export function useResponsibleLabel(circleId: string): (userId: string | null) =
 
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
-  groupLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
 });

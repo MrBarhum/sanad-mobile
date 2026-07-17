@@ -1,10 +1,9 @@
 import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { ThemedText } from '../themed-text';
-import { Cairo } from './form-typography';
 
 export type FormButtonVariant = 'primary' | 'secondary' | 'danger' | 'plain';
 export type FormButtonSize = 'md' | 'sm';
@@ -22,7 +21,7 @@ type FormButtonProps = {
 };
 
 /**
- * The Cairo button for the reskinned shared form / picker primitives (MS-0).
+ * The IBM Plex button for the reskinned shared form / picker primitives (MS-0).
  *
  * A behavior-faithful re-skin of the legacy `Button`: identical variants
  * (primary filled teal · secondary quiet elevated+hairline · danger soft
@@ -30,7 +29,7 @@ type FormButtonProps = {
  * disabled handling, pressed feedback and accessibility. It reads its colors from
  * the same theme (already the Figma teal / warm-graphite palette) so it sits
  * coherently next to the other reskinned primitives, and differs from the legacy
- * `Button` ONLY by rendering its label in **Cairo** (the Figma typeface) on the
+ * `Button` ONLY by rendering its label in **IBM Plex** (the Figma typeface) on the
  * Figma rounded-xl radius. The legacy `Button` is left untouched for the
  * already-migrated center screens that consume it.
  */
@@ -107,7 +106,7 @@ export function FormButton({
         <ActivityIndicator color={colors.text} />
       ) : (
         <View style={styles.content}>
-          <ThemedText style={[size === 'sm' ? styles.labelSm : styles.labelMd, Cairo.semibold, { color: colors.text }]}>
+          <ThemedText style={[size === 'sm' ? styles.labelSm : styles.labelMd, { fontFamily: FontFamily.semibold }, { color: colors.text }]}>
             {label}
           </ThemedText>
         </View>

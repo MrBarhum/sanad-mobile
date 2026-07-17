@@ -14,7 +14,7 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Share } from 'react-native';
 
-import { FigmaCategory } from '@/components/figma/figma-tokens';
+import type { ThemeColor } from '@/constants/theme';
 import { memberDisplayName } from '@/features/circle-members/display-name';
 import { useCircleMembers } from '@/features/circle-members/hooks';
 import { todayYmdInTimeZone, ymdInTimeZone } from '@/utils/date';
@@ -24,24 +24,24 @@ import type { PulseEvent, PulseItemType } from './types';
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
 /** Per-event icon + accent (status is icon + text + color, never color alone). */
-export function pulseEventVisual(event: PulseEvent): { Icon: IconCmp; color: string } {
+export function pulseEventVisual(event: PulseEvent): { Icon: IconCmp; colorKey: ThemeColor } {
   switch (event.event_type) {
     case 'dose_logged':
-      return { Icon: Pill, color: FigmaCategory.teal };
+      return { Icon: Pill, colorKey: 'categoryTeal' };
     case 'task_completed':
-      return { Icon: Check, color: FigmaCategory.green };
+      return { Icon: Check, colorKey: 'categoryGreen' };
     case 'task_cancelled':
-      return { Icon: X, color: FigmaCategory.gold };
+      return { Icon: X, colorKey: 'categoryGold' };
     case 'appointment_outcome':
-      return { Icon: Calendar, color: FigmaCategory.purple };
+      return { Icon: Calendar, colorKey: 'categoryPurple' };
     case 'visit_completed':
-      return { Icon: Users, color: FigmaCategory.green };
+      return { Icon: Users, colorKey: 'categoryGreen' };
     case 'vital_recorded':
-      return { Icon: Activity, color: FigmaCategory.blue };
+      return { Icon: Activity, colorKey: 'categoryBlue' };
     case 'daily_log_added':
-      return { Icon: FileText, color: FigmaCategory.green };
+      return { Icon: FileText, colorKey: 'categoryGreen' };
     case 'member_joined':
-      return { Icon: UserPlus, color: FigmaCategory.gold };
+      return { Icon: UserPlus, colorKey: 'categoryGold' };
   }
 }
 

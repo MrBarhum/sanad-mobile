@@ -13,19 +13,14 @@ import {
 } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  withAlpha,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
+import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { isolateLtr } from '@/components/ltr-text';
 import { initialFor } from '@/constants/glyphs';
 import { useDoctors } from '@/features/doctors/hooks';
@@ -45,7 +40,7 @@ function callNumber(phone: string) {
 }
 
 /** Per-contact avatar tint, cycling the Figma category ramp (matches the export). */
-const AVATAR_TINTS = [FigmaCategory.teal, FigmaCategory.purple, FigmaCategory.blue];
+const AVATAR_TINTS: ThemeColor[] = ['categoryTeal', 'categoryPurple', 'categoryBlue'];
 
 /**
  * Figma exact-copy of the Emergency card, wired to the SAME real data the legacy
@@ -64,8 +59,8 @@ export function FigmaEmergencyCard({
 }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
+  const scheme = useColorScheme();
 
   const recipient = useRecipient(circleId);
   const contacts = useEmergencyContacts(circleId);
@@ -74,7 +69,7 @@ export function FigmaEmergencyCard({
   const isLoading = recipient.isLoading || contacts.isLoading || doctors.isLoading;
   const isError = recipient.isError || contacts.isError || doctors.isError;
 
-  const muted = { color: c.muted, fontFamily: FigmaFont.regular };
+  const muted = { color: c.textSecondary, fontFamily: FontFamily.regular };
 
   if (isLoading) {
     return (
@@ -125,28 +120,28 @@ export function FigmaEmergencyCard({
       key: 'bloodType',
       label: t('recipientProfile.fields.bloodType'),
       value: person?.blood_type ?? null,
-      color: c.error,
+      color: c.errorFg,
       Icon: Droplets,
     },
     {
       key: 'allergies',
       label: t('recipientProfile.fields.allergies'),
       value: person?.allergies ?? null,
-      color: FigmaCategory.gold,
+      color: c.categoryGold,
       Icon: AlertTriangle,
     },
     {
       key: 'chronicConditions',
       label: t('recipientProfile.fields.chronicConditions'),
       value: person?.chronic_conditions ?? null,
-      color: c.error,
+      color: c.errorFg,
       Icon: Heart,
     },
     {
       key: 'emergencyNotes',
       label: t('recipientProfile.fields.emergencyNotes'),
       value: person?.emergency_notes ?? null,
-      color: FigmaCategory.blue,
+      color: c.categoryBlue,
       Icon: FileText,
     },
   ];
@@ -156,14 +151,14 @@ export function FigmaEmergencyCard({
       <FigmaHeader title={t('emergencyCard.title')} />
 
       {/* Red-tinted identity header */}
-      <View style={[styles.heroBlock, { backgroundColor: withAlpha(c.error, scheme === 'dark' ? 0.08 : 0.05) }]}>
+      <View style={[styles.heroBlock, { backgroundColor: withAlpha(c.dangerSolid, scheme === 'dark' ? 0.08 : 0.05) }]}>
         <View style={styles.shieldNote}>
-          <Shield size={14} color={c.error} />
+          <Shield size={14} color={c.errorFg} />
           <Text style={styles.shieldText}>{t('figma.emergency.viewOnly')}</Text>
         </View>
         <View style={styles.heroRow}>
-          <View style={[styles.heroChip, { backgroundColor: withAlpha(c.error, 0.15) }]}>
-            <Siren size={28} color={c.error} />
+          <View style={[styles.heroChip, { backgroundColor: withAlpha(c.dangerSolid, 0.15) }]}>
+            <Siren size={28} color={c.errorFg} />
           </View>
           <View style={styles.heroText}>
             <Text style={styles.heroTitle} numberOfLines={1}>
@@ -184,11 +179,10 @@ export function FigmaEmergencyCard({
       {/* Medical information */}
       <View>
         <SectionHeader
-          scheme={scheme}
           label={t('figma.emergency.medicalTitle')}
           onEdit={canManage ? () => router.push('/recipient-profile') : undefined}
         />
-        <FigmaCard tone="card" radius={FigmaRadius.r24} padding={0} style={{ borderColor: withAlpha(c.error, 0.2) }}>
+        <FigmaCard tone="card" radius={Radius.xl} padding={0} style={{ borderColor: withAlpha(c.dangerSolid, 0.2) }}>
           {medicalRows.map((row, index) => {
             const has = !!(row.value && row.value.trim() !== '');
             const display = has ? (row.value as string) : t('emergencyCard.notSpecified');
@@ -205,7 +199,7 @@ export function FigmaEmergencyCard({
                 <View style={styles.medText}>
                   <Text style={[styles.medLabel, muted]}>{row.label}</Text>
                   <Text
-                    style={[styles.medValue, { color: has ? c.text : c.muted }]}
+                    style={[styles.medValue, { color: has ? c.text : c.textSecondary }]}
                     selectable={has}>
                     {display}
                   </Text>
@@ -219,18 +213,17 @@ export function FigmaEmergencyCard({
       {/* Emergency contacts */}
       <View>
         <SectionHeader
-          scheme={scheme}
           label={t('emergencyCard.contactsTitle')}
           onEdit={canManage ? () => router.push('/emergency-contacts') : undefined}
         />
         {contactList.length === 0 ? (
-          <FigmaCard tone="card" radius={FigmaRadius.r20} padding={16}>
+          <FigmaCard tone="card" radius={Radius.card} padding={16}>
             <Text style={[styles.emptyText, muted]}>{t('emergencyCard.noContacts')}</Text>
           </FigmaCard>
         ) : (
           <View style={styles.list}>
             {contactList.map((contact, i) => {
-              const tint = AVATAR_TINTS[i % AVATAR_TINTS.length];
+              const tint = c[AVATAR_TINTS[i % AVATAR_TINTS.length]];
               const subParts = [
                 contact.relationship?.trim() || null,
                 contact.is_primary ? t('figma.emergency.primaryContact') : null,
@@ -238,7 +231,6 @@ export function FigmaEmergencyCard({
               return (
                 <CallRow
                   key={contact.id}
-                  scheme={scheme}
                   avatarText={initialFor(contact.name)}
                   avatarTint={tint}
                   name={contact.name}
@@ -255,7 +247,7 @@ export function FigmaEmergencyCard({
       <View>
         <Text style={[styles.sectionLabel, muted]}>{t('emergencyCard.doctorsTitle')}</Text>
         {doctorList.length === 0 ? (
-          <FigmaCard tone="card" radius={FigmaRadius.r20} padding={16}>
+          <FigmaCard tone="card" radius={Radius.card} padding={16}>
             <Text style={[styles.emptyText, muted]}>{t('emergencyCard.noDoctors')}</Text>
           </FigmaCard>
         ) : (
@@ -268,9 +260,8 @@ export function FigmaEmergencyCard({
               return (
                 <CallRow
                   key={doctor.id}
-                  scheme={scheme}
                   Icon={Stethoscope}
-                  avatarTint={FigmaCategory.green}
+                  avatarTint={c.categoryGreen}
                   name={doctor.name}
                   subtitle={subParts.join('  ·  ')}
                   phone={doctor.phone}
@@ -285,9 +276,9 @@ export function FigmaEmergencyCard({
       <View
         style={[
           styles.disclaimer,
-          { backgroundColor: withAlpha(c.error, 0.06), borderColor: withAlpha(c.error, 0.15) },
+          { backgroundColor: withAlpha(c.dangerSolid, 0.06), borderColor: withAlpha(c.dangerSolid, 0.15) },
         ]}>
-        <AlertCircle size={16} color={c.error} />
+        <AlertCircle size={16} color={c.errorFg} />
         <Text style={[styles.disclaimerText, muted]}>{t('emergencyCard.disclaimer')}</Text>
       </View>
     </FigmaScreen>
@@ -301,19 +292,17 @@ export function FigmaEmergencyCard({
  * unreachable from the live UI.
  */
 function SectionHeader({
-  scheme,
   label,
   onEdit,
 }: {
-  scheme: FigmaScheme;
   label: string;
   onEdit?: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   return (
     <View style={styles.sectionHeader}>
-      <Text style={[styles.sectionLabelInline, { color: c.muted }]}>{label}</Text>
+      <Text style={[styles.sectionLabelInline, { color: c.textSecondary }]}>{label}</Text>
       {onEdit ? (
         <Pressable
           onPress={onEdit}
@@ -335,7 +324,6 @@ function SectionHeader({
  * stored the call button is omitted (the row stays informational).
  */
 function CallRow({
-  scheme,
   name,
   subtitle,
   phone,
@@ -343,7 +331,6 @@ function CallRow({
   avatarTint,
   Icon,
 }: {
-  scheme: FigmaScheme;
   name: string;
   subtitle: string;
   phone: string | null;
@@ -352,10 +339,10 @@ function CallRow({
   Icon?: IconCmp;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   return (
-    <View style={[styles.callRow, { backgroundColor: c.card, borderColor: c.border }]}>
+    <View style={[styles.callRow, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
       <View style={[styles.avatar, { backgroundColor: withAlpha(avatarTint, 0.12) }]}>
         {Icon ? (
           <Icon size={20} color={avatarTint} />
@@ -368,7 +355,7 @@ function CallRow({
           {name}
         </Text>
         {subtitle ? (
-          <Text style={[styles.callSub, { color: c.muted, fontFamily: FigmaFont.regular }]} numberOfLines={1}>
+          <Text style={[styles.callSub, { color: c.textSecondary, fontFamily: FontFamily.regular }]} numberOfLines={1}>
             {subtitle}
           </Text>
         ) : null}
@@ -383,7 +370,7 @@ function CallRow({
           onPress={() => callNumber(phone)}
           accessibilityRole="button"
           accessibilityLabel={`${t('common.call')} ${name}`}
-          style={[styles.callBtn, { backgroundColor: c.error }]}>
+          style={[styles.callBtn, { backgroundColor: c.dangerSolid }]}>
           <Phone size={20} color="#FFFFFF" />
         </Pressable>
       ) : null}
@@ -394,22 +381,22 @@ function CallRow({
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingVertical: 48 },
   errorText: { fontSize: 14, textAlign: 'center' },
-  retry: { borderRadius: FigmaRadius.pill, paddingHorizontal: 20, paddingVertical: 10, minHeight: 44, justifyContent: 'center' },
-  retryText: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  retry: { borderRadius: Radius.pill, paddingHorizontal: 20, paddingVertical: 10, minHeight: 44, justifyContent: 'center' },
+  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
 
   // Hero
-  heroBlock: { borderRadius: FigmaRadius.r24, padding: 20, gap: 16 },
+  heroBlock: { borderRadius: Radius.xl, padding: 20, gap: 16 },
   shieldNote: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  shieldText: { fontSize: 12, color: '#C45050', fontFamily: FigmaFont.semibold, flexShrink: 1 },
+  shieldText: { fontSize: 12, color: '#C45050', fontFamily: FontFamily.semibold, flexShrink: 1 },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  heroChip: { width: 56, height: 56, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },
+  heroChip: { width: 56, height: 56, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   heroText: { flex: 1, gap: 2 },
-  heroTitle: { fontSize: 24, color: '#C45050', fontFamily: FigmaFont.extrabold },
-  heroName: { fontSize: 16, fontFamily: FigmaFont.semibold },
+  heroTitle: { fontSize: 24, color: '#C45050', fontFamily: FontFamily.bold },
+  heroName: { fontSize: 16, fontFamily: FontFamily.semibold },
   heroSub: { fontSize: 13 },
 
   // Sections
-  sectionLabel: { fontSize: 13, fontFamily: FigmaFont.semibold, marginBottom: 10 },
+  sectionLabel: { fontSize: 13, fontFamily: FontFamily.semibold, marginBottom: 10 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -417,7 +404,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10,
   },
-  sectionLabelInline: { fontSize: 13, fontFamily: FigmaFont.semibold, flexShrink: 1 },
+  sectionLabelInline: { fontSize: 13, fontFamily: FontFamily.semibold, flexShrink: 1 },
   editLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -425,28 +412,28 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: 6,
   },
-  editText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  editText: { fontSize: 13, fontFamily: FontFamily.semibold },
   list: { gap: 8 },
   emptyText: { fontSize: 14 },
 
   // Medical rows
   medRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingVertical: 16 },
-  medChip: { width: 36, height: 36, borderRadius: FigmaRadius.r12, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  medChip: { width: 36, height: 36, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
   medText: { flex: 1, gap: 2 },
   medLabel: { fontSize: 12 },
-  medValue: { fontSize: 15, fontFamily: FigmaFont.semibold, lineHeight: 24 },
+  medValue: { fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 24 },
 
   // Call rows
-  callRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: FigmaRadius.r20, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingVertical: 14 },
-  avatar: { width: 44, height: 44, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 16, fontFamily: FigmaFont.bold },
+  callRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: Radius.card, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingVertical: 14 },
+  avatar: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontSize: 16, fontFamily: FontFamily.bold },
   callText: { flex: 1, gap: 2 },
-  callName: { fontSize: 15, fontFamily: FigmaFont.semibold },
+  callName: { fontSize: 15, fontFamily: FontFamily.semibold },
   callSub: { fontSize: 12 },
-  callPhone: { fontSize: 13, fontFamily: FigmaFont.medium, marginTop: 2 },
-  callBtn: { width: 48, height: 48, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },
+  callPhone: { fontSize: 13, fontFamily: FontFamily.medium, marginTop: 2 },
+  callBtn: { width: 48, height: 48, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
 
   // Disclaimer
-  disclaimer: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: FigmaRadius.r16, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingVertical: 14 },
+  disclaimer: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingVertical: 14 },
   disclaimerText: { flex: 1, fontSize: 12, lineHeight: 18 },
 });

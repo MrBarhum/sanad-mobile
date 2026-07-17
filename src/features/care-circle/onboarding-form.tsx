@@ -8,12 +8,11 @@ import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FigmaFormField } from '@/components/figma/figma-form-screen';
-import { Cairo } from '@/components/figma/form-typography';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { Gutter, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
+import { FontFamily, Gutter, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { useCreateCareCircle } from './hooks';
@@ -82,12 +81,12 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
               <Rect x={7} y={9} width={6} height={3} rx={1.5} fill="#FFFFFF" opacity={0.9} />
             </Svg>
           </View>
-          <Text style={[styles.brandName, Cairo.bold, { color: theme.text }]}>{t('auth.brand')}</Text>
+          <Text style={[styles.brandName, { fontFamily: FontFamily.bold }, { color: theme.text }]}>{t('auth.brand')}</Text>
         </View>
-        <Text style={[styles.title, Cairo.bold, { color: theme.text }]}>
+        <Text style={[styles.title, { fontFamily: FontFamily.bold }, { color: theme.text }]}>
           {t('careCircle.onboarding.title')}
         </Text>
-        <ThemedText themeColor="textSecondary" style={Cairo.regular}>
+        <ThemedText themeColor="textSecondary">
           {t('careCircle.onboarding.subtitle')}
         </ThemedText>
       </View>
@@ -106,7 +105,7 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
 
           <View style={[styles.divider, { backgroundColor: theme.divider }]} />
 
-          <ThemedText type="smallBold" themeColor="textMuted" style={Cairo.semibold}>
+          <ThemedText type="smallBold" themeColor="textMuted">
             {t('careCircle.onboarding.recipientSection')}
           </ThemedText>
 
@@ -131,7 +130,7 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
 
       {submitError ? (
         <ThemedText
-          style={[{ color: theme.errorFg }, Cairo.regular]}
+          style={{ color: theme.errorFg }}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {submitError}

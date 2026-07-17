@@ -5,9 +5,8 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FigmaFormScreen } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
@@ -19,7 +18,7 @@ import { defaultDailyLogDraft, prepareDailyLog, type DailyLogDraft } from './log
  * Add-daily-log form — an exact-copy rebuild of the Figma `AddDailyLogScreen`
  * (header + gold non-diagnostic banner + date / observations / pain / notes
  * cards), wired to Sanad's real create flow + schema. Figma's blue/IBM-Plex
- * become teal/Cairo. The observational disclaimer, the "غير محدّد" unset states,
+ * become teal/IBM Plex. The observational disclaimer, the "غير محدّد" unset states,
  * and the distinct "بدون" pain state are preserved; the one-log-per-date conflict
  * surfaces its specific message.
  */
@@ -94,5 +93,5 @@ export function DailyLogForm({ circleId }: { circleId: string }) {
 
 const styles = StyleSheet.create({
   footer: { gap: Spacing.two },
-  footerError: { fontSize: 13, fontFamily: FigmaFont.regular, textAlign: 'center' },
+  footerError: { fontSize: 13, fontFamily: FontFamily.regular, textAlign: 'center' },
 });

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, useColorScheme } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { FigmaButton } from '@/components/figma/figma-button';
 import { FigmaCardSelect } from '@/components/figma/figma-form-screen';
-import { FigmaColors, FigmaFont, type FigmaScheme } from '@/components/figma/figma-tokens';
+import { FontFamily } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import { memberErrorKey, type CircleMember, type CircleRole } from './api';
 import {
@@ -75,8 +76,7 @@ export function MemberActionsSheet({
   onLeft: () => void;
 }) {
   const { t } = useTranslation();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   const updateRole = useUpdateMemberRole(circleId);
   const updateStatus = useUpdateMemberStatus(circleId);
@@ -172,7 +172,7 @@ export function MemberActionsSheet({
 
   const errorNode = error ? (
     <Text
-      style={[styles.error, { color: c.error }]}
+      style={[styles.error, { color: c.errorFg }]}
       accessibilityRole="alert"
       accessibilityLiveRegion="polite">
       {error}
@@ -183,14 +183,14 @@ export function MemberActionsSheet({
     <FigmaBottomSheet visible={member !== null} onClose={onClose} title={title}>
       {mode === 'menu' ? (
         <>
-          <Text style={[styles.role, { color: c.muted }]}>
+          <Text style={[styles.role, { color: c.textSecondary }]}>
             {t(`circleMembers.roles.${shown.role}`)}
             {shown.isOwner ? ` · ${t('circleMembers.owner')}` : ''}
           </Text>
           {shown.isOwner ? (
-            <Text style={[styles.note, { color: c.muted }]}>{t('circleMembers.ownerNote')}</Text>
+            <Text style={[styles.note, { color: c.textSecondary }]}>{t('circleMembers.ownerNote')}</Text>
           ) : lastAdmin ? (
-            <Text style={[styles.note, { color: c.muted }]}>{t('circleMembers.lastAdminNote')}</Text>
+            <Text style={[styles.note, { color: c.textSecondary }]}>{t('circleMembers.lastAdminNote')}</Text>
           ) : null}
 
           {canEditRole ? (
@@ -250,7 +250,7 @@ export function MemberActionsSheet({
         </>
       ) : mode === 'role' ? (
         <>
-          <Text style={[styles.note, { color: c.muted }]}>{t('circleMembers.changeRoleHint')}</Text>
+          <Text style={[styles.note, { color: c.textSecondary }]}>{t('circleMembers.changeRoleHint')}</Text>
           <FigmaCardSelect
             value={selectedRole}
             onChange={setSelectedRole}
@@ -261,7 +261,7 @@ export function MemberActionsSheet({
             }))}
           />
           {roleChanged ? (
-            <Text style={[styles.note, { color: c.muted }]}>
+            <Text style={[styles.note, { color: c.textSecondary }]}>
               {t(`circleMembers.direction.${direction}`)}
             </Text>
           ) : null}
@@ -307,8 +307,8 @@ export function MemberActionsSheet({
 }
 
 const styles = StyleSheet.create({
-  role: { fontSize: 14, fontFamily: FigmaFont.medium },
-  note: { fontSize: 14, fontFamily: FigmaFont.regular, lineHeight: 21 },
-  body: { fontSize: 15, fontFamily: FigmaFont.regular, lineHeight: 23 },
-  error: { fontSize: 14, fontFamily: FigmaFont.medium },
+  role: { fontSize: 14, fontFamily: FontFamily.medium },
+  note: { fontSize: 14, fontFamily: FontFamily.regular, lineHeight: 21 },
+  body: { fontSize: 15, fontFamily: FontFamily.regular, lineHeight: 23 },
+  error: { fontSize: 14, fontFamily: FontFamily.medium },
 });

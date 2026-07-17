@@ -6,14 +6,13 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FigmaButton } from '@/components/figma/figma-button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Spacing } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import type { Doctor } from '@/features/doctors/api';
 import { useDoctors } from '@/features/doctors/hooks';
@@ -451,21 +450,21 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
-  title: { fontSize: 18, fontFamily: FigmaFont.bold },
+  statusText: { fontSize: 13, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  title: { fontSize: 18, fontFamily: FontFamily.bold },
   row: { gap: 2 },
-  rowLabel: { fontSize: 13, fontFamily: FigmaFont.semibold },
-  rowValue: { fontSize: 16, fontFamily: FigmaFont.regular },
+  rowLabel: { fontSize: 13, fontFamily: FontFamily.semibold },
+  rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
   statusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  statusLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
-  statusError: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  statusLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  statusError: { fontSize: 14, fontFamily: FontFamily.semibold },
   actionRow: { flexDirection: 'row', gap: Spacing.two },
   actionCol: { flex: 1 },
   confirmStack: { gap: Spacing.two },
-  confirmBody: { fontSize: 14, fontFamily: FigmaFont.regular, lineHeight: 21 },
+  confirmBody: { fontSize: 14, fontFamily: FontFamily.regular, lineHeight: 21 },
 });

@@ -6,13 +6,12 @@ import { z } from 'zod';
 
 import { AuthField } from '@/components/auth-field';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { Cairo } from '@/components/figma/form-typography';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Gutter, MaxFormWidth, Spacing } from '@/constants/theme';
+import { FontFamily, Gutter, MaxFormWidth, Spacing } from '@/constants/theme';
 import { passwordResetRedirectTo } from '@/features/auth/password-reset';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -55,10 +54,10 @@ export default function ForgotPasswordScreen() {
   return (
     <Screen edges={{ top: true }} maxWidth={MaxFormWidth} keyboardAvoiding gap={Spacing.three}>
       <View style={styles.header}>
-        <Text style={[styles.title, Cairo.bold, { color: theme.text }]}>
+        <Text style={[styles.title, { fontFamily: FontFamily.bold }, { color: theme.text }]}>
           {t('auth.forgotTitle')}
         </Text>
-        <ThemedText themeColor="textSecondary" style={[styles.subtitle, Cairo.regular]}>
+        <ThemedText themeColor="textSecondary" style={styles.subtitle}>
           {t('auth.forgotSubtitle')}
         </ThemedText>
       </View>
@@ -101,7 +100,7 @@ export default function ForgotPasswordScreen() {
 
       <ThemedView style={styles.footer}>
         <Link href="/sign-in">
-          <ThemedText type="link" style={Cairo.semibold}>
+          <ThemedText type="link">
             {t('auth.backToSignIn')}
           </ThemedText>
         </Link>

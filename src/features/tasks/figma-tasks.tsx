@@ -9,7 +9,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useColorScheme,
 } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
@@ -18,16 +17,11 @@ import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
-import {
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  withAlpha,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
+import { FontFamily, Radius, withAlpha } from '@/constants/theme';
 import { useClaimTask } from '@/features/claiming/hooks';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 import { confirmAction } from '@/utils/confirm';
 import { formatHm, todayYmd } from '@/utils/date';
@@ -72,7 +66,7 @@ function compareOpenTasks(a: CareTask, b: CareTask, today: string): number {
  * and wired to real Sanad data. A back/title/teal-"+" header, a today/open/done
  * segmented control, and a hairline-separated card of task rows — round complete
  * checkbox, title (strikethrough when done), note, due time, assignee, and an X to
- * cancel open tasks. Cairo + Figma tokens, RTL.
+ * cancel open tasks. IBM Plex + theme tokens, RTL.
  *
  * Role-aware visibility (UI filter only — RLS unchanged): managers (admin /
  * primary_caregiver) see and manage every task; an actionable non-manager
@@ -92,8 +86,7 @@ export function FigmaTasks({
 }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const lookup = useMemberLookup(circleId);
@@ -244,8 +237,8 @@ export function FigmaTasks({
             <ActivityIndicator color={c.primary} />
           </View>
         ) : tasksQuery.isError ? (
-          <FigmaCard tone="card" radius={FigmaRadius.r16}>
-            <Text style={[styles.errorText, { color: c.error }]}>{t('tasks.loadError')}</Text>
+          <FigmaCard tone="card" radius={Radius.lg}>
+            <Text style={[styles.errorText, { color: c.errorFg }]}>{t('tasks.loadError')}</Text>
             <Pressable
               onPress={() => tasksQuery.refetch()}
               accessibilityRole="button"
@@ -255,8 +248,8 @@ export function FigmaTasks({
           </FigmaCard>
         ) : filtered.length === 0 ? (
           <View style={styles.empty}>
-            <Check size={40} color={c.muted} strokeWidth={1} />
-            <Text style={[styles.emptyText, { color: c.muted }]}>
+            <Check size={40} color={c.textSecondary} strokeWidth={1} />
+            <Text style={[styles.emptyText, { color: c.textSecondary }]}>
               {t(effectiveScope === 'mine' ? 'figma.tasks.emptyMine' : 'figma.tasks.empty')}
             </Text>
           </View>
@@ -266,7 +259,6 @@ export function FigmaTasks({
               <TaskRow
                 key={task.id}
                 task={task}
-                scheme={scheme}
                 mine={task.assigned_to !== null && task.assigned_to === userId}
                 unassigned={task.assigned_to === null}
                 assigneeName={
@@ -289,7 +281,6 @@ export function FigmaTasks({
 
       <TaskConfirmSheet
         confirm={confirm}
-        scheme={scheme}
         pending={acting}
         onConfirm={runConfirmed}
         onClose={() => {
@@ -297,7 +288,7 @@ export function FigmaTasks({
         }}
       />
 
-      <ClaimNoteSheet note={claimNote} scheme={scheme} onClose={() => setClaimNote(null)} />
+      <ClaimNoteSheet note={claimNote} onClose={() => setClaimNote(null)} />
     </>
   );
 }
@@ -309,22 +300,20 @@ export function FigmaTasks({
  */
 function ClaimNoteSheet({
   note,
-  scheme,
   onClose,
 }: {
   note: ClaimNote | null;
-  scheme: FigmaScheme;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
-  const color = note?.tone === 'warning' ? c.accent : c.error;
+  const c = useTheme();
+  const color = note?.tone === 'warning' ? c.warningFg : c.errorFg;
 
   return (
     <FigmaBottomSheet visible={note !== null} onClose={onClose} title={note?.title ?? ''}>
       {note?.body ? (
         <Text
-          style={[styles.confirmBody, { color: c.muted }]}
+          style={[styles.confirmBody, { color: c.textSecondary }]}
           accessibilityRole="alert"
           accessibilityLiveRegion="assertive">
           {note.body}
@@ -343,19 +332,17 @@ function ClaimNoteSheet({
  */
 function TaskConfirmSheet({
   confirm,
-  scheme,
   pending,
   onConfirm,
   onClose,
 }: {
   confirm: QuickConfirm | null;
-  scheme: FigmaScheme;
   pending: boolean;
   onConfirm: () => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const [shown, setShown] = useState<QuickConfirm | null>(confirm);
 
   useEffect(() => {
@@ -369,7 +356,7 @@ function TaskConfirmSheet({
       visible={confirm !== null}
       onClose={onClose}
       title={t(isComplete ? 'tasks.confirmCompleteTitle' : 'tasks.confirmUnableTitle')}>
-      <Text style={[styles.confirmBody, { color: c.muted }]}>
+      <Text style={[styles.confirmBody, { color: c.textSecondary }]}>
         {t(isComplete ? 'tasks.confirmCompleteBody' : 'tasks.confirmUnableBody')}
       </Text>
       <Text style={[styles.confirmTask, { color: c.text }]} numberOfLines={3}>
@@ -393,7 +380,6 @@ function TaskConfirmSheet({
 
 function TaskRow({
   task,
-  scheme,
   mine,
   unassigned,
   assigneeName,
@@ -406,7 +392,6 @@ function TaskRow({
   onOpen,
 }: {
   task: CareTask;
-  scheme: FigmaScheme;
   mine: boolean;
   unassigned: boolean;
   assigneeName: string | null;
@@ -419,7 +404,7 @@ function TaskRow({
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   // An unassigned open task can be picked up inline by any claim-capable member.
   const showClaim = canClaim && unassigned && task.status === 'open';
@@ -440,16 +425,16 @@ function TaskRow({
       : (assigneeName ?? t('tasks.assignedToMember'));
 
   // Checkbox: done = success tint + check; open = hairline outline; cancelled = X.
-  const checkColor = isDone ? c.success : isCancelled ? c.error : c.muted;
+  const checkColor = isDone ? c.successFg : isCancelled ? c.errorFg : c.textSecondary;
   const checkBg = isDone
-    ? withAlpha(c.success, 0.12)
+    ? withAlpha(c.successFg, 0.12)
     : isCancelled
-      ? withAlpha(c.error, 0.12)
+      ? withAlpha(c.errorFg, 0.12)
       : 'transparent';
   const CheckIcon: IconCmp | null = isDone ? Check : isCancelled ? X : null;
   const checkboxStyle = [
     styles.checkbox,
-    { borderColor: isDone ? c.success : c.border, backgroundColor: checkBg },
+    { borderColor: isDone ? c.successFg : c.border, backgroundColor: checkBg },
   ];
 
   return (
@@ -459,7 +444,7 @@ function TaskRow({
       accessibilityHint={t('common.details')}
       style={[
         styles.row,
-        { backgroundColor: c.card, borderColor: c.border },
+        { backgroundColor: c.backgroundElement, borderColor: c.border },
         isCancelled && styles.rowDim,
       ]}>
       {canAct ? (
@@ -492,18 +477,18 @@ function TaskRow({
           {task.title}
         </Text>
         {note ? (
-          <Text style={[styles.note, { color: c.muted }]} numberOfLines={1}>
+          <Text style={[styles.note, { color: c.textSecondary }]} numberOfLines={1}>
             {note}
           </Text>
         ) : null}
         <View style={styles.metaRow}>
           {due ? (
             <>
-              <Clock size={12} color={c.muted} />
-              <Text style={[styles.metaText, { color: c.muted }]}>{isolateLtr(due)}</Text>
+              <Clock size={12} color={c.textSecondary} />
+              <Text style={[styles.metaText, { color: c.textSecondary }]}>{isolateLtr(due)}</Text>
             </>
           ) : null}
-          {due ? <Text style={[styles.metaText, { color: c.muted }]}>·</Text> : null}
+          {due ? <Text style={[styles.metaText, { color: c.textSecondary }]}>·</Text> : null}
           <Text style={[styles.metaText, { color: c.primary }]}>{assignText}</Text>
         </View>
 
@@ -539,7 +524,7 @@ function TaskRow({
           accessibilityLabel={t('tasks.markUnable')}
           accessibilityHint={t('tasks.confirmUnableTitle')}
           style={styles.cancelBtn}>
-          <X size={18} color={c.muted} />
+          <X size={18} color={c.textSecondary} />
         </Pressable>
       ) : null}
     </Pressable>
@@ -548,26 +533,26 @@ function TaskRow({
 
 const styles = StyleSheet.create({
   center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 14, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     paddingHorizontal: 16,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  retryText: { fontSize: 13, fontFamily: FontFamily.semibold },
   scopeRow: { marginTop: 4 },
   empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyText: { fontSize: 16, fontFamily: FigmaFont.medium },
+  emptyText: { fontSize: 16, fontFamily: FontFamily.medium },
   list: { gap: 8 },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    borderRadius: FigmaRadius.r16,
+    borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     paddingVertical: 16,
@@ -576,17 +561,17 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 28,
     height: 28,
-    borderRadius: FigmaRadius.pill,
+    borderRadius: Radius.pill,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
   },
   info: { flex: 1, gap: 2 },
-  title: { fontSize: 15, fontFamily: FigmaFont.semibold },
-  note: { fontSize: 12, fontFamily: FigmaFont.regular },
+  title: { fontSize: 15, fontFamily: FontFamily.semibold },
+  note: { fontSize: 12, fontFamily: FontFamily.regular },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  metaText: { fontSize: 12, fontFamily: FigmaFont.regular },
+  metaText: { fontSize: 12, fontFamily: FontFamily.regular },
   claimBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -596,9 +581,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     minHeight: 36,
     paddingHorizontal: 12,
-    borderRadius: FigmaRadius.pill,
+    borderRadius: Radius.pill,
   },
-  claimText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  claimText: { fontSize: 13, fontFamily: FontFamily.semibold },
   cancelBtn: {
     width: 28,
     height: 28,
@@ -606,6 +591,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 2,
   },
-  confirmBody: { fontSize: 14, lineHeight: 20, fontFamily: FigmaFont.regular },
-  confirmTask: { fontSize: 16, lineHeight: 24, fontFamily: FigmaFont.semibold },
+  confirmBody: { fontSize: 14, lineHeight: 20, fontFamily: FontFamily.regular },
+  confirmTask: { fontSize: 16, lineHeight: 24, fontFamily: FontFamily.semibold },
 });

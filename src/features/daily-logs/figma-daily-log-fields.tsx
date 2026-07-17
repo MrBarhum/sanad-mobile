@@ -9,9 +9,8 @@ import {
   FigmaFormCard,
   FigmaFormField,
 } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
 import { Glyph } from '@/constants/glyphs';
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { DailyLogDraft } from './log-fields';
@@ -158,7 +157,7 @@ export function FigmaDailyLogFields({
               styles.noneChipText,
               {
                 color: pain === null ? theme.primaryText : theme.textSecondary,
-                fontFamily: pain === null ? FigmaFont.semibold : FigmaFont.regular,
+                fontFamily: pain === null ? FontFamily.semibold : FontFamily.regular,
               },
             ]}>
             {pain === null ? `${Glyph.check} ${t('dailyLogs.painNone')}` : t('dailyLogs.painNone')}
@@ -208,7 +207,7 @@ export function FigmaDailyLogFields({
                     styles.scaleChipText,
                     {
                       color: on ? theme.onPrimary : theme.textMuted,
-                      fontFamily: on ? FigmaFont.bold : FigmaFont.regular,
+                      fontFamily: on ? FontFamily.bold : FontFamily.regular,
                     },
                   ]}>
                   {level}
@@ -261,7 +260,7 @@ export function FigmaDailyLogFields({
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
   divider: { height: StyleSheet.hairlineWidth },
-  painHint: { fontSize: 12, lineHeight: 18, fontFamily: FigmaFont.regular },
+  painHint: { fontSize: 12, lineHeight: 18, fontFamily: FontFamily.regular },
   noneChip: {
     minHeight: TouchTarget.min,
     borderRadius: Radius.pill,
@@ -282,8 +281,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepValue: { flex: 1, alignItems: 'center' },
-  painBig: { fontSize: 36, fontFamily: FigmaFont.bold, writingDirection: 'ltr' },
-  painOutOf: { fontSize: 12, fontFamily: FigmaFont.regular },
+  painBig: { fontSize: 36, fontFamily: FontFamily.bold, writingDirection: 'ltr' },
+  painOutOf: { fontSize: 12, fontFamily: FontFamily.regular },
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between' },
   scaleChip: {
     width: 26,

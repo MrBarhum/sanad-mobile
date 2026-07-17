@@ -13,18 +13,13 @@ import {
 } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
+import { FontFamily, Radius, type ThemeColor } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
@@ -33,7 +28,7 @@ type ExploreItem = {
   route: string;
   titleKey: string;
   subtitleKey: string;
-  color: string;
+  colorKey: ThemeColor;
   Icon: IconCmp;
 };
 
@@ -49,7 +44,7 @@ type ExploreSection = {
  * icon chip + label + sublabel + a trailing chevron that navigates to the real
  * existing feature center (its own CircleGate resolves the active circle). This
  * is a static navigation index — no per-item counts are fabricated; the
- * sublabels describe each feature instead. Cairo + Figma tokens, dark-first, RTL.
+ * sublabels describe each feature instead. IBM Plex + theme tokens, dark-first, RTL.
  * No old Sanad Screen/Surface/GlyphChip.
  */
 const SECTIONS: ExploreSection[] = [
@@ -62,7 +57,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/medications',
         titleKey: 'careCircle.dashboard.sections.medications.title',
         subtitleKey: 'figma.explore.items.medications',
-        color: FigmaCategory.teal,
+        colorKey: 'categoryTeal',
         Icon: Pill,
       },
       {
@@ -70,7 +65,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/tasks',
         titleKey: 'careCircle.dashboard.sections.tasks.title',
         subtitleKey: 'figma.explore.items.tasks',
-        color: FigmaCategory.blue,
+        colorKey: 'categoryBlue',
         Icon: Check,
       },
       {
@@ -78,7 +73,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/appointments',
         titleKey: 'careCircle.dashboard.sections.appointments.title',
         subtitleKey: 'figma.explore.items.appointments',
-        color: FigmaCategory.purple,
+        colorKey: 'categoryPurple',
         Icon: Calendar,
       },
       {
@@ -86,7 +81,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/visits',
         titleKey: 'careCircle.dashboard.sections.visits.title',
         subtitleKey: 'figma.explore.items.visits',
-        color: FigmaCategory.gold,
+        colorKey: 'categoryGold',
         Icon: Users,
       },
     ],
@@ -100,7 +95,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/vitals',
         titleKey: 'careCircle.dashboard.sections.vitals.title',
         subtitleKey: 'figma.explore.items.vitals',
-        color: FigmaCategory.blue,
+        colorKey: 'categoryBlue',
         Icon: Activity,
       },
       {
@@ -108,7 +103,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/daily-logs',
         titleKey: 'careCircle.dashboard.sections.dailyLogs.title',
         subtitleKey: 'figma.explore.items.dailyLogs',
-        color: FigmaCategory.green,
+        colorKey: 'categoryGreen',
         Icon: FileText,
       },
       {
@@ -116,7 +111,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/doctors',
         titleKey: 'careCircle.dashboard.sections.doctors.title',
         subtitleKey: 'figma.explore.items.doctors',
-        color: FigmaCategory.gold,
+        colorKey: 'categoryGold',
         Icon: Stethoscope,
       },
       {
@@ -124,7 +119,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/emergency-card',
         titleKey: 'careCircle.dashboard.sections.emergency.title',
         subtitleKey: 'figma.explore.items.emergency',
-        color: FigmaColors.dark.error,
+        colorKey: 'dangerSolid',
         Icon: AlertCircle,
       },
     ],
@@ -138,7 +133,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/pulse',
         titleKey: 'pulse.title',
         subtitleKey: 'pulse.subtitle',
-        color: FigmaCategory.teal,
+        colorKey: 'categoryTeal',
         Icon: Waves,
       },
       {
@@ -146,7 +141,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/circle-members',
         titleKey: 'circleMembers.title',
         subtitleKey: 'figma.explore.items.members',
-        color: FigmaCategory.purple,
+        colorKey: 'categoryPurple',
         Icon: Users,
       },
       {
@@ -154,7 +149,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/recipient-profile',
         titleKey: 'recipientProfile.title',
         subtitleKey: 'figma.explore.items.recipientProfile',
-        color: FigmaCategory.teal,
+        colorKey: 'categoryTeal',
         Icon: HeartPulse,
       },
     ],
@@ -164,8 +159,7 @@ const SECTIONS: ExploreSection[] = [
 export default function ExploreScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   return (
     <FigmaScreen gap={24}>
@@ -174,19 +168,19 @@ export default function ExploreScreen() {
         <Text style={[styles.title, { color: c.text }]} accessibilityRole="header">
           {t('figma.explore.title')}
         </Text>
-        <Text style={[styles.subtitle, { color: c.muted }]}>{t('figma.explore.subtitle')}</Text>
+        <Text style={[styles.subtitle, { color: c.textSecondary }]}>{t('figma.explore.subtitle')}</Text>
       </View>
 
       {/* Grouped section lists */}
       {SECTIONS.map((section) => (
         <View key={section.id}>
           <FigmaSectionLabel label={t(section.titleKey)} />
-          <FigmaCard tone="card" radius={FigmaRadius.r24} padding={0}>
+          <FigmaCard tone="card" radius={Radius.xl} padding={0}>
             {section.items.map((item, i) => (
               <FigmaListRow
                 key={item.id}
                 Icon={item.Icon}
-                color={item.color}
+                color={c[item.colorKey]}
                 title={t(item.titleKey)}
                 subtitle={t(item.subtitleKey)}
                 topDivider={i > 0}
@@ -202,6 +196,6 @@ export default function ExploreScreen() {
 
 const styles = StyleSheet.create({
   header: { gap: 4 },
-  title: { fontSize: 26, fontFamily: FigmaFont.extrabold },
-  subtitle: { fontSize: 14, fontFamily: FigmaFont.regular },
+  title: { fontSize: 26, fontFamily: FontFamily.bold },
+  subtitle: { fontSize: 14, fontFamily: FontFamily.regular },
 });

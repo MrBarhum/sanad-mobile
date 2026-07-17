@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { Calendar, Check, Clock, MapPin, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
@@ -10,16 +10,11 @@ import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
 import { FigmaStatusPill } from '@/components/figma/figma-status-pill';
 import { IconChip } from '@/components/figma/icon-chip';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
+import { FontFamily, Radius } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useDoctors } from '@/features/doctors/hooks';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
@@ -30,10 +25,10 @@ type ApptTab = 'upcoming' | 'completed';
 
 /** Per-appointment Calendar-chip accent, cycled by index (Figma uses varied hues). */
 const CHIP_COLORS = [
-  FigmaCategory.blue,
-  FigmaCategory.purple,
-  FigmaCategory.green,
-  FigmaCategory.gold,
+  'categoryBlue',
+  'categoryPurple',
+  'categoryGreen',
+  'categoryGold',
 ] as const;
 
 /**
@@ -44,7 +39,7 @@ const CHIP_COLORS = [
  * line, an optional "completed" status pill, and Clock(date, time) + MapPin
  * (location) meta rows. Tapping a card opens the existing detail route. Reuses the
  * `AppointmentsCenter` hooks (`useUpcomingAppointments`, `useDoctors`) and its
- * status/type locale keys verbatim. Cairo + Figma tokens, RTL. No old Sanad
+ * status/type locale keys verbatim. IBM Plex + theme tokens, RTL. No old Sanad
  * Screen/Surface/Section/Button/StatusBadge.
  *
  * The "upcoming" tab uses the future-only `useUpcomingAppointments`; the
@@ -65,8 +60,7 @@ export function FigmaAppointments({
   const router = useRouter();
   const { user } = useAuth();
   const userId = user?.id ?? null;
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   const [tab, setTab] = useState<ApptTab>('upcoming');
   const upcomingQuery = useUpcomingAppointments(circleId);
@@ -115,8 +109,8 @@ export function FigmaAppointments({
           <ActivityIndicator color={c.primary} />
         </View>
       ) : appointmentsQuery.isError ? (
-        <FigmaCard tone="card" radius={FigmaRadius.r16}>
-          <Text style={[styles.errorText, { color: c.error }]}>{t('appointments.loadError')}</Text>
+        <FigmaCard tone="card" radius={Radius.lg}>
+          <Text style={[styles.errorText, { color: c.errorFg }]}>{t('appointments.loadError')}</Text>
           <Pressable
             onPress={() => appointmentsQuery.refetch()}
             accessibilityRole="button"
@@ -126,8 +120,8 @@ export function FigmaAppointments({
         </FigmaCard>
       ) : filtered.length === 0 ? (
         <View style={styles.empty}>
-          <Calendar size={40} color={c.muted} strokeWidth={1} />
-          <Text style={[styles.emptyText, { color: c.muted }]}>
+          <Calendar size={40} color={c.textSecondary} strokeWidth={1} />
+          <Text style={[styles.emptyText, { color: c.textSecondary }]}>
             {tab === 'upcoming'
               ? t('figma.appointments.emptyUpcoming')
               : t('figma.appointments.emptyCompleted')}
@@ -145,8 +139,7 @@ export function FigmaAppointments({
               assigneeName={
                 appointment.assigned_to ? (lookup(appointment.assigned_to)?.label ?? null) : null
               }
-              chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
-              scheme={scheme}
+              chipColor={c[CHIP_COLORS[index % CHIP_COLORS.length]]}
               onOpen={() => router.push(`/appointments/${appointment.id}`)}
             />
           ))}
@@ -161,18 +154,16 @@ function AppointmentCard({
   doctorName,
   assigneeName,
   chipColor,
-  scheme,
   onOpen,
 }: {
   appointment: CareAppointment;
   doctorName: string | null;
   assigneeName: string | null;
   chipColor: string;
-  scheme: FigmaScheme;
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   const isCompleted = appointment.status === 'completed';
   // Date + time meta, LTR-isolated (the date/time is the scannable anchor).
@@ -183,13 +174,13 @@ function AppointmentCard({
   return (
     <FigmaCard
       tone="card"
-      radius={FigmaRadius.r24}
+      radius={Radius.xl}
       padding={16}
       onPress={onOpen}
       accessibilityLabel={appointment.title}
       accessibilityHint={t('common.details')}>
       <View style={styles.cardTop}>
-        <IconChip Icon={Calendar} color={chipColor} size={48} radius={FigmaRadius.r16} iconSize={22} />
+        <IconChip Icon={Calendar} color={chipColor} size={48} radius={Radius.lg} iconSize={22} />
         <View style={styles.cardInfo}>
           <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={2}>
             {appointment.title}
@@ -199,14 +190,14 @@ function AppointmentCard({
               {doctorName}
             </Text>
           ) : null}
-          <Text style={[styles.cardType, { color: c.muted }]} numberOfLines={1}>
+          <Text style={[styles.cardType, { color: c.textSecondary }]} numberOfLines={1}>
             {t(`appointments.type.${appointment.appointment_type}`)}
           </Text>
         </View>
         {isCompleted ? (
           <FigmaStatusPill
             label={t('appointments.status.completed')}
-            color={c.success}
+            color={c.successFg}
             Icon={Check}
           />
         ) : null}
@@ -214,21 +205,21 @@ function AppointmentCard({
 
       <View style={styles.metaList}>
         <View style={styles.metaRow}>
-          <Clock size={13} color={c.muted} />
-          <Text style={[styles.metaText, { color: c.muted }]}>{whenText}</Text>
+          <Clock size={13} color={c.textSecondary} />
+          <Text style={[styles.metaText, { color: c.textSecondary }]}>{whenText}</Text>
         </View>
         {appointment.location ? (
           <View style={styles.metaRow}>
-            <MapPin size={13} color={c.muted} />
-            <Text style={[styles.metaText, { color: c.muted }]} numberOfLines={1}>
+            <MapPin size={13} color={c.textSecondary} />
+            <Text style={[styles.metaText, { color: c.textSecondary }]} numberOfLines={1}>
               {appointment.location}
             </Text>
           </View>
         ) : null}
         {assigneeName ? (
           <View style={styles.metaRow}>
-            <Users size={13} color={c.muted} />
-            <Text style={[styles.metaText, { color: c.muted }]} numberOfLines={1}>
+            <Users size={13} color={c.textSecondary} />
+            <Text style={[styles.metaText, { color: c.textSecondary }]} numberOfLines={1}>
               {assigneeName}
             </Text>
           </View>
@@ -240,26 +231,26 @@ function AppointmentCard({
 
 const styles = StyleSheet.create({
   center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 14, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     paddingHorizontal: 16,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  retryText: { fontSize: 13, fontFamily: FontFamily.semibold },
   empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyText: { fontSize: 16, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  emptyText: { fontSize: 16, fontFamily: FontFamily.medium, textAlign: 'center' },
   list: { gap: 12 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   cardInfo: { flex: 1, gap: 2 },
-  cardTitle: { fontSize: 16, fontFamily: FigmaFont.bold },
-  cardDoctor: { fontSize: 14, fontFamily: FigmaFont.regular },
-  cardType: { fontSize: 12, fontFamily: FigmaFont.regular },
+  cardTitle: { fontSize: 16, fontFamily: FontFamily.bold },
+  cardDoctor: { fontSize: 14, fontFamily: FontFamily.regular },
+  cardType: { fontSize: 12, fontFamily: FontFamily.regular },
   metaList: { gap: 6, marginTop: 12 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  metaText: { fontSize: 13, fontFamily: FigmaFont.regular },
+  metaText: { fontSize: 13, fontFamily: FontFamily.regular },
 });

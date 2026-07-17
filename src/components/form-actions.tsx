@@ -1,12 +1,11 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MaxFormWidth, Spacing } from '@/constants/theme';
+import { FontFamily, MaxFormWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { FigmaFooterPrimaryButton } from './figma/figma-footer-primary-button';
 import { FormButton } from './figma/form-button';
-import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -45,7 +44,7 @@ function ActionsBody({
     <View style={styles.body}>
       {status === 'saved' && savedLabel ? (
         <ThemedText
-          style={[styles.status, Cairo.semibold, { color: theme.successFg }]}
+          style={[styles.status, { color: theme.successFg }]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {savedLabel}
@@ -53,7 +52,7 @@ function ActionsBody({
       ) : null}
       {status === 'error' && errorLabel ? (
         <ThemedText
-          style={[styles.status, Cairo.semibold, { color: theme.errorFg }]}
+          style={[styles.status, { color: theme.errorFg }]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {errorLabel}
@@ -113,7 +112,7 @@ export function StickyFormActions(props: SharedProps) {
 const styles = StyleSheet.create({
   inline: { marginTop: Spacing.two },
   body: { gap: Spacing.two },
-  status: { fontSize: 14, fontWeight: '600' },
+  status: { fontSize: 14, fontFamily: FontFamily.semibold },
   sticky: {
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: Spacing.three,

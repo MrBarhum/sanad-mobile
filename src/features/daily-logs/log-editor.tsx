@@ -6,12 +6,11 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FigmaButton } from '@/components/figma/figma-button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
@@ -242,10 +241,10 @@ function DailyLogViewScreen({ log }: { log: DailyCareLog }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
+  statusText: { fontSize: 13, fontFamily: FontFamily.semibold, textAlign: 'center' },
   confirmRow: { flexDirection: 'row', gap: Spacing.two },
   confirmCol: { flex: 1 },
   row: { gap: 2 },
-  rowLabel: { fontSize: 13, fontFamily: FigmaFont.semibold },
-  rowValue: { fontSize: 16, fontFamily: FigmaFont.regular },
+  rowLabel: { fontSize: 13, fontFamily: FontFamily.semibold },
+  rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
 });

@@ -10,9 +10,8 @@ import {
   FigmaFormScreen,
   FigmaSwitch,
 } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Spacing } from '@/constants/theme';
 import { MemberSelect } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -31,7 +30,7 @@ const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
  * (header + gold disclaimer + medication-info card + dose-schedule card + notes
  * card + sticky save), wired to Sanad's real create flow, schema, and the
  * protected schedule validation. The Figma export's blue/IBM-Plex are replaced
- * with the committed teal/Cairo tokens, and its native time/date inputs with the
+ * with the committed teal/IBM Plex tokens, and its native time/date inputs with the
  * protected wheel pickers — but the layout, sections, and order match the export.
  */
 export function MedicationForm({ circleId }: { circleId: string }) {
@@ -227,7 +226,7 @@ export function MedicationForm({ circleId }: { circleId: string }) {
 
 const styles = StyleSheet.create({
   footer: { gap: Spacing.two },
-  footerError: { fontSize: 13, fontFamily: FigmaFont.regular, textAlign: 'center' },
+  footerError: { fontSize: 13, fontFamily: FontFamily.regular, textAlign: 'center' },
   divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
   switchRow: {
     flexDirection: 'row',
@@ -236,6 +235,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   switchText: { flex: 1, gap: 2 },
-  switchLabel: { fontSize: 15, fontFamily: FigmaFont.regular },
-  switchHint: { fontSize: 13, fontFamily: FigmaFont.regular },
+  switchLabel: { fontSize: 15, fontFamily: FontFamily.regular },
+  switchHint: { fontSize: 13, fontFamily: FontFamily.regular },
 });

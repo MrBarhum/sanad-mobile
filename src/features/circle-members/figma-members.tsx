@@ -3,21 +3,15 @@ import { Crown, Edit3, Eye, MoreHorizontal } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FigmaButton } from '@/components/figma/figma-button';
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  withAlpha,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
+import { FontFamily, Radius, withAlpha } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import type { CircleMember, CircleRole } from './api';
 import { memberDisplayName } from './display-name';
@@ -35,14 +29,19 @@ type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: numb
  * (family_member / caregiver) as Edit3+gold, view-only (remote_member / elder)
  * as Eye+purple. Labels still come from `circleMembers.roles.*` verbatim.
  */
-function roleVisual(role: CircleRole, primary: string): { Icon: IconCmp; color: string } {
+function roleVisual(
+  role: CircleRole,
+  primary: string,
+  gold: string,
+  purple: string,
+): { Icon: IconCmp; color: string } {
   if (role === 'admin' || role === 'primary_caregiver') {
     return { Icon: Crown, color: primary };
   }
   if (role === 'family_member' || role === 'caregiver') {
-    return { Icon: Edit3, color: FigmaCategory.gold };
+    return { Icon: Edit3, color: gold };
   }
-  return { Icon: Eye, color: FigmaCategory.purple };
+  return { Icon: Eye, color: purple };
 }
 
 /** First grapheme of a display name, for the letter avatar. */
@@ -79,8 +78,7 @@ export function FigmaMembers({
 }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   const members = useCircleMembers(circleId);
 
@@ -98,7 +96,7 @@ export function FigmaMembers({
 
   function renderRow(member: CircleMember) {
     const displayName = memberDisplayName(member, t('circleMembers.unnamed'));
-    const visual = roleVisual(member.role, c.primary);
+    const visual = roleVisual(member.role, c.primary, c.categoryGold, c.categoryPurple);
     const actionable = memberHasActions(member, all, actorRole);
     // Only show the email line when it adds info beyond the name.
     const emailLine = member.email && member.fullName ? member.email : null;
@@ -116,8 +114,8 @@ export function FigmaMembers({
               {displayName}
             </Text>
             {member.isSelf ? (
-              <View style={[styles.youBadge, { backgroundColor: c.mutedSurface }]}>
-                <Text style={[styles.youText, { color: c.muted }]}>{t('circleMembers.you')}</Text>
+              <View style={[styles.youBadge, { backgroundColor: c.backgroundSunken }]}>
+                <Text style={[styles.youText, { color: c.textSecondary }]}>{t('circleMembers.you')}</Text>
               </View>
             ) : null}
           </View>
@@ -128,16 +126,16 @@ export function FigmaMembers({
             </Text>
             {dim ? (
               <>
-                <Text style={[styles.metaDot, { color: c.muted }]}>·</Text>
-                <Text style={[styles.statusText, { color: c.muted }]}>
+                <Text style={[styles.metaDot, { color: c.textSecondary }]}>·</Text>
+                <Text style={[styles.statusText, { color: c.textSecondary }]}>
                   {t(`circleMembers.status.${member.status}`)}
                 </Text>
               </>
             ) : null}
             {emailLine ? (
               <>
-                <Text style={[styles.metaDot, { color: c.muted }]}>·</Text>
-                <Text style={[styles.email, { color: c.muted }]} numberOfLines={1} selectable>
+                <Text style={[styles.metaDot, { color: c.textSecondary }]}>·</Text>
+                <Text style={[styles.email, { color: c.textSecondary }]} numberOfLines={1} selectable>
                   {isolateLtr(emailLine)}
                 </Text>
               </>
@@ -145,13 +143,13 @@ export function FigmaMembers({
           </View>
         </View>
 
-        {actionable ? <MoreHorizontal size={20} color={c.muted} /> : null}
+        {actionable ? <MoreHorizontal size={20} color={c.textSecondary} /> : null}
       </>
     );
 
     const rowStyle = [
       styles.row,
-      { backgroundColor: c.card, borderColor: c.border },
+      { backgroundColor: c.backgroundElement, borderColor: c.border },
       dim && styles.rowDim,
     ];
 
@@ -189,8 +187,8 @@ export function FigmaMembers({
           <ActivityIndicator color={c.primary} />
         </View>
       ) : members.isError ? (
-        <FigmaCard tone="card" radius={FigmaRadius.r16}>
-          <Text style={[styles.errorText, { color: c.error }]}>{t('circleMembers.loadError')}</Text>
+        <FigmaCard tone="card" radius={Radius.lg}>
+          <Text style={[styles.errorText, { color: c.errorFg }]}>{t('circleMembers.loadError')}</Text>
           <Pressable
             onPress={() => members.refetch()}
             accessibilityRole="button"
@@ -206,7 +204,7 @@ export function FigmaMembers({
               styles.summary,
               { backgroundColor: withAlpha(c.primary, 0.08), borderColor: withAlpha(c.primary, 0.15) },
             ]}>
-            <Text style={[styles.summaryText, { color: c.muted }]}>{summary}</Text>
+            <Text style={[styles.summaryText, { color: c.textSecondary }]}>{summary}</Text>
           </View>
 
           {canManage ? (
@@ -223,7 +221,7 @@ export function FigmaMembers({
           {/* Removed members (managers only) — reachable so they can be reactivated. */}
           {inactive.length > 0 ? (
             <>
-              <Text style={[styles.sectionLabel, { color: c.muted }]}>
+              <Text style={[styles.sectionLabel, { color: c.textSecondary }]}>
                 {t('circleMembers.inactiveTitle')}
               </Text>
               <View style={styles.list}>{inactive.map(renderRow)}</View>
@@ -231,18 +229,18 @@ export function FigmaMembers({
           ) : null}
 
           {/* Role legend (plain-language) */}
-          <FigmaCard tone="card" radius={FigmaRadius.r24} padding={16}>
+          <FigmaCard tone="card" radius={Radius.xl} padding={16}>
             <Text style={[styles.legendTitle, { color: c.text }]}>{t('figma.members.rolesTitle')}</Text>
             {(
               [
                 { color: c.primary, role: 'manager', desc: 'managerDesc' },
-                { color: FigmaCategory.gold, role: 'editor', desc: 'editorDesc' },
-                { color: FigmaCategory.purple, role: 'viewer', desc: 'viewerDesc' },
+                { color: c.categoryGold, role: 'editor', desc: 'editorDesc' },
+                { color: c.categoryPurple, role: 'viewer', desc: 'viewerDesc' },
               ] as const
             ).map((r) => (
               <View key={r.role} style={styles.legendRow}>
                 <View style={[styles.legendDot, { backgroundColor: r.color }]} />
-                <Text style={[styles.legendText, { color: c.muted }]}>
+                <Text style={[styles.legendText, { color: c.textSecondary }]}>
                   <Text style={[styles.legendRole, { color: c.text }]}>
                     {t(`figma.members.legend.${r.role}`)}
                     {t('figma.members.legendSeparator')}
@@ -272,33 +270,33 @@ export function FigmaMembers({
 
 const styles = StyleSheet.create({
   center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 14, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     paddingHorizontal: 16,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  retryText: { fontSize: 13, fontFamily: FontFamily.semibold },
   // Summary line
   summary: {
-    borderRadius: FigmaRadius.r16,
+    borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  summaryText: { fontSize: 14, fontFamily: FigmaFont.regular, lineHeight: 21 },
-  sectionLabel: { fontSize: 13, fontFamily: FigmaFont.semibold, marginTop: 4 },
+  summaryText: { fontSize: 14, fontFamily: FontFamily.regular, lineHeight: 21 },
+  sectionLabel: { fontSize: 13, fontFamily: FontFamily.semibold, marginTop: 4 },
   // Member rows
   list: { gap: 8 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    borderRadius: FigmaRadius.r16,
+    borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -309,25 +307,25 @@ const styles = StyleSheet.create({
   avatar: {
     width: 48,
     height: 48,
-    borderRadius: FigmaRadius.pill,
+    borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontSize: 18, fontFamily: FigmaFont.bold },
+  avatarText: { fontSize: 18, fontFamily: FontFamily.bold },
   info: { flex: 1, gap: 3 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontSize: 15, fontFamily: FigmaFont.semibold, flexShrink: 1 },
-  youBadge: { borderRadius: FigmaRadius.pill, paddingHorizontal: 8, paddingVertical: 2 },
-  youText: { fontSize: 11, fontFamily: FigmaFont.medium },
+  name: { fontSize: 15, fontFamily: FontFamily.semibold, flexShrink: 1 },
+  youBadge: { borderRadius: Radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
+  youText: { fontSize: 11, fontFamily: FontFamily.medium },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
-  roleText: { fontSize: 12, fontFamily: FigmaFont.medium },
-  metaDot: { fontSize: 11, fontFamily: FigmaFont.regular },
-  statusText: { fontSize: 12, fontFamily: FigmaFont.regular },
-  email: { fontSize: 12, fontFamily: FigmaFont.regular, flexShrink: 1 },
+  roleText: { fontSize: 12, fontFamily: FontFamily.medium },
+  metaDot: { fontSize: 11, fontFamily: FontFamily.regular },
+  statusText: { fontSize: 12, fontFamily: FontFamily.regular },
+  email: { fontSize: 12, fontFamily: FontFamily.regular, flexShrink: 1 },
   // Role legend
-  legendTitle: { fontSize: 14, fontFamily: FigmaFont.bold, marginBottom: 10 },
+  legendTitle: { fontSize: 14, fontFamily: FontFamily.bold, marginBottom: 10 },
   legendRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
-  legendDot: { width: 8, height: 8, borderRadius: FigmaRadius.pill, marginTop: 6 },
-  legendText: { flex: 1, fontSize: 14, fontFamily: FigmaFont.regular, lineHeight: 21 },
-  legendRole: { fontFamily: FigmaFont.semibold },
+  legendDot: { width: 8, height: 8, borderRadius: Radius.pill, marginTop: 6 },
+  legendText: { flex: 1, fontSize: 14, fontFamily: FontFamily.regular, lineHeight: 21 },
+  legendRole: { fontFamily: FontFamily.semibold },
 });

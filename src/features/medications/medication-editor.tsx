@@ -12,14 +12,13 @@ import {
   FigmaMutedNote,
   FigmaSwitch,
 } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
 import { ItemActions } from '@/components/item-actions';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge } from '@/components/status-badge';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Spacing } from '@/constants/theme';
 import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -703,13 +702,13 @@ function ScheduleCard({
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
-  title: { fontSize: 18, fontFamily: FigmaFont.bold },
-  sectionHeading: { fontSize: 16, fontFamily: FigmaFont.bold },
+  statusText: { fontSize: 13, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  title: { fontSize: 18, fontFamily: FontFamily.bold },
+  sectionHeading: { fontSize: 16, fontFamily: FontFamily.bold },
   infoRow: { gap: 2 },
-  rowLabel: { fontSize: 13, fontFamily: FigmaFont.semibold },
-  rowValue: { fontSize: 16, fontFamily: FigmaFont.regular },
-  statusLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  rowLabel: { fontSize: 13, fontFamily: FontFamily.semibold },
+  rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
+  statusLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
   switchRow: {
     flexDirection: 'row',
@@ -718,8 +717,8 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   switchText: { flex: 1, gap: 2 },
-  switchLabel: { fontSize: 15, fontFamily: FigmaFont.regular },
-  switchHint: { fontSize: 13, fontFamily: FigmaFont.regular },
+  switchLabel: { fontSize: 15, fontFamily: FontFamily.regular },
+  switchHint: { fontSize: 13, fontFamily: FontFamily.regular },
   schedules: { gap: Spacing.three },
   scheduleHeader: {
     flexDirection: 'row',
