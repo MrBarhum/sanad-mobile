@@ -35,7 +35,7 @@ import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { CareLoopRing } from '@/components/figma/care-loop-ring';
 import { IconChip } from '@/components/figma/icon-chip';
-import { FontFamily, Gutter, Radius, withAlpha } from '@/constants/theme';
+import { FontFamily, Gutter, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isolateLtr } from '@/components/ltr-text';
 import { useUpcomingAppointments } from '@/features/appointments/hooks';
@@ -74,10 +74,10 @@ import {
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
 /** Fixed Figma dose-status colors (constant across modes, as in the export). */
-const DOSE_STATUS: Record<MedicationLogStatus, { color: string; Icon: IconCmp }> = {
-  given: { color: '#5AAE85', Icon: Check },
-  postponed: { color: '#C8904A', Icon: Clock },
-  missed: { color: '#C45050', Icon: X },
+const DOSE_STATUS: Record<MedicationLogStatus, { colorKey: ThemeColor; Icon: IconCmp }> = {
+  given: { colorKey: 'successFg', Icon: Check },
+  postponed: { colorKey: 'warningFg', Icon: Clock },
+  missed: { colorKey: 'errorFg', Icon: X },
 };
 const DOSE_ACTIONS: MedicationLogStatus[] = ['given', 'postponed', 'missed'];
 
@@ -395,7 +395,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
               <View style={styles.strip}>
                 {visibleDoses.slice(0, 5).map((d) => {
                   const cfg = d.status ? DOSE_STATUS[d.status] : null;
-                  const color = cfg ? cfg.color : c.textSecondary;
+                  const color = cfg ? c[cfg.colorKey] : c.textSecondary;
                   const StripIcon = cfg ? cfg.Icon : Clock;
                   // Pending/unlogged = a solid cream/elevated pill (Figma `--muted`),
                   // visibly lighter than the tinted given/postponed/missed pills.
@@ -608,7 +608,7 @@ function DoseRow({
   const status = dose.status;
   const cfg = status ? DOSE_STATUS[status] : null;
   const StatusIcon = cfg ? cfg.Icon : Clock;
-  const statusColor = cfg ? cfg.color : c.textSecondary;
+  const statusColor = cfg ? c[cfg.colorKey] : c.textSecondary;
   // Pending/unlogged = solid cream/elevated (Figma `--muted`); logged = a tint.
   const statusBg = cfg ? withAlpha(statusColor, 0.12) : c.backgroundSunken;
   const statusLabel = status ? t(`medications.status.${status}`) : t('careCircle.dashboard.today.doseUnlogged');
@@ -707,6 +707,7 @@ function DoseRow({
             DOSE_ACTIONS.map((s) => {
               const a = DOSE_STATUS[s];
               const ActionIcon = a.Icon;
+              const color = c[a.colorKey];
               const selected = s === status;
               return (
                 <Pressable
@@ -718,12 +719,12 @@ function DoseRow({
                   style={[
                     styles.doseAction,
                     {
-                      backgroundColor: withAlpha(a.color, selected ? 0.24 : 0.15),
+                      backgroundColor: withAlpha(color, selected ? 0.24 : 0.15),
                       opacity: pending ? 0.5 : 1,
                     },
                   ]}>
-                  <ActionIcon size={14} color={a.color} />
-                  <Text style={[styles.doseActionText, { color: a.color }]}>{t(`medications.status.${s}`)}</Text>
+                  <ActionIcon size={14} color={color} />
+                  <Text style={[styles.doseActionText, { color }]}>{t(`medications.status.${s}`)}</Text>
                 </Pressable>
               );
             })

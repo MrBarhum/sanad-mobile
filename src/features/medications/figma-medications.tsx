@@ -26,11 +26,11 @@ import { summarizeDoses, type DoseItem } from './today';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
-/** Fixed Figma dose-status colors (constant across modes, as in the export). */
-const DOSE_STATUS: Record<MedicationLogStatus, { color: string; Icon: IconCmp }> = {
-  given: { color: '#5AAE85', Icon: Check },
-  postponed: { color: '#C8904A', Icon: Clock },
-  missed: { color: '#C45050', Icon: X },
+/** Dose-status colors as theme tokens (AA-safe + mode-adaptive), resolved at render. */
+const DOSE_STATUS: Record<MedicationLogStatus, { colorKey: ThemeColor; Icon: IconCmp }> = {
+  given: { colorKey: 'successFg', Icon: Check },
+  postponed: { colorKey: 'warningFg', Icon: Clock },
+  missed: { colorKey: 'errorFg', Icon: X },
 };
 const DOSE_ACTIONS: MedicationLogStatus[] = ['given', 'postponed', 'missed'];
 
@@ -378,6 +378,7 @@ function DoseCard({
             DOSE_ACTIONS.map((s) => {
               const a = DOSE_STATUS[s];
               const ActionIcon = a.Icon;
+              const color = c[a.colorKey];
               const selected = s === status;
               return (
                 <Pressable
@@ -389,12 +390,12 @@ function DoseCard({
                   style={[
                     styles.doseAction,
                     {
-                      backgroundColor: withAlpha(a.color, selected ? 0.22 : 0.12),
+                      backgroundColor: withAlpha(color, selected ? 0.22 : 0.12),
                       opacity: pending ? 0.5 : 1,
                     },
                   ]}>
-                  <ActionIcon size={14} color={a.color} />
-                  <Text style={[styles.doseActionText, { color: a.color }]}>{t(`medications.status.${s}`)}</Text>
+                  <ActionIcon size={14} color={color} />
+                  <Text style={[styles.doseActionText, { color }]}>{t(`medications.status.${s}`)}</Text>
                 </Pressable>
               );
             })
@@ -521,13 +522,13 @@ function MedicationRow({
           style={[
             styles.activeBadge,
             {
-              backgroundColor: active ? withAlpha('#5AAE85', 0.12) : c.backgroundSunken,
+              backgroundColor: active ? withAlpha(c.successFg, 0.12) : c.backgroundSunken,
             },
           ]}>
           <Text
             style={[
               styles.activeBadgeText,
-              { color: active ? '#5AAE85' : c.textSecondary },
+              { color: active ? c.successFg : c.textSecondary },
             ]}>
             {active ? t('figma.medications.active') : t('figma.medications.inactive')}
           </Text>

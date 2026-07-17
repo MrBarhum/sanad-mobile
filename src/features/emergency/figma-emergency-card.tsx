@@ -154,14 +154,14 @@ export function FigmaEmergencyCard({
       <View style={[styles.heroBlock, { backgroundColor: withAlpha(c.dangerSolid, scheme === 'dark' ? 0.08 : 0.05) }]}>
         <View style={styles.shieldNote}>
           <Shield size={14} color={c.errorFg} />
-          <Text style={styles.shieldText}>{t('figma.emergency.viewOnly')}</Text>
+          <Text style={[styles.shieldText, { color: c.errorFg }]}>{t('figma.emergency.viewOnly')}</Text>
         </View>
         <View style={styles.heroRow}>
           <View style={[styles.heroChip, { backgroundColor: withAlpha(c.dangerSolid, 0.15) }]}>
             <Siren size={28} color={c.errorFg} />
           </View>
           <View style={styles.heroText}>
-            <Text style={styles.heroTitle} numberOfLines={1}>
+            <Text style={[styles.heroTitle, { color: c.errorFg }]} numberOfLines={1}>
               {t('figma.emergency.title')}
             </Text>
             <Text style={[styles.heroName, { color: c.text }]} numberOfLines={1}>
@@ -387,11 +387,11 @@ const styles = StyleSheet.create({
   // Hero
   heroBlock: { borderRadius: Radius.xl, padding: 20, gap: 16 },
   shieldNote: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  shieldText: { fontSize: 14, color: '#C45050', fontFamily: FontFamily.semibold, flexShrink: 1 },
+  shieldText: { fontSize: 14, fontFamily: FontFamily.semibold, flexShrink: 1 },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   heroChip: { width: 56, height: 56, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   heroText: { flex: 1, gap: 2 },
-  heroTitle: { fontSize: 24, color: '#C45050', fontFamily: FontFamily.bold },
+  heroTitle: { fontSize: 24, fontFamily: FontFamily.bold },
   heroName: { fontSize: 16, fontFamily: FontFamily.semibold },
   heroSub: { fontSize: 14 },
 
