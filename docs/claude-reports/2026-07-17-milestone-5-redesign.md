@@ -102,8 +102,14 @@ Hardest: `figma-tokens.ts` (linchpin), `figma-home.tsx` (102 refs), `figma-medic
 
 ---
 
-## Phase B — core components ⏭ (plan)
-One `Button` (survivor, theme.ts + IBM Plex + semantic Icon) absorbs the 3 duplicates: `FormButton` (Cairo clone), `FigmaButton` (12 consumers, reads FigmaColors directly), `FigmaFooterPrimaryButton` (renders in the **system** font). Survivors that others fold into: `Surface` (←FigmaCard, FigmaFormCard), `StatusBadge` (←FigmaStatusPill; bump 13.5→14), `EmptyState`/`LoadingState` (←all inline figma empties), `OptionSelect` (←FigmaChipSelect/CardSelect, WeekdaySelector chip), `GlyphChip` (←icon-chip), `FormField` (←FigmaField/FigmaFormField), unified sheet chrome (FigmaBottomSheet/FormModal/PickerSheet/TimezonePicker), unified header (FigmaHeader/FigmaFormScreen). **No skeleton system exists** — decision pending: standardize on `LoadingState` vs add a pure-JS `Skeleton`. Also fix `figma-header` hardcoded English `back`/`add` a11y labels (E2).
+## Phase B — core components 🔧
+
+Note: the "migrate the existing Figma components to tokens" half of Phase B is **already complete** — every `components/figma/*` primitive was moved onto theme.ts in Phase A. What remains is the **dedup** (one implementation per category).
+
+- ✅ **Buttons (P2-2 button half closed).** 4 impls → `Button` (unified survivor) + `FigmaFooterPrimaryButton` (kept as a documented Android render-workaround; system font by design; flagged for on-device QA). Deleted `FigmaButton` (12 consumers) + `FormButton` (3); repointed all to `Button`. FigmaButton's danger (solid red) → Button's calm soft danger; secondary → `backgroundSelected`. Two lucide `Icon` props → semantic `iconName` via the ICONS registry (added `signOut`, `claim` — closes P2-3 for these). `443ff9c`.
+- ⏭ **Remaining folds** — best interleaved with Phase C (they're visual-decision-entangled: which card/pill/chip look wins is a per-screen call): `Surface`←FigmaCard/FigmaFormCard, `StatusBadge`←FigmaStatusPill (13.5→14), `FormField`←FigmaField/FigmaFormField, `OptionSelect`←FigmaChipSelect/CardSelect/WeekdaySelector-chip, `GlyphChip`←icon-chip, `EmptyState`←all inline figma empties, unified sheet chrome (FigmaBottomSheet/FormModal/PickerSheet/TimezonePicker), unified header (FigmaHeader/FigmaFormScreen).
+- ⏭ **Loading skeletons** — none exist; add a pure-JS `Skeleton` (Animated opacity) or standardize on `LoadingState`.
+- ⏭ **a11y (E2 pull-forward):** `figma-header` hardcoded English `back`/`add` labels → i18n.
 
 ## Phase C — screens ⏭ (canonical order)
 Home (flagship) → Medications → Tasks → سجل النشاط (+Home نبض) → Appointments → Vitals → Visits → Daily-logs → Doctors → Members → Available-to-claim → Notifications&settings → Account → Auth ×4 → Join/Invite. Known screen-level defects to fix in-pass: Explore hardcodes `FigmaColors.dark.error` (light-mode bug); Vitals error has no retry; Daily-logs loading/error are bare text; hardcoded status hex in figma-home/figma-medications/emergency-card; arbitrary per-index category cycles.
@@ -137,3 +143,5 @@ Home (flagship) → Medications → Tasks → سجل النشاط (+Home نبض)
 - `d5c535b` refactor(figma-primitives): migrate the delete-target primitives onto theme.ts.
 - `2d33bac` docs(milestone-5): track Phase A migration progress.
 - `805a32b` refactor(tokens): consolidate every consumer onto theme.ts + retire Cairo (P2-2 token half). **← Phase A complete**
+- `95b333a` docs(milestone-5): close Phase A + record standing rules in CLAUDE.md.
+- `443ff9c` refactor(button): fold FigmaButton + FormButton into the single Button (P2-2 button half). **← Phase B started**
