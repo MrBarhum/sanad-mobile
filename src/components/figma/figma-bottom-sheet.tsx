@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,13 +19,14 @@ type FigmaBottomSheetProps = {
  */
 export function FigmaBottomSheet({ visible, onClose, title, children }: FigmaBottomSheetProps) {
   const c = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable
         style={[styles.backdrop, { backgroundColor: c.overlay }]}
-        accessibilityLabel="close"
+        accessibilityLabel={t('common.close')}
         onPress={onClose}>
         <Pressable style={styles.sheetWrap} onPress={() => {}}>
           <View style={[styles.sheet, { backgroundColor: c.backgroundElement, paddingBottom: insets.bottom + 24 }]}>

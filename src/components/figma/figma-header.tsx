@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { ArrowRight, Plus } from 'lucide-react-native';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FontFamily, Radius } from '@/constants/theme';
@@ -22,20 +23,18 @@ type FigmaHeaderProps = {
  * optional round teal "+" add button (end). RTL handles side placement (back
  * sits at the right). Use as the first child inside `FigmaScreen` (which already
  * provides the top safe-area inset).
- *
- * TODO(E2 a11y): the back/add fallback labels are hardcoded English — localize
- * via i18n in the a11y pass (kept as-is here to keep this a token-only migration).
  */
 export function FigmaHeader({ title, onAdd, addAccessibilityLabel, onBack, trailing }: FigmaHeaderProps) {
   const router = useRouter();
   const c = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.row}>
       <Pressable
         onPress={onBack ?? (() => router.back())}
         accessibilityRole="button"
-        accessibilityLabel="back"
+        accessibilityLabel={t('common.back')}
         style={[styles.action, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
         <ArrowRight size={20} color={c.text} />
       </Pressable>
@@ -50,7 +49,7 @@ export function FigmaHeader({ title, onAdd, addAccessibilityLabel, onBack, trail
         <Pressable
           onPress={onAdd}
           accessibilityRole="button"
-          accessibilityLabel={addAccessibilityLabel ?? 'add'}
+          accessibilityLabel={addAccessibilityLabel ?? t('common.add')}
           style={[styles.action, { backgroundColor: c.primary }]}>
           <Plus size={20} color={c.onPrimary} />
         </Pressable>
