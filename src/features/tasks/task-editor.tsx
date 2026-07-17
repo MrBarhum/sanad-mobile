@@ -7,20 +7,21 @@ import { DateField } from '@/components/date-field';
 import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import {
-  FigmaChipSelect,
-  FigmaFormCard,
-  FigmaFormField,
   FigmaFormScreen,
   FigmaMutedNote,
+  FigmaSectionLabel,
 } from '@/components/figma/figma-form-screen';
+import { FormField } from '@/components/form-field';
 import { isolateLtr } from '@/components/ltr-text';
+import { OptionSelect } from '@/components/option-select';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { TimeField } from '@/components/time-field';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
@@ -57,7 +58,7 @@ const STATUS_GLYPH: Record<TaskStatus, string> = {
 
 /**
  * View / edit a single task — rebuilt in the Figma editor language (FigmaFormScreen
- * header + grouped FigmaFormCards + body-rendered teal save CTA) to match the
+ * header + grouped Surface cards + body-rendered teal save CTA) to match the
  * Add-Task form's section order (main info → due date/time → assignee → notes).
  * Managers get editable fields + a status card + a two-step delete; others get a
  * read-only layout (collaborators may still complete/cancel via the status card).
@@ -214,8 +215,8 @@ function TaskEditScreen({
       <FigmaMutedNote>{t('tasks.disclaimer')}</FigmaMutedNote>
 
       {/* Main info */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('tasks.fields.title')}
           value={title}
           onChangeText={(v) => {
@@ -225,7 +226,7 @@ function TaskEditScreen({
           required
           error={fieldError(errors.title)}
         />
-        <FigmaFormField
+        <FormField
           label={t('tasks.fields.description')}
           value={description}
           onChangeText={(v) => {
@@ -238,7 +239,7 @@ function TaskEditScreen({
         />
         <View style={styles.group}>
           <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>{t('tasks.fields.category')}</Text>
-          <FigmaChipSelect
+          <OptionSelect
             value={category}
             options={categoryOptions}
             onChange={(v) => {
@@ -249,7 +250,7 @@ function TaskEditScreen({
         </View>
         <View style={styles.group}>
           <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>{t('tasks.fields.priority')}</Text>
-          <FigmaChipSelect
+          <OptionSelect
             value={priority}
             options={priorityOptions}
             onChange={(v) => {
@@ -258,10 +259,11 @@ function TaskEditScreen({
             }}
           />
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Due date / time */}
-      <FigmaFormCard label={t('tasks.dueTitle')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('tasks.dueTitle')}</FigmaSectionLabel>
         <View style={styles.row}>
           <View style={styles.dateCol}>
             <DateField
@@ -288,12 +290,12 @@ function TaskEditScreen({
             />
           </View>
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Assignee — full member picker (Phase 2B), seeded from the task's current
           assignee. Replaces the old self-only toggle, which silently wiped another
           member's assignment whenever a manager saved an edit. */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <MemberSelect
           circleId={circleId}
           value={assignedTo}
@@ -303,11 +305,11 @@ function TaskEditScreen({
             touch();
           }}
         />
-      </FigmaFormCard>
+      </Surface>
 
       {/* Notes */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('tasks.fields.notes')}
           value={notes}
           onChangeText={(v) => {
@@ -318,7 +320,7 @@ function TaskEditScreen({
           multiline
           error={fieldError(errors.notes)}
         />
-      </FigmaFormCard>
+      </Surface>
 
       <StatusSection circleId={circleId} task={initial} canManage canCollaborate={canCollaborate} />
 
@@ -382,7 +384,7 @@ function TaskViewScreen({
     <FigmaFormScreen title={t('tasks.detailTitle')} onBack={() => router.back()}>
       <FigmaMutedNote>{canUpdateStatus ? t('tasks.statusOnly') : t('tasks.readOnly')}</FigmaMutedNote>
 
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <Text style={[styles.title, { color: theme.text }]}>{task.title}</Text>
         <ReadOnlyRow label={t('tasks.fields.category')} value={t(`tasks.category.${task.category}`)} />
         <ReadOnlyRow label={t('tasks.fields.priority')} value={t(`tasks.priority.${task.priority}`)} />
@@ -395,7 +397,7 @@ function TaskViewScreen({
           <ReadOnlyRow label={t('tasks.fields.description')} value={task.description} />
         ) : null}
         {task.notes ? <ReadOnlyRow label={t('tasks.fields.notes')} value={task.notes} /> : null}
-      </FigmaFormCard>
+      </Surface>
 
       <StatusSection circleId={circleId} task={task} canManage={false} canCollaborate={canCollaborate} />
     </FigmaFormScreen>
@@ -472,7 +474,7 @@ function StatusSection({
   }
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       <View style={styles.statusHeader}>
         <Text style={[styles.statusLabel, { color: theme.text }]}>{t('tasks.fields.status')}</Text>
         <StatusBadge
@@ -557,7 +559,7 @@ function StatusSection({
           />
         </View>
       ) : null}
-    </FigmaFormCard>
+    </Surface>
   );
 }
 
@@ -579,7 +581,7 @@ function DeleteTaskRow({ circleId, id }: { circleId: string; id: string }) {
   }
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       {confirming ? (
         <View style={styles.actionRow}>
           <View style={styles.actionCol}>
@@ -602,7 +604,7 @@ function DeleteTaskRow({ circleId, id }: { circleId: string; id: string }) {
       ) : (
         <Button label={t('tasks.deleteTask')} variant="danger" onPress={() => setConfirming(true)} />
       )}
-    </FigmaFormCard>
+    </Surface>
   );
 }
 

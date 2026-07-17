@@ -46,6 +46,8 @@ type SurfaceProps = {
   bordered?: boolean;
   /** Corner radius (default Radius.card). */
   radius?: number;
+  /** Vertical gap between stacked children (e.g. a form card's fields). */
+  gap?: number;
   /** Makes the whole surface a button. */
   onPress?: () => void;
   accessibilityLabel?: string;
@@ -72,6 +74,7 @@ export function Surface({
   padded = true,
   bordered = true,
   radius = Radius.card,
+  gap,
   onPress,
   accessibilityLabel,
   accessibilityHint,
@@ -94,7 +97,7 @@ export function Surface({
   const elevated = tone === 'card' && scheme !== 'dark';
   const paddingStyle =
     padded === false ? null : { padding: typeof padded === 'number' ? padded : Spacing.four };
-  const content = [base, elevated && CardShadow, paddingStyle, style];
+  const content = [base, elevated && CardShadow, paddingStyle, gap != null && { gap }, style];
 
   if (onPress) {
     return (

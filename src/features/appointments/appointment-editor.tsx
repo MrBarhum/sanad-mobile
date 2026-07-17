@@ -5,14 +5,15 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
 import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import type { Doctor } from '@/features/doctors/api';
 import { useDoctors } from '@/features/doctors/hooks';
@@ -51,7 +52,7 @@ const STATUS_GLYPH: Record<AppointmentStatus, string> = {
 
 /**
  * View / edit a single appointment — rebuilt in the Figma editor language
- * (FigmaFormScreen header + grouped FigmaFormCards + body-rendered teal save CTA),
+ * (FigmaFormScreen header + grouped Surface cards + body-rendered teal save CTA),
  * matching the Add-Appointment form. Managers get the same FigmaAppointmentFields
  * as /appointments/new plus a status card and a two-step delete; everyone else gets
  * a read-only card layout. Real hooks, the appointment-type schema, validation
@@ -230,7 +231,7 @@ function AppointmentViewScreen({
     <FigmaFormScreen title={t('appointments.detailTitle')} onBack={() => router.back()}>
       <FigmaMutedNote>{t(canMarkOutcome ? 'appointments.statusOnly' : 'appointments.readOnly')}</FigmaMutedNote>
 
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <Text style={[styles.title, { color: theme.text }]}>{appointment.title}</Text>
         <ReadOnlyRow
           label={t('appointments.fields.type')}
@@ -247,7 +248,7 @@ function AppointmentViewScreen({
         {appointment.notes ? (
           <ReadOnlyRow label={t('appointments.fields.notes')} value={appointment.notes} />
         ) : null}
-      </FigmaFormCard>
+      </Surface>
 
       <StatusSection
         circleId={circleId}
@@ -326,7 +327,7 @@ function StatusSection({
   const showReopen = canReopen && appointment.status !== 'scheduled';
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       <View style={styles.statusHeader}>
         <Text style={[styles.statusLabel, { color: theme.text }]}>{t('appointments.fields.status')}</Text>
         <StatusBadge
@@ -394,7 +395,7 @@ function StatusSection({
           onPress={reopen}
         />
       ) : null}
-    </FigmaFormCard>
+    </Surface>
   );
 }
 
@@ -416,7 +417,7 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
   }
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       {confirming ? (
         <View style={styles.actionRow}>
           <View style={styles.actionCol}>
@@ -443,7 +444,7 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
           onPress={() => setConfirming(true)}
         />
       )}
-    </FigmaFormCard>
+    </Surface>
   );
 }
 

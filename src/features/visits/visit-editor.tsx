@@ -5,14 +5,15 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
 import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -39,7 +40,7 @@ const STATUS_GLYPH: Record<VisitStatus, string> = {
 
 /**
  * View / edit a single family visit — rebuilt in the Figma editor language
- * (FigmaFormScreen header + grouped FigmaFormCards + body-rendered teal save CTA),
+ * (FigmaFormScreen header + grouped Surface cards + body-rendered teal save CTA),
  * matching the Add-Visit form. Editors (managers, or collaborators on their own
  * visit) get the same FigmaVisitFields as /visits/new — including the optional
  * start/end times — plus a status card and a two-step delete; others get a
@@ -166,7 +167,7 @@ function VisitEditScreen({
       <UnsavedChangesGuard when={dirty} />
       <FigmaMutedNote>{t('visits.disclaimer')}</FigmaMutedNote>
 
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <FigmaVisitFields draft={draft} onChange={patch} errors={errors} />
         {canManage ? (
           <View>
@@ -179,7 +180,7 @@ function VisitEditScreen({
             />
           </View>
         ) : null}
-      </FigmaFormCard>
+      </Surface>
 
       <StatusSection circleId={circleId} visit={initial} canMarkOutcome canReopen />
 
@@ -231,14 +232,14 @@ function VisitViewScreen({
     <FigmaFormScreen title={t('visits.detailTitle')} onBack={() => router.back()}>
       <FigmaMutedNote>{t(canMarkOutcome ? 'visits.statusOnly' : 'visits.readOnly')}</FigmaMutedNote>
 
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <Text style={[styles.title, { color: theme.text }]}>{visit.visitor_name}</Text>
         <ReadOnlyRow label={t('visits.whenLabel')} value={when} />
         {responsible ? (
           <ReadOnlyRow label={t('visits.linkedToLabel')} value={responsible.label} />
         ) : null}
         {visit.notes ? <ReadOnlyRow label={t('visits.fields.notes')} value={visit.notes} /> : null}
-      </FigmaFormCard>
+      </Surface>
 
       <StatusSection circleId={circleId} visit={visit} canMarkOutcome={canMarkOutcome} canReopen={false} />
     </FigmaFormScreen>
@@ -298,7 +299,7 @@ function StatusSection({
   const showReopen = canReopen && visit.status !== 'planned';
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       <View style={styles.statusHeader}>
         <Text style={[styles.statusLabel, { color: theme.text }]}>{t('visits.fields.status')}</Text>
         <StatusBadge
@@ -363,7 +364,7 @@ function StatusSection({
           onPress={() => run('planned')}
         />
       ) : null}
-    </FigmaFormCard>
+    </Surface>
   );
 }
 
@@ -385,7 +386,7 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
   }
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       {confirming ? (
         <View style={styles.actionRow}>
           <View style={styles.actionCol}>
@@ -412,7 +413,7 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
           onPress={() => setConfirming(true)}
         />
       )}
-    </FigmaFormCard>
+    </Surface>
   );
 }
 

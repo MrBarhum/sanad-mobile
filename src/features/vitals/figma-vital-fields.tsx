@@ -3,12 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TextInput, View, type KeyboardTypeOptions } from 'react-native';
 
 import { DateField } from '@/components/date-field';
-import {
-  FigmaChipSelect,
-  FigmaFieldLabel,
-  FigmaFormCard,
-  FigmaFormField,
-} from '@/components/figma/figma-form-screen';
+import { FigmaFieldLabel, FigmaSectionLabel } from '@/components/figma/figma-form-screen';
+import { FormField } from '@/components/form-field';
+import { OptionSelect } from '@/components/option-select';
+import { Surface } from '@/components/surface';
 import { TimeField } from '@/components/time-field';
 import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -107,16 +105,18 @@ export function FigmaVitalFields({
   return (
     <>
       {/* Measurement type */}
-      <FigmaFormCard label={t('vitals.fields.type')}>
-        <FigmaChipSelect
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('vitals.fields.type')}</FigmaSectionLabel>
+        <OptionSelect
           value={draft.type}
           options={typeOptions}
           onChange={(type) => onChange({ type, unit: DEFAULT_UNITS[type] })}
         />
-      </FigmaFormCard>
+      </Surface>
 
       {/* Value */}
-      <FigmaFormCard label={t('vitals.valueLabel')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('vitals.valueLabel')}</FigmaSectionLabel>
         {isBloodPressure ? (
           <View style={styles.group}>
             <Text style={[styles.subLabel, { color: theme.textSecondary }]}>
@@ -189,10 +189,11 @@ export function FigmaVitalFields({
             ) : null}
           </View>
         )}
-      </FigmaFormCard>
+      </Surface>
 
       {/* Date & time */}
-      <FigmaFormCard label={t('vitals.fields.readingAt')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('vitals.fields.readingAt')}</FigmaSectionLabel>
         <View style={styles.dateTimeRow}>
           <View style={styles.dateCol}>
             <DateField
@@ -211,11 +212,11 @@ export function FigmaVitalFields({
             />
           </View>
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Notes */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('vitals.fields.notes')}
           value={draft.notes}
           onChangeText={(notes) => onChange({ notes })}
@@ -223,7 +224,7 @@ export function FigmaVitalFields({
           multiline
           error={fieldError(errors.notes)}
         />
-      </FigmaFormCard>
+      </Surface>
     </>
   );
 }

@@ -6,15 +6,12 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import {
-  FigmaCardSelect,
-  FigmaFormCard,
-  FigmaFormField,
-  FigmaFormScreen,
-  FigmaMutedNote,
-} from '@/components/figma/figma-form-screen';
+import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FormField } from '@/components/form-field';
 import { LtrText } from '@/components/ltr-text';
-import { FontFamily, Spacing } from '@/constants/theme';
+import { OptionSelect } from '@/components/option-select';
+import { Surface } from '@/components/surface';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { emailLocalPart } from '@/features/circle-members/display-name';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import { useMyProfile } from '@/features/profile/hooks';
@@ -50,7 +47,7 @@ export function InviteForm({ circleId, actorRole }: { circleId: string; actorRol
 
   const roleOptions = allowedRoles.map((value) => ({
     value,
-    title: t(`circleMembers.roles.${value}`),
+    label: t(`circleMembers.roles.${value}`),
     description: t(`circleMembers.roleDescriptions.${value}`),
   }));
 
@@ -77,25 +74,25 @@ export function InviteForm({ circleId, actorRole }: { circleId: string; actorRol
       onBack={() => router.back()}
       disclaimer={t('invitations.warning')}>
       {/* Role — large stacked selectable cards (title + description), not chips */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <View style={styles.group}>
           <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>
             {t('invitations.fields.role')}
           </Text>
-          <FigmaCardSelect value={role} options={roleOptions} onChange={setRole} />
+          <OptionSelect value={role} options={roleOptions} onChange={setRole} variant="card" />
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Optional reference name */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('invitations.fields.invitedName')}
           value={invitedName}
           onChangeText={setInvitedName}
           placeholder={t('invitations.placeholders.invitedName')}
           hint={t('invitations.helpers.invitedName')}
         />
-      </FigmaFormCard>
+      </Surface>
 
       {error ? (
         <Text
@@ -163,7 +160,7 @@ function CreatedCard({ created, onReset }: { created: CreatedInvitation; onReset
       <FigmaMutedNote>{t('invitations.createdSubtitle')}</FigmaMutedNote>
 
       {/* The one-time code */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <View style={[styles.codeBox, { backgroundColor: theme.backgroundSunken, borderColor: theme.border }]}>
           <LtrText style={[styles.code, { color: theme.text }]} selectable accessibilityLabel={created.code}>
             {created.code}
@@ -177,7 +174,7 @@ function CreatedCard({ created, onReset }: { created: CreatedInvitation; onReset
             {t('invitations.expiresLabel', { date: ymdFromInstant(created.expiresAt) })}
           </Text>
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {feedback ? (
         <Text style={[styles.feedback, { color: theme.successFg }]} accessibilityLiveRegion="polite">

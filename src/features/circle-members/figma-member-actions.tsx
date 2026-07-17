@@ -4,7 +4,7 @@ import { StyleSheet, Text } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { Button } from '@/components/button';
-import { FigmaCardSelect } from '@/components/figma/figma-form-screen';
+import { OptionSelect } from '@/components/option-select';
 import { FontFamily } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -251,12 +251,13 @@ export function MemberActionsSheet({
       ) : mode === 'role' ? (
         <>
           <Text style={[styles.note, { color: c.textSecondary }]}>{t('circleMembers.changeRoleHint')}</Text>
-          <FigmaCardSelect
+          <OptionSelect
+            variant="card"
             value={selectedRole}
             onChange={setSelectedRole}
             options={roleOptions.map((r) => ({
               value: r,
-              title: t(`circleMembers.roles.${r}`),
+              label: t(`circleMembers.roles.${r}`),
               description: t(`circleMembers.roleDescriptions.${r}`),
             }))}
           />

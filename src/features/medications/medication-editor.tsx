@@ -6,19 +6,20 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import {
-  FigmaFormCard,
-  FigmaFormField,
   FigmaFormScreen,
   FigmaMutedNote,
+  FigmaSectionLabel,
   FigmaSwitch,
 } from '@/components/figma/figma-form-screen';
+import { FormField } from '@/components/form-field';
 import { ItemActions } from '@/components/item-actions';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -46,7 +47,7 @@ const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 /**
  * View / edit a medication + its dose schedules — rebuilt in the Figma editor
  * language (FigmaFormScreen header + gold non-diagnostic banner + grouped
- * FigmaFormCards). The medication-info section mirrors the Add-Medication form's
+ * Surface cards). The medication-info section mirrors the Add-Medication form's
  * info card and saves with a body-rendered teal CTA; the dose-schedule manager
  * (add / edit via the schedule modal, activate / deactivate, delete), the
  * activation toggle, and the two-step delete keep their exact existing behavior —
@@ -220,8 +221,9 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
   return (
     <>
       <UnsavedChangesGuard when={dirty} />
-      <FigmaFormCard label={t('medications.medicationInfoTitle')}>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('medications.medicationInfoTitle')}</FigmaSectionLabel>
+        <FormField
           label={t('medications.fields.name')}
           value={name}
           onChangeText={(v) => {
@@ -231,7 +233,7 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
           required
           error={fieldError(errors.name)}
         />
-        <FigmaFormField
+        <FormField
           label={t('medications.fields.dosage')}
           value={dosage}
           onChangeText={(v) => {
@@ -241,7 +243,7 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
           placeholder={t('medications.placeholders.dosage')}
           error={fieldError(errors.dosage)}
         />
-        <FigmaFormField
+        <FormField
           label={t('medications.fields.form')}
           value={medForm}
           onChangeText={(v) => {
@@ -251,7 +253,7 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
           placeholder={t('medications.placeholders.form')}
           error={fieldError(errors.form)}
         />
-        <FigmaFormField
+        <FormField
           label={t('medications.fields.instructions')}
           value={instructions}
           onChangeText={(v) => {
@@ -282,10 +284,10 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
             accessibilityLabel={t('medications.fields.withFood')}
           />
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Responsible person */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <MemberSelect
           circleId={circleId}
           value={responsibleUserId}
@@ -295,7 +297,7 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
             touch();
           }}
         />
-      </FigmaFormCard>
+      </Surface>
 
       {/* Info save CTA — body-rendered teal button. This is a multi-section
           management screen, so the save belongs to the medication-info section
@@ -334,7 +336,8 @@ function ReadOnlyMedicationInfo({
   return (
     <>
       <FigmaMutedNote>{t('medications.readOnly')}</FigmaMutedNote>
-      <FigmaFormCard label={t('medications.medicationInfoTitle')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('medications.medicationInfoTitle')}</FigmaSectionLabel>
         <Text style={[styles.title, { color: theme.text }]}>{medication.name}</Text>
         {medication.dosage ? (
           <InfoRow label={t('medications.fields.dosage')} value={medication.dosage} />
@@ -352,7 +355,7 @@ function ReadOnlyMedicationInfo({
         {medication.instructions ? (
           <InfoRow label={t('medications.fields.instructions')} value={medication.instructions} />
         ) : null}
-      </FigmaFormCard>
+      </Surface>
     </>
   );
 }
@@ -409,7 +412,7 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
   }
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       <Text style={[styles.statusLabel, { color: theme.text }]}>
         {medication.is_active ? t('medications.activeLabel') : t('medications.inactiveLabel')}
       </Text>
@@ -425,7 +428,7 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
         disabled={pending}
         onPress={onToggle}
       />
-    </FigmaFormCard>
+    </Surface>
   );
 }
 
@@ -452,7 +455,7 @@ function DeleteMedicationRow({ circleId, id }: { circleId: string; id: string })
   }
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       {error ? (
         <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
           {error}
@@ -484,7 +487,7 @@ function DeleteMedicationRow({ circleId, id }: { circleId: string; id: string })
           onPress={() => setConfirming(true)}
         />
       )}
-    </FigmaFormCard>
+    </Surface>
   );
 }
 
@@ -653,7 +656,7 @@ function ScheduleCard({
     : `${t('medications.fromDate')} ${schedule.start_date}`;
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       <View style={styles.scheduleHeader}>
         <Text style={[styles.statusLabel, { color: theme.text }]}>{t('medications.scheduleNumber', { number })}</Text>
         <StatusBadge
@@ -695,7 +698,7 @@ function ScheduleCard({
           />
         </View>
       ) : null}
-    </FigmaFormCard>
+    </Surface>
   );
 }
 

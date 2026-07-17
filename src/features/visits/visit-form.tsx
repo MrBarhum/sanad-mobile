@@ -4,13 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import {
-  FigmaFormCard,
-  FigmaFormScreen,
-  FigmaMutedNote,
-} from '@/components/figma/figma-form-screen';
+import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { Surface } from '@/components/surface';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -79,7 +76,7 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
       <UnsavedChangesGuard when={dirty && !submitted} />
       <FigmaMutedNote>{t('visits.disclaimer')}</FigmaMutedNote>
 
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <FigmaVisitFields draft={draft} onChange={patch} errors={errors} />
 
         {canManage ? (
@@ -98,7 +95,7 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
             <FigmaMutedNote>{t('visits.ownVisitNote')}</FigmaMutedNote>
           </View>
         )}
-      </FigmaFormCard>
+      </Surface>
 
       {/* Primary CTA — rendered directly in the body (not the footer prop, which
           did not render on Android). Always a filled teal button; an invalid press

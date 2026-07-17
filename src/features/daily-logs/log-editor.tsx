@@ -5,12 +5,13 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FigmaFormScreen, FigmaMutedNote, FigmaSectionLabel } from '@/components/figma/figma-form-screen';
 import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
@@ -135,7 +136,7 @@ function DailyLogEditScreen({ circleId, initial }: { circleId: string; initial: 
       <FigmaDailyLogFields draft={draft} onChange={patch} errors={errors} />
 
       {/* Delete — destructive, separate from save, two-step confirm. */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         {deleteError ? (
           <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
             {deleteError}
@@ -166,7 +167,7 @@ function DailyLogEditScreen({ circleId, initial }: { circleId: string; initial: 
             onPress={() => setConfirming(true)}
           />
         )}
-      </FigmaFormCard>
+      </Surface>
 
       {/* Save CTA — rendered in the body (not the footer prop, which did not render
           on Android). Final child, below the destructive delete, matching the prior
@@ -211,24 +212,26 @@ function DailyLogViewScreen({ log }: { log: DailyCareLog }) {
       <FigmaMutedNote>{t('dailyLogs.disclaimer')}</FigmaMutedNote>
       <FigmaMutedNote>{t('dailyLogs.readOnly')}</FigmaMutedNote>
 
-      <FigmaFormCard label={t('dailyLogs.fields.logDate')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('dailyLogs.fields.logDate')}</FigmaSectionLabel>
         <Text style={[styles.rowValue, { color: theme.text }]}>{isolateLtr(log.log_date)}</Text>
-      </FigmaFormCard>
+      </Surface>
 
       {details.length > 0 ? (
-        <FigmaFormCard label={t('dailyLogs.dailyTitle')}>
+        <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+          <FigmaSectionLabel>{t('dailyLogs.dailyTitle')}</FigmaSectionLabel>
           {details.map((detail) => (
             <ReadOnlyRow key={detail.key} label={detail.label} value={detail.value} />
           ))}
-        </FigmaFormCard>
+        </Surface>
       ) : null}
 
       {notes.length > 0 ? (
-        <FigmaFormCard>
+        <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
           {notes.map((detail) => (
             <ReadOnlyRow key={detail.key} label={detail.label} value={detail.value} />
           ))}
-        </FigmaFormCard>
+        </Surface>
       ) : null}
 
       {details.length === 0 && notes.length === 0 ? (

@@ -7,7 +7,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Button } from '@/components/button';
 import { DateField } from '@/components/date-field';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { FigmaFormField } from '@/components/figma/figma-form-screen';
+import { FormField } from '@/components/form-field';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
@@ -95,7 +95,7 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
 
       <Surface>
         <View style={styles.cardFields}>
-          <FigmaFormField
+          <FormField
             label={t('careCircle.onboarding.circleNameLabel')}
             value={circleName}
             onChangeText={setCircleName}
@@ -109,7 +109,7 @@ export function CareCircleOnboarding({ userId }: { userId: string }) {
             {t('careCircle.onboarding.recipientSection')}
           </ThemedText>
 
-          <FigmaFormField
+          <FormField
             label={t('careCircle.onboarding.recipientNameLabel')}
             value={recipientName}
             onChangeText={setRecipientName}

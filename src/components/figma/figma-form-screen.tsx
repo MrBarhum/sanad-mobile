@@ -1,5 +1,5 @@
-import { Check, ChevronRight } from 'lucide-react-native';
-import { useState, type ReactNode } from 'react';
+import { ChevronRight } from 'lucide-react-native';
+import { type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -7,14 +7,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
-  type KeyboardTypeOptions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Gutter, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { FontFamily, Gutter, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 /**
@@ -108,21 +105,6 @@ export function FigmaFormScreen({
   );
 }
 
-/**
- * A form card: an elevated surface with a hairline border and a large radius that
- * groups one section of the form, with an optional muted section label.
- */
-export function FigmaFormCard({ label, children }: { label?: string; children: ReactNode }) {
-  const theme = useTheme();
-  return (
-    <View
-      style={[styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-      {label ? <FigmaSectionLabel>{label}</FigmaSectionLabel> : null}
-      {children}
-    </View>
-  );
-}
-
 /** The muted card section label (14 / 600 / muted). */
 export function FigmaSectionLabel({ children }: { children: ReactNode }) {
   const theme = useTheme();
@@ -137,78 +119,6 @@ export function FigmaFieldLabel({ label, required }: { label: string; required?:
       {label}
       {required ? <Text style={{ color: theme.errorFg }}> *</Text> : null}
     </Text>
-  );
-}
-
-/**
- * A text field: a label above a raised, rounded input with a teal focus ring
- * (raised fill, 1.5px border, radius 10). RTL Arabic content aligns to the start
- * automatically — no forced text alignment, so any LTR content stays readable.
- * `multiline` renders a 3-row note box. Validation/errors stay owned by the caller.
- */
-export function FigmaFormField({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  required,
-  multiline,
-  hint,
-  error,
-  keyboardType,
-  autoCapitalize,
-  autoCorrect,
-  maxLength,
-}: {
-  label?: string;
-  value: string;
-  onChangeText: (value: string) => void;
-  placeholder?: string;
-  required?: boolean;
-  multiline?: boolean;
-  hint?: string;
-  error?: string | null;
-  keyboardType?: KeyboardTypeOptions;
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  autoCorrect?: boolean;
-  maxLength?: number;
-}) {
-  const theme = useTheme();
-  const [focused, setFocused] = useState(false);
-  const borderColor = error ? theme.errorFg : focused ? theme.primary : theme.border;
-
-  return (
-    <View style={styles.field}>
-      {label ? <FigmaFieldLabel label={label} required={required} /> : null}
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={theme.textMuted}
-        multiline={multiline}
-        keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize}
-        autoCorrect={autoCorrect}
-        maxLength={maxLength}
-        accessibilityLabel={label}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={[
-          styles.input,
-          multiline && styles.inputMultiline,
-          { backgroundColor: theme.backgroundSunken, borderColor, color: theme.text },
-        ]}
-      />
-      {hint ? <Text style={[styles.hint, { color: theme.textMuted }]}>{hint}</Text> : null}
-      {error ? (
-        <Text
-          style={[styles.error, { color: theme.errorFg }]}
-          accessibilityRole="alert"
-          accessibilityLiveRegion="polite">
-          {error}
-        </Text>
-      ) : null}
-    </View>
   );
 }
 
@@ -285,121 +195,6 @@ export function FigmaToggleRow({
   );
 }
 
-type ChipOption<T extends string> = { value: T; label: string };
-
-/**
- * A single-choice chip group: a wrap of rounded pills that clearly read as
- * tappable chips (raised surface + hairline unselected; teal fill + teal border +
- * leading check + bold when selected — never color-only). ≥48dp targets, RTL-safe
- * wrap. Use for measurement-type / category / type selectors on the forms.
- */
-export function FigmaChipSelect<T extends string>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T;
-  options: readonly ChipOption<T>[];
-  onChange: (value: T) => void;
-}) {
-  const theme = useTheme();
-  return (
-    <View style={styles.chipWrap}>
-      {options.map((opt) => {
-        const on = opt.value === value;
-        return (
-          <Pressable
-            key={opt.value}
-            onPress={() => onChange(opt.value)}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: on }}
-            accessibilityLabel={opt.label}
-            style={[
-              styles.chip,
-              {
-                backgroundColor: on ? theme.primaryBg : theme.backgroundSunken,
-                borderColor: on ? theme.primary : theme.border,
-              },
-            ]}>
-            <Text
-              style={[
-                styles.chipText,
-                {
-                  color: on ? theme.primaryText : theme.textSecondary,
-                  fontFamily: on ? FontFamily.semibold : FontFamily.regular,
-                },
-              ]}>
-              {on ? `${Glyph.check} ${opt.label}` : opt.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-type CardOption<T extends string> = { value: T; title: string; description?: string };
-
-/**
- * A single-choice CARD group: large, full-width, stacked selectable cards (title +
- * optional description + a radio/check on the start). Selected = teal tint + teal
- * border + filled check; unselected = raised surface + hairline. Use for role
- * pickers and other "pick one, with explanation" choices (not chips).
- */
-export function FigmaCardSelect<T extends string>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T;
-  options: readonly CardOption<T>[];
-  onChange: (value: T) => void;
-}) {
-  const theme = useTheme();
-  return (
-    <View style={styles.cardSelect}>
-      {options.map((opt) => {
-        const on = opt.value === value;
-        return (
-          <Pressable
-            key={opt.value}
-            onPress={() => onChange(opt.value)}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: on }}
-            accessibilityLabel={opt.title}
-            style={[
-              styles.optionCard,
-              {
-                backgroundColor: on ? theme.primaryBg : theme.backgroundSunken,
-                borderColor: on ? theme.primary : theme.border,
-              },
-            ]}>
-            <View
-              style={[
-                styles.radio,
-                { borderColor: on ? theme.primary : theme.border, backgroundColor: on ? theme.primary : 'transparent' },
-              ]}>
-              {on ? <Check size={13} color={theme.onPrimary} /> : null}
-            </View>
-            <View style={styles.optionText}>
-              <Text
-                style={[
-                  styles.optionTitle,
-                  { color: on ? theme.primaryText : theme.text, fontFamily: on ? FontFamily.bold : FontFamily.semibold },
-                ]}>
-                {opt.title}
-              </Text>
-              {opt.description ? (
-                <Text style={[styles.optionDesc, { color: theme.textSecondary }]}>{opt.description}</Text>
-              ) : null}
-            </View>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   header: {
@@ -429,26 +224,8 @@ const styles = StyleSheet.create({
   // gap. Horizontal inset comes from scrollContent's padding; bottom (safe-area)
   // padding is applied inline at the call site.
   footer: { marginTop: Spacing.two },
-  card: {
-    borderRadius: Radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: Spacing.three,
-    gap: Spacing.three,
-  },
   sectionLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
-  field: { gap: 5 },
   fieldLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
-  input: {
-    borderRadius: Radius.md,
-    borderWidth: 1.5,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    fontFamily: FontFamily.regular,
-  },
-  inputMultiline: { minHeight: 84, textAlignVertical: 'top' },
-  hint: { fontSize: 14, fontFamily: FontFamily.regular },
-  error: { fontSize: 14, fontFamily: FontFamily.regular },
   switchTrack: {
     width: 48,
     height: 28,
@@ -475,36 +252,4 @@ const styles = StyleSheet.create({
   toggleText: { flex: 1, gap: 2 },
   toggleLabel: { fontSize: 15, fontFamily: FontFamily.regular },
   toggleHint: { fontSize: 14, fontFamily: FontFamily.regular },
-  cardSelect: { gap: Spacing.two },
-  optionCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.three,
-    borderRadius: Radius.md,
-    borderWidth: 1.5,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-  },
-  radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 1,
-  },
-  optionText: { flex: 1, gap: 2 },
-  optionTitle: { fontSize: 15 },
-  optionDesc: { fontSize: 14, lineHeight: 20, fontFamily: FontFamily.regular },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  chip: {
-    minHeight: TouchTarget.min,
-    borderRadius: Radius.pill,
-    borderWidth: 1.5,
-    paddingHorizontal: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chipText: { fontSize: 14 },
 });
