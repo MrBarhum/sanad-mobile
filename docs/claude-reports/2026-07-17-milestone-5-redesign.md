@@ -6,6 +6,18 @@
 
 > Living document — updated per phase/screen. Status legend: ✅ done · 🔧 in progress · ⏭ planned.
 
+## Status at a glance
+| Phase | State | Headline |
+|---|---|---|
+| A — one token system | ✅ | theme.ts sole source; IBM Plex only (Cairo retired); A3 contrast fixed; **P2-2 token half closed** |
+| B — core components | 🔧 | **Buttons** + **status pills** unified (**P2-2 button half closed**); a11y labels localized. Remaining dedups deferred to C |
+| C — screens | 🔧 | all 15 live screens on theme.ts + IBM Plex + 14-floor; state-defect fixes done; per-screen visual polish + component dedups documented as backlog |
+| D — moments of care | 🔧 | completion moment done (no gamification); motion respects reduced-motion; warm-copy catalog awaits owner wording |
+| E — sweep + verify | 🔧 | **E1 done → P1-8 closed** (132 sites raised); E2 a11y done; E3 font-scale → device checklist |
+
+**Closed backlog items:** P1-8 (type floor), P2-2 (two token systems + button impls), P2-13 (tab-bar web-guard), part of P2-3 (semantic icons for the migrated buttons), P2-5-adjacent (vitals/daily-logs error recovery), the Explore light-mode scheme bug.
+**Deferred (documented, non-regressions):** the remaining component dedups (card/field/chip/empty/sheet/header), hardcoded dose-status hex tokenization, the 131-string warm-copy pass (owner sign-off), a pure-JS Skeleton, and the P2-1 dead-code deletion. All quartet-green; every commit is on `milestone-5-redesign` (no push).
+
 ---
 
 ## Step 0 — Git + baseline ✅
@@ -112,14 +124,18 @@ Note: the "migrate the existing Figma components to tokens" half of Phase B is *
 - ⏭ **Remaining folds — deferred to Phase C** (visual-decision-entangled; each is a per-screen "which look wins" call, and the screens get reworked there anyway): `Surface`←FigmaCard/FigmaFormCard, `FormField`←FigmaField/FigmaFormField, `OptionSelect`←FigmaChipSelect/CardSelect/WeekdaySelector-chip, `GlyphChip`←icon-chip, `EmptyState`←inline figma empties, sheet chrome (FigmaBottomSheet/FormModal/PickerSheet), header (FigmaHeader/FigmaFormScreen).
 - ⏭ **Loading skeletons** — none exist; add a pure-JS `Skeleton` (Animated opacity) when first needed in Phase C, or standardize on `LoadingState`.
 
-## Phase C — screens ⏭ (canonical order)
-Home (flagship) → Medications → Tasks → سجل النشاط (+Home نبض) → Appointments → Vitals → Visits → Daily-logs → Doctors → Members → Available-to-claim → Notifications&settings → Account → Auth ×4 → Join/Invite. Known screen-level defects to fix in-pass: Explore hardcodes `FigmaColors.dark.error` (light-mode bug); Vitals error has no retry; Daily-logs loading/error are bare text; hardcoded status hex in figma-home/figma-medications/emergency-card; arbitrary per-index category cycles.
+## Phase C — screens 🔧 (canonical order)
+All 15 live screens are already on theme.ts + IBM Plex (Phase A) and at the 14 floor (E1). Screen-level **defects fixed**: Explore's fixed-dark `FigmaColors.dark.error` (light-mode bug, fixed in the Phase-A migration); **Vitals** error now has a retry + a loading spinner; **Daily-logs** bare-text loading/error → spinner + card+retry; Home completion hex → `successFg` token. **Deferred (documented backlog):** the component dedups (`FigmaCard`→Surface, field/chip/empty/sheet/header) — each a per-screen "which look wins" call; tokenizing the remaining hardcoded dose-status hex (figma-medications action chips, emergency-card red literals); the arbitrary per-index category cycles (decorative — low priority); a pure-JS `Skeleton`. These are visual-polish items, not correctness; the screens are functional, consistent, and accessible as-is.
 
-## Phase D — moments of care ⏭
-131 copy candidates catalogued (tone north-star: `pulse.shareEmpty`). Reword the repeated `saveFailed`/`loadError` families once; add try-again cues. Completion state: quiet «اليوم اكتمل» on the ring (subtle check, no gamification). Exclusion list respected (status/enum labels, field names, medical-safety disclaimers, validation/format errors — NOT touched).
+## Phase D — moments of care 🔧
+- ✅ **Completion moment.** When all of today's doses are logged, the ring shows a quiet «اكتملت جرعات اليوم» check on the AA-safe `successFg` — no score/streak/points (the no-gamification rule). `b337021`.
+- ✅ **Motion.** The app's only real animation is the splash overlay, which already respects OS reduced-motion; nothing new added, so nothing new to gate.
+- ⏭ **Warm copy.** 131 design-artifact candidates catalogued (tone north-star `pulse.shareEmpty`), with a clear exclusion list (status/enum labels, field names, medical-safety disclaimers, validation/format errors — NOT touched). Deferred as one batch for owner **wording sign-off** — copy voice is a taste call, and a 131-string i18n pass is parity-sensitive; better done with the owner than guessed.
 
-## Phase E — full sweep + verification ⏭ (closes P1-8)
-**E1 pre-scan: 148 raw sub-14 sites** (all in the Figma/Cairo layer + status-badge 13/13.5 + care-loop-ring 11) + 6 dead sub-14 token definitions (0 consumers). Heaviest file: figma-home.tsx (30). 144 are caregiver-read content → raised to ≥14; 4 are the sanctioned decorative exceptions. Full list to be enumerated at E1.
+## Phase E — full sweep + verification 🔧 (P1-8 closed)
+- ✅ **E1 (P1-8 closed).** Swept the whole codebase: **132 content sub-14 sites raised to 14** across 31 live screens + care-loop-ring + ThemedText eyebrow/code, with broken co-located line-heights bumped. The only sub-14 remaining anywhere is the sanctioned bell unread-count badge (`badgeText` 10). `7ea2ae1`. (Dead/unrouted files left untouched — noted for the P2-1 cleanup.)
+- ✅ **E2 a11y.** Icon buttons carry labels (header back/add + sheet close **localized** this milestone, `70b3f79`); contrast fixed at the token level (Phase-A A3); ≥48dp targets preserved; status stays icon+text.
+- ⏭ **E3 font-scale QA** → the **visual-QA-checklist** deliverable (`2026-07-17-milestone-5-visual-qa-checklist.md`): Home/meds/a form/a detail at 130% + 200%, both themes, RTL. Needs a device — the E1 reflow, the tab-bar/ring label raises, and the FigmaFooterPrimaryButton workaround are the flagged risks.
 
 ---
 
@@ -149,3 +165,5 @@ Home (flagship) → Medications → Tasks → سجل النشاط (+Home نبض)
 - `24de14e` docs(milestone-5): record the Button consolidation.
 - `9fe7026` refactor(status): fold FigmaStatusPill into the single StatusBadge.
 - `70b3f79` fix(a11y): localize the header back/add + sheet close labels (E2).
+- `7ea2ae1` fix(a11y): raise every content font size to the 14 floor (E1 / **P1-8 closed**).
+- `b337021` feat(care): Phase-D completion moment + calm loading/error states (vitals, daily-logs).
