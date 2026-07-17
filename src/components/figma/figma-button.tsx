@@ -1,7 +1,8 @@
 import type { ComponentType } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { FigmaColors, FigmaFont, FigmaRadius } from './figma-tokens';
+import { FontFamily, Radius } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 type Variant = 'primary' | 'secondary' | 'danger';
@@ -18,9 +19,9 @@ type FigmaButtonProps = {
 };
 
 /**
- * The Figma button: a filled teal primary (rounded-xl), a quiet secondary
- * (elevated + hairline), or a filled red danger. Cairo bold label, ≥52dp tall,
- * optional leading lucide icon. Matches the Figma sheet/save buttons.
+ * A filled teal primary (rounded), a quiet secondary (recessed + hairline), or a
+ * filled danger. Bold label, ≥52dp tall, optional leading icon. (Phase B folds
+ * this into the shared `Button`.)
  */
 export function FigmaButton({
   label,
@@ -32,8 +33,7 @@ export function FigmaButton({
   style,
   accessibilityHint,
 }: FigmaButtonProps) {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const isPrimary = variant === 'primary';
   // A PRIMARY action is ALWAYS a filled, full-opacity teal rectangle and stays
   // pressable unless busy — never grey/faded "disabled" styling (which reads as dim/
@@ -45,11 +45,11 @@ export function FigmaButton({
 
   const palette: Record<Variant, { bg: string; fg: string; border: string }> = {
     primary: { bg: c.primary, fg: c.onPrimary, border: 'transparent' },
-    secondary: { bg: c.elevated, fg: c.text, border: c.border },
-    danger: { bg: c.error, fg: '#FFFFFF', border: 'transparent' },
+    secondary: { bg: c.backgroundSunken, fg: c.text, border: c.border },
+    danger: { bg: c.dangerSolid, fg: c.onError, border: 'transparent' },
   };
   const p = palette[variant];
-  const fg = inactive ? c.muted : p.fg;
+  const fg = inactive ? c.textSecondary : p.fg;
 
   return (
     <Pressable
@@ -62,7 +62,7 @@ export function FigmaButton({
       style={({ pressed }) => [
         styles.btn,
         inactive
-          ? { backgroundColor: c.mutedSurface, borderColor: c.border }
+          ? { backgroundColor: c.backgroundSunken, borderColor: c.border }
           : { backgroundColor: p.bg, borderColor: p.border, opacity: pressed ? 0.85 : 1 },
         style,
       ]}>
@@ -81,12 +81,12 @@ export function FigmaButton({
 const styles = StyleSheet.create({
   btn: {
     minHeight: 52,
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
   content: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  label: { fontSize: 16, fontFamily: FigmaFont.bold },
+  label: { fontSize: 16, fontFamily: FontFamily.bold },
 });

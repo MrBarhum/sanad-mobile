@@ -3,11 +3,11 @@ import {
   Text,
   TextInput,
   View,
-  useColorScheme,
   type KeyboardTypeOptions,
 } from 'react-native';
 
-import { FigmaColors, FigmaFont, FigmaRadius } from './figma-tokens';
+import { FontFamily, Radius } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 type FigmaFieldProps = {
   label: string;
@@ -19,9 +19,8 @@ type FigmaFieldProps = {
 };
 
 /**
- * The Figma form field: a label above a rounded, elevated input. Cairo, RTL
- * (right-aligned), elevated background with a hairline. A foundation primitive for
- * the Figma add/edit sheets (the validated logic stays in the existing forms).
+ * A label above a rounded, recessed input. RTL (start-aligned), with a hairline.
+ * (Phase B folds this into the shared `FormField`.)
  */
 export function FigmaField({
   label,
@@ -31,23 +30,22 @@ export function FigmaField({
   multiline = false,
   keyboardType,
 }: FigmaFieldProps) {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   return (
     <View style={styles.field}>
-      <Text style={[styles.label, { color: c.muted }]}>{label}</Text>
+      <Text style={[styles.label, { color: c.textSecondary }]}>{label}</Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={c.muted}
+        placeholderTextColor={c.textMuted}
         multiline={multiline}
         keyboardType={keyboardType}
         textAlign="right"
         style={[
           styles.input,
-          { backgroundColor: c.elevated, borderColor: c.border, color: c.text },
+          { backgroundColor: c.backgroundSunken, borderColor: c.border, color: c.text },
           multiline && styles.multiline,
         ]}
       />
@@ -57,14 +55,14 @@ export function FigmaField({
 
 const styles = StyleSheet.create({
   field: { gap: 6 },
-  label: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  label: { fontSize: 14, fontFamily: FontFamily.semibold },
   input: {
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 15,
-    fontFamily: FigmaFont.regular,
+    fontSize: 16,
+    fontFamily: FontFamily.regular,
   },
   multiline: { minHeight: 88, textAlignVertical: 'top' },
 });

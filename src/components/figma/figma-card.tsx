@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View, useColorScheme, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { FigmaColors, FigmaLayout, FigmaRadius } from './figma-tokens';
+import { Radius } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 type FigmaCardProps = {
   children: ReactNode;
-  /** Background tone: the card surface (default) or the lifted "elevated" well. */
+  /** Background tone: the card surface (default) or the recessed "elevated" well. */
   tone?: 'card' | 'elevated';
-  /** Corner radius (default 24 = Figma rounded-3xl). */
+  /** Corner radius (default 24). */
   radius?: number;
   /** Inner padding (default 20). Pass 0 for none. */
   padding?: number;
@@ -18,25 +19,23 @@ type FigmaCardProps = {
 };
 
 /**
- * The Figma exact-copy card: a flat surface with a 1px hairline border and a
- * large soft radius (no Sanad shadow rules). Pass `onPress` to make it tappable.
- * Mirrors the Figma screens' `rounded-2xl`/`rounded-3xl` bordered cards.
+ * A flat card: a surface with a 1px hairline border and a large soft radius. Pass
+ * `onPress` to make it tappable. (Phase B folds this into the shared `Surface`.)
  */
 export function FigmaCard({
   children,
   tone = 'card',
-  radius = FigmaRadius.r24,
-  padding = FigmaLayout.heroPadding,
+  radius = Radius.xl,
+  padding = 20,
   onPress,
   accessibilityLabel,
   accessibilityHint,
   style,
 }: FigmaCardProps) {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   const base: ViewStyle = {
-    backgroundColor: tone === 'elevated' ? c.elevated : c.card,
+    backgroundColor: tone === 'elevated' ? c.backgroundSunken : c.backgroundElement,
     borderRadius: radius,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
@@ -50,7 +49,7 @@ export function FigmaCard({
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
-        android_ripple={{ color: c.elevated }}
+        android_ripple={{ color: c.backgroundSunken }}
         style={({ pressed }) => [base, styles.clip, pressed && styles.pressed, style]}>
         {children}
       </Pressable>
