@@ -162,6 +162,24 @@ Additive to `2026-07-14-milestone-4-device-qa-checklist.md`:
   you land on Join-circle with the code pre-filled; cold-start and warm-app both
   work; a normal launch never pre-fills a stale code.
 
+## Adversarial review pass (multi-agent) + follow-up fixes
+The diff was run through an adversarial multi-agent review (parallel reviewers per
+dimension → independent refute-first verification). It refuted the F1
+race/SecureStore concerns (F1 verified sound) and found no i18n-parity or auth
+issues, but **confirmed three real Pulse defects**, all fixed in a follow-up commit:
+1. **[medium] Visit events lost the visitor's name** — the RPC ties a visit to
+   `visitor_user_id` (null for an account-less external relative) and carries the
+   name in `title`; the reworded «{actor} · زيارة عائلية» rendered anonymous
+   «أحد الأعضاء» for them. `present.ts` now prefers the stored visitor name when
+   there's no linked account (linked visitors keep their roster name).
+2. **[low] Home strip time was device-local while the day was circle-local** — a
+   diaspora caregiver could see a row under «نبض اليوم» with a clock from a
+   different local day. Added `hmInTimeZone` (`src/utils/date.ts`) and render both
+   the Home strip and the `/pulse` log times in the circle frame.
+3. **[low] A future-dated event could push a real today event out of the 5-row
+   fetch** — the Home strip now fetches a 20-event buffer, filters to today, caps
+   at 5 (no migration; the full log is unaffected and shows dates).
+
 ## Notes / deliberate departures
 - D3 keeps the completed/cancelled distinction for appointments (نتيجة موعد vs إلغاء
   موعد) rather than the single form in the brief — more informative and still nominal
