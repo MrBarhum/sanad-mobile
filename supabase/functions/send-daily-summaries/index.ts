@@ -21,7 +21,13 @@ import { localYmd, wallTimeToInstant, zonedParts } from '../_shared/time.ts';
 
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
-/** Circle-local hour at which the daily digest is sent (24h). */
+/**
+ * Circle-local hour (24h) at which the daily digest is sent. Named so it doesn't
+ * fossilize as a magic number: this is the placeholder for a FUTURE per-circle
+ * setting (a `care_circles` column + manager control, parallel to
+ * `missed_dose_grace_minutes`). No per-circle UI/column this round — the digest
+ * fires for every circle at its local 20:00.
+ */
 const DIGEST_HOUR = 20;
 
 function json(body: unknown, status = 200): Response {
