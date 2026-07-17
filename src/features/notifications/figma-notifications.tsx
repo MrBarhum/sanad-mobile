@@ -1,28 +1,13 @@
-import {
-  AlertCircle,
-  Bell,
-  Calendar,
-  Check,
-  Clock,
-  FileText,
-  Hand,
-  Pill,
-  Siren,
-  Sparkles,
-  Stethoscope,
-  UserCheck,
-  XCircle,
-} from 'lucide-react-native';
-import type { ComponentType } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SkeletonList } from '@/components/skeleton';
 import { useTranslation } from 'react-i18next';
 
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
 import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
+import { type IconName } from '@/constants/icons';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
@@ -38,32 +23,30 @@ import {
 } from './hooks';
 import { useState } from 'react';
 
-type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
-
 /**
  * Per-type Figma anchor: a lucide icon + accent color for the row's icon chip.
  * The chip is decorative; the type label text below always carries the meaning.
  * Colors come from the Figma category/status ramps (constant across modes, as in
  * the export's `notifs` array — medication=teal, appointment=blue, task=gold).
  */
-const TYPE_ICON: Record<NotificationType, { Icon: IconCmp; colorKey: ThemeColor }> = {
-  medication_due: { Icon: Pill, colorKey: 'categoryTeal' },
-  medication_missed: { Icon: Pill, colorKey: 'errorFg' },
-  task_due: { Icon: Check, colorKey: 'categoryGold' },
-  appointment_upcoming: { Icon: Calendar, colorKey: 'categoryBlue' },
-  visit_update: { Icon: Stethoscope, colorKey: 'categoryGreen' },
-  care_update: { Icon: FileText, colorKey: 'categoryPurple' },
-  emergency: { Icon: Siren, colorKey: 'errorFg' },
-  system: { Icon: Bell, colorKey: 'categoryBlue' },
+const TYPE_ICON: Record<NotificationType, { iconName: IconName; colorKey: ThemeColor }> = {
+  medication_due: { iconName: 'medication', colorKey: 'categoryTeal' },
+  medication_missed: { iconName: 'medication', colorKey: 'errorFg' },
+  task_due: { iconName: 'success', colorKey: 'categoryGold' },
+  appointment_upcoming: { iconName: 'appointment', colorKey: 'categoryBlue' },
+  visit_update: { iconName: 'doctor', colorKey: 'categoryGreen' },
+  care_update: { iconName: 'dailyLog', colorKey: 'categoryPurple' },
+  emergency: { iconName: 'emergency', colorKey: 'errorFg' },
+  system: { iconName: 'notification', colorKey: 'categoryBlue' },
   // Phase 2F responsibility-aware types. Decorative icon + calm category/status tint;
   // item_cancelled uses a muted purple (NOT error red) so "not completed" doesn't alarm.
-  item_assigned: { Icon: UserCheck, colorKey: 'categoryBlue' },
-  task_overdue: { Icon: Clock, colorKey: 'warningFg' },
-  visit_upcoming: { Icon: Calendar, colorKey: 'categoryGreen' },
-  item_claimed: { Icon: Hand, colorKey: 'categoryTeal' },
-  item_completed: { Icon: Check, colorKey: 'successFg' },
-  item_cancelled: { Icon: XCircle, colorKey: 'categoryPurple' },
-  claim_digest: { Icon: Sparkles, colorKey: 'categoryGold' },
+  item_assigned: { iconName: 'member', colorKey: 'categoryBlue' },
+  task_overdue: { iconName: 'clock', colorKey: 'warningFg' },
+  visit_upcoming: { iconName: 'appointment', colorKey: 'categoryGreen' },
+  item_claimed: { iconName: 'claim', colorKey: 'categoryTeal' },
+  item_completed: { iconName: 'success', colorKey: 'successFg' },
+  item_cancelled: { iconName: 'error', colorKey: 'categoryPurple' },
+  claim_digest: { iconName: 'sparkle', colorKey: 'categoryGold' },
 };
 
 /**
@@ -139,7 +122,7 @@ export function FigmaNotifications() {
       ) : list.isError ? (
         <Surface radius={Radius.card} padded={20}>
           <View style={styles.stateBody}>
-            <IconChip Icon={AlertCircle} color={c.errorFg} size={44} radius={Radius.lg} iconSize={22} />
+            <GlyphChip iconName="error" color="errorFg" size="md" />
             <Text style={[styles.stateTitle, { color: c.text }]}>{t('figma.notifications.loadError')}</Text>
             <Pressable onPress={() => list.refetch()} accessibilityRole="button" hitSlop={8}>
               <Text style={[styles.markAllText, { color: c.primary }]}>{t('figma.notifications.retry')}</Text>
@@ -149,7 +132,7 @@ export function FigmaNotifications() {
       ) : items.length === 0 ? (
         <Surface radius={Radius.card} padded={24}>
           <View style={styles.stateBody}>
-            <IconChip Icon={Bell} color={c.textSecondary} size={48} radius={Radius.lg} iconSize={24} />
+            <GlyphChip iconName="notification" color="textSecondary" size="md" />
             <Text style={[styles.stateTitle, { color: c.text }]}>{t('figma.notifications.emptyTitle')}</Text>
             <Text style={[styles.stateSubtitle, muted]}>{t('figma.notifications.emptySubtitle')}</Text>
           </View>
@@ -201,7 +184,7 @@ function NotificationRow({
           borderColor: unread ? withAlpha(c.primary, 0.15) : c.border,
         },
       ]}>
-      <IconChip Icon={cfg.Icon} color={c[cfg.colorKey]} size={36} radius={Radius.md} iconSize={16} style={styles.chip} />
+      <GlyphChip iconName={cfg.iconName} color={cfg.colorKey} size="sm" style={styles.chip} />
       <View style={styles.body}>
         <View style={styles.titleLine}>
           <Text

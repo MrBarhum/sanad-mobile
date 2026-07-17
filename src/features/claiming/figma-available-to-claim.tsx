@@ -11,8 +11,9 @@ import { Button } from '@/components/button';
 import { Surface } from '@/components/surface';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
 import { isolateLtr } from '@/components/ltr-text';
+import { type IconName } from '@/constants/icons';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { confirmAction } from '@/utils/confirm';
@@ -27,11 +28,11 @@ type FeedbackTone = 'success' | 'warning' | 'error';
 type Feedback = { tone: FeedbackTone; title: string; body: string | null };
 
 /** Fixed section order + its icon/color, matching the feed's item types. */
-const SECTIONS: { type: ClaimItemType; labelKey: string; Icon: IconCmp; colorKey: ThemeColor }[] = [
-  { type: 'task', labelKey: 'claiming.sections.tasks', Icon: ListChecks, colorKey: 'categoryBlue' },
-  { type: 'medication', labelKey: 'claiming.sections.medications', Icon: Pill, colorKey: 'categoryTeal' },
-  { type: 'appointment', labelKey: 'claiming.sections.appointments', Icon: Calendar, colorKey: 'categoryPurple' },
-  { type: 'visit', labelKey: 'claiming.sections.visits', Icon: Users, colorKey: 'categoryGreen' },
+const SECTIONS: { type: ClaimItemType; labelKey: string; Icon: IconCmp; iconName: IconName; colorKey: ThemeColor }[] = [
+  { type: 'task', labelKey: 'claiming.sections.tasks', Icon: ListChecks, iconName: 'task', colorKey: 'categoryBlue' },
+  { type: 'medication', labelKey: 'claiming.sections.medications', Icon: Pill, iconName: 'medication', colorKey: 'categoryTeal' },
+  { type: 'appointment', labelKey: 'claiming.sections.appointments', Icon: Calendar, iconName: 'appointment', colorKey: 'categoryPurple' },
+  { type: 'visit', labelKey: 'claiming.sections.visits', Icon: Users, iconName: 'member', colorKey: 'categoryGreen' },
 ];
 
 /**
@@ -169,8 +170,8 @@ export function FigmaAvailableToClaim({
                   <ClaimCard
                     key={item.item_id}
                     item={item}
-                    color={c[section.colorKey]}
-                    Icon={section.Icon}
+                    color={section.colorKey}
+                    iconName={section.iconName}
                     pending={pendingId === item.item_id}
                     onClaim={() => onClaim(item)}
                   />
@@ -243,13 +244,13 @@ function whenText(item: AvailableClaimItem): string | null {
 function ClaimCard({
   item,
   color,
-  Icon,
+  iconName,
   pending,
   onClaim,
 }: {
   item: AvailableClaimItem;
-  color: string;
-  Icon: IconCmp;
+  color: ThemeColor;
+  iconName: IconName;
   pending: boolean;
   onClaim: () => void;
 }) {
@@ -260,7 +261,7 @@ function ClaimCard({
   return (
     <Surface tone="card" radius={Radius.xl} padded={16}>
       <View style={styles.cardTop}>
-        <IconChip Icon={Icon} color={color} size={48} radius={Radius.lg} iconSize={22} />
+        <GlyphChip iconName={iconName} color={color} size="md" />
         <View style={styles.cardInfo}>
           <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={2}>
             {item.title}

@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { Bell, Edit3, Plus, User, Users } from 'lucide-react-native';
+import { Edit3 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -10,7 +10,7 @@ import { Button } from '@/components/button';
 import { Surface } from '@/components/surface';
 import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
 import { LtrText } from '@/components/ltr-text';
 import { FontFamily, Radius, withAlpha } from '@/constants/theme';
 import { emailLocalPart } from '@/features/circle-members/display-name';
@@ -105,14 +105,7 @@ export default function AccountScreen() {
       {/* Profile header */}
       <Surface radius={Radius.xl} padded={20}>
         <View style={styles.profileRow}>
-          <IconChip
-            Icon={User}
-            color={c.primary}
-            size={64}
-            radius={Radius.pill}
-            iconSize={30}
-            tintOpacity={0.15}
-          />
+          <GlyphChip iconName="member" color="primary" size="lg" />
           <View style={styles.profileText}>
             <Text style={[styles.profileLabel, muted]}>{t('account.signedInAs')}</Text>
             <Text style={[styles.profileName, { color: c.text }]} numberOfLines={1}>
@@ -141,24 +134,24 @@ export default function AccountScreen() {
         <Surface tone="card" radius={Radius.xl} padded={0}>
           {activeCircle ? (
             <FigmaListRow
-              Icon={Users}
-              color={c.primary}
+              iconName="member"
+              color="primary"
               title={activeCircle.circleName || t('circleMembers.title')}
               subtitle={circleSubtitle || t('circleMembers.subtitle')}
               onPress={() => router.push('/circle-members')}
             />
           ) : null}
           <FigmaListRow
-            Icon={Bell}
-            color={c.categoryPurple}
+            iconName="notification"
+            color="categoryPurple"
             topDivider={Boolean(activeCircle)}
             title={t('notificationSettings.title')}
             subtitle={t('notificationSettings.subtitle')}
             onPress={() => router.push('/notification-settings')}
           />
           <FigmaListRow
-            Icon={Plus}
-            color={c.categoryGold}
+            iconName="add"
+            color="categoryGold"
             topDivider
             title={t('account.joinAnother')}
             subtitle={t('account.joinAnotherSubtitle')}

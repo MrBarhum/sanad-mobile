@@ -8,7 +8,7 @@ import { SkeletonList } from '@/components/skeleton';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
 import { isolateLtr } from '@/components/ltr-text';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
@@ -147,7 +147,7 @@ export function FigmaVisits({
                   ? (lookup(visit.visitor_user_id)?.label ?? null)
                   : null
               }
-              chipColor={c[CHIP_COLORS[index % CHIP_COLORS.length]]}
+              chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
               onOpen={() => router.push(`/visits/${visit.id}`)}
             />
           ))}
@@ -167,7 +167,7 @@ function VisitCard({
   visit: FamilyVisit;
   mine: boolean;
   linkedName: string | null;
-  chipColor: string;
+  chipColor: (typeof CHIP_COLORS)[number];
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
@@ -193,7 +193,7 @@ function VisitCard({
       accessibilityLabel={visit.visitor_name}
       accessibilityHint={t('common.details')}>
       <View style={styles.cardTop}>
-        <IconChip Icon={Users} color={chipColor} size={48} radius={Radius.lg} iconSize={22} />
+        <GlyphChip iconName="member" color={chipColor} size="md" />
         <View style={styles.cardInfo}>
           <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={2}>
             {visit.visitor_name}

@@ -1,7 +1,7 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { type IconName } from '@/constants/icons';
-import { Radius, type ThemeColor } from '@/constants/theme';
+import { Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Icon } from './icon';
@@ -36,10 +36,10 @@ const BG_BY_TONE: Record<GlyphChipTone, ThemeColor> = {
   info: 'infoBg',
 };
 
-export type GlyphChipSize = 'sm' | 'md' | 'lg';
+export type GlyphChipSize = 'xs' | 'sm' | 'md' | 'lg';
 
-const DIAMETER: Record<GlyphChipSize, number> = { sm: 36, md: 44, lg: 64 };
-const GLYPH_SIZE: Record<GlyphChipSize, number> = { sm: 16, md: 20, lg: 28 };
+const DIAMETER: Record<GlyphChipSize, number> = { xs: 28, sm: 36, md: 44, lg: 64 };
+const GLYPH_SIZE: Record<GlyphChipSize, number> = { xs: 14, sm: 16, md: 20, lg: 28 };
 
 type GlyphChipProps = {
   /**
@@ -54,6 +54,12 @@ type GlyphChipProps = {
    */
   glyph?: string;
   tone?: GlyphChipTone;
+  /**
+   * A per-feature identity color from the theme ramp (e.g. `'categoryTeal'`). When
+   * set it OVERRIDES `tone`: the mark takes this color on a soft tint of it — the
+   * way per-feature/category chips read across the app (the old `IconChip`).
+   */
+  color?: ThemeColor;
   size?: GlyphChipSize;
   /**
    * Chips are decorative anchors by default (the adjacent text carries the
@@ -73,32 +79,29 @@ export function GlyphChip({
   iconName,
   glyph,
   tone = 'primary',
+  color,
   size = 'md',
   accessibilityLabel,
   style,
 }: GlyphChipProps) {
   const theme = useTheme();
   const diameter = DIAMETER[size];
+  // A per-feature `color` overrides the semantic tone: the mark takes that color on
+  // a soft tint of it; otherwise the tone drives both fg + bg from the palette.
+  const fg: ThemeColor = color ?? FG_BY_TONE[tone];
+  const bg = color ? withAlpha(theme[color], 0.14) : theme[BG_BY_TONE[tone]];
 
   return (
     <View
       accessibilityElementsHidden={!accessibilityLabel}
       importantForAccessibility={accessibilityLabel ? 'yes' : 'no-hide-descendants'}
       accessibilityLabel={accessibilityLabel}
-      style={[
-        styles.chip,
-        {
-          width: diameter,
-          height: diameter,
-          backgroundColor: theme[BG_BY_TONE[tone]],
-        },
-        style,
-      ]}>
+      style={[styles.chip, { width: diameter, height: diameter, backgroundColor: bg }, style]}>
       {iconName ? (
-        <Icon name={iconName} size={GLYPH_SIZE[size]} color={FG_BY_TONE[tone]} />
+        <Icon name={iconName} size={GLYPH_SIZE[size]} color={fg} />
       ) : glyph ? (
         <ThemedText
-          themeColor={FG_BY_TONE[tone]}
+          themeColor={fg}
           style={[styles.glyph, { fontSize: GLYPH_SIZE[size], lineHeight: GLYPH_SIZE[size] + 8 }]}>
           {glyph}
         </ThemedText>

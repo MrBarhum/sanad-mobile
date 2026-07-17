@@ -1,19 +1,9 @@
 import type { Href } from 'expo-router';
-import {
-  Activity,
-  Calendar,
-  Check,
-  FileText,
-  Pill,
-  UserPlus,
-  Users,
-  X,
-} from 'lucide-react-native';
-import type { ComponentType } from 'react';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Share } from 'react-native';
 
+import { type IconName } from '@/constants/icons';
 import type { ThemeColor } from '@/constants/theme';
 import { memberDisplayName } from '@/features/circle-members/display-name';
 import { useCircleMembers } from '@/features/circle-members/hooks';
@@ -21,27 +11,25 @@ import { todayYmdInTimeZone, ymdInTimeZone } from '@/utils/date';
 
 import type { PulseEvent, PulseItemType } from './types';
 
-type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
-
-/** Per-event icon + accent (status is icon + text + color, never color alone). */
-export function pulseEventVisual(event: PulseEvent): { Icon: IconCmp; colorKey: ThemeColor } {
+/** Per-event semantic icon + accent (status is icon + text + color, never color alone). */
+export function pulseEventVisual(event: PulseEvent): { iconName: IconName; colorKey: ThemeColor } {
   switch (event.event_type) {
     case 'dose_logged':
-      return { Icon: Pill, colorKey: 'categoryTeal' };
+      return { iconName: 'medication', colorKey: 'categoryTeal' };
     case 'task_completed':
-      return { Icon: Check, colorKey: 'categoryGreen' };
+      return { iconName: 'success', colorKey: 'categoryGreen' };
     case 'task_cancelled':
-      return { Icon: X, colorKey: 'categoryGold' };
+      return { iconName: 'close', colorKey: 'categoryGold' };
     case 'appointment_outcome':
-      return { Icon: Calendar, colorKey: 'categoryPurple' };
+      return { iconName: 'appointment', colorKey: 'categoryPurple' };
     case 'visit_completed':
-      return { Icon: Users, colorKey: 'categoryGreen' };
+      return { iconName: 'visit', colorKey: 'categoryGreen' };
     case 'vital_recorded':
-      return { Icon: Activity, colorKey: 'categoryBlue' };
+      return { iconName: 'vital', colorKey: 'categoryBlue' };
     case 'daily_log_added':
-      return { Icon: FileText, colorKey: 'categoryGreen' };
+      return { iconName: 'dailyLog', colorKey: 'categoryGreen' };
     case 'member_joined':
-      return { Icon: UserPlus, colorKey: 'categoryGold' };
+      return { iconName: 'member', colorKey: 'categoryGold' };
   }
 }
 

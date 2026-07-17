@@ -10,9 +10,9 @@ import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
 import { StatusBadge } from '@/components/status-badge';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
 import { isolateLtr } from '@/components/ltr-text';
-import { FontFamily, Radius } from '@/constants/theme';
+import { FontFamily, Radius, type ThemeColor } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useDoctors } from '@/features/doctors/hooks';
 import { useTheme } from '@/hooks/use-theme';
@@ -138,7 +138,7 @@ export function FigmaAppointments({
               assigneeName={
                 appointment.assigned_to ? (lookup(appointment.assigned_to)?.label ?? null) : null
               }
-              chipColor={c[CHIP_COLORS[index % CHIP_COLORS.length]]}
+              chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
               onOpen={() => router.push(`/appointments/${appointment.id}`)}
             />
           ))}
@@ -158,7 +158,7 @@ function AppointmentCard({
   appointment: CareAppointment;
   doctorName: string | null;
   assigneeName: string | null;
-  chipColor: string;
+  chipColor: ThemeColor;
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
@@ -179,7 +179,7 @@ function AppointmentCard({
       accessibilityLabel={appointment.title}
       accessibilityHint={t('common.details')}>
       <View style={styles.cardTop}>
-        <IconChip Icon={Calendar} color={chipColor} size={48} radius={Radius.lg} iconSize={22} />
+        <GlyphChip iconName="appointment" color={chipColor} size="md" />
         <View style={styles.cardInfo}>
           <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={2}>
             {appointment.title}

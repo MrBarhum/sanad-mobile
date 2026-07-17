@@ -1,6 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
-  Activity,
   AlertCircle,
   Bell,
   Calendar,
@@ -8,14 +7,9 @@ import {
   ChevronDown,
   ChevronLeft,
   Clock,
-  FileText,
   HandHelping,
-  ListChecks,
   Phone,
-  Pill,
   Share2,
-  Stethoscope,
-  UserPlus,
   Users,
   X,
 } from 'lucide-react-native';
@@ -34,7 +28,8 @@ import {
 import { Surface } from '@/components/surface';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { CareLoopRing } from '@/components/figma/care-loop-ring';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
+import { type IconName } from '@/constants/icons';
 import { FontFamily, Gutter, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isolateLtr } from '@/components/ltr-text';
@@ -213,15 +208,15 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   // Canonical Sanad ordering (meds → tasks → appointments → vitals → visits →
   // daily logs → doctors → members). The RTL wrap grid places the first item
   // top-right, so medications — the highest-stakes surface — leads (A7).
-  const quickActions: { id: string; route: string; label: string; color: string; Icon: IconCmp }[] = [
-    { id: 'medications', route: '/medications', label: t('careCircle.dashboard.sections.medications.title'), color: c.categoryTeal, Icon: Pill },
-    { id: 'tasks', route: '/tasks', label: t('careCircle.dashboard.sections.tasks.title'), color: c.categoryBlue, Icon: ListChecks },
-    { id: 'appointments', route: '/appointments', label: t('careCircle.dashboard.sections.appointments.title'), color: c.categoryPurple, Icon: Calendar },
-    { id: 'vitals', route: '/vitals', label: t('careCircle.dashboard.sections.vitals.title'), color: c.categoryBlue, Icon: Activity },
-    { id: 'visits', route: '/visits', label: t('careCircle.dashboard.sections.visits.title'), color: c.categoryGreen, Icon: UserPlus },
-    { id: 'logs', route: '/daily-logs', label: t('careCircle.dashboard.sections.dailyLogs.title'), color: c.categoryPurple, Icon: FileText },
-    { id: 'doctors', route: '/doctors', label: t('careCircle.dashboard.sections.doctors.title'), color: c.categoryGreen, Icon: Stethoscope },
-    { id: 'members', route: '/circle-members', label: t('circleMembers.title'), color: c.categoryGold, Icon: Users },
+  const quickActions: { id: string; route: string; label: string; color: ThemeColor; iconName: IconName }[] = [
+    { id: 'medications', route: '/medications', label: t('careCircle.dashboard.sections.medications.title'), color: 'categoryTeal', iconName: 'medication' },
+    { id: 'tasks', route: '/tasks', label: t('careCircle.dashboard.sections.tasks.title'), color: 'categoryBlue', iconName: 'task' },
+    { id: 'appointments', route: '/appointments', label: t('careCircle.dashboard.sections.appointments.title'), color: 'categoryPurple', iconName: 'appointment' },
+    { id: 'vitals', route: '/vitals', label: t('careCircle.dashboard.sections.vitals.title'), color: 'categoryBlue', iconName: 'activity' },
+    { id: 'visits', route: '/visits', label: t('careCircle.dashboard.sections.visits.title'), color: 'categoryGreen', iconName: 'invite' },
+    { id: 'logs', route: '/daily-logs', label: t('careCircle.dashboard.sections.dailyLogs.title'), color: 'categoryPurple', iconName: 'dailyLog' },
+    { id: 'doctors', route: '/doctors', label: t('careCircle.dashboard.sections.doctors.title'), color: 'categoryGreen', iconName: 'doctor' },
+    { id: 'members', route: '/circle-members', label: t('circleMembers.title'), color: 'categoryGold', iconName: 'member' },
   ];
   // Exact 4-up tile width (screen minus the FigmaScreen gutters minus 3 column gaps).
   const quickTileWidth = (width - Gutter * 2 - 12 * 3) / 4;
@@ -437,7 +432,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
       {nextAppt ? (
         <Surface radius={Radius.xl} padded={16} onPress={() => router.push('/appointments')}>
           <View style={styles.apptRow}>
-            <IconChip Icon={Stethoscope} color={c.categoryBlue} size={48} radius={Radius.lg} iconSize={22} />
+            <GlyphChip iconName="doctor" color="categoryBlue" size="md" />
             <View style={styles.apptText}>
               <Text style={[styles.apptWhen, muted]}>{apptWhen}</Text>
               <Text style={[styles.apptTitle, { color: c.text }]} numberOfLines={1}>
@@ -465,7 +460,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
               accessibilityRole="button"
               accessibilityLabel={qa.label}
               style={[styles.quickTile, { width: quickTileWidth, backgroundColor: c.backgroundElement, borderColor: c.border }]}>
-              <IconChip Icon={qa.Icon} color={qa.color} size={40} radius={Radius.md} iconSize={20} />
+              <GlyphChip iconName={qa.iconName} color={qa.color} size="md" />
               <Text style={[styles.quickLabel, muted]} numberOfLines={2}>
                 {qa.label}
               </Text>
@@ -798,8 +793,7 @@ function PulseSection({
       </View>
       <View style={styles.pulseList}>
         {events.map((event) => {
-          const { Icon, colorKey } = pulseEventVisual(event);
-          const color = c[colorKey];
+          const { iconName, colorKey } = pulseEventVisual(event);
           return (
             <Pressable
               key={`${event.event_type}:${event.event_id}`}
@@ -811,14 +805,7 @@ function PulseSection({
                 { backgroundColor: c.backgroundElement, borderColor: c.border },
                 pressed && { opacity: 0.7 },
               ]}>
-              <IconChip
-                Icon={Icon}
-                color={color}
-                size={40}
-                radius={Radius.md}
-                iconSize={18}
-                tintOpacity={0.12}
-              />
+              <GlyphChip iconName={iconName} color={colorKey} size="md" />
               <View style={styles.pulseInfo}>
                 <Text style={[styles.pulseDesc, { color: c.text }]} numberOfLines={2}>
                   {pulseDescription(event, t, actorLabel)}

@@ -1,27 +1,13 @@
 import { useRouter } from 'expo-router';
-import {
-  Activity,
-  AlertCircle,
-  Calendar,
-  Check,
-  FileText,
-  HeartPulse,
-  Pill,
-  Stethoscope,
-  Users,
-  Waves,
-} from 'lucide-react-native';
-import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { Surface } from '@/components/surface';
+import { type IconName } from '@/constants/icons';
 import { FontFamily, Radius, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-
-type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
 type ExploreItem = {
   id: string;
@@ -29,7 +15,7 @@ type ExploreItem = {
   titleKey: string;
   subtitleKey: string;
   colorKey: ThemeColor;
-  Icon: IconCmp;
+  iconName: IconName;
 };
 
 type ExploreSection = {
@@ -58,7 +44,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'careCircle.dashboard.sections.medications.title',
         subtitleKey: 'figma.explore.items.medications',
         colorKey: 'categoryTeal',
-        Icon: Pill,
+        iconName: 'medication',
       },
       {
         id: 'tasks',
@@ -66,7 +52,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'careCircle.dashboard.sections.tasks.title',
         subtitleKey: 'figma.explore.items.tasks',
         colorKey: 'categoryBlue',
-        Icon: Check,
+        iconName: 'success',
       },
       {
         id: 'appointments',
@@ -74,7 +60,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'careCircle.dashboard.sections.appointments.title',
         subtitleKey: 'figma.explore.items.appointments',
         colorKey: 'categoryPurple',
-        Icon: Calendar,
+        iconName: 'appointment',
       },
       {
         id: 'visits',
@@ -82,7 +68,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'careCircle.dashboard.sections.visits.title',
         subtitleKey: 'figma.explore.items.visits',
         colorKey: 'categoryGold',
-        Icon: Users,
+        iconName: 'member',
       },
     ],
   },
@@ -96,7 +82,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'careCircle.dashboard.sections.vitals.title',
         subtitleKey: 'figma.explore.items.vitals',
         colorKey: 'categoryBlue',
-        Icon: Activity,
+        iconName: 'activity',
       },
       {
         id: 'dailyLogs',
@@ -104,7 +90,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'careCircle.dashboard.sections.dailyLogs.title',
         subtitleKey: 'figma.explore.items.dailyLogs',
         colorKey: 'categoryGreen',
-        Icon: FileText,
+        iconName: 'dailyLog',
       },
       {
         id: 'doctors',
@@ -112,7 +98,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'careCircle.dashboard.sections.doctors.title',
         subtitleKey: 'figma.explore.items.doctors',
         colorKey: 'categoryGold',
-        Icon: Stethoscope,
+        iconName: 'doctor',
       },
       {
         id: 'emergency',
@@ -120,7 +106,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'careCircle.dashboard.sections.emergency.title',
         subtitleKey: 'figma.explore.items.emergency',
         colorKey: 'dangerSolid',
-        Icon: AlertCircle,
+        iconName: 'error',
       },
     ],
   },
@@ -134,7 +120,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'pulse.title',
         subtitleKey: 'pulse.subtitle',
         colorKey: 'categoryTeal',
-        Icon: Waves,
+        iconName: 'activity',
       },
       {
         id: 'members',
@@ -142,7 +128,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'circleMembers.title',
         subtitleKey: 'figma.explore.items.members',
         colorKey: 'categoryPurple',
-        Icon: Users,
+        iconName: 'member',
       },
       {
         id: 'recipientProfile',
@@ -150,7 +136,7 @@ const SECTIONS: ExploreSection[] = [
         titleKey: 'recipientProfile.title',
         subtitleKey: 'figma.explore.items.recipientProfile',
         colorKey: 'categoryTeal',
-        Icon: HeartPulse,
+        iconName: 'vital',
       },
     ],
   },
@@ -179,8 +165,8 @@ export default function ExploreScreen() {
             {section.items.map((item, i) => (
               <FigmaListRow
                 key={item.id}
-                Icon={item.Icon}
-                color={c[item.colorKey]}
+                iconName={item.iconName}
+                color={item.colorKey}
                 title={t(item.titleKey)}
                 subtitle={t(item.subtitleKey)}
                 topDivider={i > 0}

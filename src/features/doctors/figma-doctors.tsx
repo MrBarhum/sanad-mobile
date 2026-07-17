@@ -6,10 +6,10 @@ import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
 import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
-import { ChipSize, FontFamily, Radius, withAlpha } from '@/constants/theme';
+import { ChipSize, FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { Doctor } from './api';
@@ -118,7 +118,7 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
                 <DoctorCard
                   key={doctor.id}
                   doctor={doctor}
-                  chipColor={c[CHIP_COLORS[index % CHIP_COLORS.length]]}
+                  chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
                   canManage={canManage}
                   deleting={deletingId === doctor.id}
                   onEdit={() => setEditing(doctor)}
@@ -151,7 +151,7 @@ function DoctorCard({
   onDelete,
 }: {
   doctor: Doctor;
-  chipColor: string;
+  chipColor: ThemeColor;
   canManage: boolean;
   deleting: boolean;
   onEdit: () => void;
@@ -177,13 +177,7 @@ function DoctorCard({
   return (
     <Surface tone="card" radius={Radius.xl} padded={16}>
       <View style={styles.cardTop}>
-        <IconChip
-          Icon={Stethoscope}
-          color={chipColor}
-          size={ChipSize.xl}
-          radius={Radius.pill}
-          iconSize={24}
-        />
+        <GlyphChip iconName="doctor" color={chipColor} size="md" />
         <View style={styles.cardInfo}>
           <Text style={[styles.cardName, { color: c.text }]} numberOfLines={1}>
             {doctor.name}

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { AlertCircle, Check, Clock, Pill, Users, X } from 'lucide-react-native';
+import { AlertCircle, Check, Clock, Users, X } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,7 @@ import { SkeletonList } from '@/components/skeleton';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
 import { isolateLtr } from '@/components/ltr-text';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
@@ -154,7 +154,7 @@ export function FigmaMedications({
       {/* Summary pill — doses given today + active medication count */}
       <Surface tone="card" radius={Radius.card} padded={14}>
         <View style={styles.summaryRow}>
-          <IconChip Icon={Pill} color={c.primary} size={40} radius={Radius.pill} iconSize={18} />
+          <GlyphChip iconName="medication" color="primary" size="md" />
           <View style={styles.summaryText}>
             <Text style={[styles.summaryTitle, { color: c.text }]} numberOfLines={1}>
               {t('figma.medications.summary', { given: String(given), total: String(total) })}
@@ -214,7 +214,7 @@ export function FigmaMedications({
               <DoseCard
                 key={dose.key}
                 dose={dose}
-                color={c[colorByMedId.get(dose.medicationId) ?? 'categoryBlue']}
+                color={colorByMedId.get(dose.medicationId) ?? 'categoryBlue'}
                 responsibleText={canManage ? responsibleLabel(dose.responsibleUserId) : null}
                 canLog={canLog && (canManage || dose.responsibleUserId === userId)}
                 open={openDoseKey === dose.key}
@@ -236,7 +236,7 @@ export function FigmaMedications({
             <MedicationRow
               key={medication.id}
               medication={medication}
-              color={c[colorByMedId.get(medication.id) ?? 'categoryBlue']}
+              color={colorByMedId.get(medication.id) ?? 'categoryBlue'}
               schedules={schedulesByMedId.get(medication.id) ?? []}
               responsibleText={canManage ? responsibleLabel(medication.responsible_user_id) : null}
               onPress={() => router.push(`/medications/${medication.id}`)}
@@ -253,7 +253,7 @@ function EmptyCard({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <Surface tone="card" radius={Radius.card} padded={24}>
       <View style={styles.empty}>
-        <IconChip Icon={Pill} color={c.textSecondary} size={48} radius={Radius.pill} iconSize={22} />
+        <GlyphChip iconName="medication" color="textSecondary" size="md" />
         <Text style={[styles.emptyTitle, { color: c.text }]}>{title}</Text>
         {subtitle ? (
           <Text style={[styles.emptySub, { color: c.textSecondary, fontFamily: FontFamily.regular }]}>{subtitle}</Text>
@@ -274,7 +274,7 @@ function DoseCard({
   onSetStatus,
 }: {
   dose: DoseItem;
-  color: string;
+  color: ThemeColor;
   responsibleText: string | null;
   canLog: boolean;
   open: boolean;
@@ -313,7 +313,7 @@ function DoseCard({
   return (
     <View>
       <View style={[styles.doseCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
-        <IconChip Icon={Pill} color={color} size={44} radius={Radius.pill} iconSize={20} tintOpacity={0.12} />
+        <GlyphChip iconName="medication" color={color} size="md" />
         <View style={styles.doseInfo}>
           {/* Name wraps to two lines (never truncated); dosage on its own line. */}
           <Text style={[styles.doseName, { color: c.text }]} numberOfLines={2}>
@@ -464,7 +464,7 @@ function MedicationRow({
   onPress,
 }: {
   medication: Medication;
-  color: string;
+  color: ThemeColor;
   schedules: MedicationSchedule[];
   responsibleText: string | null;
   onPress: () => void;
@@ -505,7 +505,7 @@ function MedicationRow({
       accessibilityHint={t('medications.tapToEdit')}
       style={[styles.medCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
       <View style={styles.medTop}>
-        <IconChip Icon={Pill} color={color} size={48} radius={Radius.lg} iconSize={22} tintOpacity={0.12} />
+        <GlyphChip iconName="medication" color={color} size="md" />
         <View style={styles.medText}>
           {/* Name wraps to two lines (never truncated); dosage already on its own line. */}
           <Text style={[styles.medName, { color: c.text }]} numberOfLines={2}>

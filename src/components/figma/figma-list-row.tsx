@@ -1,18 +1,17 @@
 import { ChevronLeft } from 'lucide-react-native';
-import type { ComponentType, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FontFamily, Radius, withAlpha } from '@/constants/theme';
+import { GlyphChip } from '@/components/glyph-chip';
+import { type IconName } from '@/constants/icons';
+import { FontFamily, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { IconChip } from './icon-chip';
-
-type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
 type FigmaListRowProps = {
-  /** Leading lucide icon (rendered in a tinted chip). */
-  Icon?: IconCmp;
-  /** Chip / accent color for the icon (default primary). */
-  color?: string;
+  /** Leading semantic icon, rendered in a tinted identity chip (GlyphChip). */
+  iconName?: IconName;
+  /** Chip / accent color as a theme key (category or tone; default primary). */
+  color?: ThemeColor;
   /** Or a letterform avatar (e.g. a member initial) instead of an icon. */
   avatarText?: string;
   title: string;
@@ -25,12 +24,12 @@ type FigmaListRowProps = {
 };
 
 /**
- * A grouped-list row: a tinted icon chip (or letter avatar) + title + optional
- * subtitle + a trailing chevron. Designed to sit inside a `FigmaCard` (padding 0)
- * as a hairline-separated group — the Explore / Account / Members list idiom.
+ * A grouped-list row: a tinted identity chip (or letter avatar) + title + optional
+ * subtitle + a trailing chevron. Designed to sit inside a `Surface` (padding 0) as
+ * a hairline-separated group — the Explore / Account / Members list idiom.
  */
 export function FigmaListRow({
-  Icon,
+  iconName,
   color,
   avatarText,
   title,
@@ -40,16 +39,14 @@ export function FigmaListRow({
   topDivider = false,
 }: FigmaListRowProps) {
   const c = useTheme();
-  const accent = color ?? c.primary;
+  const accent: ThemeColor = color ?? 'primary';
 
   const body = (
     <>
-      {Icon ? (
-        <IconChip Icon={Icon} color={accent} size={44} radius={Radius.lg} iconSize={22} />
+      {iconName ? (
+        <GlyphChip iconName={iconName} color={accent} size="md" />
       ) : avatarText != null ? (
-        <View style={[styles.avatar, { backgroundColor: withAlpha(accent, 0.15) }]}>
-          <Text style={[styles.avatarText, { color: accent }]}>{avatarText}</Text>
-        </View>
+        <GlyphChip glyph={avatarText} color={accent} size="md" />
       ) : null}
       <View style={styles.text}>
         <Text style={[styles.title, { color: c.text }]} numberOfLines={1}>
@@ -102,8 +99,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 16, fontFamily: FontFamily.semibold },
   // Older-adult floor: meaningful secondary text ≥14.
   subtitle: { fontSize: 14, fontFamily: FontFamily.regular },
-  avatar: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 18, fontFamily: FontFamily.bold },
   // Section eyebrow raised 13 -> 14 to meet the content floor.
   sectionLabel: { fontSize: 14, fontFamily: FontFamily.bold, letterSpacing: 0.5, marginBottom: 10 },
   pressed: { opacity: 0.85 },

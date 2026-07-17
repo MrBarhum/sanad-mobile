@@ -7,7 +7,7 @@ import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
 import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
 import { FontFamily, Radius, withAlpha } from '@/constants/theme';
@@ -111,8 +111,7 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
         <>
           <View style={styles.list}>
             {events.map((event) => {
-              const { Icon, colorKey } = pulseEventVisual(event);
-              const color = c[colorKey];
+              const { iconName, colorKey } = pulseEventVisual(event);
               return (
                 <Pressable
                   key={`${event.event_type}:${event.event_id}`}
@@ -124,14 +123,7 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
                     { backgroundColor: c.backgroundElement, borderColor: c.border },
                     pressed && styles.rowPressed,
                   ]}>
-                  <IconChip
-                    Icon={Icon}
-                    color={color}
-                    size={44}
-                    radius={Radius.lg}
-                    iconSize={20}
-                    tintOpacity={0.12}
-                  />
+                  <GlyphChip iconName={iconName} color={colorKey} size="md" />
                   <View style={styles.info}>
                     <Text style={[styles.desc, { color: c.text }]} numberOfLines={2}>
                       {pulseDescription(event, t, actorLabel)}

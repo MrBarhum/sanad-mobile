@@ -1,22 +1,13 @@
 import { useRouter } from 'expo-router';
-import {
-  Activity,
-  Droplets,
-  Heart,
-  Stethoscope,
-  Thermometer,
-  Weight,
-  Wind,
-} from 'lucide-react-native';
-import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
 import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
+import { type IconName } from '@/constants/icons';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
@@ -26,21 +17,19 @@ import type { VitalReading, VitalReadingType } from './api';
 import { formatVitalValue } from './describe';
 import { useVitals } from './hooks';
 
-type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
-
 /**
  * Per-type icon + category color for the vital cards. NON-DIAGNOSTIC: the color is
  * a fixed per-type category accent (a visual aid only) — it never encodes a
  * normal/abnormal judgement of the value. Mirrors the Figma `VitalsScreen` chips.
  */
-const VITAL_VISUAL: Record<VitalReadingType, { Icon: IconCmp; colorKey: ThemeColor }> = {
-  blood_pressure: { Icon: Activity, colorKey: 'categoryBlue' },
-  heart_rate: { Icon: Heart, colorKey: 'categoryPurple' },
-  temperature: { Icon: Thermometer, colorKey: 'categoryGold' },
-  blood_sugar: { Icon: Droplets, colorKey: 'categoryPurple' },
-  oxygen_saturation: { Icon: Wind, colorKey: 'categoryGreen' },
-  weight: { Icon: Weight, colorKey: 'categoryGold' },
-  other: { Icon: Stethoscope, colorKey: 'categoryTeal' },
+const VITAL_VISUAL: Record<VitalReadingType, { iconName: IconName; colorKey: ThemeColor }> = {
+  blood_pressure: { iconName: 'activity', colorKey: 'categoryBlue' },
+  heart_rate: { iconName: 'heart', colorKey: 'categoryPurple' },
+  temperature: { iconName: 'temperature', colorKey: 'categoryGold' },
+  blood_sugar: { iconName: 'drop', colorKey: 'categoryPurple' },
+  oxygen_saturation: { iconName: 'oxygen', colorKey: 'categoryGreen' },
+  weight: { iconName: 'weight', colorKey: 'categoryGold' },
+  other: { iconName: 'doctor', colorKey: 'categoryTeal' },
 };
 
 /**
@@ -131,7 +120,7 @@ export function FigmaVitals({
         {disclaimer}
         <Surface radius={Radius.xl} padded={24}>
           <View style={styles.emptyInner}>
-            <IconChip Icon={Activity} color={c.primary} size={48} radius={Radius.lg} iconSize={24} />
+            <GlyphChip iconName='activity' color='primary' size='md' />
             <Text style={[styles.stateTitle, { color: c.text }]}>{t('vitals.noTodayTitle')}</Text>
             {canAdd ? (
               <Text style={[styles.stateSub, { color: c.textSecondary }]}>{t('figma.vitals.emptySubtitle')}</Text>
@@ -202,12 +191,10 @@ function VitalCard({
       accessibilityLabel={`${typeLabel}${value ? `: ${value} ${unit}` : ''}`}
       accessibilityHint={when}
       style={styles.cell}>
-      <IconChip
-        Icon={visual.Icon}
-        color={c[visual.colorKey]}
-        size={40}
-        radius={Radius.md}
-        iconSize={20}
+      <GlyphChip
+        iconName={visual.iconName}
+        color={visual.colorKey}
+        size='md'
         style={styles.cellChip}
       />
       <Text style={[styles.type, { color: c.textSecondary }]} numberOfLines={1}>
