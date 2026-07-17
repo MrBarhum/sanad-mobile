@@ -7,7 +7,7 @@ import { FontFamily, Gutter, MaxFormWidth, Radius, Spacing, TouchTarget } from '
 import { useTheme } from '@/hooks/use-theme';
 
 import { FigmaFooterPrimaryButton } from './figma/figma-footer-primary-button';
-import { FormButton } from './figma/form-button';
+import { Button } from './button';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -91,7 +91,7 @@ export function FormModal({
                 onPress={onSubmit}
                 loading={submitting}
               />
-              <FormButton
+              <Button
                 label={cancelLabel}
                 onPress={onClose}
                 variant="secondary"

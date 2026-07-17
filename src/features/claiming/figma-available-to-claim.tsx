@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
@@ -219,7 +219,7 @@ function ClaimFeedbackSheet({
           <Text style={[styles.feedbackBody, { color: c.textSecondary }]}>{feedback.body}</Text>
         ) : null}
       </View>
-      <FigmaButton
+      <Button
         label={t('common.ok')}
         variant={tone === 'success' ? 'primary' : 'secondary'}
         onPress={onClose}
@@ -280,9 +280,9 @@ function ClaimCard({
         </View>
       </View>
 
-      <FigmaButton
+      <Button
         label={t('claiming.cta')}
-        Icon={HandHelping}
+        iconName="claim"
         loading={pending}
         onPress={onClaim}
         accessibilityHint={t('claiming.ctaHint')}

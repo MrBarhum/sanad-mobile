@@ -5,7 +5,7 @@ import { FontFamily, MaxFormWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { FigmaFooterPrimaryButton } from './figma/figma-footer-primary-button';
-import { FormButton } from './figma/form-button';
+import { Button } from './button';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -68,7 +68,7 @@ function ActionsBody({
         accessibilityHint={saveAccessibilityHint}
       />
       {secondaryLabel && onSecondary ? (
-        <FormButton label={secondaryLabel} onPress={onSecondary} variant="secondary" disabled={saving} />
+        <Button label={secondaryLabel} onPress={onSecondary} variant="secondary" disabled={saving} />
       ) : null}
     </View>
   );

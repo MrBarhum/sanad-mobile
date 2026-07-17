@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
 import { isolateLtr } from '@/components/ltr-text';
@@ -145,7 +145,7 @@ function VitalEditScreen({ circleId, initial }: { circleId: string; initial: Vit
         {confirming ? (
           <View style={styles.confirmRow}>
             <View style={styles.confirmCol}>
-              <FigmaButton
+              <Button
                 label={t('common.confirmDelete')}
                 variant="danger"
                 loading={deleting}
@@ -153,7 +153,7 @@ function VitalEditScreen({ circleId, initial }: { circleId: string; initial: Vit
               />
             </View>
             <View style={styles.confirmCol}>
-              <FigmaButton
+              <Button
                 label={t('common.cancel')}
                 variant="secondary"
                 onPress={() => setConfirming(false)}
@@ -161,7 +161,7 @@ function VitalEditScreen({ circleId, initial }: { circleId: string; initial: Vit
             </View>
           </View>
         ) : (
-          <FigmaButton
+          <Button
             label={t('vitals.deleteReading')}
             variant="danger"
             onPress={() => setConfirming(true)}

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import {
   FigmaFormCard,
@@ -418,7 +418,7 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
           {error}
         </Text>
       ) : null}
-      <FigmaButton
+      <Button
         variant="secondary"
         label={medication.is_active ? t('medications.deactivate') : t('medications.reactivate')}
         loading={pending}
@@ -461,7 +461,7 @@ function DeleteMedicationRow({ circleId, id }: { circleId: string; id: string })
       {confirming ? (
         <View style={styles.actionRow}>
           <View style={styles.actionCol}>
-            <FigmaButton
+            <Button
               label={t('common.confirmDelete')}
               variant="danger"
               loading={pending}
@@ -469,7 +469,7 @@ function DeleteMedicationRow({ circleId, id }: { circleId: string; id: string })
             />
           </View>
           <View style={styles.actionCol}>
-            <FigmaButton
+            <Button
               label={t('common.cancel')}
               variant="secondary"
               disabled={pending}
@@ -478,7 +478,7 @@ function DeleteMedicationRow({ circleId, id }: { circleId: string; id: string })
           </View>
         </View>
       ) : (
-        <FigmaButton
+        <Button
           label={t('medications.deleteMedication')}
           variant="danger"
           onPress={() => setConfirming(true)}
@@ -595,7 +595,7 @@ function SchedulesManager({
 
       {canManage ? (
         <>
-          <FigmaButton
+          <Button
             variant="secondary"
             label={t('medications.addScheduleAtMed')}
             onPress={() => setAdding(true)}
@@ -675,7 +675,7 @@ function ScheduleCard({
 
       {canManage ? (
         <View style={styles.scheduleActions}>
-          <FigmaButton
+          <Button
             variant="secondary"
             label={schedule.is_active ? t('medications.deactivate') : t('medications.reactivate')}
             loading={toggling}

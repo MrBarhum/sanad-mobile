@@ -99,6 +99,8 @@ export const ICONS = {
 
   // --- Actions & roles (Figma Make parity) ------------------------------------
   more: { family: 'ionicons', name: 'ellipsis-horizontal' },
+  signOut: { family: 'ionicons', name: 'log-out-outline' }, // account sign-out (label carries meaning)
+  claim: { family: 'ionicons', name: 'hand-left-outline' }, // «أنا متكفّل» take-responsibility CTA
   edit: { family: 'ionicons', name: 'create-outline' }, // pencil (shares the dailyLog glyph)
   copy: { family: 'ionicons', name: 'copy-outline' },
   view: { family: 'ionicons', name: 'eye-outline' },

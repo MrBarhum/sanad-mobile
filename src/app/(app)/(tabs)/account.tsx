@@ -1,12 +1,12 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { Bell, Edit3, LogOut, Plus, User, Users } from 'lucide-react-native';
+import { Bell, Edit3, Plus, User, Users } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
 import { FigmaScreen } from '@/components/figma/figma-screen';
@@ -177,10 +177,10 @@ export default function AccountScreen() {
             {error}
           </Text>
         ) : null}
-        <FigmaButton
+        <Button
           variant="danger"
           label={t('account.signOut')}
-          Icon={LogOut}
+          iconName="signOut"
           loading={signingOut}
           disabled={signingOut}
           onPress={onSignOut}
@@ -259,8 +259,8 @@ function NameEditSheet({
           {error}
         </Text>
       ) : null}
-      <FigmaButton label={t('common.save')} loading={update.isPending} onPress={onSave} />
-      <FigmaButton
+      <Button label={t('common.save')} loading={update.isPending} onPress={onSave} />
+      <Button
         label={t('common.cancel')}
         variant="secondary"
         disabled={update.isPending}

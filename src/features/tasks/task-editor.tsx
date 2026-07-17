@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import {
   FigmaChipSelect,
@@ -511,7 +511,7 @@ function StatusSection({
             </Text>
             {/* The confirm CTA mirrors the list sheet: complete = teal primary,
                 cancel = red danger. Complete uses the proven body-rendered CTA
-                (FigmaButton variant="primary" renders dark in this nested form). */}
+                (Button variant="primary" renders dark in this nested form). */}
             {confirm === 'complete' ? (
               <FigmaFooterPrimaryButton
                 label={t('tasks.markComplete')}
@@ -519,14 +519,14 @@ function StatusSection({
                 loading={pending}
               />
             ) : (
-              <FigmaButton
+              <Button
                 label={t('tasks.markUnable')}
                 variant="danger"
                 loading={pending}
                 onPress={() => run('cancel')}
               />
             )}
-            <FigmaButton
+            <Button
               label={t('common.cancel')}
               variant="secondary"
               disabled={pending}
@@ -539,7 +539,7 @@ function StatusSection({
               label={t('tasks.markComplete')}
               onPress={() => setConfirm('complete')}
             />
-            <FigmaButton
+            <Button
               label={t('tasks.markUnable')}
               variant="secondary"
               onPress={() => setConfirm('cancel')}
@@ -548,7 +548,7 @@ function StatusSection({
         )
       ) : canReopen ? (
         <View style={styles.statusActions}>
-          <FigmaButton
+          <Button
             label={t('tasks.reopen')}
             variant="secondary"
             loading={pending}
@@ -583,7 +583,7 @@ function DeleteTaskRow({ circleId, id }: { circleId: string; id: string }) {
       {confirming ? (
         <View style={styles.actionRow}>
           <View style={styles.actionCol}>
-            <FigmaButton
+            <Button
               label={t('common.confirmDelete')}
               variant="danger"
               loading={pending}
@@ -591,7 +591,7 @@ function DeleteTaskRow({ circleId, id }: { circleId: string; id: string }) {
             />
           </View>
           <View style={styles.actionCol}>
-            <FigmaButton
+            <Button
               label={t('common.cancel')}
               variant="secondary"
               disabled={pending}
@@ -600,7 +600,7 @@ function DeleteTaskRow({ circleId, id }: { circleId: string; id: string }) {
           </View>
         </View>
       ) : (
-        <FigmaButton label={t('tasks.deleteTask')} variant="danger" onPress={() => setConfirming(true)} />
+        <Button label={t('tasks.deleteTask')} variant="danger" onPress={() => setConfirming(true)} />
       )}
     </FigmaFormCard>
   );

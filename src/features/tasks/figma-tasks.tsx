@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
@@ -319,7 +319,7 @@ function ClaimNoteSheet({
           {note.body}
         </Text>
       ) : null}
-      <FigmaButton label={t('common.ok')} variant="secondary" onPress={onClose} />
+      <Button label={t('common.ok')} variant="secondary" onPress={onClose} />
     </FigmaBottomSheet>
   );
 }
@@ -362,13 +362,13 @@ function TaskConfirmSheet({
       <Text style={[styles.confirmTask, { color: c.text }]} numberOfLines={3}>
         {shown?.task.title}
       </Text>
-      <FigmaButton
+      <Button
         label={t(isComplete ? 'tasks.markComplete' : 'tasks.markUnable')}
         variant={isComplete ? 'primary' : 'danger'}
         loading={pending}
         onPress={onConfirm}
       />
-      <FigmaButton
+      <Button
         label={t('common.cancel')}
         variant="secondary"
         disabled={pending}

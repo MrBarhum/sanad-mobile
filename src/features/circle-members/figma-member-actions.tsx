@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaCardSelect } from '@/components/figma/figma-form-screen';
 import { FontFamily } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -194,7 +194,7 @@ export function MemberActionsSheet({
           ) : null}
 
           {canEditRole ? (
-            <FigmaButton
+            <Button
               variant="secondary"
               label={t('circleMembers.changeRole')}
               onPress={() => {
@@ -205,7 +205,7 @@ export function MemberActionsSheet({
             />
           ) : null}
           {canMakeOwner ? (
-            <FigmaButton
+            <Button
               variant="secondary"
               label={t('circleMembers.makeOwner')}
               onPress={() => {
@@ -215,7 +215,7 @@ export function MemberActionsSheet({
             />
           ) : null}
           {showReactivate ? (
-            <FigmaButton
+            <Button
               variant="secondary"
               label={t('circleMembers.reactivate')}
               loading={busy}
@@ -227,7 +227,7 @@ export function MemberActionsSheet({
             />
           ) : null}
           {showRemove ? (
-            <FigmaButton
+            <Button
               variant="danger"
               label={t('circleMembers.remove')}
               onPress={() => {
@@ -237,7 +237,7 @@ export function MemberActionsSheet({
             />
           ) : null}
           {showLeave ? (
-            <FigmaButton
+            <Button
               variant="danger"
               label={t('circleMembers.leave')}
               onPress={() => {
@@ -266,7 +266,7 @@ export function MemberActionsSheet({
             </Text>
           ) : null}
           {errorNode}
-          <FigmaButton
+          <Button
             label={t('circleMembers.saveRole')}
             loading={busy}
             onPress={() => {
@@ -277,7 +277,7 @@ export function MemberActionsSheet({
               run(() => updateRole.mutateAsync({ memberId: shown.memberId, role: selectedRole }));
             }}
           />
-          <FigmaButton
+          <Button
             variant="secondary"
             label={t('common.cancel')}
             disabled={busy}
@@ -288,13 +288,13 @@ export function MemberActionsSheet({
         <>
           <Text style={[styles.body, { color: c.text }]}>{confirm[mode].body}</Text>
           {errorNode}
-          <FigmaButton
+          <Button
             variant={confirm[mode].danger ? 'danger' : 'primary'}
             label={confirm[mode].btn}
             loading={busy}
             onPress={confirm[mode].go}
           />
-          <FigmaButton
+          <Button
             variant="secondary"
             label={t('common.cancel')}
             disabled={busy}

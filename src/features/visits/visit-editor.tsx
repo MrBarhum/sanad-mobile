@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
 import { isolateLtr } from '@/components/ltr-text';
@@ -327,13 +327,13 @@ function StatusSection({
                   : 'visits.confirmCancelledBody',
               )}
             </Text>
-            <FigmaButton
+            <Button
               label={t(confirm === 'completed' ? 'visits.markCompleted' : 'visits.markCancelled')}
               variant={confirm === 'completed' ? 'primary' : 'danger'}
               loading={pending}
               onPress={() => run(confirm)}
             />
-            <FigmaButton
+            <Button
               label={t('common.cancel')}
               variant="secondary"
               disabled={pending}
@@ -343,10 +343,10 @@ function StatusSection({
         ) : (
           <View style={styles.actionRow}>
             <View style={styles.actionCol}>
-              <FigmaButton label={t('visits.markCompleted')} onPress={() => setConfirm('completed')} />
+              <Button label={t('visits.markCompleted')} onPress={() => setConfirm('completed')} />
             </View>
             <View style={styles.actionCol}>
-              <FigmaButton
+              <Button
                 label={t('visits.markCancelled')}
                 variant="secondary"
                 onPress={() => setConfirm('cancelled')}
@@ -355,7 +355,7 @@ function StatusSection({
           </View>
         )
       ) : showReopen ? (
-        <FigmaButton
+        <Button
           label={t('visits.reopen')}
           variant="secondary"
           loading={pending}
@@ -389,7 +389,7 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
       {confirming ? (
         <View style={styles.actionRow}>
           <View style={styles.actionCol}>
-            <FigmaButton
+            <Button
               label={t('common.confirmDelete')}
               variant="danger"
               loading={pending}
@@ -397,7 +397,7 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
             />
           </View>
           <View style={styles.actionCol}>
-            <FigmaButton
+            <Button
               label={t('common.cancel')}
               variant="secondary"
               disabled={pending}
@@ -406,7 +406,7 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
           </View>
         </View>
       ) : (
-        <FigmaButton
+        <Button
           label={t('visits.deleteVisit')}
           variant="danger"
           onPress={() => setConfirming(true)}

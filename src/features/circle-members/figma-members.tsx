@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
@@ -208,7 +208,7 @@ export function FigmaMembers({
           </View>
 
           {canManage ? (
-            <FigmaButton
+            <Button
               variant="secondary"
               label={t('circleMembers.manageInvitations')}
               onPress={() => router.push('/circle-members/invitations')}

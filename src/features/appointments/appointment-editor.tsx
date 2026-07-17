@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
 import { isolateLtr } from '@/components/ltr-text';
@@ -355,13 +355,13 @@ function StatusSection({
                   : 'appointments.confirmCancelledBody',
               )}
             </Text>
-            <FigmaButton
+            <Button
               label={t(confirm === 'completed' ? 'appointments.markCompleted' : 'appointments.markCancelled')}
               variant={confirm === 'completed' ? 'primary' : 'danger'}
               loading={pending}
               onPress={() => mark(confirm)}
             />
-            <FigmaButton
+            <Button
               label={t('common.cancel')}
               variant="secondary"
               disabled={pending}
@@ -371,13 +371,13 @@ function StatusSection({
         ) : (
           <View style={styles.actionRow}>
             <View style={styles.actionCol}>
-              <FigmaButton
+              <Button
                 label={t('appointments.markCompleted')}
                 onPress={() => setConfirm('completed')}
               />
             </View>
             <View style={styles.actionCol}>
-              <FigmaButton
+              <Button
                 label={t('appointments.markCancelled')}
                 variant="secondary"
                 onPress={() => setConfirm('cancelled')}
@@ -386,7 +386,7 @@ function StatusSection({
           </View>
         )
       ) : showReopen ? (
-        <FigmaButton
+        <Button
           label={t('appointments.reopen')}
           variant="secondary"
           loading={pending}
@@ -420,7 +420,7 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
       {confirming ? (
         <View style={styles.actionRow}>
           <View style={styles.actionCol}>
-            <FigmaButton
+            <Button
               label={t('common.confirmDelete')}
               variant="danger"
               loading={pending}
@@ -428,7 +428,7 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
             />
           </View>
           <View style={styles.actionCol}>
-            <FigmaButton
+            <Button
               label={t('common.cancel')}
               variant="secondary"
               disabled={pending}
@@ -437,7 +437,7 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
           </View>
         </View>
       ) : (
-        <FigmaButton
+        <Button
           label={t('appointments.deleteAppointment')}
           variant="danger"
           onPress={() => setConfirming(true)}

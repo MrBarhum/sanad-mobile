@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import {
   FigmaCardSelect,
@@ -186,10 +186,10 @@ function CreatedCard({ created, onReset }: { created: CreatedInvitation; onReset
       ) : null}
 
       <View style={styles.actions}>
-        <FigmaButton label={t('invitations.shareWhatsApp')} onPress={onWhatsApp} />
-        <FigmaButton label={t('invitations.copy')} variant="secondary" onPress={onCopy} />
-        <FigmaButton label={t('invitations.share')} variant="secondary" onPress={onShare} />
-        <FigmaButton label={t('invitations.createAnother')} variant="secondary" onPress={onReset} />
+        <Button label={t('invitations.shareWhatsApp')} onPress={onWhatsApp} />
+        <Button label={t('invitations.copy')} variant="secondary" onPress={onCopy} />
+        <Button label={t('invitations.share')} variant="secondary" onPress={onShare} />
+        <Button label={t('invitations.createAnother')} variant="secondary" onPress={onReset} />
       </View>
     </FigmaFormScreen>
   );
