@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import { ArrowRight, Plus } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FigmaColors, FigmaFont, FigmaLayout, FigmaRadius } from './figma-tokens';
+import { FontFamily, Radius } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 type FigmaHeaderProps = {
   title: string;
@@ -17,15 +18,17 @@ type FigmaHeaderProps = {
 };
 
 /**
- * The Figma screen header: a round back button (start), a centered title, and an
- * optional round teal "+" add button (end). Matches the Figma `*Screen.tsx`
- * headers. RTL handles side placement (back sits at the right). Use as the first
- * child inside `FigmaScreen` (which already provides the top safe-area inset).
+ * The screen header: a round back button (start), a centered title, and an
+ * optional round teal "+" add button (end). RTL handles side placement (back
+ * sits at the right). Use as the first child inside `FigmaScreen` (which already
+ * provides the top safe-area inset).
+ *
+ * TODO(E2 a11y): the back/add fallback labels are hardcoded English — localize
+ * via i18n in the a11y pass (kept as-is here to keep this a token-only migration).
  */
 export function FigmaHeader({ title, onAdd, addAccessibilityLabel, onBack, trailing }: FigmaHeaderProps) {
   const router = useRouter();
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   return (
     <View style={styles.row}>
@@ -33,7 +36,7 @@ export function FigmaHeader({ title, onAdd, addAccessibilityLabel, onBack, trail
         onPress={onBack ?? (() => router.back())}
         accessibilityRole="button"
         accessibilityLabel="back"
-        style={[styles.action, { backgroundColor: c.card, borderColor: c.border }]}>
+        style={[styles.action, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
         <ArrowRight size={20} color={c.text} />
       </Pressable>
 
@@ -58,19 +61,20 @@ export function FigmaHeader({ title, onAdd, addAccessibilityLabel, onBack, trail
   );
 }
 
-const SIZE = FigmaLayout.headerActionSize;
+/** Round header action button diameter (bell / back / add). */
+const SIZE = 44;
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   action: {
     width: SIZE,
     height: SIZE,
-    borderRadius: FigmaRadius.pill,
+    borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
   trailing: { minWidth: SIZE, alignItems: 'flex-end' },
-  title: { flex: 1, textAlign: 'center', fontSize: 18, fontFamily: FigmaFont.bold },
+  title: { flex: 1, textAlign: 'center', fontSize: 18, fontFamily: FontFamily.bold },
 });
