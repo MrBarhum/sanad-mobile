@@ -516,13 +516,16 @@ function TaskRow({
             accessibilityRole="button"
             accessibilityLabel={t('claiming.cta')}
             accessibilityHint={t('claiming.ctaHint')}
-            style={[styles.claimBtn, { borderColor: withAlpha(c.primary, 0.4) }]}>
+            // Filled teal pill — the same treatment other primary inline actions use
+            // (e.g. the Home dose "log" button). An outlined/tinted variant read as
+            // near-invisible on the dark surface; a full-opacity fill is legible.
+            style={[styles.claimBtn, { backgroundColor: c.primary }]}>
             {claiming ? (
-              <ActivityIndicator size="small" color={c.primary} />
+              <ActivityIndicator size="small" color={c.onPrimary} />
             ) : (
               <>
-                <HandHelping size={14} color={c.primary} />
-                <Text style={[styles.claimText, { color: c.primary }]}>{t('claiming.cta')}</Text>
+                <HandHelping size={14} color={c.onPrimary} />
+                <Text style={[styles.claimText, { color: c.onPrimary }]}>{t('claiming.cta')}</Text>
               </>
             )}
           </Pressable>
@@ -594,7 +597,6 @@ const styles = StyleSheet.create({
     minHeight: 36,
     paddingHorizontal: 12,
     borderRadius: FigmaRadius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   claimText: { fontSize: 13, fontFamily: FigmaFont.semibold },
   cancelBtn: {
