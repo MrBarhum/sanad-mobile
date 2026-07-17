@@ -83,6 +83,14 @@ One 4pt `Spacing` scale + one `Radius` family already in theme.ts; ad-hoc values
 ### Consumer blast radius (69 files: 35 trivial · 28 moderate · 6 complex)
 Hardest: `figma-tokens.ts` (linchpin), `figma-home.tsx` (102 refs), `figma-medications.tsx` (71), `figma-notifications.tsx` (47, sole `FigmaStatus`), `figma-emergency-card.tsx` (45), `figma-doctors.tsx` (42). Migration order: shared `components/figma/*` primitives first (every screen composes them), then feature screens, then delete `figma-tokens.ts` + `form-typography.ts` + Cairo loading.
 
+**Migration progress (figma-tokens importers: 49 → 43):**
+- ✅ `care-loop-ring` (survivor; exercises `ringTrack`, inlined `FigmaRing`).
+- ✅ display primitives: `figma-screen`, `icon-chip`, `figma-status-pill`, `figma-segmented-tabs`, `figma-list-row`/`FigmaSectionLabel` (every list screen composes these).
+- ⏭ remaining survivor primitives: `figma-header` (+ fix hardcoded en `back`/`add` a11y labels in E2), `figma-bottom-sheet`, `figma-form-screen`, `figma-tab-bar`.
+- ⏭ delete-target primitives (Phase B, but their imports must clear before deleting `figma-tokens`): `figma-card`→Surface, `figma-field`→FormField, `figma-button`/`figma-footer-primary-button`/`form-button`→Button.
+- ⏭ feature screens (Tier A/B) + Cairo drop across `form-typography` consumers.
+- ⏭ then delete `figma-tokens.ts` + `form-typography.ts`; remove Cairo from `_layout` + `@expo-google-fonts/cairo`.
+
 ### Decisions & deliberate departures (owner can revert any by token name)
 1. **primary teal nudged darker** (`#2E8A7B`→`#2A7F71`, light only) — required to clear AA on the white-on-teal primary button (4.17→4.80). Same teal identity; dark primary unchanged.
 2. **warning/postponed = amber, not gold.** Figma reused the gold accent (`#C8904A`) for "warning". Per A3 the gold accent is reserved for **celebratory + empty-state** moments; caution uses the dedicated `warningFg` amber. Status stays icon+text (never color-only), so the shift is safe and on-brief.
@@ -119,3 +127,6 @@ Home (flagship) → Medications → Tasks → سجل النشاط (+Home نبض)
 
 ## Commit log (this milestone)
 - `0f49e91` feat(theme): unify the type scale + a11y contrast fixes on the single token system.
+- `c55aa8e` docs(milestone-5): record the understand map, contrast audit + Phase A foundation.
+- `2050491` refactor(care-ring): migrate the care-loop ring onto the single token system.
+- `642c372` refactor(figma-primitives): migrate the shared display primitives onto theme.ts.
