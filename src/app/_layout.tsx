@@ -15,6 +15,7 @@ import { useColorScheme } from 'react-native';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { IconFonts } from '@/components/icon';
 import { Colors, FontFamily } from '@/constants/theme';
+import { PendingJoinLink } from '@/features/invitations/pending-join-link';
 import { bootstrapNotifications } from '@/features/notifications/push-registration';
 import { AppProviders } from '@/providers';
 
@@ -76,6 +77,9 @@ export default function RootLayout() {
   return (
     <AppProviders>
       <ThemeProvider value={navTheme(colorScheme === 'dark' ? 'dark' : 'light')}>
+        {/* Headless: replays a WhatsApp join code captured while signed out into
+            /join-circle after authentication (survives the auth gate). */}
+        <PendingJoinLink />
         <AnimatedSplashOverlay />
         <Stack screenOptions={{ headerShown: false }} />
       </ThemeProvider>
