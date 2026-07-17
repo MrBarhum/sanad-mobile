@@ -1,18 +1,26 @@
-import * as Linking from 'expo-linking';
 import { Platform } from 'react-native';
 
 /**
+ * The exact native deep link (the `scheme` in app.json + the reset route). Passed
+ * verbatim rather than built via `Linking.createURL`, whose value varies in a dev
+ * client / Expo Go (an `exp+…`/dev-server URL) and so would NOT match the Supabase
+ * Auth "Redirect URLs" allow-list — when the redirect isn't allow-listed Supabase
+ * silently falls back to the project Site URL (its `http://localhost:3000` default),
+ * which is exactly the "link opens localhost:3000" symptom. Keep this in sync with
+ * the allow-list and the native-first Site URL — see the milestone-4.1 addendum.
+ */
+export const RESET_PASSWORD_DEEP_LINK = 'sanadmobile://reset-password';
+
+/**
  * Where Supabase should send the user after they tap the reset link in their
- * email. Native returns the app's deep link (`sanadmobile://reset-password`);
- * web returns the same path on the current origin. This exact URL (its scheme +
- * path) must be added to the Supabase Auth "Redirect URLs" allow-list — see the
- * milestone-4 runbook — or Supabase rejects it and the email link won't open.
+ * email. Native returns the fixed app deep link above; web returns the same path
+ * on the current origin.
  */
 export function passwordResetRedirectTo(): string {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     return `${window.location.origin}/reset-password`;
   }
-  return Linking.createURL('/reset-password');
+  return RESET_PASSWORD_DEEP_LINK;
 }
 
 export type RecoveryParams = {
