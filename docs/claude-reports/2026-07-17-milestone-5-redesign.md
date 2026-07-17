@@ -40,7 +40,10 @@ Six parallel read-only agents (workflow `wf_391ee2a5-bee`, 0 errors, ~648k token
 
 ---
 
-## Phase A — one token system 🔧
+## Phase A — one token system ✅
+
+**Complete.** theme.ts is the sole token source; `figma-tokens.ts` + `form-typography.ts` are deleted; Cairo is retired (removed from `_layout` `useFonts` + `@expo-google-fonts/cairo` dep); every consumer renders in IBM Plex on theme.ts. **P2-2's token half is closed** (the 4-button half closes in Phase B). Full quartet green. The 52-file consumer migration ran as a spec-driven workflow with **adversarial per-file verification** (104 agents) — which caught a systemic bug (dropped `Cairo.semibold/bold` weight overrides regressing to Regular) that I then fixed across 6 files, plus 5 `textMuted`→`textSecondary` faithfulness reverts and 20 stale-comment cleanups. Details below.
+
 
 ### A1/A4 — consolidation direction
 - theme.ts is the sole source. `figma-tokens.ts` + `form-typography.ts` to be deleted once all consumers migrate; Cairo removed from `_layout.tsx` `useFonts` + the `@expo-google-fonts/cairo` dep.
@@ -83,13 +86,13 @@ One 4pt `Spacing` scale + one `Radius` family already in theme.ts; ad-hoc values
 ### Consumer blast radius (69 files: 35 trivial · 28 moderate · 6 complex)
 Hardest: `figma-tokens.ts` (linchpin), `figma-home.tsx` (102 refs), `figma-medications.tsx` (71), `figma-notifications.tsx` (47, sole `FigmaStatus`), `figma-emergency-card.tsx` (45), `figma-doctors.tsx` (42). Migration order: shared `components/figma/*` primitives first (every screen composes them), then feature screens, then delete `figma-tokens.ts` + `form-typography.ts` + Cairo loading.
 
-**Migration progress (figma-tokens importers: 49 → 43):**
-- ✅ `care-loop-ring` (survivor; exercises `ringTrack`, inlined `FigmaRing`).
-- ✅ display primitives: `figma-screen`, `icon-chip`, `figma-status-pill`, `figma-segmented-tabs`, `figma-list-row`/`FigmaSectionLabel` (every list screen composes these).
-- ⏭ remaining survivor primitives: `figma-header` (+ fix hardcoded en `back`/`add` a11y labels in E2), `figma-bottom-sheet`, `figma-form-screen`, `figma-tab-bar`.
-- ⏭ delete-target primitives (Phase B, but their imports must clear before deleting `figma-tokens`): `figma-card`→Surface, `figma-field`→FormField, `figma-button`/`figma-footer-primary-button`/`form-button`→Button.
-- ⏭ feature screens (Tier A/B) + Cairo drop across `form-typography` consumers.
-- ⏭ then delete `figma-tokens.ts` + `form-typography.ts`; remove Cairo from `_layout` + `@expo-google-fonts/cairo`.
+**Migration record (figma-tokens importers: 49 → 0):**
+- ✅ Shared `components/figma/*` primitives migrated by hand (highest reuse): `care-loop-ring` (exercises `ringTrack`, inlined `FigmaRing`), the display set (`figma-screen`, `icon-chip`, `figma-status-pill`, `figma-segmented-tabs`, `figma-list-row`), the survivors (`figma-header`, `figma-bottom-sheet`, `figma-form-screen` [+8 sub-14 raises, dark-mode check-color fix], `figma-tab-bar` [web-guard hook, label 13→14]), and the delete-targets (`figma-card`, `figma-button`, `figma-field`) migrated onto theme.ts (Phase B removes the components).
+- ✅ 52 feature/form/auth consumers migrated via workflow `wf_61d897d7-8af` (migrate→verify pipeline; 29 clean, 23 flagged & fixed).
+  - **Real regressions the verify caught & I fixed:** dropped `Cairo.semibold/bold` overrides that fell back to Regular — restored with `FontFamily.*` in sign-in (2 links), sign-up (1), form-actions (status), form-modal (close), picker-sheet (Done/Clear/Cancel/close/selected row), weekday-selector (selected chip).
+  - **Faithfulness reverts:** 5 timestamp sites `textMuted`→`textSecondary` (figma-home, figma-pulse, figma-tasks, figma-vitals, available-to-claim) to keep the migration a pure 1:1 (metadata-quiet timestamps are a Phase-C design call, not a migration change).
+  - **Doc comments:** 20 stale "Cairo + Figma tokens" comments corrected; `Cairo` grep is now clean (only `Africa/Cairo` remains).
+- ✅ Deleted `figma-tokens.ts` + `form-typography.ts`; Cairo removed from `_layout` + `package.json`.
 
 ### Decisions & deliberate departures (owner can revert any by token name)
 1. **primary teal nudged darker** (`#2E8A7B`→`#2A7F71`, light only) — required to clear AA on the white-on-teal primary button (4.17→4.80). Same teal identity; dark primary unchanged.
@@ -130,3 +133,7 @@ Home (flagship) → Medications → Tasks → سجل النشاط (+Home نبض)
 - `c55aa8e` docs(milestone-5): record the understand map, contrast audit + Phase A foundation.
 - `2050491` refactor(care-ring): migrate the care-loop ring onto the single token system.
 - `642c372` refactor(figma-primitives): migrate the shared display primitives onto theme.ts.
+- `bba4706` refactor(figma-primitives): migrate header/tab-bar/sheet/form-screen onto theme.ts.
+- `d5c535b` refactor(figma-primitives): migrate the delete-target primitives onto theme.ts.
+- `2d33bac` docs(milestone-5): track Phase A migration progress.
+- `805a32b` refactor(tokens): consolidate every consumer onto theme.ts + retire Cairo (P2-2 token half). **← Phase A complete**

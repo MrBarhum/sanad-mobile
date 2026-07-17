@@ -35,3 +35,17 @@ Do not add packages that require a native rebuild / EAS build. Use only what's a
 
 ## Backend changes are hand-applied
 Migrations and edge functions are **written** in-repo but **never** auto-applied/deployed. Each backend-touching change ships with an ordered runbook step the maintainer runs (migrations → deploy functions → `cron.schedule` → Auth redirect URLs). Never run `supabase db push` / `functions deploy` / SQL mutations / cron changes without explicit approval of the exact command. Never print secrets or raw push tokens.
+
+# Standing decisions (Milestone 5 — "The Redesign")
+
+## One token system is law (P2-2 closed)
+`src/constants/theme.ts` is the **single** source of design tokens — color (`Colors.light/dark` via `useTheme()`), the type scale (`Type` / `FontSize`), `Spacing`, `Radius`, `ChipSize`, `IconSize`, `CardShadow`, `TouchTarget`, `Gutter`, and the `withAlpha()` helper. The parallel `figma-tokens.ts` / `form-typography.ts` (Cairo) system is **deleted** — do not reintroduce a second token or font layer. One typeface: **IBM Plex Sans Arabic** (`FontFamily`), bundled as font assets; there is no Cairo. New UI reads tokens via `useTheme()` + the `theme.ts` exports; never hardcode a hex/size that a token already covers.
+
+## Type floor = 14 (P1-8)
+14 is the **absolute** floor for any text a caregiver reads — nothing below 14 anywhere (body 16, Arabic line-heights ≥1.5×). Prefer spreading a `Type.*` preset over hand-setting fontSize/lineHeight/fontFamily. The only sanctioned sub-14 uses are pure decorative chrome that is NOT content (a superscript count badge, a «·» meta separator).
+
+## Danger tone is calm + restrained
+Emergency / destructive UI uses a **restrained** danger tone + an icon — visible, never alarming (no harsh alarm-red). Danger text → `errorFg`; a solid danger fill → `dangerSolid` (the softer `#C45050`, not a bright alert red) with `onError`. The warm **gold accent** (`accentSolid` / `accentFg`) is reserved for **celebratory + empty-state** moments only; caution/warning uses the dedicated **amber** `warningFg`, never the gold. Status is never color-only — always icon + text.
+
+## Care is not a game (no gamification)
+No streaks, scores, points, leaderboards, or competitive mechanics — anywhere. Completion is acknowledged with a **quiet** moment of care (e.g. a gentle «اليوم اكتمل» on the dose ring), never a reward mechanic. Motion is subtle and short, and respects the OS reduced-motion setting.
