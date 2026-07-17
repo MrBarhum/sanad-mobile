@@ -5,13 +5,13 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SkeletonList } from '@/components/skeleton';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
 import { IconChip } from '@/components/figma/icon-chip';
 import { isolateLtr } from '@/components/ltr-text';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { FontFamily, Radius } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
@@ -117,7 +117,7 @@ export function FigmaVisits({
       {visitsQuery.isLoading ? (
         <SkeletonList />
       ) : visitsQuery.isError ? (
-        <FigmaCard tone="card" radius={Radius.lg}>
+        <Surface tone="card" radius={Radius.lg} padded={20}>
           <Text style={[styles.errorText, { color: c.errorFg }]}>{t('visits.loadError')}</Text>
           <Pressable
             onPress={() => visitsQuery.refetch()}
@@ -125,7 +125,7 @@ export function FigmaVisits({
             style={[styles.retry, { backgroundColor: c.primary }]}>
             <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
           </Pressable>
-        </FigmaCard>
+        </Surface>
       ) : filtered.length === 0 ? (
         <View style={styles.empty}>
           <Users size={40} color={c.textSecondary} strokeWidth={1} />
@@ -185,10 +185,10 @@ function VisitCard({
   const statusConfig = visit.status !== 'planned' ? VISIT_STATUS[visit.status] : null;
 
   return (
-    <FigmaCard
+    <Surface
       tone="card"
       radius={Radius.xl}
-      padding={16}
+      padded={16}
       onPress={onOpen}
       accessibilityLabel={visit.visitor_name}
       accessibilityHint={t('common.details')}>
@@ -228,7 +228,7 @@ function VisitCard({
           </View>
         ) : null}
       </View>
-    </FigmaCard>
+    </Surface>
   );
 }
 

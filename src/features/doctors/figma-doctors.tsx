@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SkeletonList } from '@/components/skeleton';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { IconChip } from '@/components/figma/icon-chip';
 import { isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
 import { ChipSize, FontFamily, Radius, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -82,7 +82,7 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
         {doctorsQuery.isLoading ? (
           <SkeletonList />
         ) : doctorsQuery.isError ? (
-          <FigmaCard tone="card" radius={Radius.lg}>
+          <Surface tone="card" radius={Radius.lg} padded={20}>
             <Text style={[styles.errorText, { color: c.errorFg }]}>{t('doctors.loadError')}</Text>
             <Pressable
               onPress={() => doctorsQuery.refetch()}
@@ -90,7 +90,7 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
               style={[styles.retry, { backgroundColor: c.primary }]}>
               <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
             </Pressable>
-          </FigmaCard>
+          </Surface>
         ) : doctors.length === 0 ? (
           <View style={styles.empty}>
             <Stethoscope size={40} color={c.textSecondary} strokeWidth={1} />
@@ -175,7 +175,7 @@ function DoctorCard({
   }
 
   return (
-    <FigmaCard tone="card" radius={Radius.xl} padding={16}>
+    <Surface tone="card" radius={Radius.xl} padded={16}>
       <View style={styles.cardTop}>
         <IconChip
           Icon={Stethoscope}
@@ -259,7 +259,7 @@ function DoctorCard({
           )}
         </View>
       ) : null}
-    </FigmaCard>
+    </Surface>
   );
 }
 

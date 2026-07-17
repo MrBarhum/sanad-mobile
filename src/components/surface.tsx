@@ -40,8 +40,8 @@ const BG_BY_TONE: Record<SurfaceTone, ThemeColor> = {
 type SurfaceProps = {
   children?: ReactNode;
   tone?: SurfaceTone;
-  /** Inner padding (default Spacing.four). Pass false for none. */
-  padded?: boolean;
+  /** Inner padding: true = Spacing.four, a number = that many dp, false = none. */
+  padded?: boolean | number;
   /** Hairline border for definition against the canvas (default true). */
   bordered?: boolean;
   /** Corner radius (default Radius.card). */
@@ -58,10 +58,13 @@ type SurfaceProps = {
 };
 
 /**
- * A themed container surface — the one card/panel primitive used across the app.
- * Cards get a whisper-soft shadow in light mode (dark mode separates by lifted
- * background + hairline border instead). Pass `onPress` to make it a pressable
- * card — Android gets a native ripple, other platforms a gentle opacity dip.
+ * The ONE card/panel primitive used across the app (M5 card ruling — law).
+ * A card carries a hairline border in BOTH themes: the border defines the edge
+ * for older eyes and reads in dark mode where a shadow barely registers. A
+ * whisper-soft shadow sits ON TOP in light mode only, as warmth (dark mode has no
+ * shadow). Tinted/sunken tones stay flat (single elevation step). Pass `onPress`
+ * to make it a pressable card — Android gets a native ripple, other platforms a
+ * gentle opacity dip.
  */
 export function Surface({
   children,
@@ -89,7 +92,9 @@ export function Surface({
   // Depth only where it helps: plain cards on the light canvas. Tinted and
   // sunken tones stay flat so the hierarchy keeps a single elevation step.
   const elevated = tone === 'card' && scheme !== 'dark';
-  const content = [base, elevated && CardShadow, padded && styles.padded, style];
+  const paddingStyle =
+    padded === false ? null : { padding: typeof padded === 'number' ? padded : Spacing.four };
+  const content = [base, elevated && CardShadow, paddingStyle, style];
 
   if (onPress) {
     return (
@@ -161,7 +166,6 @@ export function Section({ title, action, children, gap = Spacing.three, style }:
 }
 
 const styles = StyleSheet.create({
-  padded: { padding: Spacing.four },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.5 },
   rippleClip: { overflow: 'hidden' },

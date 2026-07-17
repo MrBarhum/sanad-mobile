@@ -14,11 +14,11 @@ import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { Button } from '@/components/button';
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
 import { isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
 import { FontFamily, Radius, withAlpha } from '@/constants/theme';
 import { useClaimTask } from '@/features/claiming/hooks';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
@@ -236,7 +236,7 @@ export function FigmaTasks({
         {tasksQuery.isLoading ? (
           <SkeletonList />
         ) : tasksQuery.isError ? (
-          <FigmaCard tone="card" radius={Radius.lg}>
+          <Surface tone="card" radius={Radius.lg} padded={20}>
             <Text style={[styles.errorText, { color: c.errorFg }]}>{t('tasks.loadError')}</Text>
             <Pressable
               onPress={() => tasksQuery.refetch()}
@@ -244,7 +244,7 @@ export function FigmaTasks({
               style={[styles.retry, { backgroundColor: c.primary }]}>
               <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
             </Pressable>
-          </FigmaCard>
+          </Surface>
         ) : filtered.length === 0 ? (
           <View style={styles.empty}>
             <Check size={40} color={c.textSecondary} strokeWidth={1} />

@@ -8,7 +8,7 @@ import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { Button } from '@/components/button';
-import { FigmaCard } from '@/components/figma/figma-card';
+import { Surface } from '@/components/surface';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { IconChip } from '@/components/figma/icon-chip';
@@ -139,7 +139,7 @@ export function FigmaAvailableToClaim({
         ) : feed.isLoading ? (
           <SkeletonList />
         ) : feed.isError ? (
-          <FigmaCard tone="card" radius={Radius.lg}>
+          <Surface tone="card" radius={Radius.lg} padded={20}>
             <Text style={[styles.errorText, { color: c.errorFg }]}>{t('claiming.loadError')}</Text>
             <Pressable
               onPress={() => refetch()}
@@ -147,7 +147,7 @@ export function FigmaAvailableToClaim({
               style={[styles.retry, { backgroundColor: c.primary }]}>
               <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
             </Pressable>
-          </FigmaCard>
+          </Surface>
         ) : items.length === 0 ? (
           <View style={styles.empty}>
             <HandHelping size={40} color={c.textSecondary} strokeWidth={1} />
@@ -258,7 +258,7 @@ function ClaimCard({
   const when = whenText(item);
 
   return (
-    <FigmaCard tone="card" radius={Radius.xl} padding={16}>
+    <Surface tone="card" radius={Radius.xl} padded={16}>
       <View style={styles.cardTop}>
         <IconChip Icon={Icon} color={color} size={48} radius={Radius.lg} iconSize={22} />
         <View style={styles.cardInfo}>
@@ -287,7 +287,7 @@ function ClaimCard({
         accessibilityHint={t('claiming.ctaHint')}
         style={styles.cta}
       />
-    </FigmaCard>
+    </Surface>
   );
 }
 

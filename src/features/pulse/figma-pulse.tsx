@@ -5,11 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SkeletonList } from '@/components/skeleton';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { IconChip } from '@/components/figma/icon-chip';
 import { isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
 import { FontFamily, Radius, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { hmInTimeZone, todayYmdInTimeZone, ymdInTimeZone } from '@/utils/date';
@@ -89,7 +89,7 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
       {activity.isLoading ? (
         <SkeletonList />
       ) : activity.isError ? (
-        <FigmaCard tone="card" radius={Radius.lg}>
+        <Surface tone="card" radius={Radius.lg} padded={20}>
           <Text style={[styles.errorText, { color: c.errorFg }]}>
             {isMissingPulseRpc(activity.error) ? t('pulse.notEnabled') : t('pulse.loadError')}
           </Text>
@@ -101,7 +101,7 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
               <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
             </Pressable>
           ) : null}
-        </FigmaCard>
+        </Surface>
       ) : events.length === 0 ? (
         <View style={styles.empty}>
           <Activity size={40} color={c.textSecondary} strokeWidth={1} />

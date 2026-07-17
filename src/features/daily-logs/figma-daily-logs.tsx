@@ -5,10 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SkeletonList } from '@/components/skeleton';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
@@ -104,7 +104,7 @@ export function FigmaDailyLogs({
       {isLoading ? (
         <SkeletonList />
       ) : isError ? (
-        <FigmaCard radius={Radius.xl} padding={20}>
+        <Surface radius={Radius.xl} padded={20}>
           <Text style={[styles.emptyTitle, { color: c.errorFg }]}>{t('dailyLogs.loadError')}</Text>
           <Pressable
             onPress={() => logsQuery.refetch()}
@@ -112,16 +112,16 @@ export function FigmaDailyLogs({
             style={[styles.retry, { backgroundColor: c.primary }]}>
             <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
           </Pressable>
-        </FigmaCard>
+        </Surface>
       ) : logs.length === 0 ? (
-        <FigmaCard radius={Radius.xl} padding={20}>
+        <Surface radius={Radius.xl} padded={20}>
           <Text style={[styles.emptyTitle, { color: c.text }]}>{t('dailyLogs.noTodayTitle')}</Text>
           {canAdd ? (
             <Text style={[styles.emptySub, { color: c.textSecondary }]}>{t('dailyLogs.noTodaySubtitle')}</Text>
           ) : (
             <Text style={[styles.emptySub, { color: c.textSecondary }]}>{t('dailyLogs.cannotAdd')}</Text>
           )}
-        </FigmaCard>
+        </Surface>
       ) : (
         logs.map((log) => (
           <LogCard
@@ -161,9 +161,9 @@ function LogCard({
   const heading = relativeLabel ? `${relativeLabel}${dateLabel}` : dateLabel;
 
   return (
-    <FigmaCard
+    <Surface
       radius={Radius.xl}
-      padding={16}
+      padded={16}
       onPress={onOpen}
       accessibilityLabel={heading}
       accessibilityHint={t('figma.dailylogs.openHint')}>
@@ -212,7 +212,7 @@ function LogCard({
           ))}
         </View>
       ) : null}
-    </FigmaCard>
+    </Surface>
   );
 }
 

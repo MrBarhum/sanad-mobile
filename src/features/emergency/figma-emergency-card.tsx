@@ -15,7 +15,7 @@ import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FigmaCard } from '@/components/figma/figma-card';
+import { Surface } from '@/components/surface';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
@@ -182,7 +182,7 @@ export function FigmaEmergencyCard({
           label={t('figma.emergency.medicalTitle')}
           onEdit={canManage ? () => router.push('/recipient-profile') : undefined}
         />
-        <FigmaCard tone="card" radius={Radius.xl} padding={0} style={{ borderColor: withAlpha(c.dangerSolid, 0.2) }}>
+        <Surface tone="card" radius={Radius.xl} padded={0} style={{ borderColor: withAlpha(c.dangerSolid, 0.2) }}>
           {medicalRows.map((row, index) => {
             const has = !!(row.value && row.value.trim() !== '');
             const display = has ? (row.value as string) : t('emergencyCard.notSpecified');
@@ -207,7 +207,7 @@ export function FigmaEmergencyCard({
               </View>
             );
           })}
-        </FigmaCard>
+        </Surface>
       </View>
 
       {/* Emergency contacts */}
@@ -217,9 +217,9 @@ export function FigmaEmergencyCard({
           onEdit={canManage ? () => router.push('/emergency-contacts') : undefined}
         />
         {contactList.length === 0 ? (
-          <FigmaCard tone="card" radius={Radius.card} padding={16}>
+          <Surface tone="card" radius={Radius.card} padded={16}>
             <Text style={[styles.emptyText, muted]}>{t('emergencyCard.noContacts')}</Text>
-          </FigmaCard>
+          </Surface>
         ) : (
           <View style={styles.list}>
             {contactList.map((contact, i) => {
@@ -247,9 +247,9 @@ export function FigmaEmergencyCard({
       <View>
         <Text style={[styles.sectionLabel, muted]}>{t('emergencyCard.doctorsTitle')}</Text>
         {doctorList.length === 0 ? (
-          <FigmaCard tone="card" radius={Radius.card} padding={16}>
+          <Surface tone="card" radius={Radius.card} padded={16}>
             <Text style={[styles.emptyText, muted]}>{t('emergencyCard.noDoctors')}</Text>
-          </FigmaCard>
+          </Surface>
         ) : (
           <View style={styles.list}>
             {doctorList.map((doctor) => {

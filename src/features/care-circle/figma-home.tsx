@@ -31,7 +31,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 
-import { FigmaCard } from '@/components/figma/figma-card';
+import { Surface } from '@/components/surface';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { CareLoopRing } from '@/components/figma/care-loop-ring';
 import { IconChip } from '@/components/figma/icon-chip';
@@ -314,7 +314,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
 
       {/* Compact circle dropdown (real circles + join) */}
       {switcherOpen ? (
-        <FigmaCard tone="card" radius={Radius.lg} padding={0}>
+        <Surface tone="card" radius={Radius.lg} padded={0}>
           {circles.map((item, i) => {
             const isActive = item.circleId === activeCircleId;
             return (
@@ -345,11 +345,11 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
               {t('careCircle.dashboard.today.joinAnotherCircle')}
             </Text>
           </Pressable>
-        </FigmaCard>
+        </Surface>
       ) : null}
 
       {/* Care-loop hero */}
-      <FigmaCard radius={Radius.xl} padding={20}>
+      <Surface radius={Radius.xl} padded={20}>
         <View style={styles.heroTop}>
           <Text style={[styles.eyebrow, muted]}>{t('careCircle.dashboard.today.medLoopEyebrow')}</Text>
           <Pressable onPress={() => router.push('/medications')} accessibilityRole="button">
@@ -411,7 +411,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
             ) : null}
           </View>
         </View>
-      </FigmaCard>
+      </Surface>
 
       {/* Today summary — two stat cards */}
       <View style={styles.summaryRow}>
@@ -435,7 +435,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
 
       {/* Next appointment (only when real data exists) */}
       {nextAppt ? (
-        <FigmaCard radius={Radius.xl} padding={16} onPress={() => router.push('/appointments')}>
+        <Surface radius={Radius.xl} padded={16} onPress={() => router.push('/appointments')}>
           <View style={styles.apptRow}>
             <IconChip Icon={Stethoscope} color={c.categoryBlue} size={48} radius={Radius.lg} iconSize={22} />
             <View style={styles.apptText}>
@@ -451,7 +451,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
             </View>
             <ChevronLeft size={18} color={c.textSecondary} />
           </View>
-        </FigmaCard>
+        </Surface>
       ) : null}
 
       {/* Quick actions — 4-up grid, wraps to a second row */}

@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { Button } from '@/components/button';
-import { FigmaCard } from '@/components/figma/figma-card';
+import { Surface } from '@/components/surface';
 import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { IconChip } from '@/components/figma/icon-chip';
@@ -103,7 +103,7 @@ export default function AccountScreen() {
   return (
     <FigmaScreen gap={24}>
       {/* Profile header */}
-      <FigmaCard radius={Radius.xl} padding={20}>
+      <Surface radius={Radius.xl} padded={20}>
         <View style={styles.profileRow}>
           <IconChip
             Icon={User}
@@ -133,12 +133,12 @@ export default function AccountScreen() {
             <Edit3 size={18} color={c.primary} />
           </Pressable>
         </View>
-      </FigmaCard>
+      </Surface>
 
       {/* Care circles */}
       <View>
         <FigmaSectionLabel label={t('account.circleSectionTitle')} />
-        <FigmaCard tone="card" radius={Radius.xl} padding={0}>
+        <Surface tone="card" radius={Radius.xl} padded={0}>
           {activeCircle ? (
             <FigmaListRow
               Icon={Users}
@@ -164,7 +164,7 @@ export default function AccountScreen() {
             subtitle={t('account.joinAnotherSubtitle')}
             onPress={() => router.push('/join-circle')}
           />
-        </FigmaCard>
+        </Surface>
       </View>
 
       {/* Danger sign-out */}

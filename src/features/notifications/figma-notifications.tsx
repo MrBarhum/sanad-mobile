@@ -18,11 +18,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SkeletonList } from '@/components/skeleton';
 import { useTranslation } from 'react-i18next';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { IconChip } from '@/components/figma/icon-chip';
 import { isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
@@ -137,7 +137,7 @@ export function FigmaNotifications() {
       {list.isLoading ? (
         <SkeletonList />
       ) : list.isError ? (
-        <FigmaCard radius={Radius.card} padding={20}>
+        <Surface radius={Radius.card} padded={20}>
           <View style={styles.stateBody}>
             <IconChip Icon={AlertCircle} color={c.errorFg} size={44} radius={Radius.lg} iconSize={22} />
             <Text style={[styles.stateTitle, { color: c.text }]}>{t('figma.notifications.loadError')}</Text>
@@ -145,15 +145,15 @@ export function FigmaNotifications() {
               <Text style={[styles.markAllText, { color: c.primary }]}>{t('figma.notifications.retry')}</Text>
             </Pressable>
           </View>
-        </FigmaCard>
+        </Surface>
       ) : items.length === 0 ? (
-        <FigmaCard radius={Radius.card} padding={24}>
+        <Surface radius={Radius.card} padded={24}>
           <View style={styles.stateBody}>
             <IconChip Icon={Bell} color={c.textSecondary} size={48} radius={Radius.lg} iconSize={24} />
             <Text style={[styles.stateTitle, { color: c.text }]}>{t('figma.notifications.emptyTitle')}</Text>
             <Text style={[styles.stateSubtitle, muted]}>{t('figma.notifications.emptySubtitle')}</Text>
           </View>
-        </FigmaCard>
+        </Surface>
       ) : (
         <View style={styles.list}>
           {items.map((n) => (

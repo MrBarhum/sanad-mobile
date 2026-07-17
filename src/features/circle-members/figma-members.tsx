@@ -7,10 +7,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SkeletonList } from '@/components/skeleton';
 
 import { Button } from '@/components/button';
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
 import { FontFamily, Radius, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -186,7 +186,7 @@ export function FigmaMembers({
       {members.isLoading ? (
         <SkeletonList />
       ) : members.isError ? (
-        <FigmaCard tone="card" radius={Radius.lg}>
+        <Surface tone="card" radius={Radius.lg} padded={20}>
           <Text style={[styles.errorText, { color: c.errorFg }]}>{t('circleMembers.loadError')}</Text>
           <Pressable
             onPress={() => members.refetch()}
@@ -194,7 +194,7 @@ export function FigmaMembers({
             style={[styles.retry, { backgroundColor: c.primary }]}>
             <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
           </Pressable>
-        </FigmaCard>
+        </Surface>
       ) : (
         <>
           {/* Circle summary line (real recipient name + active member count). */}
@@ -228,7 +228,7 @@ export function FigmaMembers({
           ) : null}
 
           {/* Role legend (plain-language) */}
-          <FigmaCard tone="card" radius={Radius.xl} padding={16}>
+          <Surface tone="card" radius={Radius.xl} padded={16}>
             <Text style={[styles.legendTitle, { color: c.text }]}>{t('figma.members.rolesTitle')}</Text>
             {(
               [
@@ -248,7 +248,7 @@ export function FigmaMembers({
                 </Text>
               </View>
             ))}
-          </FigmaCard>
+          </Surface>
         </>
       )}
 

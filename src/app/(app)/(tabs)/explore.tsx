@@ -15,9 +15,9 @@ import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
 import { FigmaScreen } from '@/components/figma/figma-screen';
+import { Surface } from '@/components/surface';
 import { FontFamily, Radius, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -175,7 +175,7 @@ export default function ExploreScreen() {
       {SECTIONS.map((section) => (
         <View key={section.id}>
           <FigmaSectionLabel label={t(section.titleKey)} />
-          <FigmaCard tone="card" radius={Radius.xl} padding={0}>
+          <Surface tone="card" radius={Radius.xl} padded={0}>
             {section.items.map((item, i) => (
               <FigmaListRow
                 key={item.id}
@@ -187,7 +187,7 @@ export default function ExploreScreen() {
                 onPress={() => router.push(item.route as never)}
               />
             ))}
-          </FigmaCard>
+          </Surface>
         </View>
       ))}
     </FigmaScreen>

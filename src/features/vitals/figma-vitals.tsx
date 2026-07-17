@@ -12,11 +12,11 @@ import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { IconChip } from '@/components/figma/icon-chip';
 import { isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
@@ -111,7 +111,7 @@ export function FigmaVitals({
       <FigmaScreen>
         {header}
         {disclaimer}
-        <FigmaCard radius={Radius.xl} padding={20}>
+        <Surface radius={Radius.xl} padded={20}>
           <Text style={[styles.stateTitle, { color: c.errorFg }]}>{t('vitals.loadError')}</Text>
           <Pressable
             onPress={() => vitalsQuery.refetch()}
@@ -119,7 +119,7 @@ export function FigmaVitals({
             style={[styles.retry, { backgroundColor: c.primary }]}>
             <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
           </Pressable>
-        </FigmaCard>
+        </Surface>
       </FigmaScreen>
     );
   }
@@ -129,7 +129,7 @@ export function FigmaVitals({
       <FigmaScreen>
         {header}
         {disclaimer}
-        <FigmaCard radius={Radius.xl} padding={24}>
+        <Surface radius={Radius.xl} padded={24}>
           <View style={styles.emptyInner}>
             <IconChip Icon={Activity} color={c.primary} size={48} radius={Radius.lg} iconSize={24} />
             <Text style={[styles.stateTitle, { color: c.text }]}>{t('vitals.noTodayTitle')}</Text>
@@ -137,7 +137,7 @@ export function FigmaVitals({
               <Text style={[styles.stateSub, { color: c.textSecondary }]}>{t('figma.vitals.emptySubtitle')}</Text>
             ) : null}
           </View>
-        </FigmaCard>
+        </Surface>
       </FigmaScreen>
     );
   }
@@ -194,10 +194,10 @@ function VitalCard({
       : '';
 
   return (
-    <FigmaCard
+    <Surface
       tone="card"
       radius={Radius.xl}
-      padding={16}
+      padded={16}
       onPress={onOpen}
       accessibilityLabel={`${typeLabel}${value ? `: ${value} ${unit}` : ''}`}
       accessibilityHint={when}
@@ -231,7 +231,7 @@ function VitalCard({
           {mine ? ` · ${t('vitals.mineLabel')}` : ''}
         </Text>
       ) : null}
-    </FigmaCard>
+    </Surface>
   );
 }
 

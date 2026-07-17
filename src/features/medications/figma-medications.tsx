@@ -6,13 +6,13 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SkeletonList } from '@/components/skeleton';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
 import { IconChip } from '@/components/figma/icon-chip';
 import { isolateLtr } from '@/components/ltr-text';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { type IconName } from '@/constants/icons';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useResponsibleLabel } from '@/features/circle-members/member-assignment';
@@ -152,7 +152,7 @@ export function FigmaMedications({
       />
 
       {/* Summary pill — doses given today + active medication count */}
-      <FigmaCard tone="card" radius={Radius.card} padding={14}>
+      <Surface tone="card" radius={Radius.card} padded={14}>
         <View style={styles.summaryRow}>
           <IconChip Icon={Pill} color={c.primary} size={40} radius={Radius.pill} iconSize={18} />
           <View style={styles.summaryText}>
@@ -164,7 +164,7 @@ export function FigmaMedications({
             </Text>
           </View>
         </View>
-      </FigmaCard>
+      </Surface>
 
       {/* Tab switcher */}
       <FigmaSegmentedTabs
@@ -191,7 +191,7 @@ export function FigmaMedications({
 
       {/* Content */}
       {today.isError ? (
-        <FigmaCard tone="card" radius={Radius.card} padding={20}>
+        <Surface tone="card" radius={Radius.card} padded={20}>
           <Text style={[styles.emptyTitle, { color: c.text }]}>{t('medications.loadError')}</Text>
           <Pressable
             onPress={() => today.refetch()}
@@ -199,7 +199,7 @@ export function FigmaMedications({
             style={[styles.retryBtn, { backgroundColor: c.primary }]}>
             <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
           </Pressable>
-        </FigmaCard>
+        </Surface>
       ) : today.isLoading ? (
         <SkeletonList />
       ) : tab === 'today' ? (
@@ -251,7 +251,7 @@ export function FigmaMedications({
 function EmptyCard({ title, subtitle }: { title: string; subtitle?: string }) {
   const c = useTheme();
   return (
-    <FigmaCard tone="card" radius={Radius.card} padding={24}>
+    <Surface tone="card" radius={Radius.card} padded={24}>
       <View style={styles.empty}>
         <IconChip Icon={Pill} color={c.textSecondary} size={48} radius={Radius.pill} iconSize={22} />
         <Text style={[styles.emptyTitle, { color: c.text }]}>{title}</Text>
@@ -259,7 +259,7 @@ function EmptyCard({ title, subtitle }: { title: string; subtitle?: string }) {
           <Text style={[styles.emptySub, { color: c.textSecondary, fontFamily: FontFamily.regular }]}>{subtitle}</Text>
         ) : null}
       </View>
-    </FigmaCard>
+    </Surface>
   );
 }
 
