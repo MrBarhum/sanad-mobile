@@ -1101,9 +1101,9 @@
       "fullName": "Please enter your name",
       "email": "Please enter a valid email",
       "password": "Password must be at least 6 characters",
-      "generic": "Could not complete the request",
+      "generic": "Could not complete the request. Please try again.",
       "signInFailed": "Invalid login credentials",
-      "signUpFailed": "Could not create the account",
+      "signUpFailed": "Could not create the account. Please try again.",
       "passwordMismatch": "Passwords do not match"
     }
   },
@@ -1306,7 +1306,7 @@
       "title": "Sanad test",
       "body": "This is a local test notification.",
       "scheduled": "Test notification scheduled.",
-      "failed": "Could not schedule the test notification."
+      "failed": "Could not schedule the test notification. Please try again."
     },
     "push": {
       "explainTitle": "Stay on top of care",
