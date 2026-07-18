@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
@@ -59,8 +59,8 @@ export function FigmaFormScreen({
             accessibilityRole="button"
             accessibilityLabel={title}
             style={[styles.backButton, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-            {/* ChevronRight = "back" in RTL (points toward the start edge). */}
-            <ChevronRight size={18} color={theme.text} />
+            {/* ArrowRight = "back" in RTL (points toward the start edge) — matches FigmaHeader. */}
+            <ArrowRight size={20} color={theme.text} />
           </Pressable>
           <View style={styles.headerText}>
             <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
@@ -205,10 +205,11 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.three,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  // Matches FigmaHeader's canonical round back affordance (44dp pill).
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.md,
+    width: 44,
+    height: 44,
+    borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
