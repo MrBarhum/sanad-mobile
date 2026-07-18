@@ -2,7 +2,7 @@
 
 **Branch:** `milestone-5-redesign` (off `master` @ 369c6c2) in an isolated worktree · one conventional commit per unit · no push/PR.
 **Scope guard:** VISUAL ONLY. No behavior, routing, data, query, permission, or i18n-semantic change. Copy adjusted only where a label is a design artifact, always ar+en at parity.
-**Validation quartet (green after every phase):** `npx tsc --noEmit` · `node scripts/check-mojibake.js` (270 files) · `git -c core.autocrlf=false diff --check` · locale parity (1087/1087, ar==en).
+**Validation quartet (green after every phase):** `npx tsc --noEmit` · `node scripts/check-mojibake.js` (254 files) · `git -c core.autocrlf=false diff --check` · locale parity (1089/1089, ar==en).
 
 > Living document — updated per phase/screen. Status legend: ✅ done · 🔧 in progress · ⏭ planned.
 
@@ -10,13 +10,13 @@
 | Phase | State | Headline |
 |---|---|---|
 | A — one token system | ✅ | theme.ts sole source; IBM Plex only (Cairo retired); A3 contrast fixed; **P2-2 token half closed** |
-| B — core components | 🔧 | **Buttons** + **status pills** unified (**P2-2 button half closed**); a11y labels localized. Remaining dedups deferred to C |
-| C — screens | 🔧 | all 15 live screens on theme.ts + IBM Plex + 14-floor; state-defect fixes done; per-screen visual polish + component dedups documented as backlog |
-| D — moments of care | 🔧 | completion moment done (no gamification); motion respects reduced-motion; warm-copy catalog awaits owner wording |
-| E — sweep + verify | 🔧 | **E1 done → P1-8 closed** (132 sites raised); E2 a11y done; E3 font-scale → device checklist |
+| B — core components | ✅ | **Buttons + status pills + card/field/chip/empty/sheet/header all folded** to one survivor each (**P2-2 closed**); a11y labels localized |
+| C — screens | ✅ | all 15 live screens + the 4 Tier-C screens on one visual language; state-defect fixes done; dead files deleted |
+| D — moments of care | ✅ | completion moment done (no gamification); motion respects reduced-motion; **warm-copy voice «دفء عائلي هادئ» applied + audited** |
+| E — sweep + verify | ✅ | **E1 done → P1-8 closed** (132 sites raised); E2 a11y done; E3 font-scale → device checklist deliverable |
 
-**Closed backlog items:** P1-8 (type floor), P2-2 (two token systems + button impls), P2-13 (tab-bar web-guard), part of P2-3 (semantic icons for the migrated buttons), P2-5-adjacent (vitals/daily-logs error recovery), the Explore light-mode scheme bug, all hardcoded status-color hex (now tokens), and loading skeletons.
-**Deferred (needs owner input or a device, documented, non-regressions):** the remaining component dedups (card/field/chip/empty/sheet/header — each a per-screen "which look wins" call), the ~128-string warm-copy pass (owner wording sign-off), the per-index category cycles (decorative), the E3 font-scale device QA, and the P2-1 dead-code deletion. All quartet-green; every commit is on `milestone-5-redesign` (no push).
+**Closed backlog items:** P1-8 (type floor), P2-2 (two token systems + button impls), P2-13 (tab-bar web-guard), part of P2-3 (semantic icons for the migrated buttons), P2-5-adjacent (vitals/daily-logs error recovery), the Explore light-mode scheme bug, all hardcoded status-color hex (now tokens), loading skeletons, **P2-1 dead-file deletion**, **every component dedup (card/field/chip/empty/sheet/header)**, and the **warm-copy voice pass**.
+**Deferred (needs a device, documented, non-regressions):** the E3 font-scale device QA (the visual-QA checklist), and the per-index category cycles (decorative). All quartet-green; every commit is on `milestone-5-redesign` (no push).
 
 ---
 
@@ -114,28 +114,57 @@ Hardest: `figma-tokens.ts` (linchpin), `figma-home.tsx` (102 refs), `figma-medic
 
 ---
 
-## Phase B — core components 🔧
+## Phase B — core components ✅
 
-Note: the "migrate the existing Figma components to tokens" half of Phase B is **already complete** — every `components/figma/*` primitive was moved onto theme.ts in Phase A. What remains is the **dedup** (one implementation per category).
+Note: the "migrate the existing Figma components to tokens" half of Phase B is **already complete** — every `components/figma/*` primitive was moved onto theme.ts in Phase A. What remains is the **dedup** (one implementation per category) — **now complete** (see the completion pass below).
 
 - ✅ **Buttons (P2-2 button half closed).** 4 impls → `Button` (unified survivor) + `FigmaFooterPrimaryButton` (kept as a documented Android render-workaround; system font by design; flagged for on-device QA). Deleted `FigmaButton` (12 consumers) + `FormButton` (3); repointed all to `Button`. FigmaButton's danger (solid red) → Button's calm soft danger; secondary → `backgroundSelected`. Two lucide `Icon` props → semantic `iconName` via the ICONS registry (added `signOut`, `claim` — closes P2-3 for these). `443ff9c`.
 - ✅ **Status pills (one implementation).** Folded `FigmaStatusPill`→`StatusBadge` across its 3 consumers (medications dose pills, appointments, visits) via a status→tone map (given/completed→success, postponed→warning+clock, missed/cancelled→error, unlogged→neutral+clock). Baked-in contrast fix: the dose "given" pill dropped hardcoded `#5AAE85` (fails AA as text in light) for the AA-safe `successFg`/`successBg`. StatusBadge label 13.5→14, glyph 13→14 (floor). `9fe7026`.
 - ✅ **a11y (E2 pull-forward).** `FigmaHeader` back/add + `FigmaBottomSheet` close labels were hardcoded English (announced in English on every Arabic screen) → localized via `common.back`/`common.add`/`common.close` (parity 1089). `70b3f79`.
-- ⏭ **Remaining folds — deferred to Phase C** (visual-decision-entangled; each is a per-screen "which look wins" call, and the screens get reworked there anyway): `Surface`←FigmaCard/FigmaFormCard, `FormField`←FigmaField/FigmaFormField, `OptionSelect`←FigmaChipSelect/CardSelect/WeekdaySelector-chip, `GlyphChip`←icon-chip, `EmptyState`←inline figma empties, sheet chrome (FigmaBottomSheet/FormModal/PickerSheet), header (FigmaHeader/FigmaFormScreen).
+- ✅ **All remaining folds done** (the "completion pass" — one component per job, each an owner-approved "which look wins" ruling; see the dedicated section below): `Surface`, `FormField`, `OptionSelect`, `GlyphChip`, `EmptyState`, one sheet chrome, one header back affordance.
 - ✅ **Loading skeletons.** New pure-JS `Skeleton` + `SkeletonList` (Animated opacity, honors OS reduce-motion) wired into all 10 list screens' loading branches (spinner → card-shaped placeholders). Vitals (grid) + emergency detail keep the spinner. `14a5190`.
 
-## Phase C — screens 🔧 (canonical order)
-All 15 live screens are already on theme.ts + IBM Plex (Phase A) and at the 14 floor (E1). Screen-level **defects fixed**: Explore's fixed-dark `FigmaColors.dark.error` (light-mode bug); **Vitals** error now has a retry + a loading spinner; **Daily-logs** bare-text loading/error → spinner + card+retry; Home completion hex → `successFg`. **Hardcoded status hex fully tokenized** (`313b5ad`): figma-home + figma-medications `DOSE_STATUS` → `colorKey` (successFg/warningFg/errorFg — AA-safe + mode-adaptive), medications active-badge, and the emergency-card danger text → `errorFg`. Loading skeletons wired (above). **Deferred (documented backlog):** the component dedups (`FigmaCard`→Surface, field/chip/empty/sheet/header) — each a per-screen "which look wins" call; the arbitrary per-index category cycles (decorative — low priority). These are visual-polish items, not correctness; the screens are functional, consistent, tokenized, and accessible as-is.
+## Phase C — screens ✅ (canonical order)
+All 15 live screens are already on theme.ts + IBM Plex (Phase A) and at the 14 floor (E1). Screen-level **defects fixed**: Explore's fixed-dark `FigmaColors.dark.error` (light-mode bug); **Vitals** error now has a retry + a loading spinner; **Daily-logs** bare-text loading/error → spinner + card+retry; Home completion hex → `successFg`. **Hardcoded status hex fully tokenized** (`313b5ad`): figma-home + figma-medications `DOSE_STATUS` → `colorKey` (successFg/warningFg/errorFg — AA-safe + mode-adaptive), medications active-badge, and the emergency-card danger text → `errorFg`. Loading skeletons wired (above). **Component dedups completed** (see the completion pass below) so every screen now renders one card / field / chip / empty / sheet / header look. **Tier-C reskin done:** the 4 screens (notification-settings, invitations-list, emergency contacts-manager, recipient profile-form) were audited — their content was already on the redesign primitives (Surface, FormField, GlyphChip, EmptyState, StatusBadge, Button; themed native headers; no hardcoded colors); the one clash, two native RN `<Switch>`es, is now the brand `FigmaSwitch` (`d003b9b`). The only remaining item is the decorative per-index category color cycle (low priority, not a correctness issue).
 
-## Phase D — moments of care 🔧
+## Phase D — moments of care ✅
 - ✅ **Completion moment.** When all of today's doses are logged, the ring shows a quiet «اكتملت جرعات اليوم» check on the AA-safe `successFg` — no score/streak/points (the no-gamification rule). `b337021`.
 - ✅ **Motion.** The app's only real animation is the splash overlay, which already respects OS reduced-motion; nothing new added, so nothing new to gate.
-- 🔧 **Warm copy.** Did the low-subjectivity subset now: added "try again" cues to the 3 error strings that lacked them (`auth.errors.generic`/`signUpFailed`, `notificationSettings.test.failed`; `signInFailed` kept deliberately generic) — `8d09b45`. The remaining ~128 empty-state/error candidates are catalogued (tone north-star `pulse.shareEmpty`) and held for owner **wording sign-off** — voice is a taste call and a full i18n pass is parity-sensitive.
+- ✅ **Warm copy — «دفء عائلي هادئ» (calm family warmth), owner-approved voice.** Applied across the whole locale (`33d39a2` warmed the 74-key empty-state + error subset to «تعذّر … حاول مجددًا» / «… بعد» / «يوم هادئ»; the earlier `8d09b45` added the try-again cues). **Then audited both locales** across six voice categories — errors, empties, confirmations, missed/overdue, success/celebration/greeting, hints/descriptions — plus a violation scan. Findings: **0 exclamation marks and 0 emojis in either `ar.json` or `en.json`** (quiet celebration), **0 harsh «فشل»/«خطأ»** (all errors use «تعذّر …»), missed doses framed as facts not failures («جرعة فائتة» / «لم تُسجّل بعد»), empties framed as good news, canonical terminology respected (0 «معلّق»; «مفتوحة»/«فعّال» intact), confirmations plain and reassuring, and the care recipient always referenced with dignity («الشخص الذي تعتني به» / «الشخص الذي يتلقّى الرعاية»). **Nothing semantically risky was guessed** — the deliberately-untouched set (per the "flag, don't guess" rule) is: canonical status enums, medical/legal disclaimers, precise field labels, and the `auth.errors.password` length rule («يجب … ٦ أحرف»), which is a factual constraint, not guilt. The voice is now recorded as **law** in `CLAUDE.md`. Parity held at 1089/1089.
 
 ## Phase E — full sweep + verification 🔧 (P1-8 closed)
 - ✅ **E1 (P1-8 closed).** Swept the whole codebase: **132 content sub-14 sites raised to 14** across 31 live screens + care-loop-ring + ThemedText eyebrow/code, with broken co-located line-heights bumped. The only sub-14 remaining anywhere is the sanctioned bell unread-count badge (`badgeText` 10). `7ea2ae1`. (Dead/unrouted files left untouched — noted for the P2-1 cleanup.)
 - ✅ **E2 a11y.** Icon buttons carry labels (header back/add + sheet close **localized** this milestone, `70b3f79`); contrast fixed at the token level (Phase-A A3); ≥48dp targets preserved; status stays icon+text.
 - ⏭ **E3 font-scale QA** → the **visual-QA-checklist** deliverable (`2026-07-17-milestone-5-visual-qa-checklist.md`): Home/meds/a form/a detail at 130% + 200%, both themes, RTL. Needs a device — the E1 reflow, the tab-bar/ring label raises, and the FigmaFooterPrimaryButton workaround are the flagged risks.
+
+---
+
+## Completion pass — one component per job (owner-approved rulings) ✅
+
+The deferred component dedups were each an owner "which look wins" call. The rulings (now **law** in `CLAUDE.md`):
+
+### The card ruling — `Surface`
+Fold everything onto `Surface` with one amendment: a **hairline border in BOTH themes** (the border carries the edge for older eyes and reads in dark mode where a shadow barely registers) + the **whisper-shadow on top in light mode only** (warmth). `FigmaCard` and `FigmaFormCard` are deleted; `Surface` gained a `gap` prop (groups a card's fields — FigmaFormCard's job) and a numeric `padded`. `fbf25c9` (FigmaCard), `fafd365` (FigmaFormCard).
+
+### The one-wins survivors
+| Job | Survivor | Folded & deleted | Commit |
+|---|---|---|---|
+| Card / panel | `Surface` | FigmaCard, FigmaFormCard | `fbf25c9`, `fafd365` |
+| Text field | `FormField` (+`required`, `hint`) | FigmaField, FigmaFormField | `90f3215`, `fafd365` |
+| Single-choice selector | `OptionSelect` (+`card` variant, `description`) | FigmaChipSelect, FigmaCardSelect | `fafd365` |
+| Identity / icon chip | `GlyphChip` (semantic `iconName` + `color`) | icon-chip | `90f3215` |
+| Empty state | `EmptyState` (feature icon per screen) | 10 inline figma empties | `24f55c7` |
+| Toggle | `FigmaSwitch` | 2 Tier-C native `<Switch>`es | `d003b9b` |
+
+- **`WeekdaySelector` stays separate** — it is a **multi-select (checkbox)**, so folding it into the single-select radio `OptionSelect` would change behavior (forbidden). Its chip visuals were aligned to `OptionSelect` instead (`24f55c7`).
+- **`EmptyState` fold rule:** each list's empty shows **its feature's semantic icon** (activity/task/appointment/visit/doctor/claim/medication/vital/notification/dailyLog). Error states keep their own bespoke card — they are not empties.
+
+### One sheet chrome, one header back affordance
+- **Sheet survivor = the `FormModal`/`PickerSheet` chrome** (centered `backgroundElement` card, `Radius.card` top corners, hairline border, 8dp `backgroundSelected` handle, `MaxFormWidth`, `sectionTitle` title). `FigmaBottomSheet` was the outlier (`Radius.xl`, borderless, 4dp alpha handle, raw 18/bold title) → rebuilt on the canonical chrome, behavior untouched (`4d66b7d`). The three sheets **stay distinct components** because each encodes a different behavior contract (FormModal: explicit-close + keyboard-avoidance + submit/cancel; PickerSheet: backdrop-cancel + Done/Clear/Cancel; FigmaBottomSheet: backdrop-dismiss action sheet) — a visual-only phase must not merge behavior.
+- **Header survivor = `FigmaHeader`'s round 44dp pill + back arrow.** `FigmaFormScreen`'s header used a smaller 36dp `Radius.md` + ChevronRight → aligned to the 44dp pill + ArrowRight (`4d66b7d`). The two header components stay distinct (list headers: centered title + add button; form headers: start title+subtitle + divider) — only the shared back atom is unified.
+
+### P2-1 dead-file deletion ✅
+The catalogued dead set (`today-overview`, `today-care-ring`, `tasks-card`, `appointments-card`, `vitals-card`, `vitals-center`, `visits-card`, `daily-logs-card`, `daily-logs-center`) was grep-verified (0 importers) and deleted in `54847a3`; the like-named live helpers (`today.ts`, `*-fields.ts`, `describe.ts`) were spared.
 
 ---
 
@@ -171,3 +200,12 @@ All 15 live screens are already on theme.ts + IBM Plex (Phase A) and at the 14 f
 - `313b5ad` refactor(status): tokenize the hardcoded dose-status + emergency danger colors.
 - `8d09b45` fix(copy): add try-again cues to the error strings that lacked them.
 - `14a5190` feat(loading): add a reduced-motion Skeleton primitive + wire it into the list screens.
+- `54847a3` refactor(cleanup): delete the P2-1 dead-file set (unrouted, 0 importers). **← completion pass**
+- `fbf25c9` refactor(card): fold FigmaCard onto the single Surface (card ruling).
+- `33d39a2` feat(copy): warm-voice pass on empty-state + error copy — «دفء عائلي هادئ».
+- `90f3215` refactor(chip): fold IconChip onto the single GlyphChip identity chip.
+- `fafd365` refactor(ui): fold form primitives onto Surface/FormField/OptionSelect.
+- `24f55c7` refactor(ui): fold inline list-empties onto the shared EmptyState.
+- `4d66b7d` refactor(ui): one sheet chrome + one header back affordance.
+- `d003b9b` refactor(ui): tier-C toggles use the canonical FigmaSwitch.
+- `_pending_` docs(milestone-5): record the completion pass + voice guide as law. **← this commit**

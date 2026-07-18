@@ -30,7 +30,7 @@ For each: light/dark · 100/130/200% · RTL.
 | 10 | **Members** | letter avatars; role legend; actions sheet; `·` separators. |
 | 11 | **Available-to-claim** | claim CTA = filled Button with the new `claim` icon; feedback sheet (success/warning-amber/error). |
 | 12 | **Notifications** | per-type icon+tint; unread tint; mark-all. |
-| 13 | **Notification settings** | legacy-styled (theme.ts already); **flag** as the least-reskinned live screen (Phase-C candidate). |
+| 13 | **Notification settings** | preference + quiet-hours toggles now render the brand **`FigmaSwitch`** pill (was native `<Switch>`); grouped toggle surface reads calm; time fields for quiet hours. |
 | 14 | **Account** | sign-out = soft-danger Button + `signOut` icon; name-edit sheet; list rows. |
 | 15 | **Explore** | quick-action grid; the old fixed-dark emergency color is fixed (adapts to light now). |
 | 16 | **Auth** (sign-in/up/forgot/reset) | headings + the sign-in/sign-up/forgot **links render SemiBold** (regression fixed); AuthField inputs; the save CTA (see flag below). |
@@ -50,5 +50,19 @@ For each: light/dark · 100/130/200% · RTL.
 4. **E1 reflow** — the ~132 raised type sites enlarge cards; spot-check the densest screens (Home, Medications, Members, Emergency card) at 130% and 200% for overlap/clip.
 5. **RTL first-launch** (pre-existing): native RTL applies next launch; verify a fresh install renders RTL.
 
-## Deferred to Phase C (documented, not regressions)
-Component dedups still pending (each a per-screen look call): `FigmaCard`→`Surface`, `FormField`←`FigmaField`/`FigmaFormField`, chip primitives→`OptionSelect`, `GlyphChip`←`icon-chip`, inline empties→`EmptyState`, sheet/header chrome. Hardcoded dose-status hex (`figma-medications` action chips, emergency-card red literals) still to tokenize. Warm-copy humanization (131 catalogued candidates) awaiting owner wording sign-off. Loading skeletons (pure-JS `Skeleton`) not yet added.
+## Completion-pass checks (the folds — verify one look everywhere)
+- [ ] **Cards:** every card is a `Surface` with a **hairline border in both themes**; in **light** a whisper-shadow sits on top; **dark** has border only (no shadow). Tinted/sunken cards stay flat. No card looks heavier/rounder than its neighbours (the old FigmaCard `Radius.xl` outlier is gone).
+- [ ] **Empty states:** every list empty (pulse, tasks, appointments, visits, doctors, claiming, medications, vitals, notifications, daily-logs) reads identically — one bordered card + a circular `GlyphChip` in that feature's icon + title (+ subtitle). Error states may look different (they keep their own card) — that's intended.
+- [ ] **Fields & selectors:** text inputs (`FormField`) and chip/card selectors (`OptionSelect`) look the same on every form; weekday chips match the other chips.
+- [ ] **Toggles:** every switch is the brand `FigmaSwitch` pill (notification-settings, contacts-manager `isPrimary`, medication "with food", etc.) — no native OS switch anywhere.
+- [ ] **Sheets:** the schedule form-modal, the date/time picker sheet, and the task/member/claim action sheets share one chrome (centered card, `Radius.card` top corners, hairline border, 8dp grab handle).
+- [ ] **Header back button:** the round **44dp pill + back arrow** is identical on list screens (FigmaHeader) and form/detail screens (FigmaFormScreen) — same size, same icon.
+
+## Warm-copy spot-check (voice «دفء عائلي هادئ»)
+- [ ] Trigger an error (airplane mode → save) → message says what happened + what to do («تعذّر … حاول مجددًا»), no code/jargon, calm.
+- [ ] Empty a list → reads as good news, not absence («يوم هادئ» / «… بعد» / «كل شيء على ما يُرام»).
+- [ ] Complete an action → the toast is quiet («تم حفظ التغييرات») — no exclamation, no emoji, no streak/score.
+- [ ] English mirrors the same warmth; switch locale and re-check a couple of the above.
+
+## Still deferred (documented, not regressions)
+Only the decorative per-index category color cycle remains (low priority — a purely aesthetic choice, no correctness impact). Everything else in this milestone's backlog is closed. The on-device font-scale/RTL matrix above is the remaining manual gate.
