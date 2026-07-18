@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { AlertCircle, Calendar, Check, Clock, HandHelping, ListChecks, Pill, Users } from 'lucide-react-native';
+import { AlertCircle, Calendar, Check, Clock, ListChecks, Pill, Users } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import { Surface } from '@/components/surface';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
 import { type IconName } from '@/constants/icons';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
@@ -133,10 +134,7 @@ export function FigmaAvailableToClaim({
         <FigmaHeader title={t('claiming.title')} />
 
         {!canClaim ? (
-          <View style={styles.empty}>
-            <HandHelping size={40} color={c.textSecondary} strokeWidth={1} />
-            <Text style={[styles.emptyText, { color: c.textSecondary }]}>{t('claiming.notAllowed')}</Text>
-          </View>
+          <EmptyState iconName="claim" title={t('claiming.notAllowed')} />
         ) : feed.isLoading ? (
           <SkeletonList />
         ) : feed.isError ? (
@@ -150,10 +148,7 @@ export function FigmaAvailableToClaim({
             </Pressable>
           </Surface>
         ) : items.length === 0 ? (
-          <View style={styles.empty}>
-            <HandHelping size={40} color={c.textSecondary} strokeWidth={1} />
-            <Text style={[styles.emptyText, { color: c.textSecondary }]}>{t('claiming.empty')}</Text>
-          </View>
+          <EmptyState iconName="claim" title={t('claiming.empty')} />
         ) : (
           grouped
             .filter((section) => section.items.length > 0)
@@ -305,8 +300,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyText: { fontSize: 16, fontFamily: FontFamily.medium, textAlign: 'center' },
   feedbackRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   feedbackChip: {
     width: 44,

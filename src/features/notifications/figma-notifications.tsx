@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
 import { type IconName } from '@/constants/icons';
@@ -83,8 +84,6 @@ export function FigmaNotifications() {
     open(n);
   }
 
-  const muted = { color: c.textSecondary, fontFamily: FontFamily.regular };
-
   return (
     <FigmaScreen gap={8}>
       <FigmaHeader
@@ -130,13 +129,11 @@ export function FigmaNotifications() {
           </View>
         </Surface>
       ) : items.length === 0 ? (
-        <Surface radius={Radius.card} padded={24}>
-          <View style={styles.stateBody}>
-            <GlyphChip iconName="notification" color="textSecondary" size="md" />
-            <Text style={[styles.stateTitle, { color: c.text }]}>{t('figma.notifications.emptyTitle')}</Text>
-            <Text style={[styles.stateSubtitle, muted]}>{t('figma.notifications.emptySubtitle')}</Text>
-          </View>
-        </Surface>
+        <EmptyState
+          iconName="notification"
+          title={t('figma.notifications.emptyTitle')}
+          subtitle={t('figma.notifications.emptySubtitle')}
+        />
       ) : (
         <View style={styles.list}>
           {items.map((n) => (
@@ -221,7 +218,6 @@ const styles = StyleSheet.create({
   center: { paddingVertical: 48, alignItems: 'center' },
   stateBody: { alignItems: 'center', gap: 8 },
   stateTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
-  stateSubtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
   list: { gap: 8, marginTop: 4 },
   row: {
     flexDirection: 'row',

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { ThemedText } from './themed-text';
@@ -112,13 +112,9 @@ function Chip({
         pressed && styles.pressed,
       ]}>
       <ThemedText
-        type="small"
-        themeColor={selected ? 'primaryText' : 'textSecondary'}
-        style={[
-          styles.chip,
-          selected && styles.chipSelectedText,
-          fullWidth && styles.chipFullText,
-        ]}>
+        type={selected ? 'smallBold' : 'small'}
+        themeColor={selected ? 'primaryText' : 'text'}
+        style={[styles.chip, fullWidth && styles.chipFullText]}>
         {selected ? `${Glyph.check} ${label}` : label}
       </ThemedText>
     </Pressable>
@@ -141,7 +137,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     textAlign: 'center',
   },
-  chipSelectedText: { fontFamily: FontFamily.bold },
   chipFullText: { paddingVertical: Spacing.three },
   pressed: { opacity: 0.7 },
 });

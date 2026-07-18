@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Calendar, Clock, MapPin, Users } from 'lucide-react-native';
+import { Clock, MapPin, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -11,6 +11,7 @@ import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
 import { StatusBadge } from '@/components/status-badge';
 import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
 import { FontFamily, Radius, type ThemeColor } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
@@ -118,14 +119,14 @@ export function FigmaAppointments({
           </Pressable>
         </Surface>
       ) : filtered.length === 0 ? (
-        <View style={styles.empty}>
-          <Calendar size={40} color={c.textSecondary} strokeWidth={1} />
-          <Text style={[styles.emptyText, { color: c.textSecondary }]}>
-            {tab === 'upcoming'
+        <EmptyState
+          iconName="appointment"
+          title={
+            tab === 'upcoming'
               ? t('figma.appointments.emptyUpcoming')
-              : t('figma.appointments.emptyCompleted')}
-          </Text>
-        </View>
+              : t('figma.appointments.emptyCompleted')
+          }
+        />
       ) : (
         <View style={styles.list}>
           {filtered.map((appointment, index) => (
@@ -237,8 +238,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyText: { fontSize: 16, fontFamily: FontFamily.medium, textAlign: 'center' },
   list: { gap: 12 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   cardInfo: { flex: 1, gap: 2 },

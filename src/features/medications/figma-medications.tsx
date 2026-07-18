@@ -10,6 +10,7 @@ import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
 import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
@@ -249,18 +250,7 @@ export function FigmaMedications({
 }
 
 function EmptyCard({ title, subtitle }: { title: string; subtitle?: string }) {
-  const c = useTheme();
-  return (
-    <Surface tone="card" radius={Radius.card} padded={24}>
-      <View style={styles.empty}>
-        <GlyphChip iconName="medication" color="textSecondary" size="md" />
-        <Text style={[styles.emptyTitle, { color: c.text }]}>{title}</Text>
-        {subtitle ? (
-          <Text style={[styles.emptySub, { color: c.textSecondary, fontFamily: FontFamily.regular }]}>{subtitle}</Text>
-        ) : null}
-      </View>
-    </Surface>
-  );
+  return <EmptyState iconName="medication" title={title} subtitle={subtitle} />;
 }
 
 function DoseCard({
@@ -583,9 +573,7 @@ const styles = StyleSheet.create({
   summaryTitle: { fontSize: 14, fontFamily: FontFamily.semibold },
   summarySub: { fontSize: 14 },
   // Empty / error
-  empty: { alignItems: 'center', gap: 10 },
   emptyTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
-  emptySub: { fontSize: 14, textAlign: 'center' },
   retryBtn: {
     marginTop: 12,
     alignSelf: 'center',

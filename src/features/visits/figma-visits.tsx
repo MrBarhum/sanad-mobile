@@ -9,6 +9,7 @@ import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
 import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
@@ -127,14 +128,10 @@ export function FigmaVisits({
           </Pressable>
         </Surface>
       ) : filtered.length === 0 ? (
-        <View style={styles.empty}>
-          <Users size={40} color={c.textSecondary} strokeWidth={1} />
-          <Text style={[styles.emptyText, { color: c.textSecondary }]}>
-            {tab === 'upcoming'
-              ? t('figma.visits.emptyUpcoming')
-              : t('figma.visits.emptyRecent')}
-          </Text>
-        </View>
+        <EmptyState
+          iconName="visit"
+          title={tab === 'upcoming' ? t('figma.visits.emptyUpcoming') : t('figma.visits.emptyRecent')}
+        />
       ) : (
         <View style={styles.list}>
           {filtered.map((visit, index) => (
@@ -245,8 +242,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyText: { fontSize: 16, fontFamily: FontFamily.medium, textAlign: 'center' },
   list: { gap: 12 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   cardInfo: { flex: 1, gap: 2 },

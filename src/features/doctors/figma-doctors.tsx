@@ -1,4 +1,4 @@
-import { Pencil, Phone, Stethoscope, Trash2 } from 'lucide-react-native';
+import { Pencil, Phone, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -7,6 +7,7 @@ import { SkeletonList } from '@/components/skeleton';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
 import { ChipSize, FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
@@ -92,17 +93,11 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
             </Pressable>
           </Surface>
         ) : doctors.length === 0 ? (
-          <View style={styles.empty}>
-            <Stethoscope size={40} color={c.textSecondary} strokeWidth={1} />
-            <Text style={[styles.emptyTitle, { color: c.text }]}>
-              {t('figma.doctors.emptyTitle')}
-            </Text>
-            {canManage ? (
-              <Text style={[styles.emptySubtitle, { color: c.textSecondary }]}>
-                {t('figma.doctors.emptySubtitle')}
-              </Text>
-            ) : null}
-          </View>
+          <EmptyState
+            iconName="doctor"
+            title={t('figma.doctors.emptyTitle')}
+            subtitle={canManage ? t('figma.doctors.emptySubtitle') : undefined}
+          />
         ) : (
           <>
             {deleteError ? (
@@ -319,9 +314,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyTitle: { fontSize: 16, fontFamily: FontFamily.semibold, textAlign: 'center' },
-  emptySubtitle: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
   list: { gap: 12 },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   cardInfo: { flex: 1, gap: 2 },

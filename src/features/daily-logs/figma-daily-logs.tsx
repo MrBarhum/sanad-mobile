@@ -8,6 +8,7 @@ import { SkeletonList } from '@/components/skeleton';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { isolateLtr } from '@/components/ltr-text';
+import { EmptyState } from '@/components/states';
 import { Surface } from '@/components/surface';
 import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -114,14 +115,11 @@ export function FigmaDailyLogs({
           </Pressable>
         </Surface>
       ) : logs.length === 0 ? (
-        <Surface radius={Radius.xl} padded={20}>
-          <Text style={[styles.emptyTitle, { color: c.text }]}>{t('dailyLogs.noTodayTitle')}</Text>
-          {canAdd ? (
-            <Text style={[styles.emptySub, { color: c.textSecondary }]}>{t('dailyLogs.noTodaySubtitle')}</Text>
-          ) : (
-            <Text style={[styles.emptySub, { color: c.textSecondary }]}>{t('dailyLogs.cannotAdd')}</Text>
-          )}
-        </Surface>
+        <EmptyState
+          iconName="dailyLog"
+          title={t('dailyLogs.noTodayTitle')}
+          subtitle={t(canAdd ? 'dailyLogs.noTodaySubtitle' : 'dailyLogs.cannotAdd')}
+        />
       ) : (
         logs.map((log) => (
           <LogCard
@@ -229,7 +227,6 @@ const styles = StyleSheet.create({
   retry: { marginTop: 16, minHeight: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   retryText: { fontSize: 16, fontFamily: FontFamily.semibold },
   emptyTitle: { fontSize: 15, fontFamily: FontFamily.semibold },
-  emptySub: { fontSize: 14, fontFamily: FontFamily.regular, marginTop: 4 },
   // Log card
   cardHeader: {
     flexDirection: 'row',

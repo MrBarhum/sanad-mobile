@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
 import { type IconName } from '@/constants/icons';
@@ -118,15 +119,11 @@ export function FigmaVitals({
       <FigmaScreen>
         {header}
         {disclaimer}
-        <Surface radius={Radius.xl} padded={24}>
-          <View style={styles.emptyInner}>
-            <GlyphChip iconName='activity' color='primary' size='md' />
-            <Text style={[styles.stateTitle, { color: c.text }]}>{t('vitals.noTodayTitle')}</Text>
-            {canAdd ? (
-              <Text style={[styles.stateSub, { color: c.textSecondary }]}>{t('figma.vitals.emptySubtitle')}</Text>
-            ) : null}
-          </View>
-        </Surface>
+        <EmptyState
+          iconName="vital"
+          title={t('vitals.noTodayTitle')}
+          subtitle={canAdd ? t('figma.vitals.emptySubtitle') : undefined}
+        />
       </FigmaScreen>
     );
   }
@@ -242,8 +239,6 @@ const styles = StyleSheet.create({
   time: { fontSize: 14, fontFamily: FontFamily.regular, marginTop: 4 },
   // States.
   stateTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
-  stateSub: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
-  emptyInner: { alignItems: 'center', gap: 10 },
   center: { paddingVertical: 64, alignItems: 'center', justifyContent: 'center' },
   retry: { marginTop: 16, minHeight: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   retryText: { fontSize: 16, fontFamily: FontFamily.semibold },

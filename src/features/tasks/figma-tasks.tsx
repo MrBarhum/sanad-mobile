@@ -18,6 +18,7 @@ import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
 import { isolateLtr } from '@/components/ltr-text';
+import { EmptyState } from '@/components/states';
 import { Surface } from '@/components/surface';
 import { FontFamily, Radius, withAlpha } from '@/constants/theme';
 import { useClaimTask } from '@/features/claiming/hooks';
@@ -246,12 +247,10 @@ export function FigmaTasks({
             </Pressable>
           </Surface>
         ) : filtered.length === 0 ? (
-          <View style={styles.empty}>
-            <Check size={40} color={c.textSecondary} strokeWidth={1} />
-            <Text style={[styles.emptyText, { color: c.textSecondary }]}>
-              {t(effectiveScope === 'mine' ? 'figma.tasks.emptyMine' : 'figma.tasks.empty')}
-            </Text>
-          </View>
+          <EmptyState
+            iconName="task"
+            title={t(effectiveScope === 'mine' ? 'figma.tasks.emptyMine' : 'figma.tasks.empty')}
+          />
         ) : (
           <View style={styles.list}>
             {filtered.map((task) => (
@@ -544,8 +543,6 @@ const styles = StyleSheet.create({
   },
   retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
   scopeRow: { marginTop: 4 },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyText: { fontSize: 16, fontFamily: FontFamily.medium },
   list: { gap: 8 },
   row: {
     flexDirection: 'row',
