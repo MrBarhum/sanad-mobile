@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ContactCard } from '@/components/contact-card';
+import { FigmaSwitch } from '@/components/figma/figma-form-screen';
 import { FormField } from '@/components/form-field';
 import { FormModal } from '@/components/form-modal';
 import { ItemActions } from '@/components/item-actions';
@@ -13,7 +14,6 @@ import { StatusBadge } from '@/components/status-badge';
 import { ThemedText } from '@/components/themed-text';
 import { Glyph } from '@/constants/glyphs';
 import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { confirmDiscard } from '@/utils/confirm';
 import { fieldErrors } from '@/utils/form';
@@ -166,7 +166,6 @@ function ContactFormModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const theme = useTheme();
   const create = useCreateEmergencyContact(circleId);
   const update = useUpdateEmergencyContact(circleId);
 
@@ -282,10 +281,9 @@ function ContactFormModal({
       />
       <View style={styles.switchRow}>
         <ThemedText type="smallBold">{t('emergencyContacts.fields.isPrimary')}</ThemedText>
-        <Switch
+        <FigmaSwitch
           value={isPrimary}
           onValueChange={setIsPrimary}
-          trackColor={{ true: theme.primary, false: theme.backgroundSelected }}
           accessibilityLabel={t('emergencyContacts.fields.isPrimary')}
         />
       </View>

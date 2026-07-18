@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { FigmaSwitch } from '@/components/figma/figma-form-screen';
 import { LtrText } from '@/components/ltr-text';
 import { Screen } from '@/components/screen';
 import { Section, Surface } from '@/components/surface';
@@ -455,12 +456,7 @@ function ToggleRow({
           {description}
         </ThemedText>
       </View>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ true: theme.primary, false: Platform.OS === 'ios' ? undefined : theme.border }}
-        accessibilityLabel={label}
-      />
+      <FigmaSwitch value={value} onValueChange={onValueChange} accessibilityLabel={label} />
     </View>
   );
 }
