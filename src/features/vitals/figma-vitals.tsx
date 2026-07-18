@@ -1,30 +1,16 @@
 import { useRouter } from 'expo-router';
-import {
-  Activity,
-  Droplets,
-  Heart,
-  Stethoscope,
-  Thermometer,
-  Weight,
-  Wind,
-} from 'lucide-react-native';
-import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { IconChip } from '@/components/figma/icon-chip';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  withAlpha,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
+import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
+import { type IconName } from '@/constants/icons';
+import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 import { hmFromInstant, todayYmd, ymdFromInstant } from '@/utils/date';
 
@@ -32,21 +18,19 @@ import type { VitalReading, VitalReadingType } from './api';
 import { formatVitalValue } from './describe';
 import { useVitals } from './hooks';
 
-type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
-
 /**
  * Per-type icon + category color for the vital cards. NON-DIAGNOSTIC: the color is
  * a fixed per-type category accent (a visual aid only) — it never encodes a
  * normal/abnormal judgement of the value. Mirrors the Figma `VitalsScreen` chips.
  */
-const VITAL_VISUAL: Record<VitalReadingType, { Icon: IconCmp; color: string }> = {
-  blood_pressure: { Icon: Activity, color: FigmaCategory.blue },
-  heart_rate: { Icon: Heart, color: FigmaCategory.purple },
-  temperature: { Icon: Thermometer, color: FigmaCategory.gold },
-  blood_sugar: { Icon: Droplets, color: FigmaCategory.purple },
-  oxygen_saturation: { Icon: Wind, color: FigmaCategory.green },
-  weight: { Icon: Weight, color: FigmaCategory.gold },
-  other: { Icon: Stethoscope, color: FigmaCategory.teal },
+const VITAL_VISUAL: Record<VitalReadingType, { iconName: IconName; colorKey: ThemeColor }> = {
+  blood_pressure: { iconName: 'activity', colorKey: 'categoryBlue' },
+  heart_rate: { iconName: 'heart', colorKey: 'categoryPurple' },
+  temperature: { iconName: 'temperature', colorKey: 'categoryGold' },
+  blood_sugar: { iconName: 'drop', colorKey: 'categoryPurple' },
+  oxygen_saturation: { iconName: 'oxygen', colorKey: 'categoryGreen' },
+  weight: { iconName: 'weight', colorKey: 'categoryGold' },
+  other: { iconName: 'doctor', colorKey: 'categoryTeal' },
 };
 
 /**
@@ -71,8 +55,7 @@ export function FigmaVitals({
 }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const { user } = useAuth();
   const userId = user?.id ?? null;
 
@@ -96,19 +79,37 @@ export function FigmaVitals({
         styles.disclaimer,
         { backgroundColor: withAlpha(c.primary, 0.08), borderColor: withAlpha(c.primary, 0.15) },
       ]}>
-      <Text style={[styles.disclaimerText, { color: c.muted }]}>{t('vitals.disclaimer')}</Text>
+      <Text style={[styles.disclaimerText, { color: c.textSecondary }]}>{t('vitals.disclaimer')}</Text>
     </View>
   );
 
   // Loading / error / empty states — calm, never a guessed value.
+  if (vitalsQuery.isLoading) {
+    return (
+      <FigmaScreen>
+        {header}
+        {disclaimer}
+        <View style={styles.center}>
+          <ActivityIndicator color={c.primary} />
+        </View>
+      </FigmaScreen>
+    );
+  }
+
   if (vitalsQuery.isError) {
     return (
       <FigmaScreen>
         {header}
         {disclaimer}
-        <FigmaCard radius={FigmaRadius.r24} padding={20}>
-          <Text style={[styles.stateTitle, { color: c.text }]}>{t('vitals.loadError')}</Text>
-        </FigmaCard>
+        <Surface radius={Radius.xl} padded={20}>
+          <Text style={[styles.stateTitle, { color: c.errorFg }]}>{t('vitals.loadError')}</Text>
+          <Pressable
+            onPress={() => vitalsQuery.refetch()}
+            accessibilityRole="button"
+            style={[styles.retry, { backgroundColor: c.primary }]}>
+            <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
+          </Pressable>
+        </Surface>
       </FigmaScreen>
     );
   }
@@ -118,15 +119,11 @@ export function FigmaVitals({
       <FigmaScreen>
         {header}
         {disclaimer}
-        <FigmaCard radius={FigmaRadius.r24} padding={24}>
-          <View style={styles.emptyInner}>
-            <IconChip Icon={Activity} color={c.primary} size={48} radius={FigmaRadius.r16} iconSize={24} />
-            <Text style={[styles.stateTitle, { color: c.text }]}>{t('vitals.noTodayTitle')}</Text>
-            {canAdd ? (
-              <Text style={[styles.stateSub, { color: c.muted }]}>{t('figma.vitals.emptySubtitle')}</Text>
-            ) : null}
-          </View>
-        </FigmaCard>
+        <EmptyState
+          iconName="vital"
+          title={t('vitals.noTodayTitle')}
+          subtitle={canAdd ? t('figma.vitals.emptySubtitle') : undefined}
+        />
       </FigmaScreen>
     );
   }
@@ -141,7 +138,6 @@ export function FigmaVitals({
           <VitalCard
             key={reading.id}
             reading={reading}
-            scheme={scheme}
             today={today}
             mine={reading.recorded_by !== null && reading.recorded_by === userId}
             onOpen={() => router.push(`/vitals/${reading.id}`)}
@@ -154,19 +150,17 @@ export function FigmaVitals({
 
 function VitalCard({
   reading,
-  scheme,
   today,
   mine,
   onOpen,
 }: {
   reading: VitalReading;
-  scheme: FigmaScheme;
   today: string;
   mine: boolean;
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const visual = VITAL_VISUAL[reading.reading_type];
   const typeLabel = t(`vitals.type.${reading.reading_type}`);
 
@@ -186,23 +180,21 @@ function VitalCard({
       : '';
 
   return (
-    <FigmaCard
+    <Surface
       tone="card"
-      radius={FigmaRadius.r24}
-      padding={16}
+      radius={Radius.xl}
+      padded={16}
       onPress={onOpen}
       accessibilityLabel={`${typeLabel}${value ? `: ${value} ${unit}` : ''}`}
       accessibilityHint={when}
       style={styles.cell}>
-      <IconChip
-        Icon={visual.Icon}
-        color={visual.color}
-        size={40}
-        radius={FigmaRadius.r12}
-        iconSize={20}
+      <GlyphChip
+        iconName={visual.iconName}
+        color={visual.colorKey}
+        size='md'
         style={styles.cellChip}
       />
-      <Text style={[styles.type, { color: c.muted }]} numberOfLines={1}>
+      <Text style={[styles.type, { color: c.textSecondary }]} numberOfLines={1}>
         {typeLabel}
       </Text>
       {value ? (
@@ -211,42 +203,43 @@ function VitalCard({
             {isolateLtr(value)}
           </Text>
           {unit ? (
-            <Text style={[styles.unit, { color: c.muted }]} numberOfLines={1}>
+            <Text style={[styles.unit, { color: c.textSecondary }]} numberOfLines={1}>
               {unit}
             </Text>
           ) : null}
         </View>
       ) : null}
       {when ? (
-        <Text style={[styles.time, { color: c.muted }]} numberOfLines={1}>
+        <Text style={[styles.time, { color: c.textSecondary }]} numberOfLines={1}>
           {when}
           {mine ? ` · ${t('vitals.mineLabel')}` : ''}
         </Text>
       ) : null}
-    </FigmaCard>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   // Disclaimer banner (Figma: teal-tinted rounded-2xl well).
   disclaimer: {
-    borderRadius: FigmaRadius.r16,
+    borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  disclaimerText: { fontSize: 12, lineHeight: 19, fontFamily: FigmaFont.regular },
+  disclaimerText: { fontSize: 14, lineHeight: 19, fontFamily: FontFamily.regular },
   // 2-column grid.
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   cell: { width: '47%', flexGrow: 1 },
   cellChip: { marginBottom: 12 },
-  type: { fontSize: 11, fontFamily: FigmaFont.regular },
+  type: { fontSize: 14, fontFamily: FontFamily.regular },
   valueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 2 },
-  value: { fontSize: 22, fontFamily: FigmaFont.bold, lineHeight: 26 },
-  unit: { fontSize: 11, fontFamily: FigmaFont.regular },
-  time: { fontSize: 10, fontFamily: FigmaFont.regular, marginTop: 4 },
+  value: { fontSize: 22, fontFamily: FontFamily.bold, lineHeight: 26 },
+  unit: { fontSize: 14, fontFamily: FontFamily.regular },
+  time: { fontSize: 14, fontFamily: FontFamily.regular, marginTop: 4 },
   // States.
-  stateTitle: { fontSize: 15, fontFamily: FigmaFont.semibold, textAlign: 'center' },
-  stateSub: { fontSize: 12, fontFamily: FigmaFont.regular, textAlign: 'center' },
-  emptyInner: { alignItems: 'center', gap: 10 },
+  stateTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  center: { paddingVertical: 64, alignItems: 'center', justifyContent: 'center' },
+  retry: { marginTop: 16, minHeight: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+  retryText: { fontSize: 16, fontFamily: FontFamily.semibold },
 });

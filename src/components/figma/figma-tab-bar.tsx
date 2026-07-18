@@ -1,14 +1,16 @@
 import { Compass, Home, User } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { FigmaColors, FigmaFont, FigmaRadius, withAlpha } from './figma-tokens';
+import { FontFamily, Radius, withAlpha } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
-/** Route name → Figma label + lucide icon, matching BottomNav.tsx. */
+/** Route name → label key + lucide icon. */
 const TAB_META: Record<string, { labelKey: string; Icon: IconCmp }> = {
   index: { labelKey: 'tabs.home', Icon: Home },
   explore: { labelKey: 'tabs.explore', Icon: Compass },
@@ -25,17 +27,15 @@ type FigmaTabBarProps = {
 };
 
 /**
- * The Figma Make bottom tab bar, copied as literally as possible from
- * `BottomNav.tsx`: three tabs (الرئيسية / استكشاف / الحساب), a teal active pill
- * (44×28) behind a 20px lucide icon (stroke 2.5 active), 11px label (600 active /
- * 400 idle), a hairline top border, and the card background. RTL handles tab
- * order automatically (the row mirrors, so Home sits at the right). This replaces
- * the old native tab style entirely.
+ * The bottom tab bar: three tabs (الرئيسية / استكشاف / الحساب), a teal active pill
+ * (44×28) behind a 20px lucide icon (stroke 2.5 active), the label (600 active /
+ * 400 idle), a hairline top border, and the card background. RTL handles tab order
+ * automatically (the row mirrors, so Home sits at the right).
  */
 export function FigmaTabBar({ activeIndex, routeNames, onSelect }: FigmaTabBarProps) {
   const { t } = useTranslation();
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
+  const scheme = useColorScheme();
   const insets = useSafeAreaInsets();
   const pillBg = withAlpha(c.primary, scheme === 'dark' ? 0.15 : 0.1);
 
@@ -44,7 +44,7 @@ export function FigmaTabBar({ activeIndex, routeNames, onSelect }: FigmaTabBarPr
       style={[
         styles.bar,
         {
-          backgroundColor: c.card,
+          backgroundColor: c.backgroundElement,
           borderTopColor: c.border,
           paddingBottom: Math.max(insets.bottom, 12),
         },
@@ -54,7 +54,7 @@ export function FigmaTabBar({ activeIndex, routeNames, onSelect }: FigmaTabBarPr
         if (!meta) return null;
         const active = index === activeIndex;
         const Icon = meta.Icon;
-        const color = active ? c.primary : c.muted;
+        const color = active ? c.primary : c.textSecondary;
         const label = t(meta.labelKey);
         return (
           <Pressable
@@ -70,7 +70,7 @@ export function FigmaTabBar({ activeIndex, routeNames, onSelect }: FigmaTabBarPr
             <Text
               style={[
                 styles.label,
-                { color, fontFamily: active ? FigmaFont.semibold : FigmaFont.regular },
+                { color, fontFamily: active ? FontFamily.semibold : FontFamily.regular },
               ]}>
               {label}
             </Text>
@@ -94,12 +94,11 @@ const styles = StyleSheet.create({
   pill: {
     width: 44,
     height: 28,
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Raised from the Figma export's 11 toward the older-adult floor. Kept at 13
-  // (not 14) because the three flex-1 tabs are layout-sensitive; a strict-14 bump
-  // is worth a device check.
-  label: { fontSize: 13, lineHeight: 16 },
+  // Raised to the 14 content floor (three short Arabic labels fit on flex-1 tabs).
+  // Needs runtime QA on a narrow device / at 200% font scale for truncation.
+  label: { fontSize: 14, lineHeight: 18 },
 });

@@ -2,20 +2,16 @@ import { useRouter } from 'expo-router';
 import { Activity, Droplets, Moon, Smile, Utensils } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  withAlpha,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
 import { isolateLtr } from '@/components/ltr-text';
+import { EmptyState } from '@/components/states';
+import { Surface } from '@/components/surface';
+import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 import { todayYmd } from '@/utils/date';
 
@@ -31,13 +27,13 @@ type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: numb
  * Mirrors the Figma DailyLogsScreen row icons. Purely observational decoration —
  * no clinical judgement is implied by the color.
  */
-const FIELD_VISUAL: Record<string, { Icon: IconCmp; color: string }> = {
-  mood: { Icon: Smile, color: FigmaCategory.teal },
-  sleep: { Icon: Moon, color: FigmaCategory.purple },
-  appetite: { Icon: Utensils, color: FigmaCategory.gold },
-  hydration: { Icon: Droplets, color: FigmaCategory.blue },
-  pain: { Icon: Activity, color: FigmaCategory.green },
-  mobility: { Icon: Activity, color: FigmaCategory.green },
+const FIELD_VISUAL: Record<string, { Icon: IconCmp; colorKey: ThemeColor }> = {
+  mood: { Icon: Smile, colorKey: 'categoryTeal' },
+  sleep: { Icon: Moon, colorKey: 'categoryPurple' },
+  appetite: { Icon: Utensils, colorKey: 'categoryGold' },
+  hydration: { Icon: Droplets, colorKey: 'categoryBlue' },
+  pain: { Icon: Activity, colorKey: 'categoryGreen' },
+  mobility: { Icon: Activity, colorKey: 'categoryGreen' },
 };
 
 /** Long, localized label for a 'YYYY-MM-DD' log date (Western digits in Arabic). */
@@ -62,7 +58,7 @@ function formatLogDate(ymd: string, language: string | undefined): string {
  * "family notes, not a medical assessment" disclaimer, then one card per log with
  * a date + (your-log) marker, a list of structured field rows (mood / sleep /
  * appetite / hydration / pain / mobility, each an icon + label + value) and a
- * notes well. Observational only — never any clinical judgement. Cairo + Figma
+ * notes well. Observational only — never any clinical judgement. IBM Plex + Figma
  * tokens, RTL. Reuses the center's hooks (`useDailyLogs`) and `describe*` helpers
  * verbatim. No old Sanad Screen/Surface/Section/GlyphChip/Button.
  */
@@ -77,8 +73,7 @@ export function FigmaDailyLogs({
 }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const { user } = useAuth();
   const userId = user?.id ?? null;
 
@@ -104,28 +99,32 @@ export function FigmaDailyLogs({
           styles.disclaimer,
           { backgroundColor: withAlpha(c.primary, 0.08), borderColor: withAlpha(c.primary, 0.15) },
         ]}>
-        <Text style={[styles.disclaimerText, { color: c.muted }]}>{t('figma.dailylogs.disclaimer')}</Text>
+        <Text style={[styles.disclaimerText, { color: c.textSecondary }]}>{t('figma.dailylogs.disclaimer')}</Text>
       </View>
 
       {isLoading ? (
-        <Text style={[styles.empty, { color: c.muted }]}>{t('figma.dailylogs.loading')}</Text>
+        <SkeletonList />
       ) : isError ? (
-        <Text style={[styles.empty, { color: c.error }]}>{t('dailyLogs.loadError')}</Text>
+        <Surface radius={Radius.xl} padded={20}>
+          <Text style={[styles.emptyTitle, { color: c.errorFg }]}>{t('dailyLogs.loadError')}</Text>
+          <Pressable
+            onPress={() => logsQuery.refetch()}
+            accessibilityRole="button"
+            style={[styles.retry, { backgroundColor: c.primary }]}>
+            <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
+          </Pressable>
+        </Surface>
       ) : logs.length === 0 ? (
-        <FigmaCard radius={FigmaRadius.r24} padding={20}>
-          <Text style={[styles.emptyTitle, { color: c.text }]}>{t('dailyLogs.noTodayTitle')}</Text>
-          {canAdd ? (
-            <Text style={[styles.emptySub, { color: c.muted }]}>{t('dailyLogs.noTodaySubtitle')}</Text>
-          ) : (
-            <Text style={[styles.emptySub, { color: c.muted }]}>{t('dailyLogs.cannotAdd')}</Text>
-          )}
-        </FigmaCard>
+        <EmptyState
+          iconName="dailyLog"
+          title={t('dailyLogs.noTodayTitle')}
+          subtitle={t(canAdd ? 'dailyLogs.noTodaySubtitle' : 'dailyLogs.cannotAdd')}
+        />
       ) : (
         logs.map((log) => (
           <LogCard
             key={log.id}
             log={log}
-            scheme={scheme}
             mine={log.recorded_by !== null && log.recorded_by === userId}
             dateLabel={formatLogDate(log.log_date, i18n.language)}
             relativeLabel={
@@ -141,30 +140,28 @@ export function FigmaDailyLogs({
 
 function LogCard({
   log,
-  scheme,
   mine,
   dateLabel,
   relativeLabel,
   onOpen,
 }: {
   log: DailyCareLog;
-  scheme: FigmaScheme;
   mine: boolean;
   dateLabel: string;
   relativeLabel?: string;
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   const fields = describeDailyLog(log, t);
   const notes = describeDailyLogNotes(log, t);
   const heading = relativeLabel ? `${relativeLabel}${dateLabel}` : dateLabel;
 
   return (
-    <FigmaCard
-      radius={FigmaRadius.r24}
-      padding={16}
+    <Surface
+      radius={Radius.xl}
+      padded={16}
       onPress={onOpen}
       accessibilityLabel={heading}
       accessibilityHint={t('figma.dailylogs.openHint')}>
@@ -173,21 +170,21 @@ function LogCard({
           {heading}
         </Text>
         {mine ? (
-          <Text style={[styles.recorder, { color: c.muted }]}>{t('dailyLogs.mineLabel')}</Text>
+          <Text style={[styles.recorder, { color: c.textSecondary }]}>{t('dailyLogs.mineLabel')}</Text>
         ) : null}
       </View>
 
       {fields.length > 0 ? (
         <View style={styles.fieldList}>
           {fields.map((field) => {
-            const visual = FIELD_VISUAL[field.key] ?? { Icon: Activity, color: c.muted };
+            const visual = FIELD_VISUAL[field.key] ?? { Icon: Activity, colorKey: 'textSecondary' as ThemeColor };
             const FieldIcon = visual.Icon;
             return (
               <View key={field.key} style={styles.fieldRow}>
                 <View style={styles.fieldIcon}>
-                  <FieldIcon size={15} color={visual.color} />
+                  <FieldIcon size={15} color={c[visual.colorKey]} />
                 </View>
-                <Text style={[styles.fieldLabel, { color: c.muted }]} numberOfLines={1}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary }]} numberOfLines={1}>
                   {field.label}
                 </Text>
                 <Text style={[styles.fieldValue, { color: c.text }]} numberOfLines={2}>
@@ -198,7 +195,7 @@ function LogCard({
           })}
         </View>
       ) : (
-        <Text style={[styles.notesOnly, { color: c.muted }]}>{t('dailyLogs.notesOnly')}</Text>
+        <Text style={[styles.notesOnly, { color: c.textSecondary }]}>{t('dailyLogs.notesOnly')}</Text>
       )}
 
       {notes.length > 0 ? (
@@ -206,28 +203,30 @@ function LogCard({
           {notes.map((note) => (
             <View
               key={note.key}
-              style={[styles.notesWell, { backgroundColor: c.elevated, borderColor: c.border }]}>
-              <Text style={[styles.notesLabel, { color: c.muted }]}>{note.label}</Text>
+              style={[styles.notesWell, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
+              <Text style={[styles.notesLabel, { color: c.textSecondary }]}>{note.label}</Text>
               <Text style={[styles.notesText, { color: c.text }]}>{note.value}</Text>
             </View>
           ))}
         </View>
       ) : null}
-    </FigmaCard>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   disclaimer: {
-    borderRadius: FigmaRadius.r16,
+    borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  disclaimerText: { fontSize: 12, lineHeight: 19, fontFamily: FigmaFont.regular },
-  empty: { fontSize: 14, fontFamily: FigmaFont.regular, textAlign: 'center', marginTop: 8 },
-  emptyTitle: { fontSize: 15, fontFamily: FigmaFont.semibold },
-  emptySub: { fontSize: 13, fontFamily: FigmaFont.regular, marginTop: 4 },
+  disclaimerText: { fontSize: 14, lineHeight: 19, fontFamily: FontFamily.regular },
+  empty: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center', marginTop: 8 },
+  center: { paddingVertical: 64, alignItems: 'center', justifyContent: 'center' },
+  retry: { marginTop: 16, minHeight: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+  retryText: { fontSize: 16, fontFamily: FontFamily.semibold },
+  emptyTitle: { fontSize: 15, fontFamily: FontFamily.semibold },
   // Log card
   cardHeader: {
     flexDirection: 'row',
@@ -236,22 +235,22 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
-  cardDate: { fontSize: 14, fontFamily: FigmaFont.bold, flexShrink: 1 },
-  recorder: { fontSize: 12, fontFamily: FigmaFont.regular },
+  cardDate: { fontSize: 14, fontFamily: FontFamily.bold, flexShrink: 1 },
+  recorder: { fontSize: 14, fontFamily: FontFamily.regular },
   fieldList: { gap: 8 },
   fieldRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   fieldIcon: { width: 20, alignItems: 'center' },
-  fieldLabel: { fontSize: 13, fontFamily: FigmaFont.regular, width: 84, flexShrink: 0 },
-  fieldValue: { fontSize: 13, fontFamily: FigmaFont.medium, flex: 1 },
-  notesOnly: { fontSize: 13, fontFamily: FigmaFont.regular },
+  fieldLabel: { fontSize: 14, fontFamily: FontFamily.regular, width: 84, flexShrink: 0 },
+  fieldValue: { fontSize: 14, fontFamily: FontFamily.medium, flex: 1 },
+  notesOnly: { fontSize: 14, fontFamily: FontFamily.regular },
   notesGroup: { gap: 8, marginTop: 12 },
   notesWell: {
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 2,
   },
-  notesLabel: { fontSize: 11, fontFamily: FigmaFont.medium },
-  notesText: { fontSize: 12, lineHeight: 18, fontFamily: FigmaFont.regular },
+  notesLabel: { fontSize: 14, fontFamily: FontFamily.medium },
+  notesText: { fontSize: 14, lineHeight: 18, fontFamily: FontFamily.regular },
 });

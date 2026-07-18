@@ -4,14 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import {
-  FigmaFormCard,
-  FigmaFormScreen,
-  FigmaMutedNote,
-} from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
+import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { Surface } from '@/components/surface';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -23,7 +19,7 @@ import { defaultVisitDraft, prepareVisit, type VisitDraft } from './visit-fields
 
 /**
  * Add-visit form — an exact-copy rebuild of the Figma `AddVisitScreen` wired to
- * Sanad's real create flow + schema. The export's blue/IBM-Plex become teal/Cairo
+ * Sanad's real create flow + schema. The export's blue/IBM-Plex become teal/IBM Plex
  * and its native inputs become the protected wheel pickers. Crucially, the
  * export's "link to my account" toggle is shown to EVERYONE — Sanad's RLS instead
  * shows it ONLY to managers (collaborators always record their own visit), and
@@ -80,7 +76,7 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
       <UnsavedChangesGuard when={dirty && !submitted} />
       <FigmaMutedNote>{t('visits.disclaimer')}</FigmaMutedNote>
 
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <FigmaVisitFields draft={draft} onChange={patch} errors={errors} />
 
         {canManage ? (
@@ -99,7 +95,7 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
             <FigmaMutedNote>{t('visits.ownVisitNote')}</FigmaMutedNote>
           </View>
         )}
-      </FigmaFormCard>
+      </Surface>
 
       {/* Primary CTA — rendered directly in the body (not the footer prop, which
           did not render on Android). Always a filled teal button; an invalid press
@@ -121,6 +117,6 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
 
 const styles = StyleSheet.create({
   footer: { gap: Spacing.two },
-  footerError: { fontSize: 13, fontFamily: FigmaFont.regular, textAlign: 'center' },
+  footerError: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
   divider: { height: StyleSheet.hairlineWidth, marginBottom: Spacing.three },
 });

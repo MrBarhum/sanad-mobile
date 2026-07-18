@@ -83,6 +83,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two + Spacing.one,
     alignSelf: 'flex-start',
   },
-  glyph: { fontSize: 13, lineHeight: 18, fontWeight: '800' },
-  label: { fontFamily: FontFamily.semibold, fontSize: 13.5, lineHeight: 19, fontWeight: '600' },
+  glyph: { fontSize: 14, lineHeight: 19, fontWeight: '800' },
+  label: { fontFamily: FontFamily.semibold, fontSize: 14, lineHeight: 19 },
 });

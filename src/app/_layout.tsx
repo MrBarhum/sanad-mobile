@@ -1,12 +1,5 @@
 import '../global.css';
 
-import {
-  Cairo_400Regular,
-  Cairo_500Medium,
-  Cairo_600SemiBold,
-  Cairo_700Bold,
-  Cairo_800ExtraBold,
-} from '@expo-google-fonts/cairo';
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useEffect } from 'react';
@@ -50,15 +43,6 @@ export default function RootLayout() {
     // Vector icon glyph fonts (Ionicons + MaterialCommunityIcons), so icons are
     // ready before first paint — same expo-font path, no native rebuild.
     ...IconFonts,
-    // Cairo — the Figma exact-copy typeface. Figma-faithful screens/primitives
-    // (src/components/figma/*) render in Cairo; legacy Sanad screens keep IBM
-    // Plex Sans Arabic until they are migrated. Loaded here so Cairo is ready
-    // before first paint (pure asset load via expo-font; no native rebuild).
-    Cairo_400Regular,
-    Cairo_500Medium,
-    Cairo_600SemiBold,
-    Cairo_700Bold,
-    Cairo_800ExtraBold,
   });
 
   // Populate the OS notification channel + action-category store at the earliest

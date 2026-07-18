@@ -3,15 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
-import {
-  FigmaChipSelect,
-  FigmaFieldLabel,
-  FigmaFormCard,
-  FigmaFormField,
-} from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
+import { FigmaFieldLabel, FigmaSectionLabel } from '@/components/figma/figma-form-screen';
+import { FormField } from '@/components/form-field';
+import { OptionSelect } from '@/components/option-select';
+import { Surface } from '@/components/surface';
 import { Glyph } from '@/constants/glyphs';
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { DailyLogDraft } from './log-fields';
@@ -77,7 +74,7 @@ export function FigmaDailyLogFields({
   return (
     <>
       {/* Date */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <View style={styles.group}>
           <FigmaFieldLabel label={t('dailyLogs.fields.logDate')} />
           <DateField
@@ -87,13 +84,14 @@ export function FigmaDailyLogFields({
             error={fieldError(errors.log_date)}
           />
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Daily observations */}
-      <FigmaFormCard label={t('dailyLogs.dailyTitle')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('dailyLogs.dailyTitle')}</FigmaSectionLabel>
         <View style={styles.group}>
           <FigmaFieldLabel label={t('dailyLogs.fields.mood')} />
-          <FigmaChipSelect
+          <OptionSelect
             value={draft.mood}
             options={withUnset('mood', MOODS)}
             onChange={(value) => onChange({ mood: value })}
@@ -102,7 +100,7 @@ export function FigmaDailyLogFields({
         {divider}
         <View style={styles.group}>
           <FigmaFieldLabel label={t('dailyLogs.fields.sleepQuality')} />
-          <FigmaChipSelect
+          <OptionSelect
             value={draft.sleepQuality}
             options={withUnset('sleepQuality', SLEEP_QUALITIES)}
             onChange={(value) => onChange({ sleepQuality: value })}
@@ -111,7 +109,7 @@ export function FigmaDailyLogFields({
         {divider}
         <View style={styles.group}>
           <FigmaFieldLabel label={t('dailyLogs.fields.appetite')} />
-          <FigmaChipSelect
+          <OptionSelect
             value={draft.appetite}
             options={withUnset('appetite', APPETITE_LEVELS)}
             onChange={(value) => onChange({ appetite: value })}
@@ -120,7 +118,7 @@ export function FigmaDailyLogFields({
         {divider}
         <View style={styles.group}>
           <FigmaFieldLabel label={t('dailyLogs.fields.hydration')} />
-          <FigmaChipSelect
+          <OptionSelect
             value={draft.hydration}
             options={withUnset('hydration', HYDRATION_LEVELS)}
             onChange={(value) => onChange({ hydration: value })}
@@ -129,16 +127,17 @@ export function FigmaDailyLogFields({
         {divider}
         <View style={styles.group}>
           <FigmaFieldLabel label={t('dailyLogs.fields.mobility')} />
-          <FigmaChipSelect
+          <OptionSelect
             value={draft.mobility}
             options={withUnset('mobility', MOBILITY_LEVELS)}
             onChange={(value) => onChange({ mobility: value })}
           />
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Observed pain — null ("بدون") is distinct from an observed 0 */}
-      <FigmaFormCard label={t('dailyLogs.fields.painLevel')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('dailyLogs.fields.painLevel')}</FigmaSectionLabel>
         <Text style={[styles.painHint, { color: theme.textMuted }]}>{t('dailyLogs.painScaleHint')}</Text>
 
         <Pressable
@@ -158,7 +157,7 @@ export function FigmaDailyLogFields({
               styles.noneChipText,
               {
                 color: pain === null ? theme.primaryText : theme.textSecondary,
-                fontFamily: pain === null ? FigmaFont.semibold : FigmaFont.regular,
+                fontFamily: pain === null ? FontFamily.semibold : FontFamily.regular,
               },
             ]}>
             {pain === null ? `${Glyph.check} ${t('dailyLogs.painNone')}` : t('dailyLogs.painNone')}
@@ -208,7 +207,7 @@ export function FigmaDailyLogFields({
                     styles.scaleChipText,
                     {
                       color: on ? theme.onPrimary : theme.textMuted,
-                      fontFamily: on ? FigmaFont.bold : FigmaFont.regular,
+                      fontFamily: on ? FontFamily.bold : FontFamily.regular,
                     },
                   ]}>
                   {level}
@@ -217,11 +216,11 @@ export function FigmaDailyLogFields({
             );
           })}
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Notes */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('dailyLogs.fields.bathroomNotes')}
           value={draft.bathroomNotes}
           onChangeText={(value) => onChange({ bathroomNotes: value })}
@@ -229,7 +228,7 @@ export function FigmaDailyLogFields({
           multiline
           error={fieldError(errors.bathroom_notes)}
         />
-        <FigmaFormField
+        <FormField
           label={t('dailyLogs.fields.foodNotes')}
           value={draft.foodNotes}
           onChangeText={(value) => onChange({ foodNotes: value })}
@@ -237,7 +236,7 @@ export function FigmaDailyLogFields({
           multiline
           error={fieldError(errors.food_notes)}
         />
-        <FigmaFormField
+        <FormField
           label={t('dailyLogs.fields.activityNotes')}
           value={draft.activityNotes}
           onChangeText={(value) => onChange({ activityNotes: value })}
@@ -245,7 +244,7 @@ export function FigmaDailyLogFields({
           multiline
           error={fieldError(errors.activity_notes)}
         />
-        <FigmaFormField
+        <FormField
           label={t('dailyLogs.fields.generalNotes')}
           value={draft.generalNotes}
           onChangeText={(value) => onChange({ generalNotes: value })}
@@ -253,7 +252,7 @@ export function FigmaDailyLogFields({
           multiline
           error={fieldError(errors.general_notes)}
         />
-      </FigmaFormCard>
+      </Surface>
     </>
   );
 }
@@ -261,7 +260,7 @@ export function FigmaDailyLogFields({
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
   divider: { height: StyleSheet.hairlineWidth },
-  painHint: { fontSize: 12, lineHeight: 18, fontFamily: FigmaFont.regular },
+  painHint: { fontSize: 14, lineHeight: 18, fontFamily: FontFamily.regular },
   noneChip: {
     minHeight: TouchTarget.min,
     borderRadius: Radius.pill,
@@ -271,7 +270,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'flex-start',
   },
-  noneChipText: { fontSize: 13 },
+  noneChipText: { fontSize: 14 },
   stepperRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   stepButton: {
     width: 44,
@@ -282,8 +281,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepValue: { flex: 1, alignItems: 'center' },
-  painBig: { fontSize: 36, fontFamily: FigmaFont.bold, writingDirection: 'ltr' },
-  painOutOf: { fontSize: 12, fontFamily: FigmaFont.regular },
+  painBig: { fontSize: 36, fontFamily: FontFamily.bold, writingDirection: 'ltr' },
+  painOutOf: { fontSize: 14, fontFamily: FontFamily.regular },
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between' },
   scaleChip: {
     width: 26,
@@ -293,5 +292,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scaleChipText: { fontSize: 11 },
+  scaleChipText: { fontSize: 14 },
 });

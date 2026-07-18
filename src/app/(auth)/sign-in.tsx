@@ -7,12 +7,11 @@ import { z } from 'zod';
 
 import { AuthField } from '@/components/auth-field';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { Cairo } from '@/components/figma/form-typography';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Gutter, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
+import { FontFamily, Gutter, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { supabase } from '../../../lib/supabase';
@@ -75,8 +74,8 @@ export default function SignInScreen() {
         <View style={[styles.iconCircle, { backgroundColor: theme.primary }]}>
           <BrandMark />
         </View>
-        <Text style={[styles.brandTitle, Cairo.bold, { color: theme.text }]}>{t('auth.brand')}</Text>
-        <ThemedText themeColor="textSecondary" style={[styles.subtitle, Cairo.regular]}>
+        <Text style={[styles.brandTitle, { fontFamily: FontFamily.bold }, { color: theme.text }]}>{t('auth.brand')}</Text>
+        <ThemedText themeColor="textSecondary" style={styles.subtitle}>
           {t('auth.signInSubtitle')}
         </ThemedText>
       </View>
@@ -110,7 +109,7 @@ export default function SignInScreen() {
           />
 
           <Link href="/forgot-password" style={styles.forgotLink}>
-            <ThemedText type="link" style={Cairo.semibold}>
+            <ThemedText type="link" style={{ fontFamily: FontFamily.semibold }}>
               {t('auth.forgotPassword')}
             </ThemedText>
           </Link>
@@ -118,7 +117,6 @@ export default function SignInScreen() {
           {error ? (
             <ThemedText
               themeColor="errorFg"
-              style={Cairo.regular}
               accessibilityRole="alert"
               accessibilityLiveRegion="polite">
               {error}
@@ -134,11 +132,11 @@ export default function SignInScreen() {
       </Surface>
 
       <ThemedView style={styles.footer}>
-        <ThemedText themeColor="textSecondary" style={Cairo.regular}>
+        <ThemedText themeColor="textSecondary">
           {t('auth.noAccount')}
         </ThemedText>
         <Link href="/sign-up">
-          <ThemedText type="link" style={Cairo.semibold}>
+          <ThemedText type="link" style={{ fontFamily: FontFamily.semibold }}>
             {t('auth.signUpLink')}
           </ThemedText>
         </Link>

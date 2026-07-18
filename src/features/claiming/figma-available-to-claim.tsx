@@ -1,25 +1,22 @@
 import { useFocusEffect } from 'expo-router';
-import { AlertCircle, Calendar, Check, Clock, HandHelping, ListChecks, Pill, Users } from 'lucide-react-native';
+import { AlertCircle, Calendar, Check, Clock, ListChecks, Pill, Users } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
-import { FigmaButton } from '@/components/figma/figma-button';
-import { FigmaCard } from '@/components/figma/figma-card';
+import { Button } from '@/components/button';
+import { Surface } from '@/components/surface';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { IconChip } from '@/components/figma/icon-chip';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  withAlpha,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
+import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
+import { type IconName } from '@/constants/icons';
+import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { confirmAction } from '@/utils/confirm';
 import { formatHm, hmFromInstant, ymdFromInstant } from '@/utils/date';
 
@@ -32,11 +29,11 @@ type FeedbackTone = 'success' | 'warning' | 'error';
 type Feedback = { tone: FeedbackTone; title: string; body: string | null };
 
 /** Fixed section order + its icon/color, matching the feed's item types. */
-const SECTIONS: { type: ClaimItemType; labelKey: string; Icon: IconCmp; color: string }[] = [
-  { type: 'task', labelKey: 'claiming.sections.tasks', Icon: ListChecks, color: FigmaCategory.blue },
-  { type: 'medication', labelKey: 'claiming.sections.medications', Icon: Pill, color: FigmaCategory.teal },
-  { type: 'appointment', labelKey: 'claiming.sections.appointments', Icon: Calendar, color: FigmaCategory.purple },
-  { type: 'visit', labelKey: 'claiming.sections.visits', Icon: Users, color: FigmaCategory.green },
+const SECTIONS: { type: ClaimItemType; labelKey: string; Icon: IconCmp; iconName: IconName; colorKey: ThemeColor }[] = [
+  { type: 'task', labelKey: 'claiming.sections.tasks', Icon: ListChecks, iconName: 'task', colorKey: 'categoryBlue' },
+  { type: 'medication', labelKey: 'claiming.sections.medications', Icon: Pill, iconName: 'medication', colorKey: 'categoryTeal' },
+  { type: 'appointment', labelKey: 'claiming.sections.appointments', Icon: Calendar, iconName: 'appointment', colorKey: 'categoryPurple' },
+  { type: 'visit', labelKey: 'claiming.sections.visits', Icon: Users, iconName: 'member', colorKey: 'categoryGreen' },
 ];
 
 /**
@@ -47,7 +44,7 @@ const SECTIONS: { type: ClaimItemType; labelKey: string; Icon: IconCmp; color: s
  * the responsibility column server-side, the item leaves this feed and appears in
  * the owner's own screen. Claim feedback is shown in a bottom-anchored sheet so it
  * is visible regardless of scroll position. remote_member / elder never reach this
- * surface (the Home entry is hidden for them and the RPC rejects them). RTL, Cairo.
+ * surface (the Home entry is hidden for them and the RPC rejects them). RTL, IBM Plex.
  */
 export function FigmaAvailableToClaim({
   circleId,
@@ -57,8 +54,7 @@ export function FigmaAvailableToClaim({
   canClaim: boolean;
 }) {
   const { t } = useTranslation();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   const feed = useAvailableToClaim(canClaim ? circleId : undefined);
   const claim = useClaimItem();
@@ -138,38 +134,30 @@ export function FigmaAvailableToClaim({
         <FigmaHeader title={t('claiming.title')} />
 
         {!canClaim ? (
-          <View style={styles.empty}>
-            <HandHelping size={40} color={c.muted} strokeWidth={1} />
-            <Text style={[styles.emptyText, { color: c.muted }]}>{t('claiming.notAllowed')}</Text>
-          </View>
+          <EmptyState iconName="claim" title={t('claiming.notAllowed')} />
         ) : feed.isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={c.primary} />
-          </View>
+          <SkeletonList />
         ) : feed.isError ? (
-          <FigmaCard tone="card" radius={FigmaRadius.r16}>
-            <Text style={[styles.errorText, { color: c.error }]}>{t('claiming.loadError')}</Text>
+          <Surface tone="card" radius={Radius.lg} padded={20}>
+            <Text style={[styles.errorText, { color: c.errorFg }]}>{t('claiming.loadError')}</Text>
             <Pressable
               onPress={() => refetch()}
               accessibilityRole="button"
               style={[styles.retry, { backgroundColor: c.primary }]}>
               <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
             </Pressable>
-          </FigmaCard>
+          </Surface>
         ) : items.length === 0 ? (
-          <View style={styles.empty}>
-            <HandHelping size={40} color={c.muted} strokeWidth={1} />
-            <Text style={[styles.emptyText, { color: c.muted }]}>{t('claiming.empty')}</Text>
-          </View>
+          <EmptyState iconName="claim" title={t('claiming.empty')} />
         ) : (
           grouped
             .filter((section) => section.items.length > 0)
             .map((section) => (
               <View key={section.type} style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <section.Icon size={16} color={section.color} />
+                  <section.Icon size={16} color={c[section.colorKey]} />
                   <Text style={[styles.sectionLabel, { color: c.text }]}>{t(section.labelKey)}</Text>
-                  <Text style={[styles.sectionCount, { color: c.muted }]}>
+                  <Text style={[styles.sectionCount, { color: c.textSecondary }]}>
                     {isolateLtr(String(section.items.length))}
                   </Text>
                 </View>
@@ -177,9 +165,8 @@ export function FigmaAvailableToClaim({
                   <ClaimCard
                     key={item.item_id}
                     item={item}
-                    color={section.color}
-                    Icon={section.Icon}
-                    scheme={scheme}
+                    color={section.colorKey}
+                    iconName={section.iconName}
                     pending={pendingId === item.item_id}
                     onClaim={() => onClaim(item)}
                   />
@@ -189,7 +176,7 @@ export function FigmaAvailableToClaim({
         )}
       </FigmaScreen>
 
-      <ClaimFeedbackSheet feedback={feedback} scheme={scheme} onClose={() => setFeedback(null)} />
+      <ClaimFeedbackSheet feedback={feedback} onClose={() => setFeedback(null)} />
     </>
   );
 }
@@ -202,18 +189,16 @@ export function FigmaAvailableToClaim({
  */
 function ClaimFeedbackSheet({
   feedback,
-  scheme,
   onClose,
 }: {
   feedback: Feedback | null;
-  scheme: FigmaScheme;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   const tone: FeedbackTone = feedback?.tone ?? 'success';
-  const color = tone === 'success' ? c.success : tone === 'warning' ? c.accent : c.error;
+  const color = tone === 'success' ? c.successFg : tone === 'warning' ? c.warningFg : c.errorFg;
   const Icon = tone === 'success' ? Check : AlertCircle;
 
   return (
@@ -226,10 +211,10 @@ function ClaimFeedbackSheet({
           <Icon size={22} color={color} />
         </View>
         {feedback?.body ? (
-          <Text style={[styles.feedbackBody, { color: c.muted }]}>{feedback.body}</Text>
+          <Text style={[styles.feedbackBody, { color: c.textSecondary }]}>{feedback.body}</Text>
         ) : null}
       </View>
-      <FigmaButton
+      <Button
         label={t('common.ok')}
         variant={tone === 'success' ? 'primary' : 'secondary'}
         onPress={onClose}
@@ -254,88 +239,84 @@ function whenText(item: AvailableClaimItem): string | null {
 function ClaimCard({
   item,
   color,
-  Icon,
-  scheme,
+  iconName,
   pending,
   onClaim,
 }: {
   item: AvailableClaimItem;
-  color: string;
-  Icon: IconCmp;
-  scheme: FigmaScheme;
+  color: ThemeColor;
+  iconName: IconName;
   pending: boolean;
   onClaim: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const when = whenText(item);
 
   return (
-    <FigmaCard tone="card" radius={FigmaRadius.r24} padding={16}>
+    <Surface tone="card" radius={Radius.xl} padded={16}>
       <View style={styles.cardTop}>
-        <IconChip Icon={Icon} color={color} size={48} radius={FigmaRadius.r16} iconSize={22} />
+        <GlyphChip iconName={iconName} color={color} size="md" />
         <View style={styles.cardInfo}>
           <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={2}>
             {item.title}
           </Text>
           {when ? (
             <View style={styles.metaRow}>
-              <Clock size={13} color={c.muted} />
-              <Text style={[styles.metaText, { color: c.muted }]}>{when}</Text>
+              <Clock size={13} color={c.textSecondary} />
+              <Text style={[styles.metaText, { color: c.textSecondary }]}>{when}</Text>
             </View>
           ) : null}
           {item.subtitle ? (
-            <Text style={[styles.metaText, { color: c.muted }]} numberOfLines={1}>
+            <Text style={[styles.metaText, { color: c.textSecondary }]} numberOfLines={1}>
               {item.subtitle}
             </Text>
           ) : null}
         </View>
       </View>
 
-      <FigmaButton
+      <Button
         label={t('claiming.cta')}
-        Icon={HandHelping}
+        iconName="claim"
         loading={pending}
         onPress={onClaim}
         accessibilityHint={t('claiming.ctaHint')}
         style={styles.cta}
       />
-    </FigmaCard>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 14, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     paddingHorizontal: 16,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 13, fontFamily: FigmaFont.semibold },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyText: { fontSize: 16, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
   feedbackRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   feedbackChip: {
     width: 44,
     height: 44,
-    borderRadius: FigmaRadius.pill,
+    borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  feedbackBody: { flex: 1, fontSize: 14, lineHeight: 21, fontFamily: FigmaFont.regular },
+  feedbackBody: { flex: 1, fontSize: 14, lineHeight: 21, fontFamily: FontFamily.regular },
   section: { gap: 12 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sectionLabel: { fontSize: 15, fontFamily: FigmaFont.bold, flex: 1 },
-  sectionCount: { fontSize: 13, fontFamily: FigmaFont.medium },
+  sectionLabel: { fontSize: 15, fontFamily: FontFamily.bold, flex: 1 },
+  sectionCount: { fontSize: 14, fontFamily: FontFamily.medium },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   cardInfo: { flex: 1, gap: 4 },
-  cardTitle: { fontSize: 16, fontFamily: FigmaFont.bold },
+  cardTitle: { fontSize: 16, fontFamily: FontFamily.bold },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaText: { fontSize: 13, fontFamily: FigmaFont.regular },
+  metaText: { fontSize: 14, fontFamily: FontFamily.regular },
   cta: { marginTop: 14 },
 });

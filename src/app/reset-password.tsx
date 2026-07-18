@@ -6,12 +6,11 @@ import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-nativ
 
 import { AuthField } from '@/components/auth-field';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { Cairo } from '@/components/figma/form-typography';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { Gutter, MaxFormWidth, Spacing } from '@/constants/theme';
+import { FontFamily, Gutter, MaxFormWidth, Spacing } from '@/constants/theme';
 import { parseRecoveryParams } from '@/features/auth/password-reset';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -113,8 +112,8 @@ export default function ResetPasswordScreen() {
   return (
     <Screen edges={{ top: true }} maxWidth={MaxFormWidth} keyboardAvoiding gap={Spacing.three}>
       <View style={styles.header}>
-        <Text style={[styles.title, Cairo.bold, { color: theme.text }]}>{t('auth.resetTitle')}</Text>
-        <ThemedText themeColor="textSecondary" style={[styles.subtitle, Cairo.regular]}>
+        <Text style={[styles.title, { fontFamily: FontFamily.bold }, { color: theme.text }]}>{t('auth.resetTitle')}</Text>
+        <ThemedText themeColor="textSecondary" style={[styles.subtitle]}>
           {t('auth.resetSubtitle')}
         </ThemedText>
       </View>
@@ -124,7 +123,7 @@ export default function ResetPasswordScreen() {
           {phase === 'checking' ? (
             <View style={styles.centered}>
               <ActivityIndicator color={theme.primary} />
-              <ThemedText themeColor="textSecondary" style={Cairo.regular}>
+              <ThemedText themeColor="textSecondary">
                 {t('auth.resetChecking')}
               </ThemedText>
             </View>

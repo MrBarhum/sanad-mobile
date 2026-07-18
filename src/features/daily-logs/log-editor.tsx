@@ -3,15 +3,15 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
+import { FigmaFormScreen, FigmaMutedNote, FigmaSectionLabel } from '@/components/figma/figma-form-screen';
 import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
@@ -136,7 +136,7 @@ function DailyLogEditScreen({ circleId, initial }: { circleId: string; initial: 
       <FigmaDailyLogFields draft={draft} onChange={patch} errors={errors} />
 
       {/* Delete — destructive, separate from save, two-step confirm. */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         {deleteError ? (
           <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
             {deleteError}
@@ -145,7 +145,7 @@ function DailyLogEditScreen({ circleId, initial }: { circleId: string; initial: 
         {confirming ? (
           <View style={styles.confirmRow}>
             <View style={styles.confirmCol}>
-              <FigmaButton
+              <Button
                 label={t('common.confirmDelete')}
                 variant="danger"
                 loading={deleting}
@@ -153,7 +153,7 @@ function DailyLogEditScreen({ circleId, initial }: { circleId: string; initial: 
               />
             </View>
             <View style={styles.confirmCol}>
-              <FigmaButton
+              <Button
                 label={t('common.cancel')}
                 variant="secondary"
                 onPress={() => setConfirming(false)}
@@ -161,13 +161,13 @@ function DailyLogEditScreen({ circleId, initial }: { circleId: string; initial: 
             </View>
           </View>
         ) : (
-          <FigmaButton
+          <Button
             label={t('dailyLogs.deleteLog')}
             variant="danger"
             onPress={() => setConfirming(true)}
           />
         )}
-      </FigmaFormCard>
+      </Surface>
 
       {/* Save CTA — rendered in the body (not the footer prop, which did not render
           on Android). Final child, below the destructive delete, matching the prior
@@ -212,24 +212,26 @@ function DailyLogViewScreen({ log }: { log: DailyCareLog }) {
       <FigmaMutedNote>{t('dailyLogs.disclaimer')}</FigmaMutedNote>
       <FigmaMutedNote>{t('dailyLogs.readOnly')}</FigmaMutedNote>
 
-      <FigmaFormCard label={t('dailyLogs.fields.logDate')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('dailyLogs.fields.logDate')}</FigmaSectionLabel>
         <Text style={[styles.rowValue, { color: theme.text }]}>{isolateLtr(log.log_date)}</Text>
-      </FigmaFormCard>
+      </Surface>
 
       {details.length > 0 ? (
-        <FigmaFormCard label={t('dailyLogs.dailyTitle')}>
+        <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+          <FigmaSectionLabel>{t('dailyLogs.dailyTitle')}</FigmaSectionLabel>
           {details.map((detail) => (
             <ReadOnlyRow key={detail.key} label={detail.label} value={detail.value} />
           ))}
-        </FigmaFormCard>
+        </Surface>
       ) : null}
 
       {notes.length > 0 ? (
-        <FigmaFormCard>
+        <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
           {notes.map((detail) => (
             <ReadOnlyRow key={detail.key} label={detail.label} value={detail.value} />
           ))}
-        </FigmaFormCard>
+        </Surface>
       ) : null}
 
       {details.length === 0 && notes.length === 0 ? (
@@ -242,10 +244,10 @@ function DailyLogViewScreen({ log }: { log: DailyCareLog }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
+  statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
   confirmRow: { flexDirection: 'row', gap: Spacing.two },
   confirmCol: { flex: 1 },
   row: { gap: 2 },
-  rowLabel: { fontSize: 13, fontFamily: FigmaFont.semibold },
-  rowValue: { fontSize: 16, fontFamily: FigmaFont.regular },
+  rowLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
 });

@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
-import { Cairo } from '@/components/figma/form-typography';
 import { Icon } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 /**
@@ -42,7 +41,7 @@ export function AuthField({
 
   return (
     <View style={styles.field}>
-      <ThemedText type="smallBold" style={Cairo.semibold}>
+      <ThemedText type="smallBold">
         {label}
       </ThemedText>
       <View style={[styles.inputWrap, { backgroundColor: theme.backgroundSunken, borderColor }]}>
@@ -55,7 +54,7 @@ export function AuthField({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           accessibilityLabel={label}
-          style={[styles.input, Cairo.regular, { color: theme.text }, ltr ? styles.ltr : null]}
+          style={[styles.input, { fontFamily: FontFamily.regular }, { color: theme.text }, ltr ? styles.ltr : null]}
           {...rest}
         />
         {isPassword ? (
@@ -72,13 +71,13 @@ export function AuthField({
       {error ? (
         <ThemedText
           type="small"
-          style={[{ color: theme.errorFg }, Cairo.regular]}
+          style={[{ color: theme.errorFg }]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {error}
         </ThemedText>
       ) : hint ? (
-        <ThemedText type="small" themeColor="textMuted" style={Cairo.regular}>
+        <ThemedText type="small" themeColor="textMuted">
           {hint}
         </ThemedText>
       ) : null}

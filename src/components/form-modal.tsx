@@ -3,12 +3,11 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleShee
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Glyph } from '@/constants/glyphs';
-import { Gutter, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { FontFamily, Gutter, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { FigmaFooterPrimaryButton } from './figma/figma-footer-primary-button';
-import { FormButton } from './figma/form-button';
-import { Cairo } from './figma/form-typography';
+import { Button } from './button';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -54,7 +53,7 @@ export function FormModal({
         <ThemedView type="backgroundElement" style={[styles.sheet, { borderColor: theme.border }]}>
           <View style={[styles.grabber, { backgroundColor: theme.backgroundSelected }]} />
           <View style={styles.header}>
-            <ThemedText type="sectionTitle" style={[styles.title, Cairo.bold]} accessibilityRole="header">
+            <ThemedText type="sectionTitle" style={styles.title} accessibilityRole="header">
               {title}
             </ThemedText>
             <Pressable
@@ -63,7 +62,7 @@ export function FormModal({
               accessibilityLabel={closeLabel}
               hitSlop={Spacing.two}
               style={styles.closeButton}>
-              <ThemedText style={[styles.close, Cairo.semibold]}>{Glyph.cross}</ThemedText>
+              <ThemedText style={styles.close}>{Glyph.cross}</ThemedText>
             </Pressable>
           </View>
 
@@ -75,7 +74,7 @@ export function FormModal({
 
             {error ? (
               <ThemedText
-                style={[{ color: theme.errorFg }, Cairo.regular]}
+                style={{ color: theme.errorFg }}
                 accessibilityRole="alert"
                 accessibilityLiveRegion="polite">
                 {error}
@@ -92,7 +91,7 @@ export function FormModal({
                 onPress={onSubmit}
                 loading={submitting}
               />
-              <FormButton
+              <Button
                 label={cancelLabel}
                 onPress={onClose}
                 variant="secondary"
@@ -141,7 +140,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  close: { fontSize: 20, fontWeight: '600' },
+  close: { fontSize: 20, fontFamily: FontFamily.semibold },
   content: {
     paddingHorizontal: Gutter,
     paddingTop: Spacing.three,

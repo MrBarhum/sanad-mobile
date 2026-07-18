@@ -1,30 +1,17 @@
-import { Pencil, Phone, Stethoscope, Trash2 } from 'lucide-react-native';
+import { Pencil, Phone, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ActivityIndicator,
-  Linking,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  useColorScheme,
-} from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { IconChip } from '@/components/figma/icon-chip';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaLayout,
-  FigmaRadius,
-  withAlpha,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
+import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
+import { ChipSize, FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import type { Doctor } from './api';
 import { DoctorFormModal } from './doctor-form-modal';
@@ -32,11 +19,11 @@ import { useDeleteDoctor, useDoctors } from './hooks';
 
 /** Per-doctor Stethoscope-chip accent, cycled by index (Figma uses varied hues). */
 const CHIP_COLORS = [
-  FigmaCategory.green,
-  FigmaCategory.blue,
-  FigmaCategory.gold,
-  FigmaCategory.purple,
-  FigmaCategory.teal,
+  'categoryGreen',
+  'categoryBlue',
+  'categoryGold',
+  'categoryPurple',
+  'categoryTeal',
 ] as const;
 
 /**
@@ -51,12 +38,11 @@ const CHIP_COLORS = [
  * two-step inline confirm) — previously these lived only in the unrouted legacy
  * DoctorsManager, so a manager could add and call a doctor but never correct or
  * remove one. Reuses the manager's validated `DoctorFormModal` for both add and
- * edit and the `useDeleteDoctor` hook; Cairo + Figma tokens, RTL.
+ * edit and the `useDeleteDoctor` hook; IBM Plex + theme tokens, RTL.
  */
 export function FigmaDoctors({ circleId, canManage }: { circleId: string; canManage: boolean }) {
   const { t } = useTranslation();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   const doctorsQuery = useDoctors(circleId);
   const deleteDoctor = useDeleteDoctor(circleId);
@@ -95,36 +81,28 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
         />
 
         {doctorsQuery.isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={c.primary} />
-          </View>
+          <SkeletonList />
         ) : doctorsQuery.isError ? (
-          <FigmaCard tone="card" radius={FigmaRadius.r16}>
-            <Text style={[styles.errorText, { color: c.error }]}>{t('doctors.loadError')}</Text>
+          <Surface tone="card" radius={Radius.lg} padded={20}>
+            <Text style={[styles.errorText, { color: c.errorFg }]}>{t('doctors.loadError')}</Text>
             <Pressable
               onPress={() => doctorsQuery.refetch()}
               accessibilityRole="button"
               style={[styles.retry, { backgroundColor: c.primary }]}>
               <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
             </Pressable>
-          </FigmaCard>
+          </Surface>
         ) : doctors.length === 0 ? (
-          <View style={styles.empty}>
-            <Stethoscope size={40} color={c.muted} strokeWidth={1} />
-            <Text style={[styles.emptyTitle, { color: c.text }]}>
-              {t('figma.doctors.emptyTitle')}
-            </Text>
-            {canManage ? (
-              <Text style={[styles.emptySubtitle, { color: c.muted }]}>
-                {t('figma.doctors.emptySubtitle')}
-              </Text>
-            ) : null}
-          </View>
+          <EmptyState
+            iconName="doctor"
+            title={t('figma.doctors.emptyTitle')}
+            subtitle={canManage ? t('figma.doctors.emptySubtitle') : undefined}
+          />
         ) : (
           <>
             {deleteError ? (
               <Text
-                style={[styles.deleteError, { color: c.error }]}
+                style={[styles.deleteError, { color: c.errorFg }]}
                 accessibilityRole="alert"
                 accessibilityLiveRegion="polite">
                 {deleteError}
@@ -136,7 +114,6 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
                   key={doctor.id}
                   doctor={doctor}
                   chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
-                  scheme={scheme}
                   canManage={canManage}
                   deleting={deletingId === doctor.id}
                   onEdit={() => setEditing(doctor)}
@@ -163,22 +140,20 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
 function DoctorCard({
   doctor,
   chipColor,
-  scheme,
   canManage,
   deleting,
   onEdit,
   onDelete,
 }: {
   doctor: Doctor;
-  chipColor: string;
-  scheme: FigmaScheme;
+  chipColor: ThemeColor;
   canManage: boolean;
   deleting: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const [confirming, setConfirming] = useState(false);
 
   const phone = doctor.phone ?? null;
@@ -195,26 +170,20 @@ function DoctorCard({
   }
 
   return (
-    <FigmaCard tone="card" radius={FigmaRadius.r24} padding={16}>
+    <Surface tone="card" radius={Radius.xl} padded={16}>
       <View style={styles.cardTop}>
-        <IconChip
-          Icon={Stethoscope}
-          color={chipColor}
-          size={FigmaLayout.iconChip.xl}
-          radius={FigmaRadius.pill}
-          iconSize={24}
-        />
+        <GlyphChip iconName="doctor" color={chipColor} size="md" />
         <View style={styles.cardInfo}>
           <Text style={[styles.cardName, { color: c.text }]} numberOfLines={1}>
             {doctor.name}
           </Text>
           {specialty ? (
-            <Text style={[styles.cardSpecialty, { color: c.muted }]} numberOfLines={1}>
+            <Text style={[styles.cardSpecialty, { color: c.textSecondary }]} numberOfLines={1}>
               {specialty}
             </Text>
           ) : null}
           {clinic ? (
-            <Text style={[styles.cardClinic, { color: c.muted }]} numberOfLines={1}>
+            <Text style={[styles.cardClinic, { color: c.textSecondary }]} numberOfLines={1}>
               {clinic}
             </Text>
           ) : null}
@@ -235,8 +204,8 @@ function DoctorCard({
       </View>
 
       {phone ? (
-        <View style={[styles.phoneWell, { backgroundColor: c.elevated, borderColor: c.border }]}>
-          <Text style={[styles.phoneText, { color: c.muted }]} selectable>
+        <View style={[styles.phoneWell, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
+          <Text style={[styles.phoneText, { color: c.textSecondary }]} selectable>
             {isolateLtr(phone)}
           </Text>
         </View>
@@ -253,14 +222,12 @@ function DoctorCard({
                 filled
                 loading={deleting}
                 onPress={onDelete}
-                scheme={scheme}
               />
               <ActionButton
                 label={t('common.cancel')}
                 tone="muted"
                 disabled={deleting}
                 onPress={() => setConfirming(false)}
-                scheme={scheme}
               />
             </>
           ) : (
@@ -270,20 +237,18 @@ function DoctorCard({
                 label={t('common.edit')}
                 tone="muted"
                 onPress={onEdit}
-                scheme={scheme}
               />
               <ActionButton
                 Icon={Trash2}
                 label={t('common.delete')}
                 tone="danger"
                 onPress={() => setConfirming(true)}
-                scheme={scheme}
               />
             </>
           )}
         </View>
       ) : null}
-    </FigmaCard>
+    </Surface>
   );
 }
 
@@ -296,7 +261,6 @@ function ActionButton({
   loading = false,
   disabled = false,
   onPress,
-  scheme,
 }: {
   label: string;
   Icon?: typeof Pencil;
@@ -305,13 +269,12 @@ function ActionButton({
   loading?: boolean;
   disabled?: boolean;
   onPress: () => void;
-  scheme: FigmaScheme;
 }) {
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const danger = tone === 'danger';
-  const fg = filled ? '#FFFFFF' : danger ? c.error : c.text;
-  const bg = filled ? c.error : danger ? withAlpha(c.error, 0.1) : c.elevated;
-  const border = filled ? 'transparent' : danger ? withAlpha(c.error, 0.25) : c.border;
+  const fg = filled ? '#FFFFFF' : danger ? c.errorFg : c.text;
+  const bg = filled ? c.dangerSolid : danger ? withAlpha(c.dangerSolid, 0.1) : c.backgroundSunken;
+  const border = filled ? 'transparent' : danger ? withAlpha(c.dangerSolid, 0.25) : c.border;
 
   return (
     <Pressable
@@ -339,43 +302,40 @@ function ActionButton({
 
 const styles = StyleSheet.create({
   center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 14, fontFamily: FigmaFont.medium, textAlign: 'center' },
-  deleteError: { fontSize: 14, fontFamily: FigmaFont.medium },
+  errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
+  deleteError: { fontSize: 14, fontFamily: FontFamily.medium },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     paddingHorizontal: 16,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 13, fontFamily: FigmaFont.semibold },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyTitle: { fontSize: 16, fontFamily: FigmaFont.semibold, textAlign: 'center' },
-  emptySubtitle: { fontSize: 14, fontFamily: FigmaFont.regular, textAlign: 'center' },
+  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
   list: { gap: 12 },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   cardInfo: { flex: 1, gap: 2 },
-  cardName: { fontSize: 17, fontFamily: FigmaFont.bold },
-  cardSpecialty: { fontSize: 14, fontFamily: FigmaFont.regular },
-  cardClinic: { fontSize: 13, fontFamily: FigmaFont.regular },
+  cardName: { fontSize: 17, fontFamily: FontFamily.bold },
+  cardSpecialty: { fontSize: 14, fontFamily: FontFamily.regular },
+  cardClinic: { fontSize: 14, fontFamily: FontFamily.regular },
   callButton: {
-    width: FigmaLayout.iconChip.xl,
-    height: FigmaLayout.iconChip.xl,
-    borderRadius: FigmaRadius.pill,
+    width: ChipSize.xl,
+    height: ChipSize.xl,
+    borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pressed: { opacity: 0.7 },
   phoneWell: {
     marginTop: 12,
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  phoneText: { fontSize: 13, fontFamily: FigmaFont.regular, writingDirection: 'ltr' },
+  phoneText: { fontSize: 14, fontFamily: FontFamily.regular, writingDirection: 'ltr' },
   // Manager actions footer
   actions: {
     flexDirection: 'row',
@@ -391,9 +351,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     minHeight: 48,
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
   },
-  actionLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  actionLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
 });

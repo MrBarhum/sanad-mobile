@@ -6,16 +6,16 @@ import { StyleSheet, Text, View } from 'react-native';
 import { DateField } from '@/components/date-field';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import {
-  FigmaChipSelect,
-  FigmaFormCard,
-  FigmaFormField,
   FigmaFormScreen,
   FigmaMutedNote,
+  FigmaSectionLabel,
 } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
+import { FormField } from '@/components/form-field';
+import { OptionSelect } from '@/components/option-select';
+import { Surface } from '@/components/surface';
 import { TimeField } from '@/components/time-field';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -30,7 +30,7 @@ const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 /**
  * Add-task form — an exact-copy rebuild of the Figma `AddTaskScreen` (header +
  * main-info card with priority chips + due-date card + assignee card), wired to
- * Sanad's real create flow + schema. Figma's blue/IBM-Plex become teal/Cairo, its
+ * Sanad's real create flow + schema. Figma's blue/IBM-Plex become teal/IBM Plex, its
  * native date/time inputs become the protected wheel pickers, and its invented
  * assignee dropdown becomes a "تعيين إلى" selector of REAL circle members (no fake
  * names) — "أنا", any active member, or "بدون تعيين". Sanad also keeps the category
@@ -134,8 +134,8 @@ export function TaskForm({ circleId }: { circleId: string }) {
       <FigmaMutedNote>{t('tasks.disclaimer')}</FigmaMutedNote>
 
       {/* Main info */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('tasks.fields.title')}
           value={title}
           onChangeText={setTitle}
@@ -143,7 +143,7 @@ export function TaskForm({ circleId }: { circleId: string }) {
           required
           error={fieldError(errors.title)}
         />
-        <FigmaFormField
+        <FormField
           label={t('tasks.fields.description')}
           value={description}
           onChangeText={setDescription}
@@ -153,16 +153,17 @@ export function TaskForm({ circleId }: { circleId: string }) {
         />
         <View style={styles.group}>
           <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>{t('tasks.fields.category')}</Text>
-          <FigmaChipSelect value={category} options={categoryOptions} onChange={setCategory} />
+          <OptionSelect value={category} options={categoryOptions} onChange={setCategory} />
         </View>
         <View style={styles.group}>
           <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>{t('tasks.fields.priority')}</Text>
-          <FigmaChipSelect value={priority} options={priorityOptions} onChange={setPriority} />
+          <OptionSelect value={priority} options={priorityOptions} onChange={setPriority} />
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Due date / time */}
-      <FigmaFormCard label={t('tasks.dueTitle')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('tasks.dueTitle')}</FigmaSectionLabel>
         <View style={styles.row}>
           <View style={styles.dateCol}>
             <DateField
@@ -183,22 +184,22 @@ export function TaskForm({ circleId }: { circleId: string }) {
             />
           </View>
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Assignee — shared MemberSelect so create and edit offer the SAME choices
           (active "doer" roles only, a single «أنا» chip, one «no assignee» copy). */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <MemberSelect
           circleId={circleId}
           value={assignedTo}
           label={t('tasks.fields.assignedTo')}
           onChange={setAssignedTo}
         />
-      </FigmaFormCard>
+      </Surface>
 
       {/* Notes */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('tasks.fields.notes')}
           value={notes}
           onChangeText={setNotes}
@@ -206,7 +207,7 @@ export function TaskForm({ circleId }: { circleId: string }) {
           multiline
           error={fieldError(errors.notes)}
         />
-      </FigmaFormCard>
+      </Surface>
 
       {/* Primary CTA — rendered directly in the body (not the FigmaFormScreen footer
           prop). Always a filled teal button; an invalid press runs validation
@@ -228,9 +229,9 @@ export function TaskForm({ circleId }: { circleId: string }) {
 
 const styles = StyleSheet.create({
   footer: { gap: Spacing.two },
-  footerError: { fontSize: 13, fontFamily: FigmaFont.regular, textAlign: 'center' },
+  footerError: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
   group: { gap: Spacing.two },
-  groupLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   row: { flexDirection: 'row', gap: Spacing.three },
   dateCol: { flex: 2 },
   timeCol: { flex: 1 },

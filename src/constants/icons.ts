@@ -94,11 +94,16 @@ export const ICONS = {
   drop: { family: 'ionicons', name: 'water-outline' }, // blood type / hydration
   temperature: { family: 'material-community', name: 'thermometer' }, // care-domain reading
   oxygen: { family: 'material-community', name: 'lungs' }, // care-domain reading
+  weight: { family: 'material-community', name: 'weight' }, // vital reading
   mood: { family: 'ionicons', name: 'happy-outline' }, // daily-log observation, not a clinical scale
+  sleep: { family: 'ionicons', name: 'moon-outline' }, // daily-log observation (moon glyph)
   appetite: { family: 'material-community', name: 'silverware-fork-knife' },
+  sparkle: { family: 'ionicons', name: 'sparkles-outline' }, // gentle "new / noteworthy" mark
 
   // --- Actions & roles (Figma Make parity) ------------------------------------
   more: { family: 'ionicons', name: 'ellipsis-horizontal' },
+  signOut: { family: 'ionicons', name: 'log-out-outline' }, // account sign-out (label carries meaning)
+  claim: { family: 'ionicons', name: 'hand-left-outline' }, // «أنا متكفّل» take-responsibility CTA
   edit: { family: 'ionicons', name: 'create-outline' }, // pencil (shares the dailyLog glyph)
   copy: { family: 'ionicons', name: 'copy-outline' },
   view: { family: 'ionicons', name: 'eye-outline' },

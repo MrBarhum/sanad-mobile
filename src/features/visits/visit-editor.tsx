@@ -3,17 +3,17 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
+import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
 import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -40,7 +40,7 @@ const STATUS_GLYPH: Record<VisitStatus, string> = {
 
 /**
  * View / edit a single family visit — rebuilt in the Figma editor language
- * (FigmaFormScreen header + grouped FigmaFormCards + body-rendered teal save CTA),
+ * (FigmaFormScreen header + grouped Surface cards + body-rendered teal save CTA),
  * matching the Add-Visit form. Editors (managers, or collaborators on their own
  * visit) get the same FigmaVisitFields as /visits/new — including the optional
  * start/end times — plus a status card and a two-step delete; others get a
@@ -167,7 +167,7 @@ function VisitEditScreen({
       <UnsavedChangesGuard when={dirty} />
       <FigmaMutedNote>{t('visits.disclaimer')}</FigmaMutedNote>
 
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <FigmaVisitFields draft={draft} onChange={patch} errors={errors} />
         {canManage ? (
           <View>
@@ -180,7 +180,7 @@ function VisitEditScreen({
             />
           </View>
         ) : null}
-      </FigmaFormCard>
+      </Surface>
 
       <StatusSection circleId={circleId} visit={initial} canMarkOutcome canReopen />
 
@@ -232,14 +232,14 @@ function VisitViewScreen({
     <FigmaFormScreen title={t('visits.detailTitle')} onBack={() => router.back()}>
       <FigmaMutedNote>{t(canMarkOutcome ? 'visits.statusOnly' : 'visits.readOnly')}</FigmaMutedNote>
 
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <Text style={[styles.title, { color: theme.text }]}>{visit.visitor_name}</Text>
         <ReadOnlyRow label={t('visits.whenLabel')} value={when} />
         {responsible ? (
           <ReadOnlyRow label={t('visits.linkedToLabel')} value={responsible.label} />
         ) : null}
         {visit.notes ? <ReadOnlyRow label={t('visits.fields.notes')} value={visit.notes} /> : null}
-      </FigmaFormCard>
+      </Surface>
 
       <StatusSection circleId={circleId} visit={visit} canMarkOutcome={canMarkOutcome} canReopen={false} />
     </FigmaFormScreen>
@@ -299,7 +299,7 @@ function StatusSection({
   const showReopen = canReopen && visit.status !== 'planned';
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       <View style={styles.statusHeader}>
         <Text style={[styles.statusLabel, { color: theme.text }]}>{t('visits.fields.status')}</Text>
         <StatusBadge
@@ -328,13 +328,13 @@ function StatusSection({
                   : 'visits.confirmCancelledBody',
               )}
             </Text>
-            <FigmaButton
+            <Button
               label={t(confirm === 'completed' ? 'visits.markCompleted' : 'visits.markCancelled')}
               variant={confirm === 'completed' ? 'primary' : 'danger'}
               loading={pending}
               onPress={() => run(confirm)}
             />
-            <FigmaButton
+            <Button
               label={t('common.cancel')}
               variant="secondary"
               disabled={pending}
@@ -344,10 +344,10 @@ function StatusSection({
         ) : (
           <View style={styles.actionRow}>
             <View style={styles.actionCol}>
-              <FigmaButton label={t('visits.markCompleted')} onPress={() => setConfirm('completed')} />
+              <Button label={t('visits.markCompleted')} onPress={() => setConfirm('completed')} />
             </View>
             <View style={styles.actionCol}>
-              <FigmaButton
+              <Button
                 label={t('visits.markCancelled')}
                 variant="secondary"
                 onPress={() => setConfirm('cancelled')}
@@ -356,7 +356,7 @@ function StatusSection({
           </View>
         )
       ) : showReopen ? (
-        <FigmaButton
+        <Button
           label={t('visits.reopen')}
           variant="secondary"
           loading={pending}
@@ -364,7 +364,7 @@ function StatusSection({
           onPress={() => run('planned')}
         />
       ) : null}
-    </FigmaFormCard>
+    </Surface>
   );
 }
 
@@ -386,11 +386,11 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
   }
 
   return (
-    <FigmaFormCard>
+    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
       {confirming ? (
         <View style={styles.actionRow}>
           <View style={styles.actionCol}>
-            <FigmaButton
+            <Button
               label={t('common.confirmDelete')}
               variant="danger"
               loading={pending}
@@ -398,7 +398,7 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
             />
           </View>
           <View style={styles.actionCol}>
-            <FigmaButton
+            <Button
               label={t('common.cancel')}
               variant="secondary"
               disabled={pending}
@@ -407,13 +407,13 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
           </View>
         </View>
       ) : (
-        <FigmaButton
+        <Button
           label={t('visits.deleteVisit')}
           variant="danger"
           onPress={() => setConfirming(true)}
         />
       )}
-    </FigmaFormCard>
+    </Surface>
   );
 }
 
@@ -421,21 +421,21 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   divider: { height: StyleSheet.hairlineWidth, marginBottom: Spacing.three },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
-  title: { fontSize: 18, fontFamily: FigmaFont.bold },
+  statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  title: { fontSize: 18, fontFamily: FontFamily.bold },
   row: { gap: 2 },
-  rowLabel: { fontSize: 13, fontFamily: FigmaFont.semibold },
-  rowValue: { fontSize: 16, fontFamily: FigmaFont.regular },
+  rowLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
   statusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  statusLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
-  statusError: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  statusLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  statusError: { fontSize: 14, fontFamily: FontFamily.semibold },
   actionRow: { flexDirection: 'row', gap: Spacing.two },
   actionCol: { flex: 1 },
   confirmStack: { gap: Spacing.two },
-  confirmBody: { fontSize: 14, fontFamily: FigmaFont.regular, lineHeight: 21 },
+  confirmBody: { fontSize: 14, fontFamily: FontFamily.regular, lineHeight: 21 },
 });

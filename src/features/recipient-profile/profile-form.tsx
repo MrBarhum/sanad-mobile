@@ -5,7 +5,6 @@ import { StyleSheet, Text, View } from 'react-native';
 import { DateField } from '@/components/date-field';
 import { FormActions } from '@/components/form-actions';
 import { FormField } from '@/components/form-field';
-import { Cairo } from '@/components/figma/form-typography';
 import { Icon } from '@/components/icon';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
@@ -14,7 +13,7 @@ import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { MaxFormWidth, Radius, Spacing } from '@/constants/theme';
+import { FontFamily, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { fieldErrors } from '@/utils/form';
@@ -173,14 +172,14 @@ function RecipientFields({
         <View style={styles.summary}>
           <View style={[styles.avatar, { backgroundColor: theme.primaryBg, borderColor: theme.primary }]}>
             {initialLetter ? (
-              <Text style={[styles.avatarText, Cairo.bold, { color: theme.primaryText }]}>{initialLetter}</Text>
+              <Text style={[styles.avatarText, { fontFamily: FontFamily.bold, color: theme.primaryText }]}>{initialLetter}</Text>
             ) : (
               <Icon name="profile" size={28} color="primaryText" />
             )}
           </View>
           <View style={styles.summaryText}>
             {fullName.trim() ? (
-              <Text style={[styles.summaryName, Cairo.bold, { color: theme.text }]}>{fullName}</Text>
+              <Text style={[styles.summaryName, { fontFamily: FontFamily.bold, color: theme.text }]}>{fullName}</Text>
             ) : null}
             {birthDate ? (
               <ThemedText type="small" themeColor="textSecondary">
@@ -194,7 +193,7 @@ function RecipientFields({
       {/* Personal info card */}
       <Surface radius={Radius.lg}>
         <View style={styles.cardFields}>
-          <ThemedText type="smallBold" themeColor="textMuted" style={Cairo.semibold}>
+          <ThemedText type="smallBold" themeColor="textMuted">
             {t('recipientProfile.sections.personal')}
           </ThemedText>
           <FormField
@@ -228,7 +227,7 @@ function RecipientFields({
       {/* Medical / emergency info card */}
       <Surface radius={Radius.lg}>
         <View style={styles.cardFields}>
-          <ThemedText type="smallBold" themeColor="textMuted" style={Cairo.semibold}>
+          <ThemedText type="smallBold" themeColor="textMuted">
             {t('recipientProfile.sections.medical')}
           </ThemedText>
           <FormField

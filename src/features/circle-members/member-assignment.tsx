@@ -2,9 +2,8 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaChipSelect } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
-import { Spacing } from '@/constants/theme';
+import { OptionSelect } from '@/components/option-select';
+import { FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 
@@ -90,7 +89,7 @@ function buildOptions(
 
 /**
  * A single-choice assignee picker over the circle roster. `value` is the assigned
- * user id, or `NO_ASSIGNEE` ('') for unassigned. Wrap it in a `FigmaFormCard` at
+ * user id, or `NO_ASSIGNEE` ('') for unassigned. Wrap it in a `Surface` card at
  * the call site; it renders a muted group label + the teal chip group, RTL-safe.
  */
 export function MemberSelect({
@@ -119,7 +118,7 @@ export function MemberSelect({
       <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>
         {label ?? t('assignment.label')}
       </Text>
-      <FigmaChipSelect value={value} options={options} onChange={onChange} />
+      <OptionSelect value={value} options={options} onChange={onChange} />
     </View>
   );
 }
@@ -200,5 +199,5 @@ export function useResponsibleLabel(circleId: string): (userId: string | null) =
 
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
-  groupLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
 });

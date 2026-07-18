@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
-import { FigmaFieldLabel, FigmaFormField } from '@/components/figma/figma-form-screen';
+import { FigmaFieldLabel } from '@/components/figma/figma-form-screen';
+import { FormField } from '@/components/form-field';
 import { TimeField } from '@/components/time-field';
 import { Spacing } from '@/constants/theme';
 
@@ -48,7 +49,7 @@ export function FigmaVisitFields({
 
   return (
     <>
-      <FigmaFormField
+      <FormField
         label={t('visits.fields.visitorName')}
         value={draft.visitorName}
         onChangeText={(value) => onChange({ visitorName: value })}
@@ -90,7 +91,7 @@ export function FigmaVisitFields({
         </View>
       </View>
 
-      <FigmaFormField
+      <FormField
         label={t('visits.fields.notes')}
         value={draft.notes}
         onChangeText={(value) => onChange({ notes: value })}

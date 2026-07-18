@@ -2,15 +2,12 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
-import {
-  FigmaChipSelect,
-  FigmaFieldLabel,
-  FigmaFormCard,
-  FigmaFormField,
-} from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
+import { FigmaFieldLabel, FigmaSectionLabel } from '@/components/figma/figma-form-screen';
+import { FormField } from '@/components/form-field';
+import { OptionSelect } from '@/components/option-select';
+import { Surface } from '@/components/surface';
 import { TimeField } from '@/components/time-field';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { MemberSelect } from '@/features/circle-members/member-assignment';
 import type { Doctor } from '@/features/doctors/api';
@@ -76,8 +73,8 @@ export function FigmaAppointmentFields({
   return (
     <>
       {/* Main info */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('appointments.fields.title')}
           value={draft.title}
           onChangeText={(value) => onChange({ title: value })}
@@ -89,16 +86,17 @@ export function FigmaAppointmentFields({
           <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>
             {t('appointments.fields.type')}
           </Text>
-          <FigmaChipSelect
+          <OptionSelect
             value={draft.type}
             options={typeOptions}
             onChange={(value) => onChange({ type: value })}
           />
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Date & time */}
-      <FigmaFormCard label={t('appointments.dateTimeTitle')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('appointments.dateTimeTitle')}</FigmaSectionLabel>
         <View style={styles.field}>
           <FigmaFieldLabel label={t('appointments.fields.date')} required />
           <DateField
@@ -129,11 +127,11 @@ export function FigmaAppointmentFields({
             />
           </View>
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Location & doctor */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('appointments.fields.location')}
           value={draft.location}
           onChangeText={(value) => onChange({ location: value })}
@@ -145,28 +143,28 @@ export function FigmaAppointmentFields({
             <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>
               {t('appointments.fields.doctor')}
             </Text>
-            <FigmaChipSelect
+            <OptionSelect
               value={draft.doctorId}
               options={doctorOptions}
               onChange={(value) => onChange({ doctorId: value })}
             />
           </View>
         ) : null}
-      </FigmaFormCard>
+      </Surface>
 
       {/* Responsible person */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <MemberSelect
           circleId={circleId}
           value={draft.assignedTo}
           label={t('assignment.responsible')}
           onChange={(value) => onChange({ assignedTo: value })}
         />
-      </FigmaFormCard>
+      </Surface>
 
       {/* Notes */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('appointments.fields.notes')}
           value={draft.notes}
           onChangeText={(value) => onChange({ notes: value })}
@@ -174,14 +172,14 @@ export function FigmaAppointmentFields({
           multiline
           error={fieldError(errors.notes)}
         />
-      </FigmaFormCard>
+      </Surface>
     </>
   );
 }
 
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
-  groupLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   field: { gap: Spacing.two },
   row: { flexDirection: 'row', gap: Spacing.three },
   col: { flex: 1, gap: Spacing.two },

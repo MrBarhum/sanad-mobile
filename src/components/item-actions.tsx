@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Spacing } from '@/constants/theme';
 
-import { FormButton } from './figma/form-button';
+import { Button } from './button';
 
 type ItemActionsLabels = {
   edit: string;
@@ -36,14 +36,14 @@ export function ItemActions({
   if (confirming) {
     return (
       <View style={styles.row}>
-        <FormButton
+        <Button
           size="sm"
           variant="danger"
           label={labels.confirm}
           loading={deleting}
           onPress={onDelete}
         />
-        <FormButton
+        <Button
           size="sm"
           variant="secondary"
           label={labels.cancel}
@@ -56,14 +56,14 @@ export function ItemActions({
 
   return (
     <View style={styles.row}>
-      <FormButton
+      <Button
         size="sm"
         variant="secondary"
         label={labels.edit}
         disabled={disabled}
         onPress={onEdit}
       />
-      <FormButton
+      <Button
         size="sm"
         variant="danger"
         label={labels.delete}

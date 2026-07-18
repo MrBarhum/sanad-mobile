@@ -1,21 +1,18 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Activity, Share2 } from 'lucide-react-native';
+import { Share2 } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { IconChip } from '@/components/figma/icon-chip';
-import {
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  withAlpha,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
+import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
+import { Surface } from '@/components/surface';
+import { FontFamily, Radius, withAlpha } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { hmInTimeZone, todayYmdInTimeZone, ymdInTimeZone } from '@/utils/date';
 
 import { useCareActivity } from './hooks';
@@ -36,13 +33,12 @@ const PAGE = 20;
  * `list_care_activity` RPC. Each row: a per-type icon, the actor's resolved name,
  * a localized description, and a bidi-isolated time; tapping deep-links to the
  * source item. Handles loading / generic error / RPC-not-yet-enabled / empty /
- * load-more. RTL, Cairo, Figma tokens.
+ * load-more. RTL, IBM Plex, theme tokens.
  */
 export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone: string }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const actorLabel = usePulseActorLabel(circleId);
 
   const [limit, setLimit] = useState(PAGE);
@@ -78,7 +74,7 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
     <FigmaScreen gap={16}>
       <FigmaHeader title={t('pulse.title')} />
       <View style={styles.subtitleRow}>
-        <Text style={[styles.subtitle, { color: c.muted }]}>{t('pulse.subtitle')}</Text>
+        <Text style={[styles.subtitle, { color: c.textSecondary }]}>{t('pulse.subtitle')}</Text>
         {events.length > 0 ? (
           <Pressable
             onPress={onShare}
@@ -92,12 +88,10 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
       </View>
 
       {activity.isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={c.primary} />
-        </View>
+        <SkeletonList />
       ) : activity.isError ? (
-        <FigmaCard tone="card" radius={FigmaRadius.r16}>
-          <Text style={[styles.errorText, { color: c.error }]}>
+        <Surface tone="card" radius={Radius.lg} padded={20}>
+          <Text style={[styles.errorText, { color: c.errorFg }]}>
             {isMissingPulseRpc(activity.error) ? t('pulse.notEnabled') : t('pulse.loadError')}
           </Text>
           {!isMissingPulseRpc(activity.error) ? (
@@ -108,17 +102,14 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
               <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
             </Pressable>
           ) : null}
-        </FigmaCard>
+        </Surface>
       ) : events.length === 0 ? (
-        <View style={styles.empty}>
-          <Activity size={40} color={c.muted} strokeWidth={1} />
-          <Text style={[styles.emptyText, { color: c.muted }]}>{t('pulse.empty')}</Text>
-        </View>
+        <EmptyState iconName="activity" title={t('pulse.empty')} />
       ) : (
         <>
           <View style={styles.list}>
             {events.map((event) => {
-              const visual = pulseEventVisual(event);
+              const { iconName, colorKey } = pulseEventVisual(event);
               return (
                 <Pressable
                   key={`${event.event_type}:${event.event_id}`}
@@ -127,22 +118,15 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
                   accessibilityHint={t('common.details')}
                   style={({ pressed }) => [
                     styles.row,
-                    { backgroundColor: c.card, borderColor: c.border },
+                    { backgroundColor: c.backgroundElement, borderColor: c.border },
                     pressed && styles.rowPressed,
                   ]}>
-                  <IconChip
-                    Icon={visual.Icon}
-                    color={visual.color}
-                    size={44}
-                    radius={FigmaRadius.r16}
-                    iconSize={20}
-                    tintOpacity={0.12}
-                  />
+                  <GlyphChip iconName={iconName} color={colorKey} size="md" />
                   <View style={styles.info}>
                     <Text style={[styles.desc, { color: c.text }]} numberOfLines={2}>
                       {pulseDescription(event, t, actorLabel)}
                     </Text>
-                    <Text style={[styles.time, { color: c.muted }]}>{whenLabel(event.occurred_at)}</Text>
+                    <Text style={[styles.time, { color: c.textSecondary }]}>{whenLabel(event.occurred_at)}</Text>
                   </View>
                 </Pressable>
               );
@@ -175,37 +159,35 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: -8,
   },
-  subtitle: { fontSize: 14, fontFamily: FigmaFont.regular, flexShrink: 1 },
+  subtitle: { fontSize: 14, fontFamily: FontFamily.regular, flexShrink: 1 },
   shareBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     minHeight: 36,
     paddingHorizontal: 12,
-    borderRadius: FigmaRadius.pill,
+    borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  shareText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  shareText: { fontSize: 14, fontFamily: FontFamily.semibold },
   center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 14, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     paddingHorizontal: 16,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 13, fontFamily: FigmaFont.semibold },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyText: { fontSize: 16, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
   list: { gap: 8 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    borderRadius: FigmaRadius.r16,
+    borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -213,16 +195,16 @@ const styles = StyleSheet.create({
   },
   rowPressed: { opacity: 0.7 },
   info: { flex: 1, gap: 3 },
-  desc: { fontSize: 14, fontFamily: FigmaFont.semibold, lineHeight: 20 },
-  time: { fontSize: 12, fontFamily: FigmaFont.regular },
+  desc: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 20 },
+  time: { fontSize: 14, fontFamily: FontFamily.regular },
   loadMore: {
     alignSelf: 'center',
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: FigmaRadius.pill,
+    borderRadius: Radius.pill,
     paddingHorizontal: 20,
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  loadMoreText: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  loadMoreText: { fontSize: 14, fontFamily: FontFamily.semibold },
 });

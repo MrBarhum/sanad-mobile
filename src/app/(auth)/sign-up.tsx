@@ -6,13 +6,12 @@ import { z } from 'zod';
 
 import { AuthField } from '@/components/auth-field';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { Cairo } from '@/components/figma/form-typography';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Gutter, MaxFormWidth, Spacing } from '@/constants/theme';
+import { FontFamily, Gutter, MaxFormWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { supabase } from '../../../lib/supabase';
@@ -90,8 +89,8 @@ export default function SignUpScreen() {
   return (
     <Screen edges={{ top: true }} maxWidth={MaxFormWidth} keyboardAvoiding gap={Spacing.three}>
       <View style={styles.header}>
-        <Text style={[styles.title, Cairo.bold, { color: theme.text }]}>{t('auth.signUpTitle')}</Text>
-        <ThemedText themeColor="textSecondary" style={[styles.subtitle, Cairo.regular]}>
+        <Text style={[styles.title, { fontFamily: FontFamily.bold }, { color: theme.text }]}>{t('auth.signUpTitle')}</Text>
+        <ThemedText themeColor="textSecondary" style={styles.subtitle}>
           {t('auth.signUpSubtitle')}
         </ThemedText>
       </View>
@@ -154,7 +153,6 @@ export default function SignUpScreen() {
           {submitError ? (
             <ThemedText
               themeColor="errorFg"
-              style={Cairo.regular}
               accessibilityRole="alert"
               accessibilityLiveRegion="polite">
               {submitError}
@@ -171,11 +169,11 @@ export default function SignUpScreen() {
       </Surface>
 
       <ThemedView style={styles.footer}>
-        <ThemedText themeColor="textSecondary" style={Cairo.regular}>
+        <ThemedText themeColor="textSecondary">
           {t('auth.haveAccount')}
         </ThemedText>
         <Link href="/sign-in">
-          <ThemedText type="link" style={Cairo.semibold}>
+          <ThemedText type="link" style={{ fontFamily: FontFamily.semibold }}>
             {t('auth.signInLink')}
           </ThemedText>
         </Link>

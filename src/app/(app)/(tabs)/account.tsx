@@ -1,30 +1,24 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { Bell, Edit3, LogOut, Plus, User, Users } from 'lucide-react-native';
+import { Edit3 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, TextInput, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
-import { FigmaButton } from '@/components/figma/figma-button';
-import { FigmaCard } from '@/components/figma/figma-card';
+import { Button } from '@/components/button';
+import { Surface } from '@/components/surface';
 import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  withAlpha,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
-import { IconChip } from '@/components/figma/icon-chip';
+import { GlyphChip } from '@/components/glyph-chip';
 import { LtrText } from '@/components/ltr-text';
+import { FontFamily, Radius, withAlpha } from '@/constants/theme';
 import { emailLocalPart } from '@/features/circle-members/display-name';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import { deactivatePushToken } from '@/features/notifications/api';
 import { getRememberedToken } from '@/features/notifications/hooks';
 import { useMyProfile, useUpdateMyName } from '@/features/profile/hooks';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 import { confirmAction } from '@/utils/confirm';
 
@@ -35,7 +29,7 @@ import { supabase } from '../../../../lib/supabase';
  * Native on real Sanad data. Mirrors `AccountScreen.tsx`: a profile header
  * (user email via `useAuth`), a grouped "care circles" list (active circle →
  * members, notification settings, join another circle) and a danger sign-out.
- * Cairo + Figma tokens, RTL. No old Sanad Screen/Surface/Section/CircleSwitcher.
+ * IBM Plex + theme tokens, RTL. No old Sanad Screen/Surface/Section/CircleSwitcher.
  *
  * KEEPS the exact existing sign-out logic verbatim (deactivatePushToken +
  * supabase.auth.signOut + error state) — only the visuals changed.
@@ -44,8 +38,7 @@ export default function AccountScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const router = useRouter();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const { activeCircle } = useCircleSelection();
   const profile = useMyProfile(user?.id);
   const [signingOut, setSigningOut] = useState(false);
@@ -105,21 +98,14 @@ export default function AccountScreen() {
   ].filter(Boolean) as string[];
   const circleSubtitle = circleSubtitleParts.join('  ·  ');
 
-  const muted = { color: c.muted, fontFamily: FigmaFont.regular };
+  const muted = { color: c.textSecondary, fontFamily: FontFamily.regular };
 
   return (
     <FigmaScreen gap={24}>
       {/* Profile header */}
-      <FigmaCard radius={FigmaRadius.r24} padding={20}>
+      <Surface radius={Radius.xl} padded={20}>
         <View style={styles.profileRow}>
-          <IconChip
-            Icon={User}
-            color={c.primary}
-            size={64}
-            radius={FigmaRadius.pill}
-            iconSize={30}
-            tintOpacity={0.15}
-          />
+          <GlyphChip iconName="member" color="primary" size="lg" />
           <View style={styles.profileText}>
             <Text style={[styles.profileLabel, muted]}>{t('account.signedInAs')}</Text>
             <Text style={[styles.profileName, { color: c.text }]} numberOfLines={1}>
@@ -140,54 +126,54 @@ export default function AccountScreen() {
             <Edit3 size={18} color={c.primary} />
           </Pressable>
         </View>
-      </FigmaCard>
+      </Surface>
 
       {/* Care circles */}
       <View>
         <FigmaSectionLabel label={t('account.circleSectionTitle')} />
-        <FigmaCard tone="card" radius={FigmaRadius.r24} padding={0}>
+        <Surface tone="card" radius={Radius.xl} padded={0}>
           {activeCircle ? (
             <FigmaListRow
-              Icon={Users}
-              color={c.primary}
+              iconName="member"
+              color="primary"
               title={activeCircle.circleName || t('circleMembers.title')}
               subtitle={circleSubtitle || t('circleMembers.subtitle')}
               onPress={() => router.push('/circle-members')}
             />
           ) : null}
           <FigmaListRow
-            Icon={Bell}
-            color={FigmaCategory.purple}
+            iconName="notification"
+            color="categoryPurple"
             topDivider={Boolean(activeCircle)}
             title={t('notificationSettings.title')}
             subtitle={t('notificationSettings.subtitle')}
             onPress={() => router.push('/notification-settings')}
           />
           <FigmaListRow
-            Icon={Plus}
-            color={FigmaCategory.gold}
+            iconName="add"
+            color="categoryGold"
             topDivider
             title={t('account.joinAnother')}
             subtitle={t('account.joinAnotherSubtitle')}
             onPress={() => router.push('/join-circle')}
           />
-        </FigmaCard>
+        </Surface>
       </View>
 
       {/* Danger sign-out */}
       <View style={styles.dangerBlock}>
         {error ? (
           <Text
-            style={[styles.error, { color: c.error }]}
+            style={[styles.error, { color: c.errorFg }]}
             accessibilityRole="alert"
             accessibilityLiveRegion="polite">
             {error}
           </Text>
         ) : null}
-        <FigmaButton
+        <Button
           variant="danger"
           label={t('account.signOut')}
-          Icon={LogOut}
+          iconName="signOut"
           loading={signingOut}
           disabled={signingOut}
           onPress={onSignOut}
@@ -201,7 +187,6 @@ export default function AccountScreen() {
 
       <NameEditSheet
         visible={editingName}
-        scheme={scheme}
         userId={user?.id}
         initialName={profileName ?? ''}
         onClose={() => setEditingName(false)}
@@ -217,19 +202,17 @@ export default function AccountScreen() {
  */
 function NameEditSheet({
   visible,
-  scheme,
   userId,
   initialName,
   onClose,
 }: {
   visible: boolean;
-  scheme: FigmaScheme;
   userId: string | undefined;
   initialName: string;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const update = useUpdateMyName(userId);
   const [name, setName] = useState(initialName);
   const [error, setError] = useState<string | null>(null);
@@ -254,23 +237,23 @@ function NameEditSheet({
 
   return (
     <FigmaBottomSheet visible={visible} onClose={onClose} title={t('account.editName')}>
-      <Text style={[styles.sheetLabel, { color: c.muted }]}>{t('account.nameLabel')}</Text>
+      <Text style={[styles.sheetLabel, { color: c.textSecondary }]}>{t('account.nameLabel')}</Text>
       <TextInput
         value={name}
         onChangeText={setName}
         placeholder={t('account.namePlaceholder')}
-        placeholderTextColor={c.muted}
+        placeholderTextColor={c.textMuted}
         autoCapitalize="words"
         accessibilityLabel={t('account.nameLabel')}
-        style={[styles.sheetInput, { color: c.text, borderColor: c.border, backgroundColor: c.mutedSurface }]}
+        style={[styles.sheetInput, { color: c.text, borderColor: c.border, backgroundColor: c.backgroundSunken }]}
       />
       {error ? (
-        <Text style={[styles.error, { color: c.error }]} accessibilityRole="alert">
+        <Text style={[styles.error, { color: c.errorFg }]} accessibilityRole="alert">
           {error}
         </Text>
       ) : null}
-      <FigmaButton label={t('common.save')} loading={update.isPending} onPress={onSave} />
-      <FigmaButton
+      <Button label={t('common.save')} loading={update.isPending} onPress={onSave} />
+      <Button
         label={t('common.cancel')}
         variant="secondary"
         disabled={update.isPending}
@@ -284,28 +267,28 @@ const styles = StyleSheet.create({
   // Profile header
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   profileText: { flex: 1, gap: 2 },
-  profileLabel: { fontSize: 12 },
-  profileName: { fontSize: 18, fontFamily: FigmaFont.bold },
-  profileEmailSub: { fontSize: 13 },
+  profileLabel: { fontSize: 14 },
+  profileName: { fontSize: 18, fontFamily: FontFamily.bold },
+  profileEmailSub: { fontSize: 14 },
   editBtn: {
     width: 40,
     height: 40,
-    borderRadius: FigmaRadius.pill,
+    borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
   // Name edit sheet
-  sheetLabel: { fontSize: 14, fontFamily: FigmaFont.semibold },
+  sheetLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   sheetInput: {
     minHeight: 52,
     borderWidth: 1.5,
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     paddingHorizontal: 16,
     fontSize: 16,
-    fontFamily: FigmaFont.regular,
+    fontFamily: FontFamily.regular,
   },
   // Danger zone
   dangerBlock: { gap: 12 },
-  error: { fontSize: 13, fontFamily: FigmaFont.medium },
-  version: { fontSize: 12, textAlign: 'center', marginTop: 4 },
+  error: { fontSize: 14, fontFamily: FontFamily.medium },
+  version: { fontSize: 14, textAlign: 'center', marginTop: 4 },
 });

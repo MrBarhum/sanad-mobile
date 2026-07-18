@@ -1,40 +1,35 @@
 import { useRouter } from 'expo-router';
-import { Check, Clock, Home, Users, X } from 'lucide-react-native';
-import type { ComponentType } from 'react';
+import { Clock, Home, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SkeletonList } from '@/components/skeleton';
 
-import { FigmaCard } from '@/components/figma/figma-card';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
-import { FigmaStatusPill } from '@/components/figma/figma-status-pill';
-import { IconChip } from '@/components/figma/icon-chip';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaRadius,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
+import { GlyphChip } from '@/components/glyph-chip';
+import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
+import { StatusBadge, type StatusTone } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
+import { FontFamily, Radius } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 import { formatHm, todayYmd } from '@/utils/date';
 
 import type { FamilyVisit, VisitStatus } from './api';
 import { useVisits } from './hooks';
 
-type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 type VisitTab = 'upcoming' | 'recent';
 
 /** Per-visit chip accent, cycled by index (the Figma varies card hues). */
 const CHIP_COLORS = [
-  FigmaCategory.blue,
-  FigmaCategory.purple,
-  FigmaCategory.green,
-  FigmaCategory.gold,
+  'categoryBlue',
+  'categoryPurple',
+  'categoryGreen',
+  'categoryGold',
 ] as const;
 
 /**
@@ -43,12 +38,10 @@ const CHIP_COLORS = [
  * `VisitsCenter` STATUS_TONE mapping (completed = success/green, cancelled =
  * error/red).
  */
-const VISIT_STATUS: Record<Exclude<VisitStatus, 'planned'>, { color: keyof FigmaPalette; Icon: IconCmp }> = {
-  completed: { color: 'success', Icon: Check },
-  cancelled: { color: 'error', Icon: X },
+const VISIT_STATUS: Record<Exclude<VisitStatus, 'planned'>, { tone: StatusTone }> = {
+  completed: { tone: 'success' },
+  cancelled: { tone: 'error' },
 };
-
-type FigmaPalette = (typeof FigmaColors)['dark'];
 
 /** `${date} ${start}` sort key, matching the center's `startSortKey`. */
 function startSortKey(visit: FamilyVisit): string {
@@ -63,7 +56,7 @@ function startSortKey(visit: FamilyVisit): string {
  * the visitor name as the title, a planned/completed/cancelled status pill, and
  * Clock(date, time) + (optional Home) meta rows. Tapping a card opens the existing
  * detail route. Reuses the `VisitsCenter` hook (`useVisits`) and its date/status
- * field access + locale keys (`visits.status.*`) verbatim. Cairo + Figma tokens,
+ * field access + locale keys (`visits.status.*`) verbatim. IBM Plex + theme tokens,
  * RTL. No old Sanad Screen/Surface/Section/Button/StatusBadge.
  */
 export function FigmaVisits({
@@ -79,8 +72,7 @@ export function FigmaVisits({
   const router = useRouter();
   const { user } = useAuth();
   const userId = user?.id ?? null;
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const lookup = useMemberLookup(circleId);
 
   const visitsQuery = useVisits(circleId);
@@ -124,28 +116,22 @@ export function FigmaVisits({
       <FigmaSegmentedTabs tabs={tabs} activeKey={tab} onChange={(key) => setTab(key as VisitTab)} />
 
       {visitsQuery.isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={c.primary} />
-        </View>
+        <SkeletonList />
       ) : visitsQuery.isError ? (
-        <FigmaCard tone="card" radius={FigmaRadius.r16}>
-          <Text style={[styles.errorText, { color: c.error }]}>{t('visits.loadError')}</Text>
+        <Surface tone="card" radius={Radius.lg} padded={20}>
+          <Text style={[styles.errorText, { color: c.errorFg }]}>{t('visits.loadError')}</Text>
           <Pressable
             onPress={() => visitsQuery.refetch()}
             accessibilityRole="button"
             style={[styles.retry, { backgroundColor: c.primary }]}>
             <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
           </Pressable>
-        </FigmaCard>
+        </Surface>
       ) : filtered.length === 0 ? (
-        <View style={styles.empty}>
-          <Users size={40} color={c.muted} strokeWidth={1} />
-          <Text style={[styles.emptyText, { color: c.muted }]}>
-            {tab === 'upcoming'
-              ? t('figma.visits.emptyUpcoming')
-              : t('figma.visits.emptyRecent')}
-          </Text>
-        </View>
+        <EmptyState
+          iconName="visit"
+          title={tab === 'upcoming' ? t('figma.visits.emptyUpcoming') : t('figma.visits.emptyRecent')}
+        />
       ) : (
         <View style={styles.list}>
           {filtered.map((visit, index) => (
@@ -159,7 +145,6 @@ export function FigmaVisits({
                   : null
               }
               chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
-              scheme={scheme}
               onOpen={() => router.push(`/visits/${visit.id}`)}
             />
           ))}
@@ -174,18 +159,16 @@ function VisitCard({
   mine,
   linkedName,
   chipColor,
-  scheme,
   onOpen,
 }: {
   visit: FamilyVisit;
   mine: boolean;
   linkedName: string | null;
-  chipColor: string;
-  scheme: FigmaScheme;
+  chipColor: (typeof CHIP_COLORS)[number];
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
 
   // Date + time meta, LTR-isolated (the visit date/time is the scannable anchor).
   const timeParts: string[] = [];
@@ -199,78 +182,72 @@ function VisitCard({
   const statusConfig = visit.status !== 'planned' ? VISIT_STATUS[visit.status] : null;
 
   return (
-    <FigmaCard
+    <Surface
       tone="card"
-      radius={FigmaRadius.r24}
-      padding={16}
+      radius={Radius.xl}
+      padded={16}
       onPress={onOpen}
       accessibilityLabel={visit.visitor_name}
       accessibilityHint={t('common.details')}>
       <View style={styles.cardTop}>
-        <IconChip Icon={Users} color={chipColor} size={48} radius={FigmaRadius.r16} iconSize={22} />
+        <GlyphChip iconName="member" color={chipColor} size="md" />
         <View style={styles.cardInfo}>
           <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={2}>
             {visit.visitor_name}
           </Text>
-          <Text style={[styles.cardType, { color: c.muted }]} numberOfLines={1}>
+          <Text style={[styles.cardType, { color: c.textSecondary }]} numberOfLines={1}>
             {t('figma.visits.visitorLabel')}
           </Text>
         </View>
         {statusConfig ? (
-          <FigmaStatusPill
-            label={t(`visits.status.${visit.status}`)}
-            color={c[statusConfig.color]}
-            Icon={statusConfig.Icon}
-          />
+          <StatusBadge tone={statusConfig.tone} label={t(`visits.status.${visit.status}`)} />
         ) : null}
       </View>
 
       <View style={styles.metaList}>
         <View style={styles.metaRow}>
-          <Clock size={13} color={c.muted} />
-          <Text style={[styles.metaText, { color: c.muted }]}>{whenText}</Text>
+          <Clock size={13} color={c.textSecondary} />
+          <Text style={[styles.metaText, { color: c.textSecondary }]}>{whenText}</Text>
         </View>
         {mine ? (
           <View style={styles.metaRow}>
-            <Home size={13} color={c.muted} />
-            <Text style={[styles.metaText, { color: c.muted }]} numberOfLines={1}>
+            <Home size={13} color={c.textSecondary} />
+            <Text style={[styles.metaText, { color: c.textSecondary }]} numberOfLines={1}>
               {t('visits.mineLabel')}
             </Text>
           </View>
         ) : linkedName ? (
           <View style={styles.metaRow}>
-            <Users size={13} color={c.muted} />
-            <Text style={[styles.metaText, { color: c.muted }]} numberOfLines={1}>
+            <Users size={13} color={c.textSecondary} />
+            <Text style={[styles.metaText, { color: c.textSecondary }]} numberOfLines={1}>
               {linkedName}
             </Text>
           </View>
         ) : null}
       </View>
-    </FigmaCard>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 14, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     paddingHorizontal: 16,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 13, fontFamily: FigmaFont.semibold },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 12 },
-  emptyText: { fontSize: 16, fontFamily: FigmaFont.medium, textAlign: 'center' },
+  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
   list: { gap: 12 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   cardInfo: { flex: 1, gap: 2 },
-  cardTitle: { fontSize: 16, fontFamily: FigmaFont.bold },
-  cardType: { fontSize: 12, fontFamily: FigmaFont.regular },
+  cardTitle: { fontSize: 16, fontFamily: FontFamily.bold },
+  cardType: { fontSize: 14, fontFamily: FontFamily.regular },
   metaList: { gap: 6, marginTop: 12 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  metaText: { fontSize: 13, fontFamily: FigmaFont.regular },
+  metaText: { fontSize: 14, fontFamily: FontFamily.regular },
 });

@@ -1,6 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
-  Activity,
   AlertCircle,
   Bell,
   Calendar,
@@ -8,14 +7,9 @@ import {
   ChevronDown,
   ChevronLeft,
   Clock,
-  FileText,
   HandHelping,
-  ListChecks,
   Phone,
-  Pill,
   Share2,
-  Stethoscope,
-  UserPlus,
   Users,
   X,
 } from 'lucide-react-native';
@@ -28,23 +22,16 @@ import {
   StyleSheet,
   Text,
   View,
-  useColorScheme,
   useWindowDimensions,
 } from 'react-native';
 
-import { FigmaCard } from '@/components/figma/figma-card';
+import { Surface } from '@/components/surface';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { CareLoopRing } from '@/components/figma/care-loop-ring';
-import { IconChip } from '@/components/figma/icon-chip';
-import {
-  FigmaCategory,
-  FigmaColors,
-  FigmaFont,
-  FigmaLayout,
-  FigmaRadius,
-  withAlpha,
-  type FigmaScheme,
-} from '@/components/figma/figma-tokens';
+import { GlyphChip } from '@/components/glyph-chip';
+import { type IconName } from '@/constants/icons';
+import { FontFamily, Gutter, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { isolateLtr } from '@/components/ltr-text';
 import { useUpcomingAppointments } from '@/features/appointments/hooks';
 import { countAppointmentsToday } from '@/features/care-activity/today';
@@ -82,10 +69,10 @@ import {
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
 /** Fixed Figma dose-status colors (constant across modes, as in the export). */
-const DOSE_STATUS: Record<MedicationLogStatus, { color: string; Icon: IconCmp }> = {
-  given: { color: '#5AAE85', Icon: Check },
-  postponed: { color: '#C8904A', Icon: Clock },
-  missed: { color: '#C45050', Icon: X },
+const DOSE_STATUS: Record<MedicationLogStatus, { colorKey: ThemeColor; Icon: IconCmp }> = {
+  given: { colorKey: 'successFg', Icon: Check },
+  postponed: { colorKey: 'warningFg', Icon: Clock },
+  missed: { colorKey: 'errorFg', Icon: X },
 };
 const DOSE_ACTIONS: MedicationLogStatus[] = ['given', 'postponed', 'missed'];
 
@@ -99,14 +86,13 @@ const HOME_PULSE_MAX = 5;
  * dropdown + bell + emergency), the care-loop hero (SVG ring + next dose + status
  * strip), two today-summary stat cards, the next-appointment card, a 4-up
  * quick-action grid, the today doses list with inline status logging, and the
- * emergency banner. Cairo + Figma tokens, dark-first, RTL. No old Sanad
+ * emergency banner. IBM Plex + theme tokens, dark-first, RTL. No old Sanad
  * Screen/Surface/Section/CircleSwitcher/DashboardTile/View-ring.
  */
 export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const scheme: FigmaScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const { width } = useWindowDimensions();
   const date = todayYmd();
   const { user } = useAuth();
@@ -222,20 +208,20 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   // Canonical Sanad ordering (meds → tasks → appointments → vitals → visits →
   // daily logs → doctors → members). The RTL wrap grid places the first item
   // top-right, so medications — the highest-stakes surface — leads (A7).
-  const quickActions: { id: string; route: string; label: string; color: string; Icon: IconCmp }[] = [
-    { id: 'medications', route: '/medications', label: t('careCircle.dashboard.sections.medications.title'), color: FigmaCategory.teal, Icon: Pill },
-    { id: 'tasks', route: '/tasks', label: t('careCircle.dashboard.sections.tasks.title'), color: FigmaCategory.blue, Icon: ListChecks },
-    { id: 'appointments', route: '/appointments', label: t('careCircle.dashboard.sections.appointments.title'), color: FigmaCategory.purple, Icon: Calendar },
-    { id: 'vitals', route: '/vitals', label: t('careCircle.dashboard.sections.vitals.title'), color: FigmaCategory.blue, Icon: Activity },
-    { id: 'visits', route: '/visits', label: t('careCircle.dashboard.sections.visits.title'), color: FigmaCategory.green, Icon: UserPlus },
-    { id: 'logs', route: '/daily-logs', label: t('careCircle.dashboard.sections.dailyLogs.title'), color: FigmaCategory.purple, Icon: FileText },
-    { id: 'doctors', route: '/doctors', label: t('careCircle.dashboard.sections.doctors.title'), color: FigmaCategory.green, Icon: Stethoscope },
-    { id: 'members', route: '/circle-members', label: t('circleMembers.title'), color: FigmaCategory.gold, Icon: Users },
+  const quickActions: { id: string; route: string; label: string; color: ThemeColor; iconName: IconName }[] = [
+    { id: 'medications', route: '/medications', label: t('careCircle.dashboard.sections.medications.title'), color: 'categoryTeal', iconName: 'medication' },
+    { id: 'tasks', route: '/tasks', label: t('careCircle.dashboard.sections.tasks.title'), color: 'categoryBlue', iconName: 'task' },
+    { id: 'appointments', route: '/appointments', label: t('careCircle.dashboard.sections.appointments.title'), color: 'categoryPurple', iconName: 'appointment' },
+    { id: 'vitals', route: '/vitals', label: t('careCircle.dashboard.sections.vitals.title'), color: 'categoryBlue', iconName: 'activity' },
+    { id: 'visits', route: '/visits', label: t('careCircle.dashboard.sections.visits.title'), color: 'categoryGreen', iconName: 'invite' },
+    { id: 'logs', route: '/daily-logs', label: t('careCircle.dashboard.sections.dailyLogs.title'), color: 'categoryPurple', iconName: 'dailyLog' },
+    { id: 'doctors', route: '/doctors', label: t('careCircle.dashboard.sections.doctors.title'), color: 'categoryGreen', iconName: 'doctor' },
+    { id: 'members', route: '/circle-members', label: t('circleMembers.title'), color: 'categoryGold', iconName: 'member' },
   ];
   // Exact 4-up tile width (screen minus the FigmaScreen gutters minus 3 column gaps).
-  const quickTileWidth = (width - FigmaLayout.gutter * 2 - 12 * 3) / 4;
+  const quickTileWidth = (width - Gutter * 2 - 12 * 3) / 4;
 
-  const muted = { color: c.muted, fontFamily: FigmaFont.regular };
+  const muted = { color: c.textSecondary, fontFamily: FontFamily.regular };
 
   return (
     <FigmaScreen gap={16}>
@@ -251,7 +237,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
             <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>
               {circle.circleName}
             </Text>
-            <ChevronDown size={16} color={c.muted} />
+            <ChevronDown size={16} color={c.textSecondary} />
           </Pressable>
           {headerSubtitle ? (
             <Text style={[styles.subtitle, muted]} numberOfLines={1}>
@@ -268,10 +254,10 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
                 ? t('notifications.openCenterWithCount', { count: unreadCount })
                 : t('notifications.title')
             }
-            style={[styles.action, { backgroundColor: c.elevated, borderColor: c.border }]}>
-            <Bell size={20} color={c.muted} />
+            style={[styles.action, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
+            <Bell size={20} color={c.textSecondary} />
             {unreadCount > 0 ? (
-              <View style={[styles.badge, { backgroundColor: c.error, borderColor: c.background }]}>
+              <View style={[styles.badge, { backgroundColor: c.dangerSolid, borderColor: c.background }]}>
                 <Text style={styles.badgeText} numberOfLines={1}>
                   {isolateLtr(unreadCount > 9 ? '9+' : String(unreadCount))}
                 </Text>
@@ -284,9 +270,9 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
             accessibilityLabel={t('careCircle.dashboard.sections.emergency.title')}
             style={[
               styles.action,
-              { backgroundColor: withAlpha(c.error, 0.12), borderColor: withAlpha(c.error, 0.2) },
+              { backgroundColor: withAlpha(c.dangerSolid, 0.12), borderColor: withAlpha(c.dangerSolid, 0.2) },
             ]}>
-            <Phone size={20} color={c.error} />
+            <Phone size={20} color={c.errorFg} />
           </Pressable>
         </View>
       </View>
@@ -300,30 +286,30 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
           accessibilityLabel={t('retry')}
           style={[
             styles.notice,
-            { backgroundColor: withAlpha(c.error, 0.1), borderColor: withAlpha(c.error, 0.25) },
+            { backgroundColor: withAlpha(c.dangerSolid, 0.1), borderColor: withAlpha(c.dangerSolid, 0.25) },
           ]}>
-          <AlertCircle size={16} color={c.error} />
-          <Text style={[styles.noticeText, { color: c.error }]}>
+          <AlertCircle size={16} color={c.errorFg} />
+          <Text style={[styles.noticeText, { color: c.errorFg }]}>
             {t('careCircle.dashboard.today.loadError')}
           </Text>
-          <Text style={[styles.noticeAction, { color: c.error }]}>{t('retry')}</Text>
+          <Text style={[styles.noticeAction, { color: c.errorFg }]}>{t('retry')}</Text>
         </Pressable>
       ) : logError ? (
         <View
           style={[
             styles.notice,
-            { backgroundColor: withAlpha(c.error, 0.1), borderColor: withAlpha(c.error, 0.25) },
+            { backgroundColor: withAlpha(c.dangerSolid, 0.1), borderColor: withAlpha(c.dangerSolid, 0.25) },
           ]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
-          <AlertCircle size={16} color={c.error} />
-          <Text style={[styles.noticeText, { color: c.error }]}>{logError}</Text>
+          <AlertCircle size={16} color={c.errorFg} />
+          <Text style={[styles.noticeText, { color: c.errorFg }]}>{logError}</Text>
         </View>
       ) : null}
 
       {/* Compact circle dropdown (real circles + join) */}
       {switcherOpen ? (
-        <FigmaCard tone="card" radius={FigmaRadius.r16} padding={0}>
+        <Surface tone="card" radius={Radius.lg} padded={0}>
           {circles.map((item, i) => {
             const isActive = item.circleId === activeCircleId;
             return (
@@ -354,11 +340,11 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
               {t('careCircle.dashboard.today.joinAnotherCircle')}
             </Text>
           </Pressable>
-        </FigmaCard>
+        </Surface>
       ) : null}
 
       {/* Care-loop hero */}
-      <FigmaCard radius={FigmaRadius.r24} padding={FigmaLayout.heroPadding}>
+      <Surface radius={Radius.xl} padded={20}>
         <View style={styles.heroTop}>
           <Text style={[styles.eyebrow, muted]}>{t('careCircle.dashboard.today.medLoopEyebrow')}</Text>
           <Pressable onPress={() => router.push('/medications')} accessibilityRole="button">
@@ -371,14 +357,18 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
             {total === 0 ? (
               <Text style={[styles.heroMuted, muted]}>{t('careCircle.dashboard.today.loopNone')}</Text>
             ) : given >= total ? (
-              <View style={[styles.allDone, { backgroundColor: withAlpha('#5AAE85', 0.12) }]}>
-                <Check size={16} color="#5AAE85" />
-                <Text style={styles.allDoneText}>{t('careCircle.dashboard.today.allDosesGiven')}</Text>
+              // Moment of care: a quiet "today's doses are complete" — a calm check
+              // + reassurance on the ring, never a score or streak (no gamification).
+              <View style={[styles.allDone, { backgroundColor: withAlpha(c.successFg, 0.12) }]}>
+                <Check size={16} color={c.successFg} />
+                <Text style={[styles.allDoneText, { color: c.successFg }]}>
+                  {t('careCircle.dashboard.today.allDosesGiven')}
+                </Text>
               </View>
             ) : nextDose ? (
               <View>
                 <Text style={[styles.nextLabel, muted]}>{t('careCircle.dashboard.today.nextDoseLabel')}</Text>
-                <View style={[styles.nextDose, { backgroundColor: c.elevated, borderColor: c.border }]}>
+                <View style={[styles.nextDose, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
                   <View style={styles.nextDoseTop}>
                     <Text style={[styles.nextName, { color: c.text }]} numberOfLines={1}>
                       {nextDose.medicationName}
@@ -400,11 +390,11 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
               <View style={styles.strip}>
                 {visibleDoses.slice(0, 5).map((d) => {
                   const cfg = d.status ? DOSE_STATUS[d.status] : null;
-                  const color = cfg ? cfg.color : c.muted;
+                  const color = cfg ? c[cfg.colorKey] : c.textSecondary;
                   const StripIcon = cfg ? cfg.Icon : Clock;
                   // Pending/unlogged = a solid cream/elevated pill (Figma `--muted`),
                   // visibly lighter than the tinted given/postponed/missed pills.
-                  const pillBg = cfg ? withAlpha(color, 0.12) : c.mutedSurface;
+                  const pillBg = cfg ? withAlpha(color, 0.12) : c.backgroundSunken;
                   return (
                     <View key={d.key} style={[styles.stripPill, { backgroundColor: pillBg }]}>
                       <StripIcon size={12} color={color} />
@@ -416,23 +406,21 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
             ) : null}
           </View>
         </View>
-      </FigmaCard>
+      </Surface>
 
       {/* Today summary — two stat cards */}
       <View style={styles.summaryRow}>
         <StatCard
-          scheme={scheme}
           Icon={Check}
-          iconColor={c.success}
+          iconColor={c.successFg}
           topLabel={t('careCircle.dashboard.sections.tasks.title')}
           value={String(taskSummary.dueToday)}
           subLabel={t('careCircle.dashboard.today.dueTodayShort')}
           onPress={() => router.push('/tasks')}
         />
         <StatCard
-          scheme={scheme}
           Icon={Calendar}
-          iconColor={FigmaCategory.blue}
+          iconColor={c.categoryBlue}
           topLabel={t('careCircle.dashboard.sections.appointments.title')}
           value={String(apptCount)}
           subLabel={t('careCircle.dashboard.today.appointmentLabel')}
@@ -442,9 +430,9 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
 
       {/* Next appointment (only when real data exists) */}
       {nextAppt ? (
-        <FigmaCard radius={FigmaRadius.r24} padding={16} onPress={() => router.push('/appointments')}>
+        <Surface radius={Radius.xl} padded={16} onPress={() => router.push('/appointments')}>
           <View style={styles.apptRow}>
-            <IconChip Icon={Stethoscope} color={FigmaCategory.blue} size={48} radius={FigmaRadius.r16} iconSize={22} />
+            <GlyphChip iconName="doctor" color="categoryBlue" size="md" />
             <View style={styles.apptText}>
               <Text style={[styles.apptWhen, muted]}>{apptWhen}</Text>
               <Text style={[styles.apptTitle, { color: c.text }]} numberOfLines={1}>
@@ -456,9 +444,9 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
                 </Text>
               ) : null}
             </View>
-            <ChevronLeft size={18} color={c.muted} />
+            <ChevronLeft size={18} color={c.textSecondary} />
           </View>
-        </FigmaCard>
+        </Surface>
       ) : null}
 
       {/* Quick actions — 4-up grid, wraps to a second row */}
@@ -471,8 +459,8 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
               onPress={() => router.push(qa.route as never)}
               accessibilityRole="button"
               accessibilityLabel={qa.label}
-              style={[styles.quickTile, { width: quickTileWidth, backgroundColor: c.card, borderColor: c.border }]}>
-              <IconChip Icon={qa.Icon} color={qa.color} size={40} radius={FigmaRadius.r12} iconSize={20} />
+              style={[styles.quickTile, { width: quickTileWidth, backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+              <GlyphChip iconName={qa.iconName} color={qa.color} size="md" />
               <Text style={[styles.quickLabel, muted]} numberOfLines={2}>
                 {qa.label}
               </Text>
@@ -489,10 +477,10 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
           accessibilityLabel={t('claiming.entryTitle')}
           style={[
             styles.claimCard,
-            { backgroundColor: withAlpha(c.accent, 0.1), borderColor: withAlpha(c.accent, 0.22) },
+            { backgroundColor: withAlpha(c.accentFg, 0.1), borderColor: withAlpha(c.accentFg, 0.22) },
           ]}>
-          <View style={[styles.claimChip, { backgroundColor: withAlpha(c.accent, 0.15) }]}>
-            <HandHelping size={22} color={c.accent} />
+          <View style={[styles.claimChip, { backgroundColor: withAlpha(c.accentFg, 0.15) }]}>
+            <HandHelping size={22} color={c.accentFg} />
           </View>
           <View style={styles.claimText}>
             <Text style={[styles.claimTitle, { color: c.text }]}>{t('claiming.entryTitle')}</Text>
@@ -500,7 +488,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
               {t('claiming.entrySubtitle')}
             </Text>
           </View>
-          <ChevronLeft size={18} color={c.muted} />
+          <ChevronLeft size={18} color={c.textSecondary} />
         </Pressable>
       ) : null}
 
@@ -518,7 +506,6 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
               <DoseRow
                 key={dose.key}
                 dose={dose}
-                scheme={scheme}
                 responsibleText={circle.canManage ? responsibleLabel(dose.responsibleUserId) : null}
                 canLog={circle.canLogDoses && (circle.canManage || dose.responsibleUserId === userId)}
                 open={openDoseKey === dose.key}
@@ -532,7 +519,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
       ) : null}
 
       {/* Care Pulse — today's most-recent circle events, tap through to the log */}
-      <PulseSection circleId={circle.circleId} scheme={scheme} timezone={circle.timezone} />
+      <PulseSection circleId={circle.circleId} timezone={circle.timezone} />
 
       {/* Emergency banner */}
       <Pressable
@@ -541,20 +528,20 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
         accessibilityLabel={t('careCircle.dashboard.today.emergencyTitle')}
         style={[
           styles.emergency,
-          { backgroundColor: withAlpha(c.error, 0.08), borderColor: withAlpha(c.error, 0.2) },
+          { backgroundColor: withAlpha(c.dangerSolid, 0.08), borderColor: withAlpha(c.dangerSolid, 0.2) },
         ]}>
-        <View style={[styles.emergencyChip, { backgroundColor: withAlpha(c.error, 0.15) }]}>
-          <AlertCircle size={22} color={c.error} />
+        <View style={[styles.emergencyChip, { backgroundColor: withAlpha(c.dangerSolid, 0.15) }]}>
+          <AlertCircle size={22} color={c.errorFg} />
         </View>
         <View style={styles.emergencyText}>
-          <Text style={[styles.emergencyTitle, { color: c.error }]}>
+          <Text style={[styles.emergencyTitle, { color: c.errorFg }]}>
             {t('careCircle.dashboard.today.emergencyTitle')}
           </Text>
           <Text style={[styles.emergencySub, muted]} numberOfLines={1}>
             {emergencySubtitle}
           </Text>
         </View>
-        <View style={[styles.emergencyBtn, { backgroundColor: c.error }]}>
+        <View style={[styles.emergencyBtn, { backgroundColor: c.dangerSolid }]}>
           <Text style={styles.emergencyBtnText}>{t('careCircle.dashboard.today.emergencyView')}</Text>
         </View>
       </Pressable>
@@ -563,7 +550,6 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
 }
 
 function StatCard({
-  scheme,
   Icon,
   iconColor,
   topLabel,
@@ -571,7 +557,6 @@ function StatCard({
   subLabel,
   onPress,
 }: {
-  scheme: FigmaScheme;
   Icon: IconCmp;
   iconColor: string;
   topLabel: string;
@@ -579,26 +564,25 @@ function StatCard({
   subLabel: string;
   onPress: () => void;
 }) {
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${topLabel}: ${value} ${subLabel}`}
-      style={[styles.stat, { backgroundColor: c.card, borderColor: c.border }]}>
+      style={[styles.stat, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
       <View style={styles.statTop}>
         <Icon size={16} color={iconColor} />
-        <Text style={[styles.statTopLabel, { color: c.muted, fontFamily: FigmaFont.regular }]}>{topLabel}</Text>
+        <Text style={[styles.statTopLabel, { color: c.textSecondary, fontFamily: FontFamily.regular }]}>{topLabel}</Text>
       </View>
       <Text style={[styles.statValue, { color: c.text }]}>{value}</Text>
-      <Text style={[styles.statSub, { color: c.muted, fontFamily: FigmaFont.regular }]}>{subLabel}</Text>
+      <Text style={[styles.statSub, { color: c.textSecondary, fontFamily: FontFamily.regular }]}>{subLabel}</Text>
     </Pressable>
   );
 }
 
 function DoseRow({
   dose,
-  scheme,
   responsibleText,
   canLog,
   open,
@@ -607,7 +591,6 @@ function DoseRow({
   onSetStatus,
 }: {
   dose: DoseItem;
-  scheme: FigmaScheme;
   responsibleText: string | null;
   canLog: boolean;
   open: boolean;
@@ -616,13 +599,13 @@ function DoseRow({
   onSetStatus: (status: MedicationLogStatus) => void;
 }) {
   const { t } = useTranslation();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   const status = dose.status;
   const cfg = status ? DOSE_STATUS[status] : null;
   const StatusIcon = cfg ? cfg.Icon : Clock;
-  const statusColor = cfg ? cfg.color : c.muted;
+  const statusColor = cfg ? c[cfg.colorKey] : c.textSecondary;
   // Pending/unlogged = solid cream/elevated (Figma `--muted`); logged = a tint.
-  const statusBg = cfg ? withAlpha(statusColor, 0.12) : c.mutedSurface;
+  const statusBg = cfg ? withAlpha(statusColor, 0.12) : c.backgroundSunken;
   const statusLabel = status ? t(`medications.status.${status}`) : t('careCircle.dashboard.today.doseUnlogged');
   const isLogged = status !== null;
 
@@ -641,7 +624,7 @@ function DoseRow({
 
   return (
     <View>
-      <View style={[styles.doseRow, { backgroundColor: c.card, borderColor: c.border }]}>
+      <View style={[styles.doseRow, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
         <View style={[styles.doseStatusCircle, { backgroundColor: statusBg }]}>
           <StatusIcon size={16} color={statusColor} />
         </View>
@@ -650,17 +633,17 @@ function DoseRow({
           <Text style={[styles.doseName, { color: c.text }]} numberOfLines={2}>
             {dose.medicationName}
           </Text>
-          {dose.dosage ? <Text style={[styles.doseDosage, { color: c.muted }]}>{dose.dosage}</Text> : null}
+          {dose.dosage ? <Text style={[styles.doseDosage, { color: c.textSecondary }]}>{dose.dosage}</Text> : null}
           <View style={styles.doseMetaRow}>
-            <Text style={[styles.doseTime, { color: c.muted }]}>{isolateLtr(formatHm(dose.scheduledTime))}</Text>
+            <Text style={[styles.doseTime, { color: c.textSecondary }]}>{isolateLtr(formatHm(dose.scheduledTime))}</Text>
             <View style={[styles.doseTag, { backgroundColor: statusBg }]}>
               <Text style={[styles.doseTagText, { color: statusColor }]}>{statusLabel}</Text>
             </View>
           </View>
           {responsibleText ? (
             <View style={styles.doseResponsibleRow}>
-              <Users size={12} color={c.muted} />
-              <Text style={[styles.doseResponsibleText, { color: c.muted }]} numberOfLines={1}>
+              <Users size={12} color={c.textSecondary} />
+              <Text style={[styles.doseResponsibleText, { color: c.textSecondary }]} numberOfLines={1}>
                 {responsibleText}
               </Text>
             </View>
@@ -683,7 +666,7 @@ function DoseRow({
         ) : null}
       </View>
       {open && canLog ? (
-        <View style={[styles.doseActions, { backgroundColor: c.elevated, borderColor: c.border }]}>
+        <View style={[styles.doseActions, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
           {confirmStatus ? (
             <View style={styles.correctionRow}>
               <Text
@@ -711,7 +694,7 @@ function DoseRow({
                   disabled={pending}
                   accessibilityRole="button"
                   style={[styles.correctionCancel, { borderColor: c.border }]}>
-                  <Text style={[styles.correctionCancelText, { color: c.muted }]}>{t('common.cancel')}</Text>
+                  <Text style={[styles.correctionCancelText, { color: c.textSecondary }]}>{t('common.cancel')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -719,6 +702,7 @@ function DoseRow({
             DOSE_ACTIONS.map((s) => {
               const a = DOSE_STATUS[s];
               const ActionIcon = a.Icon;
+              const color = c[a.colorKey];
               const selected = s === status;
               return (
                 <Pressable
@@ -730,12 +714,12 @@ function DoseRow({
                   style={[
                     styles.doseAction,
                     {
-                      backgroundColor: withAlpha(a.color, selected ? 0.24 : 0.15),
+                      backgroundColor: withAlpha(color, selected ? 0.24 : 0.15),
                       opacity: pending ? 0.5 : 1,
                     },
                   ]}>
-                  <ActionIcon size={14} color={a.color} />
-                  <Text style={[styles.doseActionText, { color: a.color }]}>{t(`medications.status.${s}`)}</Text>
+                  <ActionIcon size={14} color={color} />
+                  <Text style={[styles.doseActionText, { color }]}>{t(`medications.status.${s}`)}</Text>
                 </Pressable>
               );
             })
@@ -755,16 +739,14 @@ function DoseRow({
  */
 function PulseSection({
   circleId,
-  scheme,
   timezone,
 }: {
   circleId: string;
-  scheme: FigmaScheme;
   timezone: string;
 }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const c = FigmaColors[scheme];
+  const c = useTheme();
   // Fetch a small buffer (not just 5): a deliberately future-dated event sorts
   // ahead of today's by occurred_at and would otherwise squeeze a real today event
   // out of a 5-row page. We filter to today and cap at 5 below.
@@ -793,7 +775,7 @@ function PulseSection({
   return (
     <View>
       <View style={styles.dosesHeader}>
-        <Text style={[styles.sectionLabel, { color: c.muted, fontFamily: FigmaFont.regular, marginBottom: 0 }]}>
+        <Text style={[styles.sectionLabel, { color: c.textSecondary, fontFamily: FontFamily.regular, marginBottom: 0 }]}>
           {t('pulse.sectionTitle')}
         </Text>
         <View style={styles.pulseHeaderActions}>
@@ -811,7 +793,7 @@ function PulseSection({
       </View>
       <View style={styles.pulseList}>
         {events.map((event) => {
-          const visual = pulseEventVisual(event);
+          const { iconName, colorKey } = pulseEventVisual(event);
           return (
             <Pressable
               key={`${event.event_type}:${event.event_id}`}
@@ -820,22 +802,15 @@ function PulseSection({
               accessibilityHint={t('common.details')}
               style={({ pressed }) => [
                 styles.pulseRow,
-                { backgroundColor: c.card, borderColor: c.border },
+                { backgroundColor: c.backgroundElement, borderColor: c.border },
                 pressed && { opacity: 0.7 },
               ]}>
-              <IconChip
-                Icon={visual.Icon}
-                color={visual.color}
-                size={40}
-                radius={FigmaRadius.r12}
-                iconSize={18}
-                tintOpacity={0.12}
-              />
+              <GlyphChip iconName={iconName} color={colorKey} size="md" />
               <View style={styles.pulseInfo}>
                 <Text style={[styles.pulseDesc, { color: c.text }]} numberOfLines={2}>
                   {pulseDescription(event, t, actorLabel)}
                 </Text>
-                <Text style={[styles.pulseTime, { color: c.muted }]}>
+                <Text style={[styles.pulseTime, { color: c.textSecondary }]}>
                   {isolateLtr(hmInTimeZone(event.occurred_at, timezone))}
                 </Text>
               </View>
@@ -851,15 +826,15 @@ const styles = StyleSheet.create({
   // Header
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
   headerText: { flexShrink: 1, gap: 2 },
-  date: { fontSize: 12 },
+  date: { fontSize: 14 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  name: { fontSize: 20, fontFamily: FigmaFont.bold, flexShrink: 1 },
-  subtitle: { fontSize: 12 },
+  name: { fontSize: 20, fontFamily: FontFamily.bold, flexShrink: 1 },
+  subtitle: { fontSize: 14 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   action: {
-    width: FigmaLayout.headerActionSize,
-    height: FigmaLayout.headerActionSize,
-    borderRadius: FigmaRadius.pill,
+    width: 44,
+    height: 44,
+    borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
@@ -877,67 +852,67 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { fontSize: 10, lineHeight: 12, fontFamily: FigmaFont.bold, color: '#FFFFFF' },
+  badgeText: { fontSize: 10, lineHeight: 12, fontFamily: FontFamily.bold, color: '#FFFFFF' },
   // Today's-data error / dose-log error banner
   notice: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 14,
     paddingVertical: 12,
     minHeight: 48,
   },
-  noticeText: { flex: 1, fontSize: 14, fontFamily: FigmaFont.medium },
-  noticeAction: { fontSize: 14, fontFamily: FigmaFont.bold },
+  noticeText: { flex: 1, fontSize: 14, fontFamily: FontFamily.medium },
+  noticeAction: { fontSize: 14, fontFamily: FontFamily.bold },
   // Circle dropdown
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, minHeight: 48 },
-  switchName: { fontSize: 15, fontFamily: FigmaFont.medium, flexShrink: 1 },
-  switchJoin: { fontSize: 14, fontFamily: FigmaFont.medium },
+  switchName: { fontSize: 15, fontFamily: FontFamily.medium, flexShrink: 1 },
+  switchJoin: { fontSize: 14, fontFamily: FontFamily.medium },
   // Hero
   heroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  eyebrow: { fontSize: 13, fontFamily: FigmaFont.semibold, letterSpacing: 0.3 },
-  link: { fontSize: 13, fontFamily: FigmaFont.medium },
+  eyebrow: { fontSize: 14, fontFamily: FontFamily.semibold, letterSpacing: 0.3 },
+  link: { fontSize: 14, fontFamily: FontFamily.medium },
   heroBody: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 12 },
   heroRight: { flex: 1, gap: 8 },
-  heroMuted: { fontSize: 13 },
-  allDone: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: FigmaRadius.r16, paddingHorizontal: 12, paddingVertical: 8 },
-  allDoneText: { fontSize: 13, color: '#5AAE85', fontFamily: FigmaFont.semibold },
-  nextLabel: { fontSize: 12 },
-  nextDose: { marginTop: 6, borderRadius: FigmaRadius.r16, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 12, paddingVertical: 10 },
+  heroMuted: { fontSize: 14 },
+  allDone: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: Radius.lg, paddingHorizontal: 12, paddingVertical: 8 },
+  allDoneText: { fontSize: 14, fontFamily: FontFamily.semibold },
+  nextLabel: { fontSize: 14 },
+  nextDose: { marginTop: 6, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 12, paddingVertical: 10 },
   nextDoseTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  nextName: { fontSize: 14, fontFamily: FigmaFont.semibold, flexShrink: 1 },
-  nextTime: { fontSize: 12, fontFamily: FigmaFont.medium },
-  nextDosage: { fontSize: 12, marginTop: 2 },
+  nextName: { fontSize: 14, fontFamily: FontFamily.semibold, flexShrink: 1 },
+  nextTime: { fontSize: 14, fontFamily: FontFamily.medium },
+  nextDosage: { fontSize: 14, marginTop: 2 },
   strip: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
-  stripPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: FigmaRadius.pill, paddingHorizontal: 8, paddingVertical: 4 },
-  stripTime: { fontSize: 11, fontFamily: FigmaFont.medium },
+  stripPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: Radius.pill, paddingHorizontal: 8, paddingVertical: 4 },
+  stripTime: { fontSize: 14, fontFamily: FontFamily.medium },
   // Summary
   summaryRow: { flexDirection: 'row', gap: 12 },
-  stat: { flex: 1, borderRadius: FigmaRadius.r16, borderWidth: StyleSheet.hairlineWidth, padding: 16, gap: 2 },
+  stat: { flex: 1, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, padding: 16, gap: 2 },
   statTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  statTopLabel: { fontSize: 12 },
-  statValue: { fontSize: 22, fontFamily: FigmaFont.bold },
-  statSub: { fontSize: 13 },
+  statTopLabel: { fontSize: 14 },
+  statValue: { fontSize: 22, fontFamily: FontFamily.bold },
+  statSub: { fontSize: 14 },
   // Next appointment
   apptRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   apptText: { flex: 1, gap: 2 },
-  apptWhen: { fontSize: 11 },
-  apptTitle: { fontSize: 15, fontFamily: FigmaFont.semibold },
-  apptLoc: { fontSize: 12 },
+  apptWhen: { fontSize: 14 },
+  apptTitle: { fontSize: 15, fontFamily: FontFamily.semibold },
+  apptLoc: { fontSize: 14 },
   // Quick actions
-  sectionLabel: { fontSize: 13, fontFamily: FigmaFont.semibold, marginBottom: 10 },
+  sectionLabel: { fontSize: 14, fontFamily: FontFamily.semibold, marginBottom: 10 },
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 12 },
   quickTile: {
     alignItems: 'center',
     gap: 8,
-    borderRadius: FigmaRadius.r16,
+    borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 12,
     paddingHorizontal: 4,
   },
-  quickLabel: { fontSize: 10, lineHeight: 13, textAlign: 'center' },
+  quickLabel: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
   // Care Pulse (Home strip)
   pulseHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   pulseList: { gap: 8 },
@@ -945,76 +920,76 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    borderRadius: FigmaRadius.r16,
+    borderRadius: Radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   pulseInfo: { flex: 1, gap: 2 },
-  pulseDesc: { fontSize: 13, fontFamily: FigmaFont.medium, lineHeight: 19 },
-  pulseTime: { fontSize: 11, fontFamily: FigmaFont.regular },
+  pulseDesc: { fontSize: 14, fontFamily: FontFamily.medium, lineHeight: 19 },
+  pulseTime: { fontSize: 14, fontFamily: FontFamily.regular },
   // Doses
   dosesHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   doseList: { gap: 8 },
-  doseRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: FigmaRadius.r16, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingVertical: 12 },
-  doseStatusCircle: { width: 36, height: 36, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },
+  doseRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingVertical: 12 },
+  doseStatusCircle: { width: 36, height: 36, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   doseInfo: { flex: 1, gap: 2 },
   doseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  doseName: { fontSize: 14, fontFamily: FigmaFont.semibold, flexShrink: 1 },
-  doseDosage: { fontSize: 12, fontFamily: FigmaFont.regular },
+  doseName: { fontSize: 14, fontFamily: FontFamily.semibold, flexShrink: 1 },
+  doseDosage: { fontSize: 14, fontFamily: FontFamily.regular },
   doseMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  doseTime: { fontSize: 12, fontFamily: FigmaFont.regular },
+  doseTime: { fontSize: 14, fontFamily: FontFamily.regular },
   doseResponsibleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
-  doseResponsibleText: { fontSize: 11, fontFamily: FigmaFont.regular, flexShrink: 1 },
-  doseTag: { borderRadius: FigmaRadius.pill, paddingHorizontal: 8, paddingVertical: 2 },
-  doseTagText: { fontSize: 10, fontFamily: FigmaFont.medium },
-  logBtn: { borderRadius: FigmaRadius.pill, paddingHorizontal: 12, paddingVertical: 6, minHeight: 32, justifyContent: 'center' },
+  doseResponsibleText: { fontSize: 14, fontFamily: FontFamily.regular, flexShrink: 1 },
+  doseTag: { borderRadius: Radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
+  doseTagText: { fontSize: 14, fontFamily: FontFamily.medium },
+  logBtn: { borderRadius: Radius.pill, paddingHorizontal: 12, paddingVertical: 6, minHeight: 32, justifyContent: 'center' },
   editBtn: {
-    borderRadius: FigmaRadius.pill,
+    borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
     paddingVertical: 6,
     minHeight: 32,
     justifyContent: 'center',
   },
-  logBtnText: { fontSize: 12, fontFamily: FigmaFont.semibold },
-  doseActions: { flexDirection: 'row', gap: 8, borderRadius: FigmaRadius.r16, borderWidth: StyleSheet.hairlineWidth, padding: 12, marginTop: 4 },
-  doseAction: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: FigmaRadius.r12, paddingVertical: 10, minHeight: 44 },
-  doseActionText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  logBtnText: { fontSize: 14, fontFamily: FontFamily.semibold },
+  doseActions: { flexDirection: 'row', gap: 8, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, padding: 12, marginTop: 4 },
+  doseAction: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: Radius.md, paddingVertical: 10, minHeight: 44 },
+  doseActionText: { fontSize: 14, fontFamily: FontFamily.semibold },
   // Dose correction confirm (inside the tray)
   correctionRow: { flex: 1, gap: 10 },
-  correctionText: { fontSize: 14, fontFamily: FigmaFont.semibold, lineHeight: 20 },
+  correctionText: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 20 },
   correctionActions: { flexDirection: 'row', gap: 8 },
   correctionConfirm: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     minHeight: 44,
   },
-  correctionConfirmText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  correctionConfirmText: { fontSize: 14, fontFamily: FontFamily.semibold },
   correctionCancel: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: FigmaRadius.r12,
+    borderRadius: Radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     minHeight: 44,
   },
-  correctionCancelText: { fontSize: 13, fontFamily: FigmaFont.semibold },
+  correctionCancelText: { fontSize: 14, fontFamily: FontFamily.semibold },
   // Available to claim
-  claimCard: { flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: FigmaRadius.r24, borderWidth: StyleSheet.hairlineWidth, padding: 16 },
-  claimChip: { width: 44, height: 44, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },
+  claimCard: { flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: Radius.xl, borderWidth: StyleSheet.hairlineWidth, padding: 16 },
+  claimChip: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   claimText: { flex: 1, gap: 2 },
-  claimTitle: { fontSize: 15, fontFamily: FigmaFont.bold },
-  claimSub: { fontSize: 12 },
+  claimTitle: { fontSize: 15, fontFamily: FontFamily.bold },
+  claimSub: { fontSize: 14 },
   // Emergency
-  emergency: { flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: FigmaRadius.r24, borderWidth: StyleSheet.hairlineWidth, padding: 16 },
-  emergencyChip: { width: 44, height: 44, borderRadius: FigmaRadius.pill, alignItems: 'center', justifyContent: 'center' },
+  emergency: { flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: Radius.xl, borderWidth: StyleSheet.hairlineWidth, padding: 16 },
+  emergencyChip: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   emergencyText: { flex: 1, gap: 2 },
-  emergencyTitle: { fontSize: 14, fontFamily: FigmaFont.bold },
-  emergencySub: { fontSize: 12 },
-  emergencyBtn: { borderRadius: FigmaRadius.r12, paddingHorizontal: 14, paddingVertical: 8, minHeight: 36, justifyContent: 'center' },
-  emergencyBtnText: { fontSize: 13, color: '#FFFFFF', fontFamily: FigmaFont.semibold },
+  emergencyTitle: { fontSize: 14, fontFamily: FontFamily.bold },
+  emergencySub: { fontSize: 14 },
+  emergencyBtn: { borderRadius: Radius.md, paddingHorizontal: 14, paddingVertical: 8, minHeight: 36, justifyContent: 'center' },
+  emergencyBtnText: { fontSize: 14, color: '#FFFFFF', fontFamily: FontFamily.semibold },
 });

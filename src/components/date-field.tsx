@@ -15,7 +15,6 @@ import {
   type DateFieldProps,
   type Ymd,
 } from './date-time-shared';
-import { Cairo } from './figma/form-typography';
 import { PickerSheet, WheelColumn } from './picker-sheet';
 import { ThemedText } from './themed-text';
 
@@ -137,7 +136,7 @@ export function DateField({
 
   return (
     <View style={styles.field}>
-      {label ? <ThemedText type="smallBold" style={Cairo.semibold}>{label}</ThemedText> : null}
+      {label ? <ThemedText type="smallBold">{label}</ThemedText> : null}
 
       <Pressable
         onPress={openSheet}
@@ -153,7 +152,7 @@ export function DateField({
             opacity: disabled ? 0.6 : 1,
           },
         ]}>
-        <ThemedText themeColor={value ? 'text' : 'textMuted'} style={[styles.triggerText, Cairo.regular]}>
+        <ThemedText themeColor={value ? 'text' : 'textMuted'} style={styles.triggerText}>
           {value || placeholder || t('pickers.setDate')}
         </ThemedText>
         <ThemedText
@@ -167,7 +166,7 @@ export function DateField({
       {error ? (
         <ThemedText
           type="small"
-          style={[{ color: theme.errorFg }, Cairo.regular]}
+          style={{ color: theme.errorFg }}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {error}

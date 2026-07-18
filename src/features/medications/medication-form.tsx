@@ -5,14 +5,14 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import {
-  FigmaFormCard,
-  FigmaFormField,
   FigmaFormScreen,
+  FigmaSectionLabel,
   FigmaSwitch,
 } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
+import { FormField } from '@/components/form-field';
+import { Surface } from '@/components/surface';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -31,7 +31,7 @@ const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
  * (header + gold disclaimer + medication-info card + dose-schedule card + notes
  * card + sticky save), wired to Sanad's real create flow, schema, and the
  * protected schedule validation. The Figma export's blue/IBM-Plex are replaced
- * with the committed teal/Cairo tokens, and its native time/date inputs with the
+ * with the committed teal/IBM Plex tokens, and its native time/date inputs with the
  * protected wheel pickers — but the layout, sections, and order match the export.
  */
 export function MedicationForm({ circleId }: { circleId: string }) {
@@ -130,8 +130,9 @@ export function MedicationForm({ circleId }: { circleId: string }) {
       <UnsavedChangesGuard when={dirty && !submitted} />
 
       {/* Medication info */}
-      <FigmaFormCard label={t('medications.medicationInfoTitle')}>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('medications.medicationInfoTitle')}</FigmaSectionLabel>
+        <FormField
           label={t('medications.fields.name')}
           value={name}
           onChangeText={setName}
@@ -139,21 +140,21 @@ export function MedicationForm({ circleId }: { circleId: string }) {
           required
           error={medFieldError(medErrors.name)}
         />
-        <FigmaFormField
+        <FormField
           label={t('medications.fields.dosage')}
           value={dosage}
           onChangeText={setDosage}
           placeholder={t('medications.placeholders.dosage')}
           error={medFieldError(medErrors.dosage)}
         />
-        <FigmaFormField
+        <FormField
           label={t('medications.fields.form')}
           value={medForm}
           onChangeText={setMedForm}
           placeholder={t('medications.placeholders.form')}
           error={medFieldError(medErrors.form)}
         />
-        <FigmaFormField
+        <FormField
           label={t('medications.fields.instructions')}
           value={instructions}
           onChangeText={setInstructions}
@@ -178,26 +179,27 @@ export function MedicationForm({ circleId }: { circleId: string }) {
             accessibilityLabel={t('medications.fields.withFood')}
           />
         </View>
-      </FigmaFormCard>
+      </Surface>
 
       {/* Responsible person */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <MemberSelect
           circleId={circleId}
           value={responsibleUserId}
           label={t('assignment.responsible')}
           onChange={setResponsibleUserId}
         />
-      </FigmaFormCard>
+      </Surface>
 
       {/* Dose schedule */}
-      <FigmaFormCard label={t('medications.firstScheduleTitle')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('medications.firstScheduleTitle')}</FigmaSectionLabel>
         <FigmaScheduleFields value={schedule} onChange={setSchedule} errors={scheduleErrors} />
-      </FigmaFormCard>
+      </Surface>
 
       {/* Notes */}
-      <FigmaFormCard>
-        <FigmaFormField
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FormField
           label={t('medications.fields.scheduleNotes')}
           value={schedule.notes}
           onChangeText={(notes) => setSchedule((current) => ({ ...current, notes }))}
@@ -205,7 +207,7 @@ export function MedicationForm({ circleId }: { circleId: string }) {
           multiline
           error={scheduleErrors.notes ? t('validation.tooLong') : undefined}
         />
-      </FigmaFormCard>
+      </Surface>
 
       {/* Primary CTA — rendered directly in the body (not the footer prop, which
           did not render on Android). Always a filled teal button; an invalid press
@@ -227,7 +229,7 @@ export function MedicationForm({ circleId }: { circleId: string }) {
 
 const styles = StyleSheet.create({
   footer: { gap: Spacing.two },
-  footerError: { fontSize: 13, fontFamily: FigmaFont.regular, textAlign: 'center' },
+  footerError: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
   divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
   switchRow: {
     flexDirection: 'row',
@@ -236,6 +238,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   switchText: { flex: 1, gap: 2 },
-  switchLabel: { fontSize: 15, fontFamily: FigmaFont.regular },
-  switchHint: { fontSize: 13, fontFamily: FigmaFont.regular },
+  switchLabel: { fontSize: 15, fontFamily: FontFamily.regular },
+  switchHint: { fontSize: 14, fontFamily: FontFamily.regular },
 });

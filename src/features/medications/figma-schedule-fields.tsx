@@ -4,9 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
 import { FigmaFieldLabel } from '@/components/figma/figma-form-screen';
-import { FigmaFont, withAlpha } from '@/components/figma/figma-tokens';
 import { TimeField } from '@/components/time-field';
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, TouchTarget, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatHm, todayYmd } from '@/utils/date';
 
@@ -170,7 +169,7 @@ export function FigmaScheduleFields({
                 <Text
                   style={[
                     styles.dayChipText,
-                    { color: on ? theme.primaryText : theme.textSecondary, fontFamily: on ? FigmaFont.semibold : FigmaFont.regular },
+                    { color: on ? theme.primaryText : theme.textSecondary, fontFamily: on ? FontFamily.semibold : FontFamily.regular },
                   ]}>
                   {dayLabels[day]}
                 </Text>
@@ -291,9 +290,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dayChipText: { fontSize: 11 },
+  dayChipText: { fontSize: 14 },
   everyDay: { alignSelf: 'flex-start', paddingVertical: 2 },
-  everyDayText: { fontSize: 12, fontFamily: FigmaFont.medium },
+  everyDayText: { fontSize: 14, fontFamily: FontFamily.medium },
   timeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
   timeField: { flex: 1 },
   removeTime: {
@@ -315,9 +314,9 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     paddingHorizontal: 14,
   },
-  addTimeText: { fontSize: 14, fontFamily: FigmaFont.medium },
-  help: { fontSize: 13, fontFamily: FigmaFont.regular },
-  fieldError: { fontSize: 13, fontFamily: FigmaFont.regular },
+  addTimeText: { fontSize: 14, fontFamily: FontFamily.medium },
+  help: { fontSize: 14, fontFamily: FontFamily.regular },
+  fieldError: { fontSize: 14, fontFamily: FontFamily.regular },
   dateRow: { flexDirection: 'row', gap: Spacing.three },
   dateCol: { flex: 1 },
 });

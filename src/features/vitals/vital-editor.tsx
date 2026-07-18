@@ -3,15 +3,15 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FigmaButton } from '@/components/figma/figma-button';
+import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { FigmaFormCard, FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
-import { FigmaFont } from '@/components/figma/figma-tokens';
+import { FigmaFormScreen, FigmaMutedNote, FigmaSectionLabel } from '@/components/figma/figma-form-screen';
 import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useAuth } from '@/providers';
@@ -137,7 +137,7 @@ function VitalEditScreen({ circleId, initial }: { circleId: string; initial: Vit
       <FigmaVitalFields draft={draft} onChange={patch} errors={errors} />
 
       {/* Delete — destructive, kept separate from save, two-step confirm. */}
-      <FigmaFormCard>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         {deleteError ? (
           <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
             {deleteError}
@@ -146,7 +146,7 @@ function VitalEditScreen({ circleId, initial }: { circleId: string; initial: Vit
         {confirming ? (
           <View style={styles.confirmRow}>
             <View style={styles.confirmCol}>
-              <FigmaButton
+              <Button
                 label={t('common.confirmDelete')}
                 variant="danger"
                 loading={deleting}
@@ -154,7 +154,7 @@ function VitalEditScreen({ circleId, initial }: { circleId: string; initial: Vit
               />
             </View>
             <View style={styles.confirmCol}>
-              <FigmaButton
+              <Button
                 label={t('common.cancel')}
                 variant="secondary"
                 onPress={() => setConfirming(false)}
@@ -162,13 +162,13 @@ function VitalEditScreen({ circleId, initial }: { circleId: string; initial: Vit
             </View>
           </View>
         ) : (
-          <FigmaButton
+          <Button
             label={t('vitals.deleteReading')}
             variant="danger"
             onPress={() => setConfirming(true)}
           />
         )}
-      </FigmaFormCard>
+      </Surface>
 
       {/* Save CTA — rendered in the body (not the footer prop, which did not render
           on Android). Final child, below the destructive delete, matching the prior
@@ -204,24 +204,28 @@ function VitalViewScreen({ reading }: { reading: VitalReading }) {
       disclaimer={t('vitals.disclaimer')}>
       <FigmaMutedNote>{t('vitals.readOnly')}</FigmaMutedNote>
 
-      <FigmaFormCard label={t('vitals.fields.type')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('vitals.fields.type')}</FigmaSectionLabel>
         <Text style={[styles.value, { color: theme.text }]}>{t(`vitals.type.${reading.reading_type}`)}</Text>
-      </FigmaFormCard>
+      </Surface>
 
       {value ? (
-        <FigmaFormCard label={t('vitals.valueLabel')}>
+        <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+          <FigmaSectionLabel>{t('vitals.valueLabel')}</FigmaSectionLabel>
           <Text style={[styles.value, { color: theme.text }]}>{value}</Text>
-        </FigmaFormCard>
+        </Surface>
       ) : null}
 
-      <FigmaFormCard label={t('vitals.fields.readingAt')}>
+      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+        <FigmaSectionLabel>{t('vitals.fields.readingAt')}</FigmaSectionLabel>
         <Text style={[styles.value, { color: theme.text }]}>{when}</Text>
-      </FigmaFormCard>
+      </Surface>
 
       {reading.notes ? (
-        <FigmaFormCard label={t('vitals.fields.notes')}>
+        <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+          <FigmaSectionLabel>{t('vitals.fields.notes')}</FigmaSectionLabel>
           <Text style={[styles.value, { color: theme.text }]}>{reading.notes}</Text>
-        </FigmaFormCard>
+        </Surface>
       ) : null}
     </FigmaFormScreen>
   );
@@ -230,8 +234,8 @@ function VitalViewScreen({ reading }: { reading: VitalReading }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
-  statusText: { fontSize: 13, fontFamily: FigmaFont.semibold, textAlign: 'center' },
+  statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
   confirmRow: { flexDirection: 'row', gap: Spacing.two },
   confirmCol: { flex: 1 },
-  value: { fontSize: 16, fontFamily: FigmaFont.regular },
+  value: { fontSize: 16, fontFamily: FontFamily.regular },
 });

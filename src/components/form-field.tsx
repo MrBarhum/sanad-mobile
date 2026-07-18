@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 
 type FormFieldProps = TextInputProps & {
   label?: string;
   error?: string | null;
+  /** Adds a required `*` after the label. */
+  required?: boolean;
+  /** Quiet helper line under the input (hidden while an error shows). */
+  hint?: string;
 };
 
 /**
@@ -20,7 +23,7 @@ type FormFieldProps = TextInputProps & {
  * so Arabic content aligns to the start automatically. Pass `multiline` for
  * notes fields. All standard TextInput props pass through.
  */
-export function FormField({ label, error, style, multiline, onFocus, onBlur, ...rest }: FormFieldProps) {
+export function FormField({ label, error, required, hint, style, multiline, onFocus, onBlur, ...rest }: FormFieldProps) {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
 
@@ -28,7 +31,12 @@ export function FormField({ label, error, style, multiline, onFocus, onBlur, ...
 
   return (
     <View style={styles.field}>
-      {label ? <ThemedText type="smallBold" style={Cairo.semibold}>{label}</ThemedText> : null}
+      {label ? (
+        <ThemedText type="smallBold">
+          {label}
+          {required ? <ThemedText style={{ color: theme.errorFg }}> *</ThemedText> : null}
+        </ThemedText>
+      ) : null}
       <TextInput
         placeholderTextColor={theme.textMuted}
         accessibilityLabel={label}
@@ -43,7 +51,7 @@ export function FormField({ label, error, style, multiline, onFocus, onBlur, ...
         }}
         style={[
           styles.input,
-          Cairo.regular,
+          { fontFamily: FontFamily.regular },
           multiline && styles.multiline,
           focused && styles.inputFocused,
           {
@@ -55,10 +63,15 @@ export function FormField({ label, error, style, multiline, onFocus, onBlur, ...
         ]}
         {...rest}
       />
+      {hint && !error ? (
+        <ThemedText type="small" themeColor="textMuted">
+          {hint}
+        </ThemedText>
+      ) : null}
       {error ? (
         <ThemedText
           type="small"
-          style={[{ color: theme.errorFg }, Cairo.regular]}
+          style={[{ color: theme.errorFg }]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
           {error}

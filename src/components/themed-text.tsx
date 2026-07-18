@@ -86,8 +86,8 @@ const styles = StyleSheet.create({
   /** Small overline above a hero (e.g. "اليوم / TODAY"). Pair with a muted/accent color. */
   eyebrow: {
     fontFamily: FontFamily.semibold,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: 600,
     letterSpacing: 0.5,
   },
@@ -125,6 +125,6 @@ const styles = StyleSheet.create({
   code: {
     fontFamily: Fonts.mono,
     fontWeight: Platform.select({ android: 700 }) ?? 500,
-    fontSize: 13,
+    fontSize: 14,
   },
 });

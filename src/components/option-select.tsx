@@ -4,12 +4,13 @@ import { Glyph } from '@/constants/glyphs';
 import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 
 export type SelectOption<T extends string> = {
   value: T;
   label: string;
+  /** Optional supporting line, shown only in the `card` variant. */
+  description?: string;
 };
 
 type OptionSelectProps<T extends string> = {
@@ -18,27 +19,24 @@ type OptionSelectProps<T extends string> = {
   options: readonly SelectOption<T>[];
   onChange: (value: T) => void;
   disabled?: boolean;
+  /**
+   * `chip` (default) — a wrap of compact segmented chips.
+   * `card` — full-width stacked cards with a radio + title + optional description
+   * (the "pick one, with explanation" choice, e.g. a role picker).
+   */
+  variant?: 'chip' | 'card';
 };
 
 /**
- * A labeled single-choice segmented chip group (category / priority / type /
- * unit / role enums on the care forms).
+ * A labeled single-choice selector — the ONE selection primitive for category /
+ * priority / type / unit / role enums on the care forms.
  *
- * Each option is a FULL-AREA Pressable chip with a clearly visible outline, so it
- * reads as a tappable control on the screen canvas rather than as loose text:
- *   - unselected — soft neutral fill (`backgroundSelected`) + a 1.5dp `border`
- *                  edge so it sits visibly above the canvas in light AND dark;
- *   - selected   — brand tint (`primaryBg`) + brand border + a leading check
- *                  glyph + bold label, so the choice is never carried by color
- *                  alone (a11y) and is obvious at a glance.
- * Meets the 48dp touch floor, wraps gracefully on narrow widths, and is RTL-safe
- * (row + gap, no physical left/right offsets). `radio` role + selected/disabled
- * accessibility state. Behaves identically on web and native (no native picker).
- *
- * NOTE: this intentionally does NOT use the generic `Button` `secondary` variant
- * — that variant is a quiet, near-canvas fill tuned for on-card actions, and as a
- * standalone on-canvas chip it provided almost no affordance (the regression that
- * made these options look unclickable).
+ * Each option is a FULL-AREA Pressable with a clearly visible outline so it reads
+ * as a tappable control, never loose text: unselected = soft neutral fill +
+ * hairline; selected = brand tint + brand border + a leading check + bold label,
+ * so the choice is never carried by color alone (a11y). Meets the 48dp touch
+ * floor, RTL-safe, identical on web + native. `chip` wraps compact pills; `card`
+ * stacks full-width rows with a radio + title + optional description.
  */
 export function OptionSelect<T extends string>({
   label,
@@ -46,42 +44,88 @@ export function OptionSelect<T extends string>({
   options,
   onChange,
   disabled = false,
+  variant = 'chip',
 }: OptionSelectProps<T>) {
   const theme = useTheme();
 
   return (
     <View style={styles.field}>
-      {label ? <ThemedText type="smallBold" style={Cairo.semibold}>{label}</ThemedText> : null}
-      <View style={styles.options}>
-        {options.map((option) => {
-          const selected = option.value === value;
-          return (
-            <Pressable
-              key={option.value}
-              onPress={() => onChange(option.value)}
-              disabled={disabled}
-              accessibilityRole="radio"
-              accessibilityState={{ selected, disabled }}
-              accessibilityLabel={option.label}
-              style={({ pressed }) => [
-                styles.chip,
-                {
-                  backgroundColor: selected ? theme.primaryBg : theme.backgroundSelected,
-                  borderColor: selected ? theme.primary : theme.border,
-                },
-                pressed && !disabled && styles.pressed,
-                disabled && styles.disabled,
-              ]}>
-              <ThemedText
-                type={selected ? 'smallBold' : 'small'}
-                themeColor={selected ? 'primaryText' : 'text'}
-                style={selected ? Cairo.semibold : Cairo.regular}>
-                {selected ? `${Glyph.check} ${option.label}` : option.label}
-              </ThemedText>
-            </Pressable>
-          );
-        })}
-      </View>
+      {label ? <ThemedText type="smallBold">{label}</ThemedText> : null}
+      {variant === 'card' ? (
+        <View style={styles.cardList}>
+          {options.map((option) => {
+            const selected = option.value === value;
+            return (
+              <Pressable
+                key={option.value}
+                onPress={() => onChange(option.value)}
+                disabled={disabled}
+                accessibilityRole="radio"
+                accessibilityState={{ selected, disabled }}
+                accessibilityLabel={option.label}
+                style={({ pressed }) => [
+                  styles.optionCard,
+                  {
+                    backgroundColor: selected ? theme.primaryBg : theme.backgroundSelected,
+                    borderColor: selected ? theme.primary : theme.border,
+                  },
+                  pressed && !disabled && styles.pressed,
+                  disabled && styles.disabled,
+                ]}>
+                <View
+                  style={[
+                    styles.radio,
+                    { borderColor: selected ? theme.primary : theme.border, backgroundColor: selected ? theme.primary : 'transparent' },
+                  ]}>
+                  {selected ? (
+                    <ThemedText style={[styles.radioCheck, { color: theme.onPrimary }]}>{Glyph.check}</ThemedText>
+                  ) : null}
+                </View>
+                <View style={styles.optionText}>
+                  <ThemedText type={selected ? 'smallBold' : 'small'} themeColor={selected ? 'primaryText' : 'text'}>
+                    {option.label}
+                  </ThemedText>
+                  {option.description ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {option.description}
+                    </ThemedText>
+                  ) : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : (
+        <View style={styles.options}>
+          {options.map((option) => {
+            const selected = option.value === value;
+            return (
+              <Pressable
+                key={option.value}
+                onPress={() => onChange(option.value)}
+                disabled={disabled}
+                accessibilityRole="radio"
+                accessibilityState={{ selected, disabled }}
+                accessibilityLabel={option.label}
+                style={({ pressed }) => [
+                  styles.chip,
+                  {
+                    backgroundColor: selected ? theme.primaryBg : theme.backgroundSelected,
+                    borderColor: selected ? theme.primary : theme.border,
+                  },
+                  pressed && !disabled && styles.pressed,
+                  disabled && styles.disabled,
+                ]}>
+                <ThemedText
+                  type={selected ? 'smallBold' : 'small'}
+                  themeColor={selected ? 'primaryText' : 'text'}>
+                  {selected ? `${Glyph.check} ${option.label}` : option.label}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
@@ -98,6 +142,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  cardList: { gap: Spacing.two },
+  optionCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.three,
+    minHeight: TouchTarget.min,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    paddingVertical: Spacing.three - 2,
+    paddingHorizontal: Spacing.three,
+  },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  radioCheck: { fontSize: 13, lineHeight: 15, fontWeight: '800' },
+  optionText: { flex: 1, gap: 2 },
   pressed: { opacity: 0.7 },
   disabled: { opacity: 0.5 },
 });

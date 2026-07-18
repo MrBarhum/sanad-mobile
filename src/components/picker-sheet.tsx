@@ -3,10 +3,9 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Glyph } from '@/constants/glyphs';
-import { Gutter, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { FontFamily, Gutter, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -66,7 +65,7 @@ export function PickerSheet({
             ]}>
             <View style={[styles.grabber, { backgroundColor: theme.backgroundSelected }]} />
             <View style={styles.header}>
-              <ThemedText type="sectionTitle" accessibilityRole="header" style={[styles.title, Cairo.bold]}>
+              <ThemedText type="sectionTitle" accessibilityRole="header" style={styles.title}>
                 {title}
               </ThemedText>
               <Pressable
@@ -75,7 +74,7 @@ export function PickerSheet({
                 accessibilityLabel={closeLabel ?? cancelLabel}
                 hitSlop={Spacing.two}
                 style={styles.close}>
-                <ThemedText style={[styles.closeGlyph, Cairo.semibold]}>{Glyph.cross}</ThemedText>
+                <ThemedText style={styles.closeGlyph}>{Glyph.cross}</ThemedText>
               </Pressable>
             </View>
 
@@ -94,7 +93,7 @@ export function PickerSheet({
                   styles.actionRow,
                   pressed ? { backgroundColor: theme.backgroundSelected } : null,
                 ]}>
-                <ThemedText style={[styles.actionLabel, Cairo.bold, { color: theme.primary }]}>
+                <ThemedText style={[styles.actionLabel, { color: theme.primary, fontFamily: FontFamily.bold }]}>
                   {doneLabel}
                 </ThemedText>
               </Pressable>
@@ -107,7 +106,7 @@ export function PickerSheet({
                     styles.actionRow,
                     pressed ? { backgroundColor: theme.backgroundSelected } : null,
                   ]}>
-                  <ThemedText style={[styles.actionLabel, Cairo.semibold, { color: theme.text }]}>
+                  <ThemedText style={[styles.actionLabel, { color: theme.text }]}>
                     {clearLabel}
                   </ThemedText>
                 </Pressable>
@@ -120,7 +119,7 @@ export function PickerSheet({
                   styles.actionRow,
                   pressed ? { backgroundColor: theme.backgroundSelected } : null,
                 ]}>
-                <ThemedText style={[styles.actionLabel, Cairo.semibold, { color: theme.text }]}>
+                <ThemedText style={[styles.actionLabel, { color: theme.text }]}>
                   {cancelLabel}
                 </ThemedText>
               </Pressable>
@@ -171,7 +170,7 @@ export function WheelColumn({
   return (
     <View style={styles.column}>
       {label ? (
-        <ThemedText type="small" themeColor="textSecondary" style={[styles.columnLabel, Cairo.regular]}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.columnLabel}>
           {label}
         </ThemedText>
       ) : null}
@@ -194,7 +193,7 @@ export function WheelColumn({
               style={[styles.row, isSelected && { backgroundColor: theme.primaryBg }]}>
               <ThemedText
                 themeColor={isSelected ? 'primaryText' : 'text'}
-                style={[styles.rowText, isSelected ? Cairo.bold : Cairo.regular, isSelected && styles.rowTextSelected]}>
+                style={[styles.rowText, isSelected && styles.rowTextSelected]}>
                 {isSelected ? `${Glyph.check} ${text}` : text}
               </ThemedText>
             </Pressable>
@@ -228,7 +227,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.three },
   title: { flexShrink: 1 },
   close: { minWidth: TouchTarget.min, minHeight: TouchTarget.min, alignItems: 'center', justifyContent: 'center' },
-  closeGlyph: { fontSize: 20, fontWeight: '600' },
+  closeGlyph: { fontSize: 20, fontFamily: FontFamily.semibold },
   // A plain full-width block (column direction): the child wheel-row (the field's
   // own `columns` View) stretches to the full width, which is what keeps its
   // flex:1 WheelColumns from collapsing to zero width — the cause of the blank
@@ -241,7 +240,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionLabel: { fontSize: 17, lineHeight: 24, textAlign: 'center' },
+  actionLabel: { fontSize: 17, lineHeight: 24, textAlign: 'center', fontFamily: FontFamily.semibold },
   column: { flex: 1, gap: Spacing.one },
   columnLabel: { textAlign: 'center' },
   columnScroll: {
@@ -256,5 +255,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rowText: { fontSize: 18 },
-  rowTextSelected: { fontWeight: '700' },
+  rowTextSelected: { fontFamily: FontFamily.bold },
 });

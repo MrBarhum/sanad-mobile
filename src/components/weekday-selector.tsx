@@ -4,7 +4,6 @@ import { Glyph } from '@/constants/glyphs';
 import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import { Cairo } from './figma/form-typography';
 import { ThemedText } from './themed-text';
 
 /** Days of the week, 0 = Sunday .. 6 = Saturday (matches the DB convention). */
@@ -58,7 +57,7 @@ export function WeekdaySelector({
 
   return (
     <View style={styles.section}>
-      {label ? <ThemedText type="smallBold" style={Cairo.semibold}>{label}</ThemedText> : null}
+      {label ? <ThemedText type="smallBold">{label}</ThemedText> : null}
 
       <Chip selected={allSelected} label={everyDayLabel} onPress={toggleEveryDay} fullWidth />
 
@@ -75,7 +74,7 @@ export function WeekdaySelector({
       </View>
 
       {error ? (
-        <ThemedText type="small" style={[{ color: theme.errorFg }, Cairo.regular]} accessibilityRole="alert">
+        <ThemedText type="small" style={[{ color: theme.errorFg }]} accessibilityRole="alert">
           {error}
         </ThemedText>
       ) : null}
@@ -113,14 +112,9 @@ function Chip({
         pressed && styles.pressed,
       ]}>
       <ThemedText
-        type="small"
-        themeColor={selected ? 'primaryText' : 'textSecondary'}
-        style={[
-          styles.chip,
-          selected ? Cairo.bold : Cairo.regular,
-          selected && styles.chipSelectedText,
-          fullWidth && styles.chipFullText,
-        ]}>
+        type={selected ? 'smallBold' : 'small'}
+        themeColor={selected ? 'primaryText' : 'text'}
+        style={[styles.chip, fullWidth && styles.chipFullText]}>
         {selected ? `${Glyph.check} ${label}` : label}
       </ThemedText>
     </Pressable>
@@ -143,7 +137,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     textAlign: 'center',
   },
-  chipSelectedText: { fontWeight: '700' },
   chipFullText: { paddingVertical: Spacing.three },
   pressed: { opacity: 0.7 },
 });
