@@ -34,7 +34,8 @@ const DOER_ROLES: ReadonlySet<CircleRole> = new Set<CircleRole>([
 /** A non-empty user id is "real"; '' is the no-assignment sentinel for the chips. */
 export const NO_ASSIGNEE = '';
 
-type Option = { value: string; label: string };
+export type AssigneeOption = { value: string; label: string };
+type Option = AssigneeOption;
 
 function isAssignableDoer(member: CircleMember): boolean {
   return (
@@ -88,6 +89,22 @@ function buildOptions(
 }
 
 /**
+ * The assignee chip options for a circle (no-assignment · me · other active
+ * doers · the stored value if it's since inactive). Exposed so a screen can
+ * render the chips in its own visual language while reusing this exact,
+ * email-safe option logic (`MemberSelect` renders the shared default chips).
+ */
+export function useMemberOptions(circleId: string, value: string): AssigneeOption[] {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const membersQuery = useCircleMembers(circleId);
+  return useMemo(
+    () => buildOptions(membersQuery.data ?? [], user?.id ?? null, value, t),
+    [membersQuery.data, user?.id, value, t],
+  );
+}
+
+/**
  * A single-choice assignee picker over the circle roster. `value` is the assigned
  * user id, or `NO_ASSIGNEE` ('') for unassigned. Wrap it in a `Surface` card at
  * the call site; it renders a muted group label + the teal chip group, RTL-safe.
@@ -105,13 +122,7 @@ export function MemberSelect({
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { user } = useAuth();
-  const membersQuery = useCircleMembers(circleId);
-
-  const options = useMemo(
-    () => buildOptions(membersQuery.data ?? [], user?.id ?? null, value, t),
-    [membersQuery.data, user?.id, value, t],
-  );
+  const options = useMemberOptions(circleId, value);
 
   return (
     <View style={styles.group}>

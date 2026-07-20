@@ -3,9 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
-import { FigmaFieldLabel } from '@/components/figma/figma-form-screen';
 import { TimeField } from '@/components/time-field';
-import { FontFamily, Radius, Spacing, TouchTarget, withAlpha } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatHm, todayYmd } from '@/utils/date';
 
@@ -40,15 +39,15 @@ export function scheduleDatesValid(draft: ScheduleDraft, today: string): boolean
 }
 
 /**
- * Figma-faithful inline schedule editor for the Add-Medication screen — a visual
- * rebuild of the export's "جدول الجرعات" section (weekday row + dose-time rows +
- * date range). It deliberately mirrors the layout of `AddMedicationScreen` while
- * preserving Sanad's real behavior:
+ * The Dar inline schedule editor for the Add-Medication screen — the «جدول الجرعات»
+ * section (weekday chips + dose-time rows + date range). Dar-styled inline (this
+ * component is medications-only) while preserving Sanad's real behaviour:
  *   - opt-in weekday selection, 0 = Sunday .. 6 = Saturday;
- *   - the protected wheel `TimeField` / `DateField` (NO native time/date inputs);
+ *   - the protected wheel `TimeField` / `DateField` (reused as-is — the wheel
+ *     picker is behaviour-critical and shared);
  *   - live duplicate-time detection + per-row highlight (the parent blocks save).
- * The schedule `notes` field is rendered by the parent as a separate card (also
- * matching the export). State + validation stay owned by `MedicationForm`.
+ * The schedule `notes` field is rendered by the parent as a separate card. State +
+ * validation stay owned by `MedicationForm`.
  */
 export function FigmaScheduleFields({
   value,
@@ -60,7 +59,7 @@ export function FigmaScheduleFields({
   errors?: Partial<Record<string, string>>;
 }) {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const c = useTheme();
 
   const dayLabels = WEEKDAY_KEYS.map((key) => t(`medications.weekdaysShort.${key}`));
   const dayFullLabels = WEEKDAY_KEYS.map((key) => t(`medications.weekdays.${key}`));
@@ -125,7 +124,6 @@ export function FigmaScheduleFields({
   // these via minDate; these messages cover any residual invalid state.
   const today = todayYmd();
   const liveDateErrors = scheduleDateErrors(value, today);
-  // End date can't be earlier than today OR the chosen start date.
   const endMinDate = value.start_date && value.start_date > today ? value.start_date : today;
 
   function startDateError(): string | undefined {
@@ -139,7 +137,6 @@ export function FigmaScheduleFields({
   }
 
   function setStartDate(next: string) {
-    // If the new start is after the current end, drop the now-invalid end date.
     const end = value.end_date && value.end_date < next ? '' : value.end_date;
     onChange({ ...value, start_date: next, end_date: end });
   }
@@ -148,7 +145,7 @@ export function FigmaScheduleFields({
     <View style={styles.container}>
       {/* Days of the week */}
       <View style={styles.group}>
-        <FigmaFieldLabel label={t('medications.fields.days')} />
+        <Text style={[styles.label, { color: c.text }]}>{t('medications.fields.days')}</Text>
         <View style={styles.daysRow}>
           {DAY_INDEXES.map((day) => {
             const on = selectedDays.has(day);
@@ -159,17 +156,11 @@ export function FigmaScheduleFields({
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: on }}
                 accessibilityLabel={dayFullLabels[day]}
-                style={[
-                  styles.dayChip,
-                  {
-                    backgroundColor: on ? theme.primaryBg : theme.backgroundSunken,
-                    borderColor: on ? theme.primary : theme.border,
-                  },
-                ]}>
+                style={[styles.dayChip, { backgroundColor: on ? c.primary : c.backgroundElement, borderColor: c.border }]}>
                 <Text
                   style={[
                     styles.dayChipText,
-                    { color: on ? theme.primaryText : theme.textSecondary, fontFamily: on ? FontFamily.semibold : FontFamily.regular },
+                    { color: on ? c.onPrimary : c.textSecondary, fontFamily: on ? FontFamily.bold : FontFamily.semibold },
                   ]}>
                   {dayLabels[day]}
                 </Text>
@@ -178,12 +169,12 @@ export function FigmaScheduleFields({
           })}
         </View>
         <Pressable onPress={toggleEveryDay} accessibilityRole="button" hitSlop={Spacing.two} style={styles.everyDay}>
-          <Text style={[styles.everyDayText, { color: theme.primaryText }]}>
+          <Text style={[styles.everyDayText, { color: c.primaryText }]}>
             {allSelected ? t('medications.clearDays') : t('medications.everyDay')}
           </Text>
         </Pressable>
         {errors?.days_of_week ? (
-          <Text style={[styles.fieldError, { color: theme.errorFg }]} accessibilityRole="alert">
+          <Text style={[styles.fieldError, { color: c.errorFg }]} accessibilityRole="alert">
             {t('medications.errors.daysRequired')}
           </Text>
         ) : null}
@@ -191,7 +182,7 @@ export function FigmaScheduleFields({
 
       {/* Dose times */}
       <View style={styles.group}>
-        <FigmaFieldLabel label={t('medications.fields.times')} />
+        <Text style={[styles.label, { color: c.text }]}>{t('medications.fields.times')}</Text>
         {value.times.map((time, index) => {
           const isDuplicate = duplicateTimeValues.has(formatHm(time));
           return (
@@ -200,11 +191,11 @@ export function FigmaScheduleFields({
               style={[
                 styles.timeRow,
                 isDuplicate && {
-                  borderWidth: 1,
-                  borderRadius: Radius.md,
+                  borderWidth: BorderWidth.standard,
+                  borderRadius: Radius.card,
                   padding: Spacing.two,
-                  borderColor: theme.errorFg,
-                  backgroundColor: theme.errorBg,
+                  borderColor: c.errorFg,
+                  backgroundColor: c.errorBg,
                 },
               ]}>
               <View style={styles.timeField}>
@@ -219,8 +210,8 @@ export function FigmaScheduleFields({
                   onPress={() => removeTime(index)}
                   accessibilityRole="button"
                   accessibilityLabel={t('common.delete')}
-                  style={[styles.removeTime, { backgroundColor: withAlpha(theme.errorFg, 0.13), borderColor: withAlpha(theme.errorFg, 0.3) }]}>
-                  <X size={16} color={theme.errorFg} />
+                  style={[styles.removeTime, { backgroundColor: c.errorBg, borderColor: c.errorFg }]}>
+                  <X size={16} color={c.errorFg} strokeWidth={2.6} />
                 </Pressable>
               ) : null}
             </View>
@@ -230,20 +221,18 @@ export function FigmaScheduleFields({
           onPress={addTime}
           accessibilityRole="button"
           accessibilityLabel={t('medications.addTimeToSchedule')}
-          style={[styles.addTime, { borderColor: theme.border }]}>
-          <Plus size={15} color={theme.primaryText} />
-          <Text style={[styles.addTimeText, { color: theme.primaryText }]}>
-            {t('medications.addTime')}
-          </Text>
+          style={[styles.addTime, { borderColor: c.border }]}>
+          <Plus size={16} color={c.primaryText} strokeWidth={2.6} />
+          <Text style={[styles.addTimeText, { color: c.primaryText }]}>{t('medications.addTime')}</Text>
         </Pressable>
-        <Text style={[styles.help, { color: theme.textSecondary }]}>{t('medications.helpSameDays')}</Text>
+        <Text style={[styles.help, { color: c.textSecondary }]}>{t('medications.helpSameDays')}</Text>
         {timesError() ? (
-          <Text style={[styles.fieldError, { color: theme.errorFg }]} accessibilityRole="alert">
+          <Text style={[styles.fieldError, { color: c.errorFg }]} accessibilityRole="alert">
             {timesError()}
           </Text>
         ) : null}
         {hasDuplicateTimes ? (
-          <Text style={[styles.fieldError, { color: theme.errorFg }]} accessibilityRole="alert">
+          <Text style={[styles.fieldError, { color: c.errorFg }]} accessibilityRole="alert">
             {t('medications.errors.duplicateTime')}
           </Text>
         ) : null}
@@ -251,7 +240,7 @@ export function FigmaScheduleFields({
 
       {/* Medication period (date range) */}
       <View style={styles.group}>
-        <FigmaFieldLabel label={t('medications.periodTitle')} />
+        <Text style={[styles.label, { color: c.text }]}>{t('medications.periodTitle')}</Text>
         <View style={styles.dateRow}>
           <View style={styles.dateCol}>
             <DateField
@@ -279,27 +268,28 @@ export function FigmaScheduleFields({
 }
 
 const styles = StyleSheet.create({
-  container: { gap: Spacing.three },
+  container: { gap: 14 },
   group: { gap: Spacing.two },
-  daysRow: { flexDirection: 'row', gap: 4 },
+  label: { fontSize: 15, fontFamily: FontFamily.semibold },
+  daysRow: { flexDirection: 'row', gap: 5 },
   dayChip: {
     flex: 1,
     height: 36,
-    borderRadius: Radius.sm,
-    borderWidth: 1.5,
+    borderRadius: Radius.control,
+    borderWidth: BorderWidth.standard,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dayChipText: { fontSize: 14 },
   everyDay: { alignSelf: 'flex-start', paddingVertical: 2 },
-  everyDayText: { fontSize: 14, fontFamily: FontFamily.medium },
+  everyDayText: { fontSize: 15, fontFamily: FontFamily.semibold, textDecorationLine: 'underline' },
   timeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
   timeField: { flex: 1 },
   removeTime: {
-    width: TouchTarget.min,
-    height: TouchTarget.min,
-    borderRadius: Radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
+    width: 46,
+    height: 46,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -307,16 +297,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     minHeight: TouchTarget.min,
-    borderRadius: Radius.md,
-    borderWidth: 1,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
     borderStyle: 'dashed',
     paddingHorizontal: 14,
   },
-  addTimeText: { fontSize: 14, fontFamily: FontFamily.medium },
-  help: { fontSize: 14, fontFamily: FontFamily.regular },
-  fieldError: { fontSize: 14, fontFamily: FontFamily.regular },
+  addTimeText: { fontSize: 16, fontFamily: FontFamily.bold },
+  help: { fontSize: 14, fontFamily: FontFamily.medium, lineHeight: 22 },
+  fieldError: { fontSize: 15, fontFamily: FontFamily.semibold },
   dateRow: { flexDirection: 'row', gap: Spacing.three },
   dateCol: { flex: 1 },
 });

@@ -1,19 +1,24 @@
 import { useRouter } from 'expo-router';
+import { AlertCircle, Check, ChevronRight, Info } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
-
-import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import {
-  FigmaFormScreen,
-  FigmaSectionLabel,
-  FigmaSwitch,
-} from '@/components/figma/figma-form-screen';
-import { FormField } from '@/components/form-field';
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { SectionHeader } from '@/components/section-header';
 import { Surface } from '@/components/surface';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { FontFamily, Radius, Spacing } from '@/constants/theme';
-import { MemberSelect } from '@/features/circle-members/member-assignment';
+import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
+import { useMemberOptions } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { todayYmd } from '@/utils/date';
@@ -27,17 +32,18 @@ import { defaultScheduleDraft, prepareSchedule, type ScheduleDraft } from './sch
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
 /**
- * Add-medication form — an exact-copy rebuild of the Figma `AddMedicationScreen`
- * (header + gold disclaimer + medication-info card + dose-schedule card + notes
- * card + sticky save), wired to Sanad's real create flow, schema, and the
- * protected schedule validation. The Figma export's blue/Cairo are replaced
- * with the committed teal/Cairo tokens, and its native time/date inputs with the
- * protected wheel pickers — but the layout, sections, and order match the export.
+ * Add-medication form, rebuilt to the Dar "6b" frame (green band header + gold
+ * non-diagnostic banner + section cards + inline text fields + responsible chips +
+ * the schedule editor + a full-width save), wired to Sanad's real create flow,
+ * schema, and the protected schedule validation. Everything is inline-Dar and
+ * scoped to Medications — no shared form component is restyled. Behaviour, data,
+ * validation and copy are unchanged (bare ghost placeholders per the Dar correction).
  */
 export function MedicationForm({ circleId }: { circleId: string }) {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const c = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const create = useCreateMedication(circleId);
 
   const [name, setName] = useState('');
@@ -52,6 +58,8 @@ export function MedicationForm({ circleId }: { circleId: string }) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
+  const responsibleOptions = useMemberOptions(circleId, responsibleUserId);
+
   const { dirty } = useUnsavedChanges({
     name,
     dosage,
@@ -62,8 +70,6 @@ export function MedicationForm({ circleId }: { circleId: string }) {
     schedule,
   });
   const submitting = create.isPending;
-  // Whether the schedule's add-flow date constraints hold (no past dates; end not
-  // before start). The pickers enforce this; onSubmit re-checks before saving.
   const datesValid = scheduleDatesValid(schedule, todayYmd());
 
   // Navigate back only after the guard has released (next commit), so a successful
@@ -122,122 +128,321 @@ export function MedicationForm({ circleId }: { circleId: string }) {
   }
 
   return (
-    <FigmaFormScreen
-      title={t('medications.addTitle')}
-      subtitle={t('medications.addSubtitle')}
-      onBack={() => router.back()}
-      disclaimer={t('medications.disclaimer')}>
-      <UnsavedChangesGuard when={dirty && !submitted} />
-
-      {/* Medication info */}
-      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
-        <FigmaSectionLabel>{t('medications.medicationInfoTitle')}</FigmaSectionLabel>
-        <FormField
-          label={t('medications.fields.name')}
-          value={name}
-          onChangeText={setName}
-          placeholder={t('medications.placeholders.name')}
-          required
-          error={medFieldError(medErrors.name)}
-        />
-        <FormField
-          label={t('medications.fields.dosage')}
-          value={dosage}
-          onChangeText={setDosage}
-          placeholder={t('medications.placeholders.dosage')}
-          error={medFieldError(medErrors.dosage)}
-        />
-        <FormField
-          label={t('medications.fields.form')}
-          value={medForm}
-          onChangeText={setMedForm}
-          placeholder={t('medications.placeholders.form')}
-          error={medFieldError(medErrors.form)}
-        />
-        <FormField
-          label={t('medications.fields.instructions')}
-          value={instructions}
-          onChangeText={setInstructions}
-          placeholder={t('medications.placeholders.instructions')}
-          multiline
-          error={medFieldError(medErrors.instructions)}
-        />
-
-        <View style={[styles.divider, { backgroundColor: theme.divider }]} />
-        <View style={styles.switchRow}>
-          <View style={styles.switchText}>
-            <Text style={[styles.switchLabel, { color: theme.text }]}>
-              {t('medications.fields.withFood')}
-            </Text>
-            <Text style={[styles.switchHint, { color: theme.textSecondary }]}>
-              {t('medications.withFoodReminder')}
-            </Text>
+    <View style={[styles.fill, { backgroundColor: c.background }]}>
+      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {/* Form header band */}
+        <View style={[styles.band, { backgroundColor: c.band, paddingTop: insets.top + 16 }]}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
+            style={[styles.bandBack, { borderColor: c.bandInk }]}>
+            <ChevronRight size={20} color={c.bandInk} strokeWidth={2.4} />
+          </Pressable>
+          <View style={styles.bandTitleCol}>
+            <Text style={[styles.bandTitle, { color: c.bandInk }]}>{t('medications.addTitle')}</Text>
+            <Text style={[styles.bandSubtitle, { color: c.bandInk }]}>{t('medications.addSubtitle')}</Text>
           </View>
-          <FigmaSwitch
-            value={withFood}
-            onValueChange={setWithFood}
-            accessibilityLabel={t('medications.fields.withFood')}
-          />
+          <View style={styles.bandSpacer} />
         </View>
-      </Surface>
 
-      {/* Responsible person */}
-      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
-        <MemberSelect
-          circleId={circleId}
-          value={responsibleUserId}
-          label={t('assignment.responsible')}
-          onChange={setResponsibleUserId}
-        />
-      </Surface>
+        <ScrollView
+          contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 24 }]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          <UnsavedChangesGuard when={dirty && !submitted} />
 
-      {/* Dose schedule */}
-      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
-        <FigmaSectionLabel>{t('medications.firstScheduleTitle')}</FigmaSectionLabel>
-        <FigmaScheduleFields value={schedule} onChange={setSchedule} errors={scheduleErrors} />
-      </Surface>
+          {/* Non-diagnostic disclaimer (gold) */}
+          <View style={[styles.disclaimer, { backgroundColor: c.goldFill, borderColor: c.border }]}>
+            <Info size={20} color={c.goldInk} strokeWidth={2.2} style={styles.disclaimerIcon} />
+            <Text style={[styles.disclaimerText, { color: c.goldInk }]}>{t('medications.disclaimer')}</Text>
+          </View>
 
-      {/* Notes */}
-      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
-        <FormField
-          label={t('medications.fields.scheduleNotes')}
-          value={schedule.notes}
-          onChangeText={(notes) => setSchedule((current) => ({ ...current, notes }))}
-          placeholder={t('medications.placeholders.scheduleNotes')}
-          multiline
-          error={scheduleErrors.notes ? t('validation.tooLong') : undefined}
-        />
-      </Surface>
+          {/* Medication info */}
+          <Surface tone="card" padded={14} gap={14}>
+            <SectionHeader title={t('medications.medicationInfoTitle')} />
+            <MedField
+              label={t('medications.fields.name')}
+              required
+              value={name}
+              onChangeText={setName}
+              placeholder={t('medications.placeholders.name')}
+              error={medFieldError(medErrors.name)}
+            />
+            <MedField
+              label={t('medications.fields.dosage')}
+              value={dosage}
+              onChangeText={setDosage}
+              placeholder={t('medications.placeholders.dosage')}
+              error={medFieldError(medErrors.dosage)}
+            />
+            <MedField
+              label={t('medications.fields.form')}
+              value={medForm}
+              onChangeText={setMedForm}
+              placeholder={t('medications.placeholders.form')}
+              error={medFieldError(medErrors.form)}
+            />
+            <MedField
+              label={t('medications.fields.instructions')}
+              value={instructions}
+              onChangeText={setInstructions}
+              placeholder={t('medications.placeholders.instructions')}
+              multiline
+              error={medFieldError(medErrors.instructions)}
+            />
+            <View style={[styles.divider, { backgroundColor: c.border }]} />
+            <View style={styles.switchRow}>
+              <View style={styles.switchText}>
+                <Text style={[styles.switchLabel, { color: c.text }]}>{t('medications.fields.withFood')}</Text>
+                <Text style={[styles.switchHint, { color: c.textSecondary }]}>{t('medications.withFoodReminder')}</Text>
+              </View>
+              <DarSwitch
+                value={withFood}
+                onValueChange={setWithFood}
+                accessibilityLabel={t('medications.fields.withFood')}
+              />
+            </View>
+          </Surface>
 
-      {/* Primary CTA — rendered directly in the body (not the footer prop, which
-          did not render on Android). Always a filled teal button; an invalid press
-          runs validation and shows inline errors. */}
-      <View style={styles.footer}>
-        {submitError ? (
-          <Text
-            style={[styles.footerError, { color: theme.errorFg }]}
-            accessibilityRole="alert"
-            accessibilityLiveRegion="polite">
-            {submitError}
-          </Text>
-        ) : null}
-        <FigmaFooterPrimaryButton label={t('medications.add')} onPress={onSubmit} loading={submitting} />
-      </View>
-    </FigmaFormScreen>
+          {/* Responsible person */}
+          <Surface tone="card" padded={14} gap={12}>
+            <SectionHeader title={t('assignment.responsible')} />
+            <View style={styles.chipsWrap}>
+              {responsibleOptions.map((opt) => {
+                const selected = opt.value === responsibleUserId;
+                return (
+                  <Pressable
+                    key={opt.value || 'none'}
+                    onPress={() => setResponsibleUserId(opt.value)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: selected ? c.primary : c.backgroundElement, borderColor: c.border },
+                    ]}>
+                    {selected ? <Check size={13} color={c.onPrimary} strokeWidth={2.8} /> : null}
+                    <Text
+                      style={[
+                        styles.chipText,
+                        { color: selected ? c.onPrimary : c.textSecondary, fontFamily: selected ? FontFamily.bold : FontFamily.semibold },
+                      ]}>
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </Surface>
+
+          {/* Dose schedule */}
+          <Surface tone="card" padded={14} gap={12}>
+            <SectionHeader title={t('medications.firstScheduleTitle')} />
+            <FigmaScheduleFields value={schedule} onChange={setSchedule} errors={scheduleErrors} />
+          </Surface>
+
+          {/* Notes */}
+          <Surface tone="card" padded={14}>
+            <MedField
+              label={t('medications.fields.scheduleNotes')}
+              value={schedule.notes}
+              onChangeText={(notes) => setSchedule((current) => ({ ...current, notes }))}
+              placeholder={t('medications.placeholders.scheduleNotes')}
+              multiline
+              error={scheduleErrors.notes ? t('validation.tooLong') : undefined}
+            />
+          </Surface>
+
+          {/* Primary CTA — always a visible green button; an invalid press runs
+              validation and reveals the inline errors. */}
+          {submitError ? (
+            <Text
+              style={[styles.footerError, { color: c.errorFg }]}
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite">
+              {submitError}
+            </Text>
+          ) : null}
+          <Pressable
+            onPress={onSubmit}
+            disabled={submitting}
+            accessibilityRole="button"
+            accessibilityLabel={t('medications.add')}
+            style={[styles.saveBtn, { backgroundColor: c.primary, borderColor: c.border, opacity: submitting ? 0.7 : 1 }]}>
+            <Text style={[styles.saveText, { color: c.onPrimary }]}>{t('medications.add')}</Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
+/** Inline Dar text field: 2px border, sunken fill (terr on error), acc focus ring. */
+function MedField({
+  label,
+  required,
+  value,
+  onChangeText,
+  placeholder,
+  error,
+  multiline,
+}: {
+  label: string;
+  required?: boolean;
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder: string;
+  error?: string;
+  multiline?: boolean;
+}) {
+  const { t } = useTranslation();
+  const c = useTheme();
+  const [focused, setFocused] = useState(false);
+  const borderColor = error ? c.errorFg : focused ? c.primaryText : c.border;
+  const backgroundColor = error ? c.errorBg : c.backgroundSunken;
+  return (
+    <View style={styles.field}>
+      <Text style={[styles.fieldLabel, { color: c.text }]}>
+        {label}
+        {required ? <Text style={{ color: c.errorFg }}>{` (${t('common.required')})`}</Text> : null}
+      </Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={c.textSecondary}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        multiline={multiline}
+        textAlignVertical={multiline ? 'top' : 'center'}
+        style={[styles.input, { borderColor, backgroundColor, color: c.text }, multiline && styles.inputMultiline]}
+      />
+      {error ? (
+        <View style={styles.fieldErrorRow} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          <AlertCircle size={15} color={c.errorFg} strokeWidth={2.4} />
+          <Text style={[styles.fieldErrorText, { color: c.errorFg }]}>{error}</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/** The Dar brand toggle (48×28 pill): 2px border, sunken off / btn on, card thumb. */
+function DarSwitch({
+  value,
+  onValueChange,
+  accessibilityLabel,
+}: {
+  value: boolean;
+  onValueChange: (next: boolean) => void;
+  accessibilityLabel: string;
+}) {
+  const c = useTheme();
+  return (
+    <Pressable
+      onPress={() => onValueChange(!value)}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      accessibilityLabel={accessibilityLabel}
+      style={[
+        styles.track,
+        {
+          backgroundColor: value ? c.primary : c.backgroundSunken,
+          borderColor: value ? c.primary : c.border,
+          justifyContent: value ? 'flex-end' : 'flex-start',
+        },
+      ]}>
+      <View style={[styles.thumb, { backgroundColor: c.backgroundElement, borderColor: c.border }]} />
+    </Pressable>
+  );
+}
+
+const R8 = Radius.card;
+
 const styles = StyleSheet.create({
-  footer: { gap: Spacing.two },
-  footerError: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
-  divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
-  switchRow: {
+  fill: { flex: 1 },
+  // Header band
+  band: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 16 },
+  bandBack: {
+    width: 44,
+    height: 44,
+    borderWidth: BorderWidth.standard,
+    borderRadius: R8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  bandTitleCol: { flex: 1, minWidth: 0 },
+  bandTitle: { fontSize: 20, fontFamily: FontFamily.bold, lineHeight: 28 },
+  bandSubtitle: { fontSize: 14, fontFamily: FontFamily.medium, opacity: 0.85 },
+  bandSpacer: { width: 44, flexShrink: 0 },
+  // Scroll body
+  scroll: { paddingHorizontal: 14, paddingTop: 14, gap: 12 },
+  // Disclaimer
+  disclaimer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    borderWidth: BorderWidth.standard,
+    borderRadius: R8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  disclaimerIcon: { marginTop: 2 },
+  disclaimerText: { flex: 1, fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 25 },
+  // Fields
+  field: { gap: 5 },
+  fieldLabel: { fontSize: 15, fontFamily: FontFamily.semibold },
+  input: {
+    borderWidth: BorderWidth.standard,
+    borderRadius: R8,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    fontSize: 16,
+    fontFamily: FontFamily.medium,
+    minHeight: 48,
+  },
+  inputMultiline: { minHeight: 84, paddingTop: 11 },
+  fieldErrorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 1 },
+  fieldErrorText: { flex: 1, fontSize: 15, fontFamily: FontFamily.semibold },
+  // With-food row
+  divider: { height: BorderWidth.standard, alignSelf: 'stretch' },
+  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16 },
+  switchText: { flex: 1, gap: 2 },
+  switchLabel: { fontSize: 15, fontFamily: FontFamily.medium },
+  switchHint: { fontSize: 14, fontFamily: FontFamily.medium },
+  track: {
+    width: 48,
+    height: 28,
+    borderRadius: Radius.pill,
+    borderWidth: BorderWidth.thin,
+    paddingHorizontal: 2,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
+    flexShrink: 0,
   },
-  switchText: { flex: 1, gap: 2 },
-  switchLabel: { fontSize: 15, fontFamily: FontFamily.regular },
-  switchHint: { fontSize: 14, fontFamily: FontFamily.regular },
+  thumb: { width: 20, height: 20, borderRadius: 10, borderWidth: BorderWidth.thin },
+  // Responsible chips
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: BorderWidth.standard,
+    borderRadius: R8,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  chipText: { fontSize: 15 },
+  // Footer
+  footerError: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
+  saveBtn: {
+    borderWidth: BorderWidth.standard,
+    borderRadius: R8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 52,
+  },
+  saveText: { fontSize: 17, fontFamily: FontFamily.bold },
 });

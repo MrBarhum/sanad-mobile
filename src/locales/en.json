@@ -4,6 +4,7 @@
   "retry": "Retry",
   "error": "Couldn't complete that. Check your connection and try again.",
   "common": {
+    "required": "Required",
     "edit": "Edit",
     "details": "Details",
     "delete": "Delete",
@@ -544,10 +545,10 @@
       "scheduleNotes": "Additional notes"
     },
     "placeholders": {
-      "name": "e.g. Metformin",
-      "dosage": "e.g. 500 mg",
-      "form": "e.g. tablet, syrup, injection",
-      "instructions": "e.g. take with water",
+      "name": "Metformin",
+      "dosage": "500 mg",
+      "form": "tablet, syrup, injection",
+      "instructions": "take with water",
       "endDate": "Optional — YYYY-MM-DD",
       "scheduleNotes": "Any special instructions..."
     },
