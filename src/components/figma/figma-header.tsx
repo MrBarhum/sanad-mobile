@@ -75,6 +75,35 @@ export function FigmaHeader({ title, onAdd, addAccessibilityLabel, onBack, trail
   );
 }
 
+/**
+ * The Dar tab-screen band: a full-bleed deep-green header carrying a 24/800 title
+ * and an optional 16/600 subtitle (Explore / Account). Pass it to `FigmaScreen`'s
+ * `band` slot — it supplies its own top safe-area inset so the green fill runs to
+ * the top edge under the status bar. No back / add affordance (tab roots).
+ */
+export function FigmaTabBand({ title, subtitle }: { title: string; subtitle?: string }) {
+  const c = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[bandStyles.band, { backgroundColor: c.band, paddingTop: insets.top + 22 }]}>
+      <Text style={[bandStyles.title, { color: c.bandInk }]} accessibilityRole="header" numberOfLines={1}>
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text style={[bandStyles.subtitle, { color: c.bandInk }]} numberOfLines={1}>
+          {subtitle}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+const bandStyles = StyleSheet.create({
+  band: { paddingHorizontal: 18, paddingBottom: 16, gap: 3 },
+  title: { fontSize: 24, fontFamily: FontFamily.bold, lineHeight: 34 },
+  subtitle: { fontSize: 16, fontFamily: FontFamily.medium, opacity: 0.85 },
+});
+
 const SIZE = 44;
 
 const styles = StyleSheet.create({

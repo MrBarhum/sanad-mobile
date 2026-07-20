@@ -1,20 +1,22 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { FigmaListRow, FigmaSectionLabel } from '@/components/figma/figma-list-row';
+import { FigmaTabBand } from '@/components/figma/figma-header';
+import { FigmaListRow } from '@/components/figma/figma-list-row';
 import { FigmaScreen } from '@/components/figma/figma-screen';
+import { SectionHeader } from '@/components/section-header';
 import { Surface } from '@/components/surface';
+import { type GlyphChipTone } from '@/components/glyph-chip';
 import { type IconName } from '@/constants/icons';
-import { FontFamily, Radius, type ThemeColor } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Radius } from '@/constants/theme';
 
 type ExploreItem = {
   id: string;
   route: string;
   titleKey: string;
   subtitleKey: string;
-  colorKey: ThemeColor;
+  tone: GlyphChipTone;
   iconName: IconName;
 };
 
@@ -25,13 +27,12 @@ type ExploreSection = {
 };
 
 /**
- * The Figma Make "Explore" screen, recreated literally in React Native: a plain
- * title header (no back / add) over grouped section lists. Each row is a tinted
- * icon chip + label + sublabel + a trailing chevron that navigates to the real
- * existing feature center (its own CircleGate resolves the active circle). This
- * is a static navigation index — no per-item counts are fabricated; the
- * sublabels describe each feature instead. Cairo + theme tokens, dark-first, RTL.
- * No old Sanad Screen/Surface/GlyphChip.
+ * The Dar "Explore" screen (frame 8a): a green tab-band header over three grouped
+ * section cards. Each section = a `SectionHeader` (10×10 square + 16/800 title) +
+ * a Surface holding 2px-separated `FigmaListRow`s — a 40dp toned icon square +
+ * title + a describing subtitle + a back chevron that routes to the real feature
+ * center (each resolves the active circle through its own CircleGate). A static
+ * navigation index — no fabricated counts. Cairo + Dar tokens, both themes, RTL.
  */
 const SECTIONS: ExploreSection[] = [
   {
@@ -43,7 +44,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/medications',
         titleKey: 'careCircle.dashboard.sections.medications.title',
         subtitleKey: 'figma.explore.items.medications',
-        colorKey: 'categoryTeal',
+        tone: 'primary',
         iconName: 'medication',
       },
       {
@@ -51,15 +52,15 @@ const SECTIONS: ExploreSection[] = [
         route: '/tasks',
         titleKey: 'careCircle.dashboard.sections.tasks.title',
         subtitleKey: 'figma.explore.items.tasks',
-        colorKey: 'categoryBlue',
-        iconName: 'success',
+        tone: 'success',
+        iconName: 'task',
       },
       {
         id: 'appointments',
         route: '/appointments',
         titleKey: 'careCircle.dashboard.sections.appointments.title',
         subtitleKey: 'figma.explore.items.appointments',
-        colorKey: 'categoryPurple',
+        tone: 'primary',
         iconName: 'appointment',
       },
       {
@@ -67,8 +68,8 @@ const SECTIONS: ExploreSection[] = [
         route: '/visits',
         titleKey: 'careCircle.dashboard.sections.visits.title',
         subtitleKey: 'figma.explore.items.visits',
-        colorKey: 'categoryGold',
-        iconName: 'member',
+        tone: 'warning',
+        iconName: 'visit',
       },
     ],
   },
@@ -81,15 +82,15 @@ const SECTIONS: ExploreSection[] = [
         route: '/vitals',
         titleKey: 'careCircle.dashboard.sections.vitals.title',
         subtitleKey: 'figma.explore.items.vitals',
-        colorKey: 'categoryBlue',
-        iconName: 'activity',
+        tone: 'success',
+        iconName: 'vital',
       },
       {
         id: 'dailyLogs',
         route: '/daily-logs',
         titleKey: 'careCircle.dashboard.sections.dailyLogs.title',
         subtitleKey: 'figma.explore.items.dailyLogs',
-        colorKey: 'categoryGreen',
+        tone: 'primary',
         iconName: 'dailyLog',
       },
       {
@@ -97,7 +98,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/doctors',
         titleKey: 'careCircle.dashboard.sections.doctors.title',
         subtitleKey: 'figma.explore.items.doctors',
-        colorKey: 'categoryGold',
+        tone: 'warning',
         iconName: 'doctor',
       },
       {
@@ -105,8 +106,8 @@ const SECTIONS: ExploreSection[] = [
         route: '/emergency-card',
         titleKey: 'careCircle.dashboard.sections.emergency.title',
         subtitleKey: 'figma.explore.items.emergency',
-        colorKey: 'dangerSolid',
-        iconName: 'error',
+        tone: 'error',
+        iconName: 'emergency',
       },
     ],
   },
@@ -119,7 +120,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/pulse',
         titleKey: 'pulse.title',
         subtitleKey: 'pulse.subtitle',
-        colorKey: 'categoryTeal',
+        tone: 'success',
         iconName: 'activity',
       },
       {
@@ -127,7 +128,7 @@ const SECTIONS: ExploreSection[] = [
         route: '/circle-members',
         titleKey: 'circleMembers.title',
         subtitleKey: 'figma.explore.items.members',
-        colorKey: 'categoryPurple',
+        tone: 'primary',
         iconName: 'member',
       },
       {
@@ -135,8 +136,8 @@ const SECTIONS: ExploreSection[] = [
         route: '/recipient-profile',
         titleKey: 'recipientProfile.title',
         subtitleKey: 'figma.explore.items.recipientProfile',
-        colorKey: 'categoryTeal',
-        iconName: 'vital',
+        tone: 'warning',
+        iconName: 'profile',
       },
     ],
   },
@@ -145,28 +146,21 @@ const SECTIONS: ExploreSection[] = [
 export default function ExploreScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const c = useTheme();
 
   return (
-    <FigmaScreen gap={24}>
-      {/* Title header (no back / add) */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: c.text }]} accessibilityRole="header">
-          {t('figma.explore.title')}
-        </Text>
-        <Text style={[styles.subtitle, { color: c.textSecondary }]}>{t('figma.explore.subtitle')}</Text>
-      </View>
-
-      {/* Grouped section lists */}
+    <FigmaScreen
+      band={<FigmaTabBand title={t('figma.explore.title')} subtitle={t('figma.explore.subtitle')} />}
+      contentGutter={14}
+      gap={16}>
       {SECTIONS.map((section) => (
-        <View key={section.id}>
-          <FigmaSectionLabel label={t(section.titleKey)} />
-          <Surface tone="card" radius={Radius.xl} padded={0}>
+        <View key={section.id} style={{ gap: 8 }}>
+          <SectionHeader title={t(section.titleKey)} />
+          <Surface tone="card" radius={Radius.card} padded={0}>
             {section.items.map((item, i) => (
               <FigmaListRow
                 key={item.id}
                 iconName={item.iconName}
-                color={item.colorKey}
+                tone={item.tone}
                 title={t(item.titleKey)}
                 subtitle={t(item.subtitleKey)}
                 topDivider={i > 0}
@@ -179,9 +173,3 @@ export default function ExploreScreen() {
     </FigmaScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  header: { gap: 4 },
-  title: { fontSize: 26, fontFamily: FontFamily.bold },
-  subtitle: { fontSize: 14, fontFamily: FontFamily.regular },
-});
