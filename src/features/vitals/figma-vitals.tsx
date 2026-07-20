@@ -1,15 +1,15 @@
 import { useRouter } from 'expo-router';
+import { Info } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { GlyphChip } from '@/components/glyph-chip';
-import { EmptyState } from '@/components/states';
+import { GlyphChip, type GlyphChipTone } from '@/components/glyph-chip';
 import { isolateLtr } from '@/components/ltr-text';
-import { Surface } from '@/components/surface';
+import { EmptyState } from '@/components/states';
 import { type IconName } from '@/constants/icons';
-import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 import { hmFromInstant, todayYmd, ymdFromInstant } from '@/utils/date';
@@ -19,30 +19,31 @@ import { formatVitalValue } from './describe';
 import { useVitals } from './hooks';
 
 /**
- * Per-type icon + category color for the vital cards. NON-DIAGNOSTIC: the color is
- * a fixed per-type category accent (a visual aid only) — it never encodes a
- * normal/abnormal judgement of the value. Mirrors the Figma `VitalsScreen` chips.
+ * Per-type icon + category TONE for the vital cards. NON-DIAGNOSTIC: the tone is a
+ * fixed per-type category accent (a visual aid only) — it never encodes a
+ * normal/abnormal judgement of the value. Tones resolve to the Dar tint pairs the
+ * frame draws on each icon square (primary → tacc/acc, success → tok/ok, warning
+ * → twarn/warn). The per-type icon glyph is unchanged.
  */
-const VITAL_VISUAL: Record<VitalReadingType, { iconName: IconName; colorKey: ThemeColor }> = {
-  blood_pressure: { iconName: 'activity', colorKey: 'categoryBlue' },
-  heart_rate: { iconName: 'heart', colorKey: 'categoryPurple' },
-  temperature: { iconName: 'temperature', colorKey: 'categoryGold' },
-  blood_sugar: { iconName: 'drop', colorKey: 'categoryPurple' },
-  oxygen_saturation: { iconName: 'oxygen', colorKey: 'categoryGreen' },
-  weight: { iconName: 'weight', colorKey: 'categoryGold' },
-  other: { iconName: 'doctor', colorKey: 'categoryTeal' },
+const VITAL_VISUAL: Record<VitalReadingType, { iconName: IconName; tone: GlyphChipTone }> = {
+  blood_pressure: { iconName: 'activity', tone: 'primary' },
+  heart_rate: { iconName: 'heart', tone: 'success' },
+  temperature: { iconName: 'temperature', tone: 'warning' },
+  blood_sugar: { iconName: 'drop', tone: 'primary' },
+  oxygen_saturation: { iconName: 'oxygen', tone: 'success' },
+  weight: { iconName: 'weight', tone: 'warning' },
+  other: { iconName: 'doctor', tone: 'primary' },
 };
 
 /**
- * The Figma Make `VitalsScreen`, recreated as literally as possible in React
- * Native and wired to real Sanad data. Header (back + title + teal add), the
- * strong non-diagnostic disclaimer banner, then a 2-column grid of vital cards:
- * a category-colored type icon chip, the type name, the measured value + unit,
- * and the timestamp. Strictly NON-DIAGNOSTIC — value + unit + time only, no
- * normal/abnormal labels and no health-based color coding. Tap → /vitals/[id].
- * Reuses `VitalsCenter`'s hooks/fields verbatim (`useVitals`, `formatVitalValue`,
- * `reading_type`, `reading_at`, `recorded_by`). No old Sanad Screen/Surface/
- * Section/GlyphChip.
+ * The Dar vital-readings list (frame 8d): a deep-green sub-screen header (back +
+ * «القياسات الحيوية» + filled add), a strong non-diagnostic disclaimer well, then a
+ * 2-column grid of reading cards — a tinted per-type icon square, the type name,
+ * the measured value + unit (big, LTR, baseline-aligned), and the timestamp meta.
+ * Strictly NON-DIAGNOSTIC: value + unit + time only, no normal/abnormal labels and
+ * no health-based color coding. Tap → /vitals/[id]. Reuses `useVitals`,
+ * `formatVitalValue`, and the `reading_type` / `reading_at` / `recorded_by` fields
+ * verbatim. Cairo + Dar tokens, both themes, RTL. Behaviour/data/routing unchanged.
  */
 export function FigmaVitals({
   circleId,
@@ -73,13 +74,12 @@ export function FigmaVitals({
     />
   );
 
+  // Non-diagnostic disclaimer well — tacc (primaryBg) tint, 2px border, an info
+  // glyph in the green accent, and a 14/700 line in the ink tone (frame 8d).
   const disclaimer = (
-    <View
-      style={[
-        styles.disclaimer,
-        { backgroundColor: withAlpha(c.primary, 0.08), borderColor: withAlpha(c.primary, 0.15) },
-      ]}>
-      <Text style={[styles.disclaimerText, { color: c.textSecondary }]}>{t('vitals.disclaimer')}</Text>
+    <View style={[styles.disclaimer, { backgroundColor: c.primaryBg, borderColor: c.border }]}>
+      <Info size={18} color={c.primaryText} strokeWidth={2.2} style={styles.disclaimerIcon} />
+      <Text style={[styles.disclaimerText, { color: c.text }]}>{t('vitals.disclaimer')}</Text>
     </View>
   );
 
@@ -101,15 +101,15 @@ export function FigmaVitals({
       <FigmaScreen>
         {header}
         {disclaimer}
-        <Surface radius={Radius.xl} padded={20}>
-          <Text style={[styles.stateTitle, { color: c.errorFg }]}>{t('vitals.loadError')}</Text>
+        <View style={[styles.errorCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+          <Text style={[styles.errorText, { color: c.errorFg }]}>{t('vitals.loadError')}</Text>
           <Pressable
             onPress={() => vitalsQuery.refetch()}
             accessibilityRole="button"
             style={[styles.retry, { backgroundColor: c.primary }]}>
             <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
           </Pressable>
-        </Surface>
+        </View>
       </FigmaScreen>
     );
   }
@@ -165,7 +165,7 @@ function VitalCard({
   const typeLabel = t(`vitals.type.${reading.reading_type}`);
 
   // The measured value with its unit, split into a large value + small unit to
-  // mirror the Figma baseline-aligned value/unit pair. NON-DIAGNOSTIC.
+  // mirror the frame's baseline-aligned value/unit pair (LTR). NON-DIAGNOSTIC.
   const full = formatVitalValue(reading);
   const unit = reading.unit ?? '';
   const value = unit && full.endsWith(unit) ? full.slice(0, full.length - unit.length).trim() : full;
@@ -180,66 +180,88 @@ function VitalCard({
       : '';
 
   return (
-    <Surface
-      tone="card"
-      radius={Radius.xl}
-      padded={16}
+    <Pressable
       onPress={onOpen}
+      accessibilityRole="button"
       accessibilityLabel={`${typeLabel}${value ? `: ${value} ${unit}` : ''}`}
       accessibilityHint={when}
-      style={styles.cell}>
-      <GlyphChip
-        iconName={visual.iconName}
-        color={visual.colorKey}
-        size='md'
-        style={styles.cellChip}
-      />
+      style={({ pressed }) => [
+        styles.cell,
+        { backgroundColor: c.backgroundElement, borderColor: c.border },
+        pressed && styles.cellPressed,
+      ]}>
+      <GlyphChip iconName={visual.iconName} tone={visual.tone} size="sm" style={styles.cellChip} />
       <Text style={[styles.type, { color: c.textSecondary }]} numberOfLines={1}>
         {typeLabel}
       </Text>
       {value ? (
-        <View style={styles.valueRow}>
-          <Text style={[styles.value, { color: c.text }]} numberOfLines={1}>
-            {isolateLtr(value)}
-          </Text>
+        <Text style={[styles.valueLine, { color: c.text }]} numberOfLines={1}>
+          {isolateLtr(value)}
           {unit ? (
-            <Text style={[styles.unit, { color: c.textSecondary }]} numberOfLines={1}>
-              {unit}
-            </Text>
+            <Text style={[styles.unit, { color: c.textSecondary }]}>{` ${unit}`}</Text>
           ) : null}
-        </View>
+        </Text>
       ) : null}
       {when ? (
-        <Text style={[styles.time, { color: c.textSecondary }]} numberOfLines={1}>
+        <Text style={[styles.meta, { color: c.textSecondary }]} numberOfLines={1}>
           {when}
           {mine ? ` · ${t('vitals.mineLabel')}` : ''}
         </Text>
       ) : null}
-    </Surface>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  // Disclaimer banner (Figma: teal-tinted rounded-2xl well).
+  // Non-diagnostic disclaimer well (frame: tacc fill, 2px border, info + 14/700 ink).
   disclaimer: {
-    borderRadius: Radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
   },
-  disclaimerText: { fontSize: 14, lineHeight: 19, fontFamily: FontFamily.regular },
-  // 2-column grid.
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  cell: { width: '47%', flexGrow: 1 },
-  cellChip: { marginBottom: 12 },
-  type: { fontSize: 14, fontFamily: FontFamily.regular },
-  valueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 2 },
-  value: { fontSize: 22, fontFamily: FontFamily.bold, lineHeight: 26 },
-  unit: { fontSize: 14, fontFamily: FontFamily.regular },
-  time: { fontSize: 14, fontFamily: FontFamily.regular, marginTop: 4 },
+  disclaimerIcon: { marginTop: 3, flexShrink: 0 },
+  disclaimerText: { flex: 1, fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 23 },
+  // 2-column reading grid.
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  cell: {
+    width: '47%',
+    flexGrow: 1,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  cellPressed: { opacity: 0.7 },
+  // Frame's 38px tinted icon square (GlyphChip keeps its 2px border + radius 6).
+  cellChip: { width: 38, height: 38 },
+  type: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 22, marginTop: 8 },
+  // Big LTR value + small unit on one baseline, anchored to the start (RTL right).
+  valueLine: {
+    writingDirection: 'ltr',
+    textAlign: 'right',
+    fontSize: 24,
+    fontFamily: FontFamily.black,
+    lineHeight: 32,
+    marginTop: 2,
+  },
+  unit: { fontSize: 14, fontFamily: FontFamily.semibold },
+  meta: { fontSize: 14, fontFamily: FontFamily.medium, lineHeight: 22, marginTop: 2 },
   // States.
-  stateTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
   center: { paddingVertical: 64, alignItems: 'center', justifyContent: 'center' },
-  retry: { marginTop: 16, minHeight: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
-  retryText: { fontSize: 16, fontFamily: FontFamily.semibold },
+  errorCard: { borderWidth: BorderWidth.standard, borderRadius: Radius.card, padding: 20 },
+  errorText: { fontSize: 16, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  retry: {
+    marginTop: 12,
+    alignSelf: 'center',
+    borderRadius: Radius.control,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  retryText: { fontSize: 15, fontFamily: FontFamily.bold },
 });
