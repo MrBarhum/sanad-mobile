@@ -1,11 +1,13 @@
+import { ArrowDown, ArrowLeftRight, ArrowUp } from 'lucide-react-native';
+import type { ComponentType } from 'react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { Button } from '@/components/button';
 import { OptionSelect } from '@/components/option-select';
-import { FontFamily } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { memberErrorKey, type CircleMember, type CircleRole } from './api';
@@ -16,10 +18,24 @@ import {
   useUpdateMemberStatus,
 } from './hooks';
 import { assignableRolesFor, canChangeStatus, isLastActiveAdmin } from './permissions';
-import { roleChangeDirection } from './role-capabilities';
+import { roleChangeDirection, type RoleChangeDirection } from './role-capabilities';
 
 type ConfirmKind = 'remove' | 'leave' | 'owner';
 type Mode = 'menu' | 'role' | ConfirmKind;
+
+type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+
+/**
+ * The live role-change effect note (frame 9b): a bordered tinted callout whose tone
+ * signals whether the change lowers (amber caution, down arrow), raises (green
+ * accent, up arrow) or laterally shifts (neutral, side arrows) the member's access.
+ * The frame depicts the downgrade case; the other two reuse the same chrome.
+ */
+const DIRECTION_VISUAL: Record<RoleChangeDirection, { fg: ThemeColor; tint: ThemeColor; Icon: IconCmp }> = {
+  increase: { fg: 'primaryText', tint: 'primaryBg', Icon: ArrowUp },
+  decrease: { fg: 'warningFg', tint: 'warningBg', Icon: ArrowDown },
+  lateral: { fg: 'textSecondary', tint: 'backgroundSunken', Icon: ArrowLeftRight },
+};
 
 /**
  * Whether the actor has at least one action available on this member — the roster
@@ -125,6 +141,8 @@ export function MemberActionsSheet({
 
   const roleChanged = selectedRole !== shown.role;
   const direction = roleChangeDirection(shown.role, selectedRole);
+  const dirVisual = DIRECTION_VISUAL[direction];
+  const DirectionIcon = dirVisual.Icon;
 
   async function run(action: () => Promise<unknown>, after?: () => void) {
     setError(null);
@@ -250,7 +268,7 @@ export function MemberActionsSheet({
         </>
       ) : mode === 'role' ? (
         <>
-          <Text style={[styles.note, { color: c.textSecondary }]}>{t('circleMembers.changeRoleHint')}</Text>
+          <Text style={[styles.hint, { color: c.textSecondary }]}>{t('circleMembers.changeRoleHint')}</Text>
           <OptionSelect
             variant="card"
             value={selectedRole}
@@ -262,9 +280,15 @@ export function MemberActionsSheet({
             }))}
           />
           {roleChanged ? (
-            <Text style={[styles.note, { color: c.textSecondary }]}>
-              {t(`circleMembers.direction.${direction}`)}
-            </Text>
+            <View
+              style={[styles.directionNote, { borderColor: c[dirVisual.fg], backgroundColor: c[dirVisual.tint] }]}
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite">
+              <DirectionIcon size={15} color={c[dirVisual.fg]} strokeWidth={2.4} />
+              <Text style={[styles.directionText, { color: c[dirVisual.fg] }]}>
+                {t(`circleMembers.direction.${direction}`)}
+              </Text>
+            </View>
           ) : null}
           {errorNode}
           <Button
@@ -310,6 +334,17 @@ export function MemberActionsSheet({
 const styles = StyleSheet.create({
   role: { fontSize: 14, fontFamily: FontFamily.medium },
   note: { fontSize: 14, fontFamily: FontFamily.regular, lineHeight: 21 },
+  hint: { fontSize: 15, fontFamily: FontFamily.medium, lineHeight: 23, textAlign: 'center' },
   body: { fontSize: 15, fontFamily: FontFamily.regular, lineHeight: 23 },
+  directionNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  directionText: { flex: 1, fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 22 },
   error: { fontSize: 14, fontFamily: FontFamily.medium },
 });
