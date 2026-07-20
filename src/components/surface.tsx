@@ -8,11 +8,13 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { CardShadow, Radius, Spacing, type ThemeColor } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BorderWidth, Radius, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { ThemedText } from './themed-text';
+
+/** Dar card inner padding (design: 12–14). Used when `padded` is boolean `true`. */
+const CARD_PADDING = 14;
 
 export type SurfaceTone =
   | 'card'
@@ -40,11 +42,11 @@ const BG_BY_TONE: Record<SurfaceTone, ThemeColor> = {
 type SurfaceProps = {
   children?: ReactNode;
   tone?: SurfaceTone;
-  /** Inner padding: true = Spacing.four, a number = that many dp, false = none. */
+  /** Inner padding: true = 14dp (Dar card), a number = that many dp, false = none. */
   padded?: boolean | number;
-  /** Hairline border for definition against the canvas (default true). */
+  /** 2px solid border for definition against the canvas, both themes (default true). */
   bordered?: boolean;
-  /** Corner radius (default Radius.card). */
+  /** Corner radius (default Radius.card = 8). */
   radius?: number;
   /** Vertical gap between stacked children (e.g. a form card's fields). */
   gap?: number;
@@ -60,13 +62,12 @@ type SurfaceProps = {
 };
 
 /**
- * The ONE card/panel primitive used across the app (M5 card ruling — law).
- * A card carries a hairline border in BOTH themes: the border defines the edge
- * for older eyes and reads in dark mode where a shadow barely registers. A
- * whisper-soft shadow sits ON TOP in light mode only, as warmth (dark mode has no
- * shadow). Tinted/sunken tones stay flat (single elevation step). Pass `onPress`
- * to make it a pressable card — Android gets a native ripple, other platforms a
- * gentle opacity dip.
+ * The ONE card/panel primitive used across the app (Dar card ruling — law).
+ * A card is FLAT in both themes: `card` fill, a 2px solid `border` (= the deep
+ * green `line`; in dark it lightens so the edge reads), radius 8, and NO shadow —
+ * the border defines the edge; depth comes from the border + tint tones, never
+ * lift. Tinted/sunken tones use the same flat border. Pass `onPress` to make it a
+ * pressable card — Android gets a native ripple, other platforms a gentle opacity dip.
  */
 export function Surface({
   children,
@@ -84,20 +85,16 @@ export function Surface({
   testID,
 }: SurfaceProps) {
   const theme = useTheme();
-  const scheme = useColorScheme();
 
   const base: ViewStyle = {
     backgroundColor: theme[BG_BY_TONE[tone]],
     borderRadius: radius,
-    borderWidth: bordered ? StyleSheet.hairlineWidth : 0,
+    borderWidth: bordered ? BorderWidth.standard : 0,
     borderColor: theme.border,
   };
-  // Depth only where it helps: plain cards on the light canvas. Tinted and
-  // sunken tones stay flat so the hierarchy keeps a single elevation step.
-  const elevated = tone === 'card' && scheme !== 'dark';
   const paddingStyle =
-    padded === false ? null : { padding: typeof padded === 'number' ? padded : Spacing.four };
-  const content = [base, elevated && CardShadow, paddingStyle, gap != null && { gap }, style];
+    padded === false ? null : { padding: typeof padded === 'number' ? padded : CARD_PADDING };
+  const content = [base, paddingStyle, gap != null && { gap }, style];
 
   if (onPress) {
     return (

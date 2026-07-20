@@ -4,9 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { FontFamily, Radius, withAlpha } from '@/constants/theme';
+import { BorderWidth, FontFamily } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
@@ -27,34 +26,29 @@ type FigmaTabBarProps = {
 };
 
 /**
- * The bottom tab bar: three tabs (الرئيسية / استكشاف / الحساب), a teal active pill
- * (44×28) behind a 20px lucide icon (stroke 2.5 active), the label (600 active /
- * 400 idle), a hairline top border, and the card background. RTL handles tab order
- * automatically (the row mirrors, so Home sits at the right).
+ * The Dar bottom tab bar: three tabs (الرئيسية / استكشاف / الحساب) on a `card` bar
+ * with a 2px `line` top border. The ACTIVE tab is a solid `btn` (green) block with
+ * `btnInk` icon + 800 label; idle tabs are `mut` on `card` with a 600 label and a
+ * 2px `line` start-divider between them. Icon 22 (stroke 2.4 active / 2 idle). RTL
+ * handles tab order automatically (the row mirrors, so Home sits at the right).
  */
 export function FigmaTabBar({ activeIndex, routeNames, onSelect }: FigmaTabBarProps) {
   const { t } = useTranslation();
   const c = useTheme();
-  const scheme = useColorScheme();
   const insets = useSafeAreaInsets();
-  const pillBg = withAlpha(c.primary, scheme === 'dark' ? 0.15 : 0.1);
 
   return (
     <View
       style={[
         styles.bar,
-        {
-          backgroundColor: c.backgroundElement,
-          borderTopColor: c.border,
-          paddingBottom: Math.max(insets.bottom, 12),
-        },
+        { backgroundColor: c.background, borderTopColor: c.border },
       ]}>
       {routeNames.map((routeName, index) => {
         const meta = TAB_META[routeName];
         if (!meta) return null;
         const active = index === activeIndex;
         const Icon = meta.Icon;
-        const color = active ? c.primary : c.textSecondary;
+        const color = active ? c.onPrimary : c.textSecondary;
         const label = t(meta.labelKey);
         return (
           <Pressable
@@ -63,14 +57,16 @@ export function FigmaTabBar({ activeIndex, routeNames, onSelect }: FigmaTabBarPr
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             accessibilityLabel={label}
-            style={styles.tab}>
-            <View style={[styles.pill, active && { backgroundColor: pillBg }]}>
-              <Icon size={20} color={color} strokeWidth={active ? 2.5 : 2} />
-            </View>
+            style={[
+              styles.tab,
+              { backgroundColor: active ? c.primary : c.backgroundElement, paddingBottom: 14 + insets.bottom },
+              index > 0 && { borderStartWidth: BorderWidth.standard, borderStartColor: c.border },
+            ]}>
+            <Icon size={22} color={color} strokeWidth={active ? 2.4 : 2} />
             <Text
               style={[
                 styles.label,
-                { color, fontFamily: active ? FontFamily.semibold : FontFamily.regular },
+                { color, fontFamily: active ? FontFamily.bold : FontFamily.medium },
               ]}>
               {label}
             </Text>
@@ -84,21 +80,17 @@ export function FigmaTabBar({ activeIndex, routeNames, onSelect }: FigmaTabBarPr
 const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingTop: 8,
-    paddingHorizontal: 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    alignItems: 'stretch',
+    borderTopWidth: BorderWidth.standard,
   },
-  tab: { flex: 1, alignItems: 'center', gap: 4, minHeight: 48, paddingVertical: 4 },
-  pill: {
-    width: 44,
-    height: 28,
-    borderRadius: Radius.md,
+  tab: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    gap: 3,
+    paddingTop: 12,
   },
-  // Raised to the 14 content floor (three short Arabic labels fit on flex-1 tabs).
-  // Needs runtime QA on a narrow device / at 200% font scale for truncation.
-  label: { fontSize: 14, lineHeight: 18 },
+  // 15px / 800 active · 600 idle — clears the 14 content floor. Needs runtime QA on
+  // a narrow device / at 200% font scale for truncation of three short labels.
+  label: { fontSize: 15, lineHeight: 20 },
 });
