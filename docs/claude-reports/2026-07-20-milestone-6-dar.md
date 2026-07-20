@@ -160,6 +160,15 @@ Legend: ✅ matches HTML · 🔸 deliberate deviation (reasoned).
 | Emergency banner | terr bg, 2px err border, alert 24; title 16/800 err; sub 14/600 ink; «عرض» err-fill/bg-text r6 16/800 | same | ✅ |
 | Tab bar | card bg, 2px top, active btn block, idle mut + dividers | `FigmaTabBar` | ✅ |
 
+### Checkpoint-1 fixes (post-review, user feedback)
+1. **Dose bead strip glued to the tiles** → added a 12dp `marginTop` (a `style` prop
+   on `DoseBeadStrip`) so the strip detaches from the count/next-dose tiles.
+2. **Pulse rows** → raised the row padding to 12/16 so the icon square sits clearly
+   off the card edge; the text stays beside the icon (horizontal row, unchanged).
+3. **Next-dose name truncated** → removed `numberOfLines` on the next-dose name so a
+   long medication name wraps and shows in full (never cut).
+4. **Tab bar too large** → shrank it: icon 22→20, label 15→14, padding 12/14 → 9/9.
+
 ### Home self-check
 - ✅ No new token file; no parallel component (reused Surface/FigmaScreen; added the 2 sanctioned new components).
 - ✅ No Arabic hardcoded outside i18next (one new key `dosesGivenSoFar`, ar+en at parity).

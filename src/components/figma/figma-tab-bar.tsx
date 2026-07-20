@@ -59,10 +59,10 @@ export function FigmaTabBar({ activeIndex, routeNames, onSelect }: FigmaTabBarPr
             accessibilityLabel={label}
             style={[
               styles.tab,
-              { backgroundColor: active ? c.primary : c.backgroundElement, paddingBottom: 14 + insets.bottom },
+              { backgroundColor: active ? c.primary : c.backgroundElement, paddingBottom: 9 + insets.bottom },
               index > 0 && { borderStartWidth: BorderWidth.standard, borderStartColor: c.border },
             ]}>
-            <Icon size={22} color={color} strokeWidth={active ? 2.4 : 2} />
+            <Icon size={20} color={color} strokeWidth={active ? 2.4 : 2} />
             <Text
               style={[
                 styles.label,
@@ -88,9 +88,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     gap: 3,
-    paddingTop: 12,
+    paddingTop: 9,
   },
-  // 15px / 800 active · 600 idle — clears the 14 content floor. Needs runtime QA on
-  // a narrow device / at 200% font scale for truncation of three short labels.
-  label: { fontSize: 15, lineHeight: 20 },
+  // 14px (the content floor) / 800 active · 600 idle. Needs runtime QA on a narrow
+  // device / at 200% font scale for truncation of three short labels.
+  label: { fontSize: 14, lineHeight: 18 },
 });

@@ -1,6 +1,6 @@
 import { Check, Clock, X } from 'lucide-react-native';
 import type { ComponentType } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { BorderWidth, FontFamily, Radius, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -41,6 +41,7 @@ type DoseBeadStripProps = {
    * (one summary, never N announced beads).
    */
   accessibilityLabel: string;
+  style?: StyleProp<ViewStyle>;
 };
 
 /**
@@ -49,10 +50,10 @@ type DoseBeadStripProps = {
  * postponed = `twarn` fill + `warn` clock; missed = `terr` fill + `err` X; upcoming
  * = `card` fill + `mut` clock. The LTR time sits 14/600 below each cell.
  */
-export function DoseBeadStrip({ beads, accessibilityLabel }: DoseBeadStripProps) {
+export function DoseBeadStrip({ beads, accessibilityLabel, style }: DoseBeadStripProps) {
   const c = useTheme();
   return (
-    <View accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel} style={styles.strip}>
+    <View accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel} style={[styles.strip, style]}>
       {beads.map((bead) => {
         const cfg = BEAD[bead.status ?? 'upcoming'];
         const Icon = cfg.Icon;

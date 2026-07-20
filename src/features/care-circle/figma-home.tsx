@@ -407,7 +407,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
                 </Text>
                 {nextDose ? (
                   <>
-                    <Text style={[styles.nextName, { color: c.text }]} numberOfLines={1}>
+                    <Text style={[styles.nextName, { color: c.text }]}>
                       {nextDose.medicationName}
                     </Text>
                     <Text style={[styles.nextMeta, { color: c.primaryText }]} numberOfLines={1}>
@@ -425,7 +425,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
                 )}
               </View>
             </View>
-            <DoseBeadStrip beads={beads} accessibilityLabel={beadsA11y} />
+            <DoseBeadStrip beads={beads} accessibilityLabel={beadsA11y} style={styles.beadStripGap} />
           </>
         )}
 
@@ -906,6 +906,8 @@ const styles = StyleSheet.create({
   pulseHeadGap: { marginTop: 16, marginBottom: 8 },
   // Med-loop tiles
   tileRow: { flexDirection: 'row', gap: 8 },
+  // Detach the bead strip from the tiles above it (they read as glued otherwise).
+  beadStripGap: { marginTop: 12 },
   loopNone: { fontSize: 16, fontFamily: FontFamily.medium, paddingVertical: 4 },
   countTile: { flex: 1.05, borderWidth: BorderWidth.standard, borderRadius: Radius.card, paddingVertical: 12, paddingHorizontal: 14 },
   tileLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
@@ -973,7 +975,7 @@ const styles = StyleSheet.create({
   // Pulse
   pulseHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   pulseLink: { fontSize: 15, fontFamily: FontFamily.semibold, textDecorationLine: 'underline' },
-  pulseRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 14 },
+  pulseRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 16 },
   pulseIcon: { width: 34, height: 34, borderWidth: BorderWidth.standard, borderRadius: Radius.control, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   pulseDesc: { flex: 1, fontSize: 15, fontFamily: FontFamily.medium, lineHeight: 23 },
   pulseTime: { fontSize: 14, fontFamily: FontFamily.medium, writingDirection: 'ltr' },
