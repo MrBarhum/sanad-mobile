@@ -127,6 +127,7 @@
         "loopA11y": "Today's care loop: {{given}} of {{total}} doses given",
         "loopA11yNone": "Today's care loop: no doses scheduled today",
         "nextDoseLabel": "Next dose",
+        "dosesGivenSoFar": "Given so far",
         "nextDoseAllGiven": "All of today's doses given",
         "nextDoseNone": "No doses today",
         "appointmentLabel": "Today's appointment",

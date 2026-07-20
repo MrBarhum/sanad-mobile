@@ -127,6 +127,7 @@
         "loopA11y": "حلقة رعاية اليوم: {{given}} من {{total}} جرعة تم إعطاؤها",
         "loopA11yNone": "حلقة رعاية اليوم: لا جرعات مجدولة اليوم",
         "nextDoseLabel": "الجرعة القادمة",
+        "dosesGivenSoFar": "أُعطيت حتى الآن",
         "nextDoseAllGiven": "تم إعطاء جرعات اليوم",
         "nextDoseNone": "لا جرعات اليوم",
         "appointmentLabel": "موعد اليوم",

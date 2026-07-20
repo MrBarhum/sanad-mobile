@@ -6,10 +6,16 @@ import {
   Check,
   ChevronDown,
   ChevronLeft,
+  ClipboardList,
   Clock,
+  DoorOpen,
   HandHelping,
+  Heart,
   Phone,
+  Pill,
   Share2,
+  SquareCheck,
+  Stethoscope,
   Users,
   X,
 } from 'lucide-react-native';
@@ -24,15 +30,16 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Surface } from '@/components/surface';
+import { DoseBeadStrip, type DoseBead } from '@/components/dose-bead-strip';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { CareLoopRing } from '@/components/figma/care-loop-ring';
-import { GlyphChip } from '@/components/glyph-chip';
-import { type IconName } from '@/constants/icons';
-import { FontFamily, Gutter, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { isolateLtr } from '@/components/ltr-text';
+import { SectionHeader } from '@/components/section-header';
+import { Surface } from '@/components/surface';
+import { type IconName } from '@/constants/icons';
+import { BorderWidth, FontFamily, Radius, type ThemeColor } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useUpcomingAppointments } from '@/features/appointments/hooks';
 import { countAppointmentsToday } from '@/features/care-activity/today';
 import { useResponsibleLabel } from '@/features/circle-members/member-assignment';
@@ -68,31 +75,51 @@ import {
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
-/** Fixed Figma dose-status colors (constant across modes, as in the export). */
-const DOSE_STATUS: Record<MedicationLogStatus, { colorKey: ThemeColor; Icon: IconCmp }> = {
-  given: { colorKey: 'successFg', Icon: Check },
-  postponed: { colorKey: 'warningFg', Icon: Clock },
-  missed: { colorKey: 'errorFg', Icon: X },
+/** Dose-status → the icon + color-token pair used on the dose rows / status pills. */
+const DOSE_STATUS: Record<MedicationLogStatus, { fg: ThemeColor; tint: ThemeColor; Icon: IconCmp }> = {
+  given: { fg: 'successFg', tint: 'successBg', Icon: Check },
+  postponed: { fg: 'warningFg', tint: 'warningBg', Icon: Clock },
+  missed: { fg: 'errorFg', tint: 'errorBg', Icon: X },
 };
 const DOSE_ACTIONS: MedicationLogStatus[] = ['given', 'postponed', 'missed'];
+
+/** Pulse event icon → lucide glyph + Dar tint pair (dose/task done = green success,
+ *  cancelled = amber, the rest = accent). Feature identity is the glyph, not hue.
+ *  Keyed only by the icons `pulseEventVisual` emits; the fallback covers any other. */
+type PulseVisual = { Icon: IconCmp; fg: ThemeColor; tint: ThemeColor };
+const PULSE_FALLBACK: PulseVisual = { Icon: Clock, fg: 'primaryText', tint: 'primaryBg' };
+const PULSE_VISUAL: Partial<Record<IconName, PulseVisual>> = {
+  medication: { Icon: Pill, fg: 'successFg', tint: 'successBg' },
+  success: { Icon: Check, fg: 'successFg', tint: 'successBg' },
+  close: { Icon: X, fg: 'warningFg', tint: 'warningBg' },
+  appointment: { Icon: Calendar, fg: 'primaryText', tint: 'primaryBg' },
+  visit: { Icon: DoorOpen, fg: 'primaryText', tint: 'primaryBg' },
+  vital: { Icon: Heart, fg: 'primaryText', tint: 'primaryBg' },
+  dailyLog: { Icon: ClipboardList, fg: 'primaryText', tint: 'primaryBg' },
+  member: { Icon: Users, fg: 'primaryText', tint: 'primaryBg' },
+};
 
 /** Home Care-Pulse strip: fetch a small buffer, then filter-to-today and cap at 5. */
 const HOME_PULSE_FETCH = 20;
 const HOME_PULSE_MAX = 5;
+/** Content gutter of the Dar home (matches FigmaScreen's contentGutter below). */
+const CONTENT_PAD = 16;
+const GRID_GAP = 8;
 
 /**
- * The Figma Make Home, recreated as literally as possible in React Native and
- * wired to real Sanad data. Mirrors `HomeScreen.tsx`: header (date + recipient +
- * dropdown + bell + emergency), the care-loop hero (SVG ring + next dose + status
- * strip), two today-summary stat cards, the next-appointment card, a 4-up
- * quick-action grid, the today doses list with inline status logging, and the
- * emergency banner. Cairo + theme tokens, dark-first, RTL. No old Sanad
- * Screen/Surface/Section/CircleSwitcher/DashboardTile/View-ring.
+ * The Dar home (frame 5a): a deep-green header band (date + circle switcher +
+ * recipient + bell + emergency), the medication-loop section (dose-count tile +
+ * next-dose tile + the 5-cell dose bead strip that replaced the SVG ring), two
+ * stat tiles, the next-appointment card, a 4×2 quick-action grid, the gold
+ * available-to-claim banner, today's doses with inline status logging, the pulse
+ * strip, and the emergency banner. Cairo + Dar tokens, both themes, RTL. All
+ * behaviour, data, scoping and routing are unchanged from the prior home.
  */
 export function FigmaHome({ circle }: { circle: ActiveCircle }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const c = useTheme();
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const date = todayYmd();
   const { user } = useAuth();
@@ -100,7 +127,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
 
   // Family members (non-managers who can log) see only doses/appointments they are
   // responsible for; managers see all; read-only members see all (no actions). The
-  // care-loop, next-dose, dose list, next-appointment and today's-appointment count
+  // dose loop, next-dose, dose list, next-appointment and today's-appointment count
   // all reflect this scope so a family member's home shows THEIR day, not everyone's.
   const scopeToMine = !circle.canManage && circle.canLogDoses;
 
@@ -203,49 +230,57 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
       : `${isolateLtr(ymdFromInstant(nextAppt.starts_at))}  ${isolateLtr(apptTime)}`
     : '';
 
-  // Quick access to every important reachable area (2 rows of 4). Order is the
-  // natural RTL reading order; the wrap grid places the first item top-right.
-  // Canonical Sanad ordering (meds → tasks → appointments → vitals → visits →
-  // daily logs → doctors → members). The RTL wrap grid places the first item
-  // top-right, so medications — the highest-stakes surface — leads (A7).
-  const quickActions: { id: string; route: string; label: string; color: ThemeColor; iconName: IconName }[] = [
-    { id: 'medications', route: '/medications', label: t('careCircle.dashboard.sections.medications.title'), color: 'categoryTeal', iconName: 'medication' },
-    { id: 'tasks', route: '/tasks', label: t('careCircle.dashboard.sections.tasks.title'), color: 'categoryBlue', iconName: 'task' },
-    { id: 'appointments', route: '/appointments', label: t('careCircle.dashboard.sections.appointments.title'), color: 'categoryPurple', iconName: 'appointment' },
-    { id: 'vitals', route: '/vitals', label: t('careCircle.dashboard.sections.vitals.title'), color: 'categoryBlue', iconName: 'activity' },
-    { id: 'visits', route: '/visits', label: t('careCircle.dashboard.sections.visits.title'), color: 'categoryGreen', iconName: 'invite' },
-    { id: 'logs', route: '/daily-logs', label: t('careCircle.dashboard.sections.dailyLogs.title'), color: 'categoryPurple', iconName: 'dailyLog' },
-    { id: 'doctors', route: '/doctors', label: t('careCircle.dashboard.sections.doctors.title'), color: 'categoryGreen', iconName: 'doctor' },
-    { id: 'members', route: '/circle-members', label: t('circleMembers.title'), color: 'categoryGold', iconName: 'member' },
+  // Quick access to every important reachable area (2 rows of 4). Canonical Sanad
+  // ordering (meds → tasks → appointments → vitals → visits → daily logs → doctors
+  // → members). The RTL wrap grid places the first item top-right, so medications —
+  // the highest-stakes surface — leads (A7). Feature identity is the glyph (all one
+  // green accent — the Dar monochrome-icon rule).
+  const quickActions: { id: string; route: string; label: string; Icon: IconCmp }[] = [
+    { id: 'medications', route: '/medications', label: t('careCircle.dashboard.sections.medications.title'), Icon: Pill },
+    { id: 'tasks', route: '/tasks', label: t('careCircle.dashboard.sections.tasks.title'), Icon: SquareCheck },
+    { id: 'appointments', route: '/appointments', label: t('careCircle.dashboard.sections.appointments.title'), Icon: Calendar },
+    { id: 'vitals', route: '/vitals', label: t('careCircle.dashboard.sections.vitals.title'), Icon: Heart },
+    { id: 'visits', route: '/visits', label: t('careCircle.dashboard.sections.visits.title'), Icon: DoorOpen },
+    { id: 'logs', route: '/daily-logs', label: t('careCircle.dashboard.sections.dailyLogs.title'), Icon: ClipboardList },
+    { id: 'doctors', route: '/doctors', label: t('careCircle.dashboard.sections.doctors.title'), Icon: Stethoscope },
+    { id: 'members', route: '/circle-members', label: t('circleMembers.title'), Icon: Users },
   ];
-  // Exact 4-up tile width (screen minus the FigmaScreen gutters minus 3 column gaps).
-  const quickTileWidth = (width - Gutter * 2 - 12 * 3) / 4;
+  // Exact 4-up tile width (content width minus the 16px gutters minus 3 column gaps).
+  const quickTileWidth = (width - CONTENT_PAD * 2 - GRID_GAP * 3) / 4;
 
-  const muted = { color: c.textSecondary, fontFamily: FontFamily.regular };
+  // Dose bead strip: up to 5 cells + one spoken summary (the retired ring's a11y).
+  const beads: DoseBead[] = visibleDoses.slice(0, 5).map((d) => ({
+    key: d.key,
+    status: d.status,
+    time: formatHm(d.scheduledTime),
+  }));
+  const beadsA11y =
+    total > 0
+      ? t('careCircle.dashboard.today.loopA11y', { given, total })
+      : t('careCircle.dashboard.today.loopA11yNone');
 
-  return (
-    <FigmaScreen gap={16}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerText}>
-          <Text style={[styles.date, muted]}>{formatLongDate(i18n.language)}</Text>
+  const band = (
+    <View style={[styles.band, { backgroundColor: c.band, paddingTop: insets.top + 22 }]}>
+      <View style={styles.bandRow}>
+        <View style={styles.bandText}>
+          <Text style={[styles.bandDate, { color: c.bandInk }]}>{formatLongDate(i18n.language)}</Text>
           <Pressable
             style={styles.nameRow}
             accessibilityRole="button"
             accessibilityHint={t('circleSwitcher.switch')}
             onPress={() => setSwitcherOpen((o) => !o)}>
-            <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>
+            <Text style={[styles.bandName, { color: c.bandInk }]} numberOfLines={1}>
               {circle.circleName}
             </Text>
-            <ChevronDown size={16} color={c.textSecondary} />
+            <ChevronDown size={17} color={c.bandInk} strokeWidth={2.4} style={styles.bandChevron} />
           </Pressable>
           {headerSubtitle ? (
-            <Text style={[styles.subtitle, muted]} numberOfLines={1}>
+            <Text style={[styles.bandSubtitle, { color: c.bandInk }]} numberOfLines={1}>
               {headerSubtitle}
             </Text>
           ) : null}
         </View>
-        <View style={styles.headerActions}>
+        <View style={styles.bandActions}>
           <Pressable
             onPress={() => router.push('/notifications')}
             accessibilityRole="button"
@@ -254,11 +289,11 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
                 ? t('notifications.openCenterWithCount', { count: unreadCount })
                 : t('notifications.title')
             }
-            style={[styles.action, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
-            <Bell size={20} color={c.textSecondary} />
+            style={[styles.bandActionBordered, { borderColor: c.bandInk }]}>
+            <Bell size={20} color={c.bandInk} strokeWidth={2} />
             {unreadCount > 0 ? (
-              <View style={[styles.badge, { backgroundColor: c.dangerSolid, borderColor: c.background }]}>
-                <Text style={styles.badgeText} numberOfLines={1}>
+              <View style={[styles.bandBadge, { backgroundColor: c.goldFill }]}>
+                <Text style={[styles.bandBadgeText, { color: c.goldInk }]} numberOfLines={1}>
                   {isolateLtr(unreadCount > 9 ? '9+' : String(unreadCount))}
                 </Text>
               </View>
@@ -268,290 +303,277 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
             onPress={() => router.push('/emergency-card')}
             accessibilityRole="button"
             accessibilityLabel={t('careCircle.dashboard.sections.emergency.title')}
-            style={[
-              styles.action,
-              { backgroundColor: withAlpha(c.dangerSolid, 0.12), borderColor: withAlpha(c.dangerSolid, 0.2) },
-            ]}>
-            <Phone size={20} color={c.errorFg} />
+            style={[styles.bandActionFilled, { backgroundColor: c.bandInk }]}>
+            <Phone size={19} color={c.band} strokeWidth={2.2} />
           </Pressable>
         </View>
       </View>
+    </View>
+  );
 
-      {/* Today's-data load failure — a retryable banner so a failed fetch never
-          masquerades as an empty day. */}
-      {todayLoadError ? (
-        <Pressable
-          onPress={retryToday}
-          accessibilityRole="button"
-          accessibilityLabel={t('retry')}
-          style={[
-            styles.notice,
-            { backgroundColor: withAlpha(c.dangerSolid, 0.1), borderColor: withAlpha(c.dangerSolid, 0.25) },
-          ]}>
-          <AlertCircle size={16} color={c.errorFg} />
-          <Text style={[styles.noticeText, { color: c.errorFg }]}>
-            {t('careCircle.dashboard.today.loadError')}
-          </Text>
-          <Text style={[styles.noticeAction, { color: c.errorFg }]}>{t('retry')}</Text>
-        </Pressable>
-      ) : logError ? (
-        <View
-          style={[
-            styles.notice,
-            { backgroundColor: withAlpha(c.dangerSolid, 0.1), borderColor: withAlpha(c.dangerSolid, 0.25) },
-          ]}
-          accessibilityRole="alert"
-          accessibilityLiveRegion="polite">
-          <AlertCircle size={16} color={c.errorFg} />
-          <Text style={[styles.noticeText, { color: c.errorFg }]}>{logError}</Text>
-        </View>
-      ) : null}
-
-      {/* Compact circle dropdown (real circles + join) */}
-      {switcherOpen ? (
-        <Surface tone="card" radius={Radius.lg} padded={0}>
-          {circles.map((item, i) => {
-            const isActive = item.circleId === activeCircleId;
-            return (
-              <Pressable
-                key={item.circleId}
-                onPress={() => {
-                  setActiveCircle(item.circleId);
-                  setSwitcherOpen(false);
-                }}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isActive }}
-                style={[styles.switchRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
-                <Text style={[styles.switchName, { color: c.text }]} numberOfLines={1}>
-                  {item.circleName}
-                </Text>
-                {isActive ? <Check size={16} color={c.primary} /> : null}
-              </Pressable>
-            );
-          })}
+  return (
+    <FigmaScreen band={band} contentGutter={CONTENT_PAD}>
+      <View>
+        {/* Today's-data load failure — a retryable banner so a failed fetch never
+            masquerades as an empty day. */}
+        {todayLoadError ? (
           <Pressable
-            onPress={() => {
-              setSwitcherOpen(false);
-              router.push('/join-circle');
-            }}
+            onPress={retryToday}
             accessibilityRole="button"
-            style={[styles.switchRow, { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
-            <Text style={[styles.switchJoin, { color: c.primary }]}>
-              {t('careCircle.dashboard.today.joinAnotherCircle')}
+            accessibilityLabel={t('retry')}
+            style={[styles.notice, { backgroundColor: c.errorBg, borderColor: c.errorFg }]}>
+            <AlertCircle size={18} color={c.errorFg} strokeWidth={2.2} />
+            <Text style={[styles.noticeText, { color: c.errorFg }]}>
+              {t('careCircle.dashboard.today.loadError')}
             </Text>
+            <Text style={[styles.noticeAction, { color: c.errorFg }]}>{t('retry')}</Text>
           </Pressable>
-        </Surface>
-      ) : null}
+        ) : logError ? (
+          <View
+            style={[styles.notice, { backgroundColor: c.errorBg, borderColor: c.errorFg }]}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite">
+            <AlertCircle size={18} color={c.errorFg} strokeWidth={2.2} />
+            <Text style={[styles.noticeText, { color: c.errorFg }]}>{logError}</Text>
+          </View>
+        ) : null}
 
-      {/* Care-loop hero */}
-      <Surface radius={Radius.xl} padded={20}>
-        <View style={styles.heroTop}>
-          <Text style={[styles.eyebrow, muted]}>{t('careCircle.dashboard.today.medLoopEyebrow')}</Text>
-          <Pressable onPress={() => router.push('/medications')} accessibilityRole="button">
-            <Text style={[styles.link, { color: c.primary }]}>{t('careCircle.dashboard.today.viewAll')}</Text>
-          </Pressable>
-        </View>
-        <View style={styles.heroBody}>
-          <CareLoopRing given={given} total={total} />
-          <View style={styles.heroRight}>
-            {total === 0 ? (
-              <Text style={[styles.heroMuted, muted]}>{t('careCircle.dashboard.today.loopNone')}</Text>
-            ) : given >= total ? (
-              // Moment of care: a quiet "today's doses are complete" — a calm check
-              // + reassurance on the ring, never a score or streak (no gamification).
-              <View style={[styles.allDone, { backgroundColor: withAlpha(c.successFg, 0.12) }]}>
-                <Check size={16} color={c.successFg} />
-                <Text style={[styles.allDoneText, { color: c.successFg }]}>
-                  {t('careCircle.dashboard.today.allDosesGiven')}
+        {/* Compact circle dropdown (real circles + join) */}
+        {switcherOpen ? (
+          <Surface tone="card" padded={0} style={styles.switcher}>
+            {circles.map((item, i) => {
+              const isActive = item.circleId === activeCircleId;
+              return (
+                <Pressable
+                  key={item.circleId}
+                  onPress={() => {
+                    setActiveCircle(item.circleId);
+                    setSwitcherOpen(false);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isActive }}
+                  style={[styles.switchRow, i > 0 && { borderTopColor: c.border, borderTopWidth: BorderWidth.standard }]}>
+                  <Text style={[styles.switchName, { color: c.text }]} numberOfLines={1}>
+                    {item.circleName}
+                  </Text>
+                  {isActive ? <Check size={18} color={c.primaryText} strokeWidth={2.6} /> : null}
+                </Pressable>
+              );
+            })}
+            <Pressable
+              onPress={() => {
+                setSwitcherOpen(false);
+                router.push('/join-circle');
+              }}
+              accessibilityRole="button"
+              style={[styles.switchRow, { borderTopColor: c.border, borderTopWidth: BorderWidth.standard }]}>
+              <Text style={[styles.switchJoin, { color: c.primaryText }]}>
+                {t('careCircle.dashboard.today.joinAnotherCircle')}
+              </Text>
+            </Pressable>
+          </Surface>
+        ) : null}
+
+        {/* Medication-loop section: count tile + next-dose tile + bead strip */}
+        <SectionHeader
+          title={t('careCircle.dashboard.today.medLoopEyebrow')}
+          linkLabel={t('careCircle.dashboard.today.viewAll')}
+          onLinkPress={() => router.push('/medications')}
+          style={styles.sectionHeadGap}
+        />
+        {total === 0 ? (
+          <Text style={[styles.loopNone, { color: c.textSecondary }]}>
+            {t('careCircle.dashboard.today.loopNone')}
+          </Text>
+        ) : (
+          <>
+            <View style={styles.tileRow}>
+              <View
+                style={[styles.countTile, { backgroundColor: c.backgroundElement, borderColor: c.border }]}
+                importantForAccessibility="no-hide-descendants"
+                accessibilityElementsHidden>
+                <Text style={[styles.tileLabel, { color: c.textSecondary }]}>{t('medications.todayTitle')}</Text>
+                <Text style={[styles.countBig, { color: c.text }]}>
+                  {isolateLtr(String(given))}
+                  <Text style={[styles.countTotal, { color: c.textSecondary }]}>{isolateLtr(`/${total}`)}</Text>
+                </Text>
+                <Text style={[styles.tileSub, { color: c.textSecondary }]}>
+                  {t('careCircle.dashboard.today.dosesGivenSoFar')}
                 </Text>
               </View>
-            ) : nextDose ? (
-              <View>
-                <Text style={[styles.nextLabel, muted]}>{t('careCircle.dashboard.today.nextDoseLabel')}</Text>
-                <View style={[styles.nextDose, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
-                  <View style={styles.nextDoseTop}>
+              <View style={[styles.nextTile, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
+                <Text style={[styles.tileLabel, { color: c.textSecondary }]}>
+                  {t('careCircle.dashboard.today.nextDoseLabel')}
+                </Text>
+                {nextDose ? (
+                  <>
                     <Text style={[styles.nextName, { color: c.text }]} numberOfLines={1}>
                       {nextDose.medicationName}
                     </Text>
-                    <Text style={[styles.nextTime, { color: c.primary }]}>
+                    <Text style={[styles.nextMeta, { color: c.primaryText }]} numberOfLines={1}>
                       {isolateLtr(formatHm(nextDose.scheduledTime))}
+                      {nextDose.dosage ? ` · ${nextDose.dosage}` : ''}
+                    </Text>
+                  </>
+                ) : (
+                  <View style={styles.nextDone}>
+                    <Check size={16} color={c.successFg} strokeWidth={2.6} />
+                    <Text style={[styles.nextDoneText, { color: c.successFg }]} numberOfLines={2}>
+                      {t('careCircle.dashboard.today.allDosesGiven')}
                     </Text>
                   </View>
-                  {nextDose.dosage ? (
-                    <Text style={[styles.nextDosage, muted]} numberOfLines={1}>
-                      {nextDose.dosage}
-                    </Text>
-                  ) : null}
-                </View>
+                )}
               </View>
-            ) : null}
+            </View>
+            <DoseBeadStrip beads={beads} accessibilityLabel={beadsA11y} />
+          </>
+        )}
 
-            {total > 0 ? (
-              <View style={styles.strip}>
-                {visibleDoses.slice(0, 5).map((d) => {
-                  const cfg = d.status ? DOSE_STATUS[d.status] : null;
-                  const color = cfg ? c[cfg.colorKey] : c.textSecondary;
-                  const StripIcon = cfg ? cfg.Icon : Clock;
-                  // Pending/unlogged = a solid cream/elevated pill (Figma `--muted`),
-                  // visibly lighter than the tinted given/postponed/missed pills.
-                  const pillBg = cfg ? withAlpha(color, 0.12) : c.backgroundSunken;
-                  return (
-                    <View key={d.key} style={[styles.stripPill, { backgroundColor: pillBg }]}>
-                      <StripIcon size={12} color={color} />
-                      <Text style={[styles.stripTime, { color }]}>{isolateLtr(formatHm(d.scheduledTime))}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            ) : null}
-          </View>
+        {/* Today summary — two stat tiles */}
+        <View style={[styles.tileRow, styles.statsGap]}>
+          <StatTile
+            Icon={Check}
+            iconColor={c.successFg}
+            tint={c.successBg}
+            topLabel={t('careCircle.dashboard.sections.tasks.title')}
+            value={String(taskSummary.dueToday)}
+            subLabel={t('careCircle.dashboard.today.dueTodayShort')}
+            onPress={() => router.push('/tasks')}
+          />
+          <StatTile
+            Icon={Calendar}
+            iconColor={c.primaryText}
+            tint={c.primaryBg}
+            topLabel={t('careCircle.dashboard.sections.appointments.title')}
+            value={String(apptCount)}
+            subLabel={t('careCircle.dashboard.today.appointmentLabel')}
+            onPress={() => router.push('/appointments')}
+          />
         </View>
-      </Surface>
 
-      {/* Today summary — two stat cards */}
-      <View style={styles.summaryRow}>
-        <StatCard
-          Icon={Check}
-          iconColor={c.successFg}
-          topLabel={t('careCircle.dashboard.sections.tasks.title')}
-          value={String(taskSummary.dueToday)}
-          subLabel={t('careCircle.dashboard.today.dueTodayShort')}
-          onPress={() => router.push('/tasks')}
-        />
-        <StatCard
-          Icon={Calendar}
-          iconColor={c.categoryBlue}
-          topLabel={t('careCircle.dashboard.sections.appointments.title')}
-          value={String(apptCount)}
-          subLabel={t('careCircle.dashboard.today.appointmentLabel')}
-          onPress={() => router.push('/appointments')}
-        />
-      </View>
-
-      {/* Next appointment (only when real data exists) */}
-      {nextAppt ? (
-        <Surface radius={Radius.xl} padded={16} onPress={() => router.push('/appointments')}>
-          <View style={styles.apptRow}>
-            <GlyphChip iconName="doctor" color="categoryBlue" size="md" />
+        {/* Next appointment (only when real data exists) */}
+        {nextAppt ? (
+          <Pressable
+            onPress={() => router.push('/appointments')}
+            accessibilityRole="button"
+            style={[styles.apptCard, styles.nextApptGap, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+            <View style={[styles.apptIcon, { backgroundColor: c.primaryBg, borderColor: c.border }]}>
+              <Calendar size={20} color={c.primaryText} strokeWidth={2.2} />
+            </View>
             <View style={styles.apptText}>
-              <Text style={[styles.apptWhen, muted]}>{apptWhen}</Text>
+              <Text style={[styles.apptWhen, { color: c.textSecondary }]}>{apptWhen}</Text>
               <Text style={[styles.apptTitle, { color: c.text }]} numberOfLines={1}>
                 {nextAppt.title}
               </Text>
               {nextAppt.location ? (
-                <Text style={[styles.apptLoc, muted]} numberOfLines={1}>
+                <Text style={[styles.apptLoc, { color: c.textSecondary }]} numberOfLines={1}>
                   {nextAppt.location}
                 </Text>
               ) : null}
             </View>
-            <ChevronLeft size={18} color={c.textSecondary} />
-          </View>
-        </Surface>
-      ) : null}
+            <ChevronLeft size={18} color={c.text} strokeWidth={2.4} />
+          </Pressable>
+        ) : null}
 
-      {/* Quick actions — 4-up grid, wraps to a second row */}
-      <View>
-        <Text style={[styles.sectionLabel, muted]}>{t('careCircle.dashboard.today.quickActions')}</Text>
+        {/* Quick actions — 4-up grid, wraps to a second row */}
+        <SectionHeader title={t('careCircle.dashboard.today.quickActions')} style={styles.quickHeadGap} />
         <View style={styles.quickGrid}>
-          {quickActions.map((qa) => (
-            <Pressable
-              key={qa.id}
-              onPress={() => router.push(qa.route as never)}
-              accessibilityRole="button"
-              accessibilityLabel={qa.label}
-              style={[styles.quickTile, { width: quickTileWidth, backgroundColor: c.backgroundElement, borderColor: c.border }]}>
-              <GlyphChip iconName={qa.iconName} color={qa.color} size="md" />
-              <Text style={[styles.quickLabel, muted]} numberOfLines={2}>
-                {qa.label}
-              </Text>
-            </Pressable>
-          ))}
+          {quickActions.map((qa) => {
+            const Icon = qa.Icon;
+            return (
+              <Pressable
+                key={qa.id}
+                onPress={() => router.push(qa.route as never)}
+                accessibilityRole="button"
+                accessibilityLabel={qa.label}
+                style={[styles.quickTile, { width: quickTileWidth, backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+                <Icon size={20} color={c.primaryText} strokeWidth={2} />
+                <Text style={[styles.quickLabel, { color: c.text }]} numberOfLines={2}>
+                  {qa.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
-      </View>
 
-      {/* Available to claim — claim-capable members only (never remote/elder) */}
-      {circle.canManage || circle.canLogDoses ? (
+        {/* Available to claim — claim-capable members only (never remote/elder) */}
+        {circle.canManage || circle.canLogDoses ? (
+          <Pressable
+            onPress={() => router.push('/available-to-claim')}
+            accessibilityRole="button"
+            accessibilityLabel={t('claiming.entryTitle')}
+            style={[styles.claimCard, styles.claimGap, { backgroundColor: c.goldFill, borderColor: c.border }]}>
+            <HandHelping size={24} color={c.goldInk} strokeWidth={2} />
+            <View style={styles.claimText}>
+              <Text style={[styles.claimTitle, { color: c.goldInk }]}>{t('claiming.entryTitle')}</Text>
+              <Text style={[styles.claimSub, { color: c.goldInk }]} numberOfLines={1}>
+                {t('claiming.entrySubtitle')}
+              </Text>
+            </View>
+            <ChevronLeft size={17} color={c.goldInk} strokeWidth={2.4} />
+          </Pressable>
+        ) : null}
+
+        {/* Today's doses */}
+        {total > 0 ? (
+          <>
+            <SectionHeader
+              title={t('medications.todayTitle')}
+              linkLabel={t('careCircle.dashboard.today.allMedications')}
+              onLinkPress={() => router.push('/medications')}
+              style={styles.doseHeadGap}
+            />
+            <View style={[styles.groupCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+              {orderedDoses.map((dose, i) => (
+                <DoseRow
+                  key={dose.key}
+                  dose={dose}
+                  first={i === 0}
+                  responsibleText={circle.canManage ? responsibleLabel(dose.responsibleUserId) : null}
+                  canLog={circle.canLogDoses && (circle.canManage || dose.responsibleUserId === userId)}
+                  open={openDoseKey === dose.key}
+                  pending={pendingKey === dose.key}
+                  onToggle={() => setOpenDoseKey((k) => (k === dose.key ? null : dose.key))}
+                  onSetStatus={(status) => setStatus(dose, status)}
+                />
+              ))}
+            </View>
+          </>
+        ) : null}
+
+        {/* Care Pulse — today's most-recent circle events, tap through to the log */}
+        <PulseSection circleId={circle.circleId} timezone={circle.timezone} />
+
+        {/* Emergency banner */}
         <Pressable
-          onPress={() => router.push('/available-to-claim')}
+          onPress={() => router.push('/emergency-card')}
           accessibilityRole="button"
-          accessibilityLabel={t('claiming.entryTitle')}
-          style={[
-            styles.claimCard,
-            { backgroundColor: withAlpha(c.accentFg, 0.1), borderColor: withAlpha(c.accentFg, 0.22) },
-          ]}>
-          <View style={[styles.claimChip, { backgroundColor: withAlpha(c.accentFg, 0.15) }]}>
-            <HandHelping size={22} color={c.accentFg} />
-          </View>
-          <View style={styles.claimText}>
-            <Text style={[styles.claimTitle, { color: c.text }]}>{t('claiming.entryTitle')}</Text>
-            <Text style={[styles.claimSub, muted]} numberOfLines={1}>
-              {t('claiming.entrySubtitle')}
+          accessibilityLabel={t('careCircle.dashboard.today.emergencyTitle')}
+          style={[styles.emergency, { backgroundColor: c.errorBg, borderColor: c.errorFg }]}>
+          <AlertCircle size={24} color={c.errorFg} strokeWidth={2.2} />
+          <View style={styles.emergencyText}>
+            <Text style={[styles.emergencyTitle, { color: c.errorFg }]}>
+              {t('careCircle.dashboard.today.emergencyTitle')}
+            </Text>
+            <Text style={[styles.emergencySub, { color: c.text }]} numberOfLines={1}>
+              {emergencySubtitle}
             </Text>
           </View>
-          <ChevronLeft size={18} color={c.textSecondary} />
+          <View style={[styles.emergencyBtn, { backgroundColor: c.errorFg }]}>
+            <Text style={[styles.emergencyBtnText, { color: c.onError }]}>
+              {t('careCircle.dashboard.today.emergencyView')}
+            </Text>
+          </View>
         </Pressable>
-      ) : null}
-
-      {/* Today's doses */}
-      {total > 0 ? (
-        <View>
-          <View style={styles.dosesHeader}>
-            <Text style={[styles.sectionLabel, muted]}>{t('medications.todayTitle')}</Text>
-            <Pressable onPress={() => router.push('/medications')} accessibilityRole="button">
-              <Text style={[styles.link, { color: c.primary }]}>{t('careCircle.dashboard.today.allMedications')}</Text>
-            </Pressable>
-          </View>
-          <View style={styles.doseList}>
-            {orderedDoses.map((dose) => (
-              <DoseRow
-                key={dose.key}
-                dose={dose}
-                responsibleText={circle.canManage ? responsibleLabel(dose.responsibleUserId) : null}
-                canLog={circle.canLogDoses && (circle.canManage || dose.responsibleUserId === userId)}
-                open={openDoseKey === dose.key}
-                pending={pendingKey === dose.key}
-                onToggle={() => setOpenDoseKey((k) => (k === dose.key ? null : dose.key))}
-                onSetStatus={(status) => setStatus(dose, status)}
-              />
-            ))}
-          </View>
-        </View>
-      ) : null}
-
-      {/* Care Pulse — today's most-recent circle events, tap through to the log */}
-      <PulseSection circleId={circle.circleId} timezone={circle.timezone} />
-
-      {/* Emergency banner */}
-      <Pressable
-        onPress={() => router.push('/emergency-card')}
-        accessibilityRole="button"
-        accessibilityLabel={t('careCircle.dashboard.today.emergencyTitle')}
-        style={[
-          styles.emergency,
-          { backgroundColor: withAlpha(c.dangerSolid, 0.08), borderColor: withAlpha(c.dangerSolid, 0.2) },
-        ]}>
-        <View style={[styles.emergencyChip, { backgroundColor: withAlpha(c.dangerSolid, 0.15) }]}>
-          <AlertCircle size={22} color={c.errorFg} />
-        </View>
-        <View style={styles.emergencyText}>
-          <Text style={[styles.emergencyTitle, { color: c.errorFg }]}>
-            {t('careCircle.dashboard.today.emergencyTitle')}
-          </Text>
-          <Text style={[styles.emergencySub, muted]} numberOfLines={1}>
-            {emergencySubtitle}
-          </Text>
-        </View>
-        <View style={[styles.emergencyBtn, { backgroundColor: c.dangerSolid }]}>
-          <Text style={styles.emergencyBtnText}>{t('careCircle.dashboard.today.emergencyView')}</Text>
-        </View>
-      </Pressable>
+      </View>
     </FigmaScreen>
   );
 }
 
-function StatCard({
+function StatTile({
   Icon,
   iconColor,
+  tint,
   topLabel,
   value,
   subLabel,
@@ -559,6 +581,7 @@ function StatCard({
 }: {
   Icon: IconCmp;
   iconColor: string;
+  tint: string;
   topLabel: string;
   value: string;
   subLabel: string;
@@ -570,19 +593,20 @@ function StatCard({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${topLabel}: ${value} ${subLabel}`}
-      style={[styles.stat, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+      style={[styles.statTile, { backgroundColor: tint, borderColor: c.border }]}>
       <View style={styles.statTop}>
-        <Icon size={16} color={iconColor} />
-        <Text style={[styles.statTopLabel, { color: c.textSecondary, fontFamily: FontFamily.regular }]}>{topLabel}</Text>
+        <Icon size={16} color={iconColor} strokeWidth={2.4} />
+        <Text style={[styles.statTopLabel, { color: c.text }]}>{topLabel}</Text>
       </View>
-      <Text style={[styles.statValue, { color: c.text }]}>{value}</Text>
-      <Text style={[styles.statSub, { color: c.textSecondary, fontFamily: FontFamily.regular }]}>{subLabel}</Text>
+      <Text style={[styles.statValue, { color: c.text }]}>{isolateLtr(value)}</Text>
+      <Text style={[styles.statSub, { color: c.textSecondary }]}>{subLabel}</Text>
     </Pressable>
   );
 }
 
 function DoseRow({
   dose,
+  first,
   responsibleText,
   canLog,
   open,
@@ -591,6 +615,7 @@ function DoseRow({
   onSetStatus,
 }: {
   dose: DoseItem;
+  first: boolean;
   responsibleText: string | null;
   canLog: boolean;
   open: boolean;
@@ -603,9 +628,9 @@ function DoseRow({
   const status = dose.status;
   const cfg = status ? DOSE_STATUS[status] : null;
   const StatusIcon = cfg ? cfg.Icon : Clock;
-  const statusColor = cfg ? c[cfg.colorKey] : c.textSecondary;
-  // Pending/unlogged = solid cream/elevated (Figma `--muted`); logged = a tint.
-  const statusBg = cfg ? withAlpha(statusColor, 0.12) : c.backgroundSunken;
+  const statusColor = cfg ? c[cfg.fg] : c.textSecondary;
+  // Logged = the status tint fill; unlogged/due = a solid sunken well.
+  const statusBg = cfg ? c[cfg.tint] : c.backgroundSunken;
   const statusLabel = status ? t(`medications.status.${status}`) : t('careCircle.dashboard.today.doseUnlogged');
   const isLogged = status !== null;
 
@@ -623,10 +648,10 @@ function DoseRow({
   }
 
   return (
-    <View>
-      <View style={[styles.doseRow, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
-        <View style={[styles.doseStatusCircle, { backgroundColor: statusBg }]}>
-          <StatusIcon size={16} color={statusColor} />
+    <View style={!first && { borderTopWidth: BorderWidth.standard, borderTopColor: c.border }}>
+      <View style={styles.doseRow}>
+        <View style={[styles.doseSquare, { backgroundColor: statusBg, borderColor: c.border }]}>
+          <StatusIcon size={17} color={statusColor} strokeWidth={cfg?.Icon === Check ? 2.8 : 2.4} />
         </View>
         <View style={styles.doseInfo}>
           {/* Name wraps to two lines (never truncated); dosage on its own line. */}
@@ -635,19 +660,20 @@ function DoseRow({
           </Text>
           {dose.dosage ? <Text style={[styles.doseDosage, { color: c.textSecondary }]}>{dose.dosage}</Text> : null}
           <View style={styles.doseMetaRow}>
-            <Text style={[styles.doseTime, { color: c.textSecondary }]}>{isolateLtr(formatHm(dose.scheduledTime))}</Text>
-            <View style={[styles.doseTag, { backgroundColor: statusBg }]}>
+            <Text style={[styles.doseTime, { color: c.text }]}>{isolateLtr(formatHm(dose.scheduledTime))}</Text>
+            <View style={[styles.doseTag, { borderColor: statusColor }]}>
+              <StatusIcon size={12} color={statusColor} strokeWidth={cfg?.Icon === Check ? 2.8 : 2.4} />
               <Text style={[styles.doseTagText, { color: statusColor }]}>{statusLabel}</Text>
             </View>
+            {responsibleText ? (
+              <View style={styles.doseResponsible}>
+                <Users size={12} color={c.textSecondary} strokeWidth={2} />
+                <Text style={[styles.doseResponsibleText, { color: c.textSecondary }]} numberOfLines={1}>
+                  {responsibleText}
+                </Text>
+              </View>
+            ) : null}
           </View>
-          {responsibleText ? (
-            <View style={styles.doseResponsibleRow}>
-              <Users size={12} color={c.textSecondary} />
-              <Text style={[styles.doseResponsibleText, { color: c.textSecondary }]} numberOfLines={1}>
-                {responsibleText}
-              </Text>
-            </View>
-          ) : null}
         </View>
         {canLog ? (
           <Pressable
@@ -656,17 +682,17 @@ function DoseRow({
             accessibilityLabel={`${isLogged ? t('medications.editStatus') : t('careCircle.dashboard.today.logAction')} ${dose.medicationName}`}
             style={
               isLogged
-                ? [styles.editBtn, { borderColor: withAlpha(c.primary, 0.4) }]
+                ? [styles.editBtn, { borderColor: c.border }]
                 : [styles.logBtn, { backgroundColor: c.primary }]
             }>
-            <Text style={[styles.logBtnText, { color: isLogged ? c.primary : c.onPrimary }]}>
+            <Text style={[styles.logBtnText, { color: isLogged ? c.text : c.onPrimary }]}>
               {isLogged ? t('medications.editStatus') : t('careCircle.dashboard.today.logAction')}
             </Text>
           </Pressable>
         ) : null}
       </View>
       {open && canLog ? (
-        <View style={[styles.doseActions, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
+        <View style={[styles.doseActions, { backgroundColor: c.backgroundSunken, borderTopColor: c.border }]}>
           {confirmStatus ? (
             <View style={styles.correctionRow}>
               <Text
@@ -694,7 +720,7 @@ function DoseRow({
                   disabled={pending}
                   accessibilityRole="button"
                   style={[styles.correctionCancel, { borderColor: c.border }]}>
-                  <Text style={[styles.correctionCancelText, { color: c.textSecondary }]}>{t('common.cancel')}</Text>
+                  <Text style={[styles.correctionCancelText, { color: c.text }]}>{t('common.cancel')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -702,7 +728,7 @@ function DoseRow({
             DOSE_ACTIONS.map((s) => {
               const a = DOSE_STATUS[s];
               const ActionIcon = a.Icon;
-              const color = c[a.colorKey];
+              const color = c[a.fg];
               const selected = s === status;
               return (
                 <Pressable
@@ -713,12 +739,9 @@ function DoseRow({
                   accessibilityState={{ selected }}
                   style={[
                     styles.doseAction,
-                    {
-                      backgroundColor: withAlpha(color, selected ? 0.24 : 0.15),
-                      opacity: pending ? 0.5 : 1,
-                    },
+                    { backgroundColor: c[a.tint], borderColor: selected ? color : c.border, opacity: pending ? 0.5 : 1 },
                   ]}>
-                  <ActionIcon size={14} color={color} />
+                  <ActionIcon size={14} color={color} strokeWidth={a.Icon === Check ? 2.8 : 2.4} />
                   <Text style={[styles.doseActionText, { color }]}>{t(`medications.status.${s}`)}</Text>
                 </Pressable>
               );
@@ -737,13 +760,7 @@ function DoseRow({
  * when there's no activity today (or the RPC isn't enabled yet), so a quiet day —
  * or a not-yet-migrated backend — never shows an error here.
  */
-function PulseSection({
-  circleId,
-  timezone,
-}: {
-  circleId: string;
-  timezone: string;
-}) {
+function PulseSection({ circleId, timezone }: { circleId: string; timezone: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const c = useTheme();
@@ -773,27 +790,30 @@ function PulseSection({
   if (activity.isLoading || activity.isError || events.length === 0) return null;
 
   return (
-    <View>
-      <View style={styles.dosesHeader}>
-        <Text style={[styles.sectionLabel, { color: c.textSecondary, fontFamily: FontFamily.regular, marginBottom: 0 }]}>
-          {t('pulse.sectionTitle')}
-        </Text>
-        <View style={styles.pulseHeaderActions}>
-          <Pressable
-            onPress={() => sharePulseSummary(composePulseShareText(events, t, actorLabel, timezone))}
-            accessibilityRole="button"
-            accessibilityLabel={t('pulse.share')}
-            hitSlop={8}>
-            <Share2 size={16} color={c.primary} />
-          </Pressable>
-          <Pressable onPress={() => router.push('/pulse')} accessibilityRole="button">
-            <Text style={[styles.link, { color: c.primary }]}>{t('pulse.viewAll')}</Text>
-          </Pressable>
-        </View>
-      </View>
-      <View style={styles.pulseList}>
-        {events.map((event) => {
-          const { iconName, colorKey } = pulseEventVisual(event);
+    <>
+      <SectionHeader
+        title={t('pulse.sectionTitle')}
+        style={styles.pulseHeadGap}
+        trailing={
+          <View style={styles.pulseHeaderActions}>
+            <Pressable
+              onPress={() => sharePulseSummary(composePulseShareText(events, t, actorLabel, timezone))}
+              accessibilityRole="button"
+              accessibilityLabel={t('pulse.share')}
+              hitSlop={8}>
+              <Share2 size={17} color={c.text} strokeWidth={2} />
+            </Pressable>
+            <Pressable onPress={() => router.push('/pulse')} accessibilityRole="button" hitSlop={8}>
+              <Text style={[styles.pulseLink, { color: c.primaryText }]}>{t('pulse.viewAll')}</Text>
+            </Pressable>
+          </View>
+        }
+      />
+      <View style={[styles.groupCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+        {events.map((event, i) => {
+          const { iconName } = pulseEventVisual(event);
+          const visual = PULSE_VISUAL[iconName] ?? PULSE_FALLBACK;
+          const PulseIcon = visual.Icon;
           return (
             <Pressable
               key={`${event.event_type}:${event.event_id}`}
@@ -802,194 +822,166 @@ function PulseSection({
               accessibilityHint={t('common.details')}
               style={({ pressed }) => [
                 styles.pulseRow,
-                { backgroundColor: c.backgroundElement, borderColor: c.border },
+                i > 0 && { borderTopWidth: BorderWidth.standard, borderTopColor: c.border },
                 pressed && { opacity: 0.7 },
               ]}>
-              <GlyphChip iconName={iconName} color={colorKey} size="md" />
-              <View style={styles.pulseInfo}>
-                <Text style={[styles.pulseDesc, { color: c.text }]} numberOfLines={2}>
-                  {pulseDescription(event, t, actorLabel)}
-                </Text>
-                <Text style={[styles.pulseTime, { color: c.textSecondary }]}>
-                  {isolateLtr(hmInTimeZone(event.occurred_at, timezone))}
-                </Text>
+              <View style={[styles.pulseIcon, { backgroundColor: c[visual.tint], borderColor: c.border }]}>
+                <PulseIcon size={14} color={c[visual.fg]} strokeWidth={2.2} />
               </View>
+              <Text style={[styles.pulseDesc, { color: c.text }]} numberOfLines={2}>
+                {pulseDescription(event, t, actorLabel)}
+              </Text>
+              <Text style={[styles.pulseTime, { color: c.textSecondary }]}>
+                {isolateLtr(hmInTimeZone(event.occurred_at, timezone))}
+              </Text>
             </Pressable>
           );
         })}
       </View>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  // Header
-  header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
-  headerText: { flexShrink: 1, gap: 2 },
-  date: { fontSize: 14 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  name: { fontSize: 20, fontFamily: FontFamily.bold, flexShrink: 1 },
-  subtitle: { fontSize: 14 },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  action: {
+  // Header band
+  band: { paddingHorizontal: 18, paddingBottom: 18 },
+  bandRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
+  bandText: { flexShrink: 1, gap: 1 },
+  bandDate: { fontSize: 14, fontFamily: FontFamily.medium, opacity: 0.8 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  bandName: { fontSize: 24, fontFamily: FontFamily.bold, lineHeight: 34, flexShrink: 1 },
+  bandChevron: { opacity: 0.8 },
+  bandSubtitle: { fontSize: 16, opacity: 0.85 },
+  bandActions: { flexDirection: 'row', gap: 10, paddingTop: 4 },
+  bandActionBordered: {
     width: 44,
     height: 44,
-    borderRadius: Radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Unread badge on the bell (app-wide unread indicator)
-  badge: {
+  bandActionFilled: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bandBadge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1.5,
+    top: -8,
+    insetInlineStart: -8,
+    minWidth: 21,
+    height: 21,
+    borderRadius: Radius.control,
     paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { fontSize: 10, lineHeight: 12, fontFamily: FontFamily.bold, color: '#FFFFFF' },
-  // Today's-data error / dose-log error banner
+  bandBadgeText: { fontSize: 13, fontFamily: FontFamily.bold },
+  // Notice banner
   notice: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
     paddingHorizontal: 14,
     paddingVertical: 12,
     minHeight: 48,
+    marginBottom: 12,
   },
   noticeText: { flex: 1, fontSize: 14, fontFamily: FontFamily.medium },
   noticeAction: { fontSize: 14, fontFamily: FontFamily.bold },
-  // Circle dropdown
-  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, minHeight: 48 },
-  switchName: { fontSize: 15, fontFamily: FontFamily.medium, flexShrink: 1 },
-  switchJoin: { fontSize: 14, fontFamily: FontFamily.medium },
-  // Hero
-  heroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  eyebrow: { fontSize: 14, fontFamily: FontFamily.semibold, letterSpacing: 0.3 },
-  link: { fontSize: 14, fontFamily: FontFamily.medium },
-  heroBody: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 12 },
-  heroRight: { flex: 1, gap: 8 },
-  heroMuted: { fontSize: 14 },
-  allDone: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: Radius.lg, paddingHorizontal: 12, paddingVertical: 8 },
-  allDoneText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  nextLabel: { fontSize: 14 },
-  nextDose: { marginTop: 6, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 12, paddingVertical: 10 },
-  nextDoseTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  nextName: { fontSize: 14, fontFamily: FontFamily.semibold, flexShrink: 1 },
-  nextTime: { fontSize: 14, fontFamily: FontFamily.medium },
-  nextDosage: { fontSize: 14, marginTop: 2 },
-  strip: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
-  stripPill: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: Radius.pill, paddingHorizontal: 8, paddingVertical: 4 },
-  stripTime: { fontSize: 14, fontFamily: FontFamily.medium },
-  // Summary
-  summaryRow: { flexDirection: 'row', gap: 12 },
-  stat: { flex: 1, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, padding: 16, gap: 2 },
-  statTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  statTopLabel: { fontSize: 14 },
-  statValue: { fontSize: 22, fontFamily: FontFamily.bold },
-  statSub: { fontSize: 14 },
+  // Circle switcher dropdown
+  switcher: { marginBottom: 12 },
+  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, minHeight: 48 },
+  switchName: { fontSize: 16, fontFamily: FontFamily.medium, flexShrink: 1 },
+  switchJoin: { fontSize: 15, fontFamily: FontFamily.semibold },
+  // Section header spacing
+  sectionHeadGap: { marginBottom: 8 },
+  quickHeadGap: { marginTop: 16, marginBottom: 8 },
+  doseHeadGap: { marginTop: 16, marginBottom: 8 },
+  pulseHeadGap: { marginTop: 16, marginBottom: 8 },
+  // Med-loop tiles
+  tileRow: { flexDirection: 'row', gap: 8 },
+  loopNone: { fontSize: 16, fontFamily: FontFamily.medium, paddingVertical: 4 },
+  countTile: { flex: 1.05, borderWidth: BorderWidth.standard, borderRadius: Radius.card, paddingVertical: 12, paddingHorizontal: 14 },
+  tileLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  countBig: { fontSize: 46, fontFamily: FontFamily.black, lineHeight: 53, textAlign: 'right', writingDirection: 'ltr' },
+  countTotal: { fontSize: 22, fontFamily: FontFamily.semibold },
+  tileSub: { fontSize: 15, fontFamily: FontFamily.medium },
+  nextTile: { flex: 1, borderWidth: BorderWidth.standard, borderRadius: Radius.card, paddingVertical: 12, paddingHorizontal: 14 },
+  nextName: { fontSize: 17, fontFamily: FontFamily.bold, lineHeight: 26, marginTop: 2 },
+  nextMeta: { fontSize: 16, fontFamily: FontFamily.bold },
+  nextDone: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  nextDoneText: { fontSize: 15, fontFamily: FontFamily.semibold, flexShrink: 1 },
+  // Stat tiles
+  statsGap: { marginTop: 14 },
+  statTile: { flex: 1, borderWidth: BorderWidth.standard, borderRadius: Radius.card, paddingVertical: 12, paddingHorizontal: 14 },
+  statTop: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  statTopLabel: { fontSize: 15, fontFamily: FontFamily.bold },
+  statValue: { fontSize: 38, fontFamily: FontFamily.black, lineHeight: 46 },
+  statSub: { fontSize: 15, fontFamily: FontFamily.medium },
   // Next appointment
-  apptRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  apptText: { flex: 1, gap: 2 },
-  apptWhen: { fontSize: 14 },
-  apptTitle: { fontSize: 15, fontFamily: FontFamily.semibold },
-  apptLoc: { fontSize: 14 },
+  nextApptGap: { marginTop: 8 },
+  apptCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: BorderWidth.standard, borderRadius: Radius.card, paddingVertical: 12, paddingHorizontal: 14 },
+  apptIcon: { width: 44, height: 44, borderWidth: BorderWidth.standard, borderRadius: Radius.card, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  apptText: { flex: 1, minWidth: 0 },
+  apptWhen: { fontSize: 14, fontFamily: FontFamily.semibold },
+  apptTitle: { fontSize: 16, fontFamily: FontFamily.bold, lineHeight: 24 },
+  apptLoc: { fontSize: 14, fontFamily: FontFamily.medium },
   // Quick actions
-  sectionLabel: { fontSize: 14, fontFamily: FontFamily.semibold, marginBottom: 10 },
-  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 12 },
-  quickTile: {
-    alignItems: 'center',
-    gap: 8,
-    borderRadius: Radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-  },
-  quickLabel: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
-  // Care Pulse (Home strip)
-  pulseHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  pulseList: { gap: 8 },
-  pulseRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderRadius: Radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  pulseInfo: { flex: 1, gap: 2 },
-  pulseDesc: { fontSize: 14, fontFamily: FontFamily.medium, lineHeight: 19 },
-  pulseTime: { fontSize: 14, fontFamily: FontFamily.regular },
-  // Doses
-  dosesHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  doseList: { gap: 8 },
-  doseRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingVertical: 12 },
-  doseStatusCircle: { width: 36, height: 36, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
-  doseInfo: { flex: 1, gap: 2 },
-  doseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  doseName: { fontSize: 14, fontFamily: FontFamily.semibold, flexShrink: 1 },
-  doseDosage: { fontSize: 14, fontFamily: FontFamily.regular },
-  doseMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  doseTime: { fontSize: 14, fontFamily: FontFamily.regular },
-  doseResponsibleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
-  doseResponsibleText: { fontSize: 14, fontFamily: FontFamily.regular, flexShrink: 1 },
-  doseTag: { borderRadius: Radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
-  doseTagText: { fontSize: 14, fontFamily: FontFamily.medium },
-  logBtn: { borderRadius: Radius.pill, paddingHorizontal: 12, paddingVertical: 6, minHeight: 32, justifyContent: 'center' },
-  editBtn: {
-    borderRadius: Radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    minHeight: 32,
-    justifyContent: 'center',
-  },
-  logBtnText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  doseActions: { flexDirection: 'row', gap: 8, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, padding: 12, marginTop: 4 },
-  doseAction: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: Radius.md, paddingVertical: 10, minHeight: 44 },
+  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: GRID_GAP, rowGap: GRID_GAP },
+  quickTile: { alignItems: 'center', gap: 5, borderWidth: BorderWidth.standard, borderRadius: Radius.card, paddingVertical: 10, paddingHorizontal: 4 },
+  quickLabel: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 19, textAlign: 'center' },
+  // Claim banner
+  claimGap: { marginTop: 14 },
+  claimCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: BorderWidth.standard, borderRadius: Radius.card, paddingVertical: 12, paddingHorizontal: 14 },
+  claimText: { flex: 1, minWidth: 0 },
+  claimTitle: { fontSize: 16, fontFamily: FontFamily.bold },
+  claimSub: { fontSize: 14, fontFamily: FontFamily.medium },
+  // Grouped list card (doses + pulse)
+  groupCard: { borderWidth: BorderWidth.standard, borderRadius: Radius.card, overflow: 'hidden' },
+  // Dose rows
+  doseRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', paddingVertical: 12, paddingHorizontal: 14 },
+  doseSquare: { width: 40, height: 40, borderWidth: BorderWidth.standard, borderRadius: Radius.control, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  doseInfo: { flex: 1, minWidth: 0 },
+  doseName: { fontSize: 16, fontFamily: FontFamily.bold, lineHeight: 24 },
+  doseDosage: { fontSize: 14, fontFamily: FontFamily.medium, marginTop: 1 },
+  doseMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 },
+  doseTime: { fontSize: 14, fontFamily: FontFamily.semibold, writingDirection: 'ltr' },
+  doseTag: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: BorderWidth.thin, borderRadius: Radius.tiny, paddingHorizontal: 9, paddingVertical: 2 },
+  doseTagText: { fontSize: 14, fontFamily: FontFamily.semibold },
+  doseResponsible: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  doseResponsibleText: { fontSize: 14, fontFamily: FontFamily.medium, flexShrink: 1 },
+  logBtn: { borderRadius: Radius.control, paddingHorizontal: 16, paddingVertical: 8, justifyContent: 'center', flexShrink: 0 },
+  editBtn: { borderWidth: BorderWidth.standard, borderRadius: Radius.control, paddingHorizontal: 12, paddingVertical: 6, justifyContent: 'center', flexShrink: 0 },
+  logBtnText: { fontSize: 15, fontFamily: FontFamily.bold },
+  // Dose action tray
+  doseActions: { flexDirection: 'row', gap: 8, borderTopWidth: BorderWidth.standard, padding: 12 },
+  doseAction: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: BorderWidth.thin, borderRadius: Radius.control, paddingVertical: 10, minHeight: 44 },
   doseActionText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  // Dose correction confirm (inside the tray)
   correctionRow: { flex: 1, gap: 10 },
-  correctionText: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 20 },
+  correctionText: { fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 22 },
   correctionActions: { flexDirection: 'row', gap: 8 },
-  correctionConfirm: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radius.md,
-    minHeight: 44,
-  },
-  correctionConfirmText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  correctionCancel: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    minHeight: 44,
-  },
-  correctionCancelText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  // Available to claim
-  claimCard: { flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: Radius.xl, borderWidth: StyleSheet.hairlineWidth, padding: 16 },
-  claimChip: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
-  claimText: { flex: 1, gap: 2 },
-  claimTitle: { fontSize: 15, fontFamily: FontFamily.bold },
-  claimSub: { fontSize: 14 },
-  // Emergency
-  emergency: { flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: Radius.xl, borderWidth: StyleSheet.hairlineWidth, padding: 16 },
-  emergencyChip: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
-  emergencyText: { flex: 1, gap: 2 },
-  emergencyTitle: { fontSize: 14, fontFamily: FontFamily.bold },
-  emergencySub: { fontSize: 14 },
-  emergencyBtn: { borderRadius: Radius.md, paddingHorizontal: 14, paddingVertical: 8, minHeight: 36, justifyContent: 'center' },
-  emergencyBtnText: { fontSize: 14, color: '#FFFFFF', fontFamily: FontFamily.semibold },
+  correctionConfirm: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: Radius.control, minHeight: 44 },
+  correctionConfirmText: { fontSize: 15, fontFamily: FontFamily.bold },
+  correctionCancel: { flex: 1, alignItems: 'center', justifyContent: 'center', borderWidth: BorderWidth.standard, borderRadius: Radius.control, minHeight: 44 },
+  correctionCancelText: { fontSize: 15, fontFamily: FontFamily.bold },
+  // Pulse
+  pulseHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  pulseLink: { fontSize: 15, fontFamily: FontFamily.semibold, textDecorationLine: 'underline' },
+  pulseRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 14 },
+  pulseIcon: { width: 34, height: 34, borderWidth: BorderWidth.standard, borderRadius: Radius.control, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  pulseDesc: { flex: 1, fontSize: 15, fontFamily: FontFamily.medium, lineHeight: 23 },
+  pulseTime: { fontSize: 14, fontFamily: FontFamily.medium, writingDirection: 'ltr' },
+  // Emergency banner
+  emergency: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: BorderWidth.standard, borderRadius: Radius.card, paddingVertical: 12, paddingHorizontal: 14, marginTop: 14, marginBottom: 18 },
+  emergencyText: { flex: 1, minWidth: 0 },
+  emergencyTitle: { fontSize: 16, fontFamily: FontFamily.bold },
+  emergencySub: { fontSize: 14, fontFamily: FontFamily.medium },
+  emergencyBtn: { borderRadius: Radius.control, paddingHorizontal: 18, paddingVertical: 7, justifyContent: 'center', flexShrink: 0 },
+  emergencyBtnText: { fontSize: 16, fontFamily: FontFamily.bold },
 });
