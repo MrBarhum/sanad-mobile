@@ -285,3 +285,57 @@ preserved. Quartet green.
   chrome get their Dar polish in the dedicated forms/sheets pass.
 - Runtime/visual verification is deferred to the user's device review at each
   checkpoint — the static quartet is green after every commit.
+
+---
+
+# Phase 3 — full-app Dar pass (completion)
+
+Every remaining drawn frame (and the un-drawn "compose" screens) is now on the Dar
+identity. Each screen was rebuilt to its HTML frame (or composed from the closest
+sibling), quartet-green, one commit each. No locale edits were needed anywhere in
+this phase — **every screen reused existing i18n keys, so ar/en parity held at 1093
+throughout**. No new native dependency. No behaviour/route/query/permission change.
+
+## Screens rebuilt (frame → file → commit)
+| Frame | Screen | File | Commit |
+|---|---|---|---|
+| 8a | Explore (tab) | `(tabs)/explore.tsx` | `be1f082` |
+| 8b | Account (tab) | `(tabs)/account.tsx` | `be1f082` |
+| 8d | Vitals list | `features/vitals/figma-vitals.tsx` | `1c701bf` |
+| 8e | Daily-logs list | `features/daily-logs/figma-daily-logs.tsx` | `1c701bf` |
+| 8f | Visits list | `features/visits/figma-visits.tsx` | `1c701bf` |
+| 7c | Notifications feed | `features/notifications/figma-notifications.tsx` | `015e4e6` |
+| 9e | Emergency card | `features/emergency/figma-emergency-card.tsx` | `7268917` |
+| — | Doctors list | `features/doctors/figma-doctors.tsx` | `69edf7a` |
+| 9a/9b | Members roster + role sheet | `features/circle-members/figma-members.tsx`, `figma-member-actions.tsx` | `dca5206` |
+| 7b | Appointment detail | `features/appointments/appointment-editor.tsx` | `cf69490` |
+| 9d | Available-to-claim | `features/claiming/figma-available-to-claim.tsx` | `ba3e62b` |
+| — | Appointments list | `features/appointments/figma-appointments.tsx` | `2f12395` |
+| 7a | Auth ×4 (sign-in/up/forgot/reset) | `(auth)/*`, `reset-password.tsx`, `features/auth/auth-chrome.tsx` | `248e62a` |
+| 9c | Invitations (code reveal + list) | `features/invitations/invite-form.tsx`, `invitations-list.tsx` | `baa7a78` |
+| 6b | Forms → FigmaFormScreen (join / recipient-profile / notification-settings) | `features/invitations/join-form.tsx`, `features/recipient-profile/profile-form.tsx`, `features/notifications/notification-settings.tsx` | `887848a` |
+| — | Emergency-contacts manager | `features/emergency/contacts-manager.tsx` | `887848a` |
+| — | First-run onboarding | `features/care-circle/onboarding-form.tsx` | `514c5ff` |
+
+## Shared-component work this phase
+- **New:** `FigmaTabBand` (the green tab-screen band for Explore/Account) in `figma-header.tsx`; `AuthHeader` + `AuthError` in `features/auth/auth-chrome.tsx` (the shared 7a lockup, reused by onboarding).
+- **Restyled once, consumed everywhere:** `FigmaListRow` → the Dar grouped row (40dp toned icon square, 16/800 title, 14/600 subtitle, back chevron, 2px dividers, semantic `tone` prop) — serves Explore, Account, and the form pickers. `FormField` gained an opt-in `secureToggle` (eye reveal) so passwords stay on the one canonical field. `skeleton.tsx` list card raised to the 2px Dar border.
+- **Deleted:** the parallel `auth-field.tsx` (folded into `FormField`).
+
+## Routing / chrome
+- Native headers hidden (Dar band is the only chrome) for: `join-circle`, `notification-settings`, `recipient-profile`, `emergency-contacts` (in `(app)/_layout.tsx`), and all three `circle-members/*` screens (nested `_layout.tsx` — each draws its own band, fixing a latent double-header on the roster).
+- Auth + onboarding keep the `Screen` shell (it uniquely provides keyboard-avoidance + max-width centering); every other screen is on `FigmaScreen`/`FigmaFormScreen`.
+
+## Two design corrections applied throughout
+1. **Neutral responsible-person** — recipient-profile + onboarding + Home render a person icon + name, never a gendered «المسؤول/المسؤولة» word (the app stores no gender).
+2. **Ghost placeholders** — bare example placeholders, no «مثال: …» prefix.
+
+## Deliberate deviations / notes (for review)
+- **Gutter:** sub-screens use `FigmaScreen`'s default 20px gutter with `FigmaHeader` (which hard-codes its `-Gutter` band breakout), not the frame's 14px — this matches the already-approved Medications/Tasks/Pulse and keeps the band aligned. ~6px wider content than the mockup; app-wide and consistent.
+- **14 floor > frame 13:** meta/timestamps/badges the mockups draw at 13px are rendered at 14 (≥600 weight) per the binding type floor. Applies to vitals meta, the «أنت» member badge, and list meta lines.
+- **Gold reservation enforced:** the onboarding invite hint moved from the old gold `accent` banner to green `info`; gold now appears only on the claim-digest notification and the one-time invite-code warning.
+- **Emergency call buttons** use `errorFg` fill (frame's `--err`) with a `bg`-colored icon — the Dar frame's explicit choice for the call affordance; still restrained (no alarm-red screens).
+- `pulse/present.ts` still returns a legacy `colorKey` (categoryX) in `pulseEventVisual`, but both consumers ignore it and apply their own Dar tone maps — dead data, renders nothing, left untouched.
+
+## Final verification
+`npx tsc --noEmit` → 0 errors · `npm run check:mojibake` → clean · `git diff --check` → clean · ar/en parity → 1093 = 1093 (0 diff). Runtime/visual verification remains the user's device review. Every screen exists in light AND dark (token values swap only); RTL throughout with LTR-isolated numerics.
