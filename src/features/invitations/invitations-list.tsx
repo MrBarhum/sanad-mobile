@@ -4,14 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { FigmaHeader } from '@/components/figma/figma-header';
+import { FigmaScreen } from '@/components/figma/figma-screen';
 import { GlyphChip } from '@/components/glyph-chip';
-import { Screen } from '@/components/screen';
+import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { Glyph } from '@/constants/glyphs';
-import { Spacing } from '@/constants/theme';
+import { BorderWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ymdFromInstant } from '@/utils/date';
 
@@ -43,22 +44,36 @@ export function InvitationsList({ circleId }: { circleId: string }) {
     }
   }
 
-  if (invitations.isLoading) return <LoadingState />;
+  if (invitations.isLoading) {
+    return (
+      <FigmaScreen>
+        <FigmaHeader title={t('invitations.manageTitle')} />
+        <LoadingState />
+      </FigmaScreen>
+    );
+  }
   if (invitations.isError) {
     return (
-      <ErrorState
-        message={t('invitations.loadError')}
-        retryLabel={t('retry')}
-        onRetry={() => invitations.refetch()}
-      />
+      <FigmaScreen>
+        <FigmaHeader title={t('invitations.manageTitle')} />
+        <ErrorState
+          message={t('invitations.loadError')}
+          retryLabel={t('retry')}
+          onRetry={() => invitations.refetch()}
+        />
+      </FigmaScreen>
     );
   }
 
   const items = invitations.data ?? [];
 
   return (
-    <Screen>
-      <Button label={t('invitations.invite')} onPress={() => router.push('/circle-members/invite')} />
+    <FigmaScreen>
+      <FigmaHeader
+        title={t('invitations.manageTitle')}
+        onAdd={() => router.push('/circle-members/invite')}
+        addAccessibilityLabel={t('invitations.invite')}
+      />
 
       {error ? (
         <ThemedText
@@ -71,7 +86,7 @@ export function InvitationsList({ circleId }: { circleId: string }) {
 
       {items.length === 0 ? (
         <EmptyState
-          icon={Glyph.members}
+          iconName="member"
           title={t('invitations.emptyTitle')}
           subtitle={t('invitations.emptySubtitle')}
         />
@@ -87,7 +102,7 @@ export function InvitationsList({ circleId }: { circleId: string }) {
           ))}
         </View>
       )}
-    </Screen>
+    </FigmaScreen>
   );
 }
 
@@ -107,7 +122,7 @@ function InvitationCard({
   return (
     <Surface style={styles.card}>
       <View style={styles.cardHeader}>
-        <GlyphChip glyph={Glyph.members} tone="primary" size="sm" />
+        <GlyphChip iconName="member" tone="primary" size="sm" />
         <ThemedText type="cardTitle" style={styles.cardTitle}>
           {item.invitedName?.trim() || t(`circleMembers.roles.${item.role}`)}
         </ThemedText>
@@ -120,7 +135,7 @@ function InvitationCard({
 
       {item.status === 'pending' ? (
         <ThemedText type="small" themeColor="textSecondary">
-          {t('invitations.expiresLabel', { date: ymdFromInstant(item.expiresAt) })}
+          {t('invitations.expiresLabel', { date: isolateLtr(ymdFromInstant(item.expiresAt)) })}
         </ThemedText>
       ) : null}
 
@@ -128,7 +143,7 @@ function InvitationCard({
         <ThemedText type="small" themeColor="textSecondary">
           {t('invitations.acceptedByLabel', {
             name: item.acceptedByName,
-            date: item.acceptedAt ? ymdFromInstant(item.acceptedAt) : '',
+            date: item.acceptedAt ? isolateLtr(ymdFromInstant(item.acceptedAt)) : '',
           })}
         </ThemedText>
       ) : null}
@@ -187,7 +202,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     flexWrap: 'wrap',
     marginTop: Spacing.one,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: BorderWidth.standard,
     paddingTop: Spacing.three,
   },
 });
