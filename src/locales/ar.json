@@ -1193,7 +1193,7 @@
     "enableAction": "إعدادات الإشعارات",
     "manageLink": "إدارة إعدادات الإشعارات",
     "actions": {
-      "completeButton": "تم",
+      "completeButton": "تم الإنجاز",
       "snoozeButton": "ذكرني بعد ٥ دقائق",
       "doneTitle": "تم",
       "snoozeConfirm": "سيصلك تذكير بعد ٥ دقائق",

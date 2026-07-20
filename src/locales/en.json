@@ -1193,7 +1193,7 @@
     "enableAction": "Notification settings",
     "manageLink": "Manage notification settings",
     "actions": {
-      "completeButton": "Done",
+      "completeButton": "Mark complete",
       "snoozeButton": "Remind me in 5 min",
       "doneTitle": "Done",
       "snoozeConfirm": "We'll remind you in 5 minutes",

@@ -394,8 +394,7 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
                 accessibilityElementsHidden>
                 <Text style={[styles.tileLabel, { color: c.textSecondary }]}>{t('medications.todayTitle')}</Text>
                 <Text style={[styles.countBig, { color: c.text }]}>
-                  {isolateLtr(String(given))}
-                  <Text style={[styles.countTotal, { color: c.textSecondary }]}>{isolateLtr(`/${total}`)}</Text>
+                  {`${given}`}<Text style={[styles.countTotal, { color: c.textSecondary }]}>{`/${total}`}</Text>
                 </Text>
                 <Text style={[styles.tileSub, { color: c.textSecondary }]}>
                   {t('careCircle.dashboard.today.dosesGivenSoFar')}
@@ -975,10 +974,10 @@ const styles = StyleSheet.create({
   // Pulse
   pulseHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   pulseLink: { fontSize: 15, fontFamily: FontFamily.semibold, textDecorationLine: 'underline' },
-  pulseRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 16 },
+  pulseRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 12, paddingHorizontal: 16 },
   pulseIcon: { width: 34, height: 34, borderWidth: BorderWidth.standard, borderRadius: Radius.control, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   pulseDesc: { flex: 1, fontSize: 15, fontFamily: FontFamily.medium, lineHeight: 23 },
-  pulseTime: { fontSize: 14, fontFamily: FontFamily.medium, writingDirection: 'ltr' },
+  pulseTime: { fontSize: 14, fontFamily: FontFamily.medium, writingDirection: 'ltr', marginTop: 6 },
   // Emergency banner
   emergency: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: BorderWidth.standard, borderRadius: Radius.card, paddingVertical: 12, paddingHorizontal: 14, marginTop: 14, marginBottom: 18 },
   emergencyText: { flex: 1, minWidth: 0 },
