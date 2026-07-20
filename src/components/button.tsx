@@ -1,11 +1,10 @@
-import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { type IconName } from '@/constants/icons';
-import { FontFamily, Radius, Spacing, TouchTarget, type ThemeColor } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, TouchTarget, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Icon } from './icon';
-import { ThemedText } from './themed-text';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'plain';
 export type ButtonSize = 'md' | 'sm';
@@ -23,12 +22,8 @@ type ButtonProps = {
   onPress: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
-  /**
-   * Optional leading icon rendered in the label color before the label.
-   * Decorative — the label always carries the meaning.
-   */
   iconName?: IconName;
-  /** Legacy leading text glyph (e.g. '＋'). Kept for existing call sites; prefer `iconName`. */
+  /** Legacy leading text glyph. Kept for existing call sites; prefer `iconName`. */
   glyph?: string;
   loading?: boolean;
   disabled?: boolean;
@@ -38,16 +33,12 @@ type ButtonProps = {
 };
 
 /**
- * The single button primitive across the care screens. Variants:
- *   - primary   — filled brand blue (the main action), darkens while pressed.
- *   - secondary — quiet warm-neutral fill (companion actions). Calm on both the
- *                 canvas and on cards; never a huge white slab in dark mode.
- *   - danger    — soft error-tinted fill with strong error text. Reads clearly
- *                 destructive yet stays visually + semantically separate from
- *                 save/confirm, without shouting.
- *   - plain     — text-only, brand-colored (low-emphasis tertiary actions).
+ * The single Dar button primitive. Variants:
+ *   - primary   — `btn` fill + `btnInk`, 2px `line` border, radius 8 (the main action).
+ *   - secondary — `card` fill + 2px `line` border + `ink` text (companion actions).
+ *   - danger    — `card` fill + 2px `err` border + `err` text (restrained destructive).
+ *   - plain     — text-only, `acc`, underlined (low-emphasis tertiary actions).
  * Always meets the touch-target floor; labels stay legible in light & dark.
- * Cross-platform — no native-only APIs.
  */
 export function Button({
   label,
@@ -62,48 +53,20 @@ export function Button({
   accessibilityHint,
   accessibilityLabel,
 }: ButtonProps) {
-  const theme = useTheme();
+  const c = useTheme();
   const isPrimary = variant === 'primary';
   const isDisabled = disabled || loading;
 
-  const palette: Record<
-    ButtonVariant,
-    { background: string; pressed: string; border: string; text: string }
-  > = {
-    primary: {
-      background: theme.primary,
-      pressed: theme.primaryPressed,
-      border: 'transparent',
-      text: theme.onPrimary,
-    },
-    secondary: {
-      background: theme.backgroundSelected,
-      pressed: theme.border,
-      // A visible hairline edge so a quiet secondary button still reads as a
-      // pressable control (not loose text) on both the canvas and on cards.
-      border: theme.border,
-      text: theme.text,
-    },
-    danger: {
-      background: theme.errorBg,
-      pressed: theme.errorBg,
-      border: theme.errorFg,
-      text: theme.errorFg,
-    },
-    plain: {
-      background: 'transparent',
-      pressed: theme.backgroundSelected,
-      border: 'transparent',
-      text: theme.primaryText,
-    },
+  const palette: Record<ButtonVariant, { background: string; pressed: string; border: string; text: string }> = {
+    primary: { background: c.primary, pressed: c.primaryPressed, border: c.border, text: c.onPrimary },
+    secondary: { background: c.backgroundElement, pressed: c.backgroundSunken, border: c.border, text: c.text },
+    danger: { background: c.backgroundElement, pressed: c.errorBg, border: c.errorFg, text: c.errorFg },
+    plain: { background: 'transparent', pressed: c.backgroundSelected, border: 'transparent', text: c.primaryText },
   };
   const colors = palette[variant];
-  // A PRIMARY action is always a filled, full-opacity brand rectangle — never grey
-  // or faded — so "filled teal" reliably reads as the main action. Pressability is
-  // still gated by `disabled`/`loading`; only the faded/grey *styling* is removed.
-  // The quiet/danger/plain variants keep their dim-when-disabled affordance.
   const fadedDisabled = !isPrimary && isDisabled;
   const iconColor: ThemeColor = ICON_COLOR[variant];
+  const labelSize = size === 'sm' ? 15 : variant === 'plain' ? 15 : isPrimary ? 17 : 16;
 
   return (
     <Pressable
@@ -116,9 +79,11 @@ export function Button({
       style={({ pressed }) => [
         styles.base,
         size === 'sm' ? styles.sm : styles.md,
+        variant === 'plain' && styles.plain,
         {
           backgroundColor: pressed && !isDisabled ? colors.pressed : colors.background,
           borderColor: colors.border,
+          borderWidth: variant === 'plain' ? 0 : BorderWidth.standard,
           opacity: fadedDisabled ? 0.45 : pressed && variant === 'danger' ? 0.75 : 1,
         },
         style,
@@ -127,20 +92,19 @@ export function Button({
         <ActivityIndicator color={colors.text} />
       ) : (
         <View style={styles.content}>
-          {iconName ? (
-            <Icon name={iconName} size={size === 'sm' ? 16 : 18} color={iconColor} />
-          ) : glyph ? (
-            <ThemedText
-              accessibilityElementsHidden
-              importantForAccessibility="no"
-              style={[size === 'sm' ? styles.glyphSm : styles.glyphMd, { color: colors.text }]}>
+          {iconName ? <Icon name={iconName} size={size === 'sm' ? 16 : 18} color={iconColor} /> : null}
+          {glyph && !iconName ? (
+            <Text accessibilityElementsHidden style={[styles.glyph, { color: colors.text }]}>
               {glyph}
-            </ThemedText>
+            </Text>
           ) : null}
-          <ThemedText
-            style={[size === 'sm' ? styles.labelSm : styles.labelMd, { color: colors.text }]}>
+          <Text
+            style={[
+              { fontFamily: FontFamily.bold, fontSize: labelSize, color: colors.text },
+              variant === 'plain' && styles.plainLabel,
+            ]}>
             {label}
-          </ThemedText>
+          </Text>
         </View>
       )}
     </Pressable>
@@ -149,16 +113,14 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.md,
+    borderRadius: Radius.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  md: { minHeight: TouchTarget.comfortable, paddingVertical: Spacing.three, paddingHorizontal: Spacing.four },
-  sm: { minHeight: TouchTarget.min, paddingVertical: Spacing.two, paddingHorizontal: Spacing.three },
-  content: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two },
-  labelMd: { fontFamily: FontFamily.semibold, fontSize: 16, lineHeight: 24, fontWeight: '600' },
-  labelSm: { fontFamily: FontFamily.semibold, fontSize: 14, lineHeight: 21, fontWeight: '600' },
-  glyphMd: { fontSize: 17, lineHeight: 24, fontWeight: '700' },
-  glyphSm: { fontSize: 15, lineHeight: 21, fontWeight: '700' },
+  md: { minHeight: TouchTarget.comfortable, paddingVertical: 13, paddingHorizontal: 24 },
+  sm: { minHeight: TouchTarget.min, paddingVertical: 8, paddingHorizontal: 16 },
+  plain: { minHeight: 0, paddingVertical: 4, paddingHorizontal: 4 },
+  content: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  glyph: { fontSize: 17, fontFamily: FontFamily.bold },
+  plainLabel: { textDecorationLine: 'underline' },
 });

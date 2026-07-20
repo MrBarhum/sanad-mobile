@@ -1,7 +1,7 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { type IconName } from '@/constants/icons';
-import { FontFamily, Radius, Spacing, type ThemeColor } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Icon } from './icon';
@@ -15,14 +15,6 @@ const FG_BY_TONE: Record<StatusTone, ThemeColor> = {
   error: 'errorFg',
   info: 'infoFg',
   neutral: 'textSecondary',
-};
-
-const BG_BY_TONE: Record<StatusTone, ThemeColor> = {
-  success: 'successBg',
-  warning: 'warningBg',
-  error: 'errorBg',
-  info: 'infoBg',
-  neutral: 'backgroundSelected',
 };
 
 /**
@@ -43,30 +35,26 @@ type StatusBadgeProps = {
   label: string;
   /** Override the leading icon with another semantic icon (still shape-based). */
   iconName?: IconName;
-  /**
-   * Legacy escape hatch: render a literal text glyph instead of the tone icon.
-   * Kept so existing call sites keep working; new code should use `iconName`.
-   */
+  /** Legacy escape hatch: a literal text glyph instead of the tone icon. */
   glyph?: string;
   style?: StyleProp<ViewStyle>;
 };
 
 /**
- * Pill badge for a status (e.g. a medication dose "given", a task "done"). A soft
- * tinted background with a strong foreground, a bold tone icon and a text label —
- * legible in light & dark, never color-only, calm rather than loud.
+ * The Dar status pill: a 1.5px stroke border in the tone color, radius 4, a tone
+ * icon + a 14/700 label — icon + text (never color-only), calm rather than loud.
+ * Matches the dose / task status pills exactly.
  */
 export function StatusBadge({ tone, label, iconName, glyph, style }: StatusBadgeProps) {
-  const theme = useTheme();
-  const fg = theme[FG_BY_TONE[tone]];
-  const bg = theme[BG_BY_TONE[tone]];
+  const c = useTheme();
+  const fg = c[FG_BY_TONE[tone]];
 
   return (
-    <View style={[styles.badge, { backgroundColor: bg }, style]} accessibilityRole="text">
+    <View style={[styles.badge, { borderColor: fg }, style]} accessibilityRole="text">
       {glyph ? (
         <ThemedText style={[styles.glyph, { color: fg }]}>{glyph}</ThemedText>
       ) : (
-        <Icon name={iconName ?? ICON_BY_TONE[tone]} size={14} color={FG_BY_TONE[tone]} />
+        <Icon name={iconName ?? ICON_BY_TONE[tone]} size={12} color={FG_BY_TONE[tone]} />
       )}
       <ThemedText style={[styles.label, { color: fg }]}>{label}</ThemedText>
     </View>
@@ -77,10 +65,11 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one + Spacing.half,
-    borderRadius: Radius.pill,
-    paddingVertical: Spacing.one + Spacing.half,
-    paddingHorizontal: Spacing.two + Spacing.one,
+    gap: 5,
+    borderWidth: BorderWidth.thin,
+    borderRadius: Radius.tiny,
+    paddingVertical: 2,
+    paddingHorizontal: 9,
     alignSelf: 'flex-start',
   },
   glyph: { fontSize: 14, lineHeight: 19, fontWeight: '800' },

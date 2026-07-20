@@ -1,7 +1,7 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { type IconName } from '@/constants/icons';
-import { Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { Button } from './button';
@@ -25,7 +25,7 @@ export function LoadingState({ label }: { label?: string }) {
   );
 }
 
-/** Full-area centered error message with a retry button. */
+/** Full-area centered error message with a retry button (Dar: an err icon square). */
 export function ErrorState({
   message,
   retryLabel,
@@ -35,18 +35,20 @@ export function ErrorState({
   retryLabel: string;
   onRetry: () => void;
 }) {
+  const c = useTheme();
   return (
     <ThemedView style={styles.centered}>
       <GlyphChip iconName="warning" tone="error" size="lg" />
-      <ThemedText style={styles.message} accessibilityRole="alert">
+      <Text style={[styles.message, { color: c.text }]} accessibilityRole="alert">
         {message}
-      </ThemedText>
+      </Text>
       <Button label={retryLabel} onPress={onRetry} variant="secondary" />
     </ThemedView>
   );
 }
 
-/** Centered empty-state card (e.g. an empty list). */
+/** The Dar quiet empty-state card: a tinted circle icon + a 20/800 title + a
+ *  16/600 reassuring line. Calm, never an error. */
 export function EmptyState({
   title,
   subtitle,
@@ -60,39 +62,24 @@ export function EmptyState({
   /** Optional semantic icon above the title (preferred). */
   iconName?: IconName;
 }) {
+  const c = useTheme();
   return (
     <Surface tone="card" style={styles.empty}>
       {iconName ? (
-        <GlyphChip iconName={iconName} tone="neutral" size="lg" />
+        <GlyphChip iconName={iconName} tone="success" size="lg" shape="circle" />
       ) : icon ? (
-        <GlyphChip glyph={icon} tone="neutral" size="lg" />
+        <GlyphChip glyph={icon} tone="success" size="lg" shape="circle" />
       ) : null}
-      <ThemedText type="cardTitle" style={styles.centerText}>
-        {title}
-      </ThemedText>
-      {subtitle ? (
-        <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-          {subtitle}
-        </ThemedText>
-      ) : null}
+      <Text style={[styles.title, { color: c.text }]}>{title}</Text>
+      {subtitle ? <Text style={[styles.subtitle, { color: c.textSecondary }]}>{subtitle}</Text> : null}
     </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.four,
-    paddingHorizontal: Spacing.four,
-  },
-  message: { textAlign: 'center' },
-  empty: {
-    paddingVertical: Spacing.five,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.three,
-    alignItems: 'center',
-  },
-  centerText: { textAlign: 'center' },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24, paddingHorizontal: 24 },
+  message: { textAlign: 'center', fontSize: 16, fontFamily: FontFamily.semibold, lineHeight: 26 },
+  empty: { paddingVertical: 32, paddingHorizontal: 24, gap: 16, alignItems: 'center' },
+  title: { textAlign: 'center', fontSize: 20, fontFamily: FontFamily.bold, lineHeight: 30 },
+  subtitle: { textAlign: 'center', fontSize: 16, fontFamily: FontFamily.medium, lineHeight: 27 },
 });
