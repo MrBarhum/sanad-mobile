@@ -19,7 +19,7 @@ import { defaultVisitDraft, prepareVisit, type VisitDraft } from './visit-fields
 
 /**
  * Add-visit form — an exact-copy rebuild of the Figma `AddVisitScreen` wired to
- * Sanad's real create flow + schema. The export's blue/IBM-Plex become teal/IBM Plex
+ * Sanad's real create flow + schema. The export's blue/Cairo become teal/Cairo
  * and its native inputs become the protected wheel pickers. Crucially, the
  * export's "link to my account" toggle is shown to EVERYONE — Sanad's RLS instead
  * shows it ONLY to managers (collaborators always record their own visit), and

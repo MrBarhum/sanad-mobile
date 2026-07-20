@@ -56,7 +56,7 @@ function startSortKey(visit: FamilyVisit): string {
  * the visitor name as the title, a planned/completed/cancelled status pill, and
  * Clock(date, time) + (optional Home) meta rows. Tapping a card opens the existing
  * detail route. Reuses the `VisitsCenter` hook (`useVisits`) and its date/status
- * field access + locale keys (`visits.status.*`) verbatim. IBM Plex + theme tokens,
+ * field access + locale keys (`visits.status.*`) verbatim. Cairo + theme tokens,
  * RTL. No old Sanad Screen/Surface/Section/Button/StatusBadge.
  */
 export function FigmaVisits({

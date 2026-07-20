@@ -18,8 +18,8 @@ import { defaultVitalDraft, prepareVital, type VitalDraft } from './vital-fields
  * Add-vital-reading form — an exact-copy rebuild of the Figma `AddVitalScreen`
  * (header + gold non-diagnostic disclaimer + measurement-type card + value card
  * + date-time card + notes card + sticky save), wired to Sanad's real create
- * flow + `prepareVital` validation. Figma's blue/IBM-Plex are replaced with the
- * committed teal/IBM Plex; its native date/time inputs with the protected wheel
+ * flow + `prepareVital` validation. Figma's blue/Cairo are replaced with the
+ * committed teal/Cairo; its native date/time inputs with the protected wheel
  * pickers. No diagnosis, no value interpretation, no health-color coding.
  */
 export function VitalForm({ circleId }: { circleId: string }) {

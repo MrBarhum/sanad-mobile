@@ -56,7 +56,7 @@ const TYPE_ICON: Record<NotificationType, { iconName: IconName; colorKey: ThemeC
  * a back + centered title header with a "mark all read" text action (only when
  * there are unread items), an unread-count banner, and a recent-first list of
  * rows — each a per-type icon chip + title + body + time + unread dot, with
- * unread rows tinted and read rows plain. IBM Plex + theme tokens, dark-first, RTL.
+ * unread rows tinted and read rows plain. Cairo + theme tokens, dark-first, RTL.
  *
  * Reuses the NotificationsCenter hooks/data VERBATIM (useNotifications /
  * useMarkAllRead / useMarkNotificationRead / useOpenNotification), keeping the

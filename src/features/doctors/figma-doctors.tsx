@@ -38,7 +38,7 @@ const CHIP_COLORS = [
  * two-step inline confirm) — previously these lived only in the unrouted legacy
  * DoctorsManager, so a manager could add and call a doctor but never correct or
  * remove one. Reuses the manager's validated `DoctorFormModal` for both add and
- * edit and the `useDeleteDoctor` hook; IBM Plex + theme tokens, RTL.
+ * edit and the `useDeleteDoctor` hook; Cairo + theme tokens, RTL.
  */
 export function FigmaDoctors({ circleId, canManage }: { circleId: string; canManage: boolean }) {
   const { t } = useTranslation();

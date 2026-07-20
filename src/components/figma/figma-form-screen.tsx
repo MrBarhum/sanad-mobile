@@ -19,7 +19,7 @@ import { useTheme } from '@/hooks/use-theme';
  * title/subtitle + hairline divider), an optional full-bleed gold disclaimer
  * banner, a scrolling stack of cards, and the save footer.
  *
- * Colors and type both come from the single token system (theme.ts + IBM Plex
+ * Colors and type both come from the single token system (theme.ts + Cairo
  * Sans Arabic). The caller passes the save button as `footer` so each screen keeps
  * its own disabled/loading/error wiring.
  */

@@ -68,7 +68,7 @@ function compareOpenTasks(a: CareTask, b: CareTask, today: string): number {
  * and wired to real Sanad data. A back/title/teal-"+" header, a today/open/done
  * segmented control, and a hairline-separated card of task rows — round complete
  * checkbox, title (strikethrough when done), note, due time, assignee, and an X to
- * cancel open tasks. IBM Plex + theme tokens, RTL.
+ * cancel open tasks. Cairo + theme tokens, RTL.
  *
  * Role-aware visibility (UI filter only — RLS unchanged): managers (admin /
  * primary_caregiver) see and manage every task; an actionable non-manager

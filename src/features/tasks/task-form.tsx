@@ -30,7 +30,7 @@ const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 /**
  * Add-task form — an exact-copy rebuild of the Figma `AddTaskScreen` (header +
  * main-info card with priority chips + due-date card + assignee card), wired to
- * Sanad's real create flow + schema. Figma's blue/IBM-Plex become teal/IBM Plex, its
+ * Sanad's real create flow + schema. Figma's blue/Cairo become teal/Cairo, its
  * native date/time inputs become the protected wheel pickers, and its invented
  * assignee dropdown becomes a "تعيين إلى" selector of REAL circle members (no fake
  * names) — "أنا", any active member, or "بدون تعيين". Sanad also keeps the category

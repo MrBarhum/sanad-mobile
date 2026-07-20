@@ -17,8 +17,8 @@ import { defaultDailyLogDraft, prepareDailyLog, type DailyLogDraft } from './log
 /**
  * Add-daily-log form — an exact-copy rebuild of the Figma `AddDailyLogScreen`
  * (header + gold non-diagnostic banner + date / observations / pain / notes
- * cards), wired to Sanad's real create flow + schema. Figma's blue/IBM-Plex
- * become teal/IBM Plex. The observational disclaimer, the "غير محدّد" unset states,
+ * cards), wired to Sanad's real create flow + schema. Figma's blue/Cairo
+ * become teal/Cairo. The observational disclaimer, the "غير محدّد" unset states,
  * and the distinct "بدون" pain state are preserved; the one-log-per-date conflict
  * surfaces its specific message.
  */

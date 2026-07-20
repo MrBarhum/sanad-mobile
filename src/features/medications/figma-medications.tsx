@@ -61,7 +61,7 @@ type TabKey = 'today' | 'all';
  * today/all segmented control, today = dose cards with inline given/postponed/
  * missed logging (via the real `useLogDose`), and all = medication rows with Pill
  * chip + dosage + schedule chips + active badge tapping through to the detail
- * screen. IBM Plex + theme tokens, RTL. No old Sanad Screen/Surface/Section/Button.
+ * screen. Cairo + theme tokens, RTL. No old Sanad Screen/Surface/Section/Button.
  */
 export function FigmaMedications({
   circleId,

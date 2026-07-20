@@ -58,7 +58,7 @@ function formatLogDate(ymd: string, language: string | undefined): string {
  * "family notes, not a medical assessment" disclaimer, then one card per log with
  * a date + (your-log) marker, a list of structured field rows (mood / sleep /
  * appetite / hydration / pain / mobility, each an icon + label + value) and a
- * notes well. Observational only — never any clinical judgement. IBM Plex + Figma
+ * notes well. Observational only — never any clinical judgement. Cairo + Figma
  * tokens, RTL. Reuses the center's hooks (`useDailyLogs`) and `describe*` helpers
  * verbatim. No old Sanad Screen/Surface/Section/GlyphChip/Button.
  */

@@ -86,7 +86,7 @@ const HOME_PULSE_MAX = 5;
  * dropdown + bell + emergency), the care-loop hero (SVG ring + next dose + status
  * strip), two today-summary stat cards, the next-appointment card, a 4-up
  * quick-action grid, the today doses list with inline status logging, and the
- * emergency banner. IBM Plex + theme tokens, dark-first, RTL. No old Sanad
+ * emergency banner. Cairo + theme tokens, dark-first, RTL. No old Sanad
  * Screen/Surface/Section/CircleSwitcher/DashboardTile/View-ring.
  */
 export function FigmaHome({ circle }: { circle: ActiveCircle }) {

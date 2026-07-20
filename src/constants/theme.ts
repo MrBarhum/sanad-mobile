@@ -2,28 +2,25 @@
  * Sanad design tokens — a single source of truth for color, type, spacing,
  * radius, elevation and touch-target sizing.
  *
- * Visual direction: "Warm Care OS" — a calm, premium, Arabic-first family-care
- * interface. Identity comes from typography (IBM Plex Sans Arabic), warm-neutral
- * canvases (never flat white / pure black), one confident teal brand, a soft sand
- * accent, and per-feature category tints — not from gradients, heavy shadows or
- * decoration. Tuned for older adults and family caregivers: large targets, strong
- * contrast, status is never color-only. Light and dark are full peers.
+ * Visual direction: «دار · الأخضر والرمل» (Dar / Green & Sand) — a "family house"
+ * feel: sturdy, grounded, calm. Warm sand canvas (`background`), cream cards
+ * (`backgroundElement`), a deep-green header band (`band`) with cream ink
+ * (`bandInk`), and 2px solid deep-green borders (`border` = `line`) on almost
+ * everything. Flat elevation (no shadows); gold (`goldFill`/`goldInk`) is reserved
+ * for exactly the claim + one-time-warning surfaces. Typeface: Cairo. Tuned for
+ * older adults: ≥16 body, strong AA contrast, status never color-only. Light and
+ * dark are full peers — only token values swap, never layout.
  *
- * Phase A (Figma Make parity, 2026-06-16): the palette was re-pointed from the
- * prior brand blue to the Figma Make teal / porcelain / graphite direction (values
- * derived from docs/figma/make-export/extracted/src/styles/theme.css), and a
- * 5-step category color ramp (categoryBlue/Purple/Green/Gold/Teal) was added for
- * feature-identity icon chips. Token KEYS are unchanged — only values changed and
- * the ramp was appended — so every existing consumer keeps working. Rationale +
- * the few derived (non-1:1) values are documented in
- * docs/claude-reports/2026-06-16-figma-phase-a-token-icon-alignment.md.
+ * Milestone 6 (2026-07-20) re-pointed every color VALUE to the Dar handoff palette
+ * (source: docs/design/tokens.reference.ts) while KEEPING all existing key names —
+ * so the whole app shifts identity from the token change alone — and added the
+ * genuinely new roles `band`/`bandInk`/`goldFill`/`goldInk`. The full handoff-token
+ * → repo-token mapping (and the collapse of the category ramp onto the single green
+ * accent) is in docs/claude-reports/2026-07-20-milestone-6-dar.md. AA verified in
+ * both themes.
  *
- * Existing token keys (text/background/backgroundElement/backgroundSelected/
- * textSecondary/border/primary/onPrimary/primaryBg/primaryText/semantic Fg+Bg,
- * Spacing, MaxContentWidth, MaxFormWidth, Fonts, BottomTabInset, TopTabInset,
- * Radius, TouchTarget, Gutter) are preserved so every consumer keeps working;
- * the rest is additive (textMuted, backgroundSunken, divider, primaryPressed,
- * accentFg/Bg, overlay, FontFamily, CardShadow, category* ramp).
+ * All existing token keys are preserved so every consumer keeps working; only
+ * values changed + the four new keys were appended.
  */
 
 import '@/global.css';
@@ -32,140 +29,151 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    // Surfaces & text — warm porcelain canvas, white cards, warm hairlines.
-    text: '#1A1714',
-    textSecondary: '#6B6258',
-    /** Quieter than textSecondary — metadata/timestamps only, never body text.
-     * Darkened #8A837A → #6D6760 so it clears AA 4.5:1 even on the deepest light
-     * well (backgroundSunken) — kills the documented grey-on-grey failure. */
-    textMuted: '#6D6760',
-    background: '#F7F3EE',
-    backgroundElement: '#FFFFFF',
-    /** Pressed/selected fill — a step deeper than backgroundSunken (derived). */
-    backgroundSelected: '#E4DDCE',
-    /** Recessed wells INSIDE cards + input fields (Figma Make input/secondary tone). */
-    backgroundSunken: '#EDE8DF',
-    border: '#E1DDD8',
-    /** Softer than border — separators between rows inside one surface. */
-    divider: '#ECE7DF',
-    /** Care-loop ring un-filled track (decorative SVG stroke; contrast N/A). */
-    ringTrack: 'rgba(26, 23, 20, 0.08)',
+    // Surfaces & text — warm sand canvas, cream cards, deep-green ink & borders.
+    text: '#14312A', // ink
+    textSecondary: '#47594F', // mut
+    /** Dar has one muted tone — mut is used for every secondary/meta line. */
+    textMuted: '#47594F', // mut
+    background: '#EFE8D6', // bg (warm sand)
+    backgroundElement: '#FAF6EA', // card (cream)
+    /** Pressed/selected fill + grab handles — the sunken well tone. */
+    backgroundSelected: '#E4DBC4', // sunken
+    /** Recessed wells INSIDE cards + input fields. */
+    backgroundSunken: '#E4DBC4', // sunken
+    border: '#14312A', // line (= ink in light — the 2px solid edge)
+    /** Dar dividers are the same 2px line as borders. */
+    divider: '#14312A', // line
+    /** Legacy care-loop ring track (ring retired; kept for type symmetry). */
+    ringTrack: 'rgba(20, 49, 42, 0.12)',
 
-    // Brand — one confident teal (Figma Make parity; was brand blue #1B5FBE).
-    // Nudged darker #2E8A7B → #2A7F71 so white onPrimary clears AA 4.5:1 on the
-    // filled primary button (was 4.17). Same teal identity, generous contrast.
-    primary: '#2A7F71',
-    primaryPressed: '#256F63',
-    onPrimary: '#FFFFFF',
-    primaryBg: '#EAF3F1', // tinted teal surface (chips/links/active)
-    primaryText: '#1F6E60', // darker teal so brand text clears AA on porcelain
+    // Brand — deep green. `primary`/`btn` = the button/active fill; `primaryText`/
+    // `acc` = accent text, links, icons. Same value in light (the Dar palette).
+    primary: '#0E4A40', // btn
+    primaryPressed: '#0A3A32', // derived darker btn (press)
+    onPrimary: '#F4EEDC', // btnInk (cream on green)
+    primaryBg: '#D9E4DE', // tacc — tinted accent/info surface
+    primaryText: '#0E4A40', // acc — accent text/links/icons
 
-    // Warm sand accent — reserved for "today/highlight" moments, used sparingly.
-    accentFg: '#8A5A17',
-    accentBg: '#F4E9D5',
+    // Accent = the GOLD pairing (goldFill fill + goldInk text). Reserved for the
+    // two sanctioned gold uses (claim surfaces, one-time warnings) + the gold banner.
+    accentFg: '#2A2408', // goldInk (text on gold)
+    accentBg: '#E3C36A', // goldFill (gold surface)
 
-    // Semantic foregrounds (text + icon) and soft backgrounds (badges/surfaces)
-    successFg: '#1F7A4D',
-    successBg: '#E4F1EA',
-    warningFg: '#9A5B00',
-    warningBg: '#F6EBD7',
-    errorFg: '#B5403F',
-    errorBg: '#F7E5E3',
-    infoFg: '#3E6FA0',
-    infoBg: '#E7EEF7',
+    // Semantic foregrounds (stroke/text) + tint fills (icon+text always accompany).
+    successFg: '#2E6A4E', // ok
+    successBg: '#DAE8DC', // tok (success tint)
+    warningFg: '#7F5A08', // warn (amber caution — never the gold)
+    warningBg: '#EEE2C1', // twarn (caution tint)
+    errorFg: '#9C4034', // err (restrained danger)
+    errorBg: '#F1DED6', // terr (danger tint)
+    infoFg: '#0E4A40', // acc — info shares the green accent
+    infoBg: '#D9E4DE', // tacc — info tint
 
-    // Filled-status foregrounds + a second surface lift. The filled-status fgs are
-    // still UNUSED by screens; kept key-symmetric for the ThemeColor type.
-    accentSolid: '#C8904A', // Figma Make gold accent fill
-    accentText: '#7A4E12', // sand text/eyebrow on the canvas (AA)
-    onAccent: '#2A1D05', // dark text on the gold accentSolid fill (white failed AA at 2.78)
-    dangerSolid: '#C45050', // softer Figma Make destructive fill (NOT the bell badge red #D92D20)
-    onError: '#FFFFFF',
-    onSuccess: '#FFFFFF',
-    onWarning: '#2A1D05', // dark text reads on a solid amber
-    backgroundRaised: '#FFFFFF', // second elevation step (light lifts via shadow)
+    // Solid-fill on-colors (mostly type-symmetry). Dar rule: an err fill takes
+    // bg-colored text; gold fill takes goldInk.
+    accentSolid: '#E3C36A', // goldFill
+    accentText: '#7F5A08', // warm accent eyebrow (= warn)
+    onAccent: '#2A2408', // goldInk (text on gold fill)
+    dangerSolid: '#9C4034', // err — the solid danger fill (emergency call, delete)
+    onError: '#EFE8D6', // bg-colored text on an err fill
+    onSuccess: '#F4EEDC', // cream text on a solid ok fill
+    onWarning: '#2A2408', // dark text on a solid warn fill
+    backgroundRaised: '#FAF6EA', // flat — no second elevation (= card)
 
-    /** Modal scrim. */
-    overlay: 'rgba(26, 23, 20, 0.45)',
+    /** Bottom-sheet / modal scrim (Dar spec). */
+    overlay: 'rgba(8, 18, 14, 0.55)',
 
-    // Per-feature category ramp (Figma Make chart palette) — used as <Icon> tint
-    // colors for feature/medication identity chips. Low-opacity tint backgrounds
-    // are derived at consume time (Phase B), so only the 5 solids live here.
-    categoryBlue: '#5A8ABF',
-    categoryPurple: '#8B6FA8',
-    categoryGreen: '#4A9A75',
-    categoryGold: '#BA8645', // darkened from #C8904A so the icon tint clears 3:1 UI on a card
-    categoryTeal: '#2E8A7B',
+    // Feature-identity ramp — Dar collapses per-feature color to the single green
+    // accent (the HTML draws every feature icon in `acc`); identity now comes from
+    // the glyph, not the hue. Kept key-symmetric so every GlyphChip consumer works.
+    categoryBlue: '#0E4A40', // acc
+    categoryPurple: '#0E4A40', // acc
+    categoryGreen: '#0E4A40', // acc
+    categoryGold: '#0E4A40', // acc
+    categoryTeal: '#0E4A40', // acc
+
+    // NEW Dar roles (no prior repo home): the deep-green header band + its cream
+    // ink, and the gold fill/ink pair used ONLY on claim + one-time-warning surfaces.
+    band: '#0E4A40',
+    bandInk: '#F4EEDC',
+    goldFill: '#E3C36A',
+    goldInk: '#2A2408',
   },
   dark: {
-    // Warm graphite — near-black canvas, lifted cards (Figma Make parity).
-    text: '#EDE8DF',
-    textSecondary: '#ACA89D',
-    /** Lightened #8A837A → #908981 so metadata clears AA 4.5:1 on dark sunken wells. */
-    textMuted: '#908981',
-    background: '#0F0E0C',
-    backgroundElement: '#1A1916',
-    backgroundSelected: '#322E27',
-    backgroundSunken: '#26231E',
-    border: '#2E2A24',
-    divider: '#211F1B',
-    /** Care-loop ring un-filled track (decorative SVG stroke; contrast N/A). */
-    ringTrack: 'rgba(237, 232, 223, 0.10)',
+    // Deep green-black canvas, lifted green cards, borders LIGHTEN (not ink).
+    text: '#EEE7D4', // ink
+    textSecondary: '#A9BCAD', // mut
+    textMuted: '#A9BCAD', // mut
+    background: '#0A1B17', // bg
+    backgroundElement: '#122B24', // card
+    backgroundSelected: '#0E211C', // sunken
+    backgroundSunken: '#0E211C', // sunken
+    border: '#6B8074', // line (lightens away from ink so edges read in dark)
+    divider: '#6B8074', // line
+    ringTrack: 'rgba(238, 231, 212, 0.12)',
 
-    primary: '#4BA898',
-    primaryPressed: '#3E9384',
-    onPrimary: '#0F0E0C', // dark text on the lighter dark-mode teal (Figma Make)
-    primaryBg: '#1C2D29',
-    primaryText: '#7AC8BA',
+    primary: '#7FC7B4', // btn
+    primaryPressed: '#6BB3A0', // derived darker btn
+    onPrimary: '#06231C', // btnInk (dark on light-teal)
+    primaryBg: '#1D3B33', // tacc
+    primaryText: '#8FCBB8', // acc
 
-    accentFg: '#DDAF63',
-    accentBg: '#34291A',
+    accentFg: '#1A1408', // goldInk
+    accentBg: '#C8A33B', // goldFill
 
-    successFg: '#5AAE85',
-    successBg: '#16291F',
-    warningFg: '#D9A24A',
-    warningBg: '#332813',
-    errorFg: '#E07A78',
-    errorBg: '#3A1E1C',
-    infoFg: '#7FA8D8',
-    infoBg: '#1B2738',
+    successFg: '#93C9A6', // ok
+    successBg: '#1E3D2C', // tok
+    warningFg: '#DDB65E', // warn
+    warningBg: '#41351A', // twarn
+    errorFg: '#E2907F', // err
+    errorBg: '#46271F', // terr
+    infoFg: '#8FCBB8', // acc
+    infoBg: '#1D3B33', // tacc
 
-    // Filled-status foregrounds — see the light palette. Light fills in dark mode
-    // take dark on* text; still UNUSED by screens, kept key-symmetric.
-    accentSolid: '#C8904A',
-    accentText: '#E2B872',
-    onAccent: '#0F0E0C',
-    dangerSolid: '#C45050',
-    onError: '#FFFFFF',
-    onSuccess: '#0F0E0C',
-    onWarning: '#2A1D05',
-    backgroundRaised: '#232019', // second lift (Figma Make elevated nested-well)
+    accentSolid: '#C8A33B', // goldFill
+    accentText: '#DDB65E', // warn
+    onAccent: '#1A1408', // goldInk
+    dangerSolid: '#E2907F', // err
+    onError: '#0A1B17', // bg-colored text on err fill
+    onSuccess: '#06231C',
+    onWarning: '#1A1408',
+    backgroundRaised: '#122B24', // = card (flat)
 
-    overlay: 'rgba(0, 0, 0, 0.55)',
+    overlay: 'rgba(0, 0, 0, 0.6)',
 
-    categoryBlue: '#6A9ACC',
-    categoryPurple: '#9B7FC0',
-    categoryGreen: '#5AAE85',
-    categoryGold: '#C8904A',
-    categoryTeal: '#4BA898',
+    categoryBlue: '#8FCBB8', // acc
+    categoryPurple: '#8FCBB8', // acc
+    categoryGreen: '#8FCBB8', // acc
+    categoryGold: '#8FCBB8', // acc
+    categoryTeal: '#8FCBB8', // acc
+
+    band: '#123B32',
+    bandInk: '#EEE7D4',
+    goldFill: '#C8A33B',
+    goldInk: '#1A1408',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 /**
- * App typeface — IBM Plex Sans Arabic (SIL OFL, bundled in assets/fonts, loaded
- * once in the root layout via expo-font). One family carries Arabic AND Latin so
- * mixed content (medication names, emails) stays harmonious. Static weight files
- * → each weight is its own family name; pair with the matching numeric
- * fontWeight so platforms without the file (or before load) fall back cleanly to
- * the system font at the right weight.
+ * App typeface — Cairo (SIL OFL), the single family for the Dar identity, loaded
+ * once in the root layout from `@expo-google-fonts/cairo` (pure JS asset package —
+ * no native module, no rebuild). One family carries Arabic AND Latin so mixed
+ * content (medication names, emails) stays harmonious. Static weight files → each
+ * weight is its own family name.
+ *
+ * The Dar weight scale is 400/600/700/800/900; the repo key names are kept
+ * (regular→400, medium→600, semibold→700, bold→800) with `black`→900 added, so
+ * every existing `FontFamily.*` consumer keeps working. IBM Plex Sans Arabic is
+ * fully retired — there is exactly one typeface.
  */
 export const FontFamily = {
-  regular: 'IBMPlexSansArabic-Regular',
-  medium: 'IBMPlexSansArabic-Medium',
-  semibold: 'IBMPlexSansArabic-SemiBold',
-  bold: 'IBMPlexSansArabic-Bold',
+  regular: 'Cairo_400Regular',
+  medium: 'Cairo_600SemiBold',
+  semibold: 'Cairo_700Bold',
+  bold: 'Cairo_800ExtraBold',
+  black: 'Cairo_900Black',
 } as const;
 
 export const Fonts = Platform.select({
@@ -199,7 +207,7 @@ export const Fonts = Platform.select({
  * value, timestamp, status, hint, or body line.
  *
  * `FontSize` is the raw numeric scale; `Type` bundles size + line-height + the
- * matching IBM Plex family into ready-to-spread TextStyle presets. Prefer
+ * matching Cairo family into ready-to-spread TextStyle presets. Prefer
  * spreading a `Type.*` preset over hand-setting fontSize/lineHeight/fontFamily.
  */
 export const FontSize = {
@@ -279,33 +287,43 @@ export const ChipSize = {
   xl: 48,
 } as const;
 
-/** Corner-radius scale. `card` is the standard panel radius; `pill` a stadium. */
+/**
+ * Corner-radius scale — the Dar scale is 8 / 6 / 4 / 999 / 16. Cards, buttons and
+ * inputs = 8 (the dominant radius, so the historical panel keys `sm/md/lg/card/xl`
+ * all resolve to 8 and every consumer lands on the right value); `control` (6) =
+ * small icon squares & inner controls (dose beads, status squares); `tiny` (4) =
+ * tiny badges & status pills; `pill` (999) = pills, avatars, checkbox circles;
+ * `sheet` (16) = bottom-sheet top corners. Do not invent radii.
+ */
 export const Radius = {
   sm: 8,
-  md: 12,
-  lg: 16,
-  card: 20,
-  xl: 24,
+  md: 8,
+  lg: 8,
+  card: 8,
+  xl: 8,
+  control: 6,
+  tiny: 4,
+  sheet: 16,
   pill: 999,
 } as const;
 
 /**
- * Whisper-soft card elevation for LIGHT mode only — dark mode separates surfaces
- * by lifted background + hairline border instead (shadows read as smears on a
- * dark canvas). Keep opacity ≤0.07: depth should be felt, not seen.
+ * Border widths — Dar draws **2px solid** borders on almost everything (`standard`);
+ * small status pills and tiny badges use a `thin` 1.5px stroke. The old
+ * `StyleSheet.hairlineWidth` edges are retired in the Dar restyle.
  */
-export const CardShadow = Platform.select({
-  web: {
-    boxShadow: '0 2px 10px rgba(40, 36, 26, 0.06)',
-  },
-  default: {
-    shadowColor: '#28241A',
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 1,
-  },
-}) as object;
+export const BorderWidth = {
+  thin: 1.5,
+  standard: 2,
+} as const;
+
+/**
+ * Flat elevation (Dar law) — cards are defined by their 2px `border`, not by a
+ * shadow, in BOTH themes. This is a deliberate no-op kept so the single `Surface`
+ * consumer (and any future spread of `CardShadow`) stays valid without a shadow.
+ * Depth comes from the border + tint tones; overlays use a scrim, never lift.
+ */
+export const CardShadow = {} as object;
 
 /**
  * Minimum / comfortable touch-target heights (dp). 48 is the accessibility floor

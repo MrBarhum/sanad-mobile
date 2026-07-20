@@ -30,8 +30,8 @@ const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
  * Add-medication form — an exact-copy rebuild of the Figma `AddMedicationScreen`
  * (header + gold disclaimer + medication-info card + dose-schedule card + notes
  * card + sticky save), wired to Sanad's real create flow, schema, and the
- * protected schedule validation. The Figma export's blue/IBM-Plex are replaced
- * with the committed teal/IBM Plex tokens, and its native time/date inputs with the
+ * protected schedule validation. The Figma export's blue/Cairo are replaced
+ * with the committed teal/Cairo tokens, and its native time/date inputs with the
  * protected wheel pickers — but the layout, sections, and order match the export.
  */
 export function MedicationForm({ circleId }: { circleId: string }) {

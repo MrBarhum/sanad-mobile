@@ -44,7 +44,7 @@ const SECTIONS: { type: ClaimItemType; labelKey: string; Icon: IconCmp; iconName
  * the responsibility column server-side, the item leaves this feed and appears in
  * the owner's own screen. Claim feedback is shown in a bottom-anchored sheet so it
  * is visible regardless of scroll position. remote_member / elder never reach this
- * surface (the Home entry is hidden for them and the RPC rejects them). RTL, IBM Plex.
+ * surface (the Home entry is hidden for them and the RPC rejects them). RTL, Cairo.
  */
 export function FigmaAvailableToClaim({
   circleId,

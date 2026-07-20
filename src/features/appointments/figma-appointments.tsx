@@ -41,7 +41,7 @@ const CHIP_COLORS = [
  * line, an optional "completed" status pill, and Clock(date, time) + MapPin
  * (location) meta rows. Tapping a card opens the existing detail route. Reuses the
  * `AppointmentsCenter` hooks (`useUpcomingAppointments`, `useDoctors`) and its
- * status/type locale keys verbatim. IBM Plex + theme tokens, RTL. No old Sanad
+ * status/type locale keys verbatim. Cairo + theme tokens, RTL. No old Sanad
  * Screen/Surface/Section/Button/StatusBadge.
  *
  * The "upcoming" tab uses the future-only `useUpcomingAppointments`; the

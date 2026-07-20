@@ -22,7 +22,7 @@ import { useCreateAppointment } from './hooks';
 /**
  * Add-appointment form — an exact-copy rebuild of the Figma `AddAppointmentScreen`
  * wired to Sanad's real create flow, schema, and the real doctors list. Figma's
- * blue/IBM-Plex become teal/IBM Plex, its native date/time inputs become the
+ * blue/Cairo become teal/Cairo, its native date/time inputs become the
  * protected wheel pickers, and its hardcoded doctors become the real list.
  */
 export function AppointmentForm({ circleId }: { circleId: string }) {

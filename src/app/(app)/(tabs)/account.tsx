@@ -29,7 +29,7 @@ import { supabase } from '../../../../lib/supabase';
  * Native on real Sanad data. Mirrors `AccountScreen.tsx`: a profile header
  * (user email via `useAuth`), a grouped "care circles" list (active circle →
  * members, notification settings, join another circle) and a danger sign-out.
- * IBM Plex + theme tokens, RTL. No old Sanad Screen/Surface/Section/CircleSwitcher.
+ * Cairo + theme tokens, RTL. No old Sanad Screen/Surface/Section/CircleSwitcher.
  *
  * KEEPS the exact existing sign-out logic verbatim (deactivatePushToken +
  * supabase.auth.signOut + error state) — only the visuals changed.

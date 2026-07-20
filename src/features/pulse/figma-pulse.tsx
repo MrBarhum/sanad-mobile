@@ -33,7 +33,7 @@ const PAGE = 20;
  * `list_care_activity` RPC. Each row: a per-type icon, the actor's resolved name,
  * a localized description, and a bidi-isolated time; tapping deep-links to the
  * source item. Handles loading / generic error / RPC-not-yet-enabled / empty /
- * load-more. RTL, IBM Plex, theme tokens.
+ * load-more. RTL, Cairo, theme tokens.
  */
 export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone: string }) {
   const { t } = useTranslation();

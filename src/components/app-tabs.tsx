@@ -9,7 +9,7 @@ import { FigmaTabBar } from '@/components/figma/figma-tab-bar';
  * Figma exact-copy: the previous native tab bar (`NativeTabs`) could not be
  * styled to match the Figma BottomNav, so this uses Expo Router's JS `Tabs` with
  * a fully custom `tabBar` (`FigmaTabBar`) — the teal active pill, lucide icons
- * and IBM Plex labels from the Figma design. Navigation behavior is preserved: the
+ * and Cairo labels from the Figma design. Navigation behavior is preserved: the
  * custom bar emits the standard `tabPress` event and navigates on select. RTL
  * tab order is handled by the row mirroring (Home sits at the right).
  */

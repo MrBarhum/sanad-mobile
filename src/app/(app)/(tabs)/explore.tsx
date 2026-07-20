@@ -30,7 +30,7 @@ type ExploreSection = {
  * icon chip + label + sublabel + a trailing chevron that navigates to the real
  * existing feature center (its own CircleGate resolves the active circle). This
  * is a static navigation index — no per-item counts are fabricated; the
- * sublabels describe each feature instead. IBM Plex + theme tokens, dark-first, RTL.
+ * sublabels describe each feature instead. Cairo + theme tokens, dark-first, RTL.
  * No old Sanad Screen/Surface/GlyphChip.
  */
 const SECTIONS: ExploreSection[] = [

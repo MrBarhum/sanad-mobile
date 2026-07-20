@@ -1,5 +1,12 @@
 import '../global.css';
 
+import {
+  Cairo_400Regular,
+  Cairo_600SemiBold,
+  Cairo_700Bold,
+  Cairo_800ExtraBold,
+  Cairo_900Black,
+} from '@expo-google-fonts/cairo';
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useEffect } from 'react';
@@ -32,14 +39,17 @@ function navTheme(scheme: 'light' | 'dark') {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  // The brand typeface (Arabic + Latin). Pure asset load — no native module, no
-  // rebuild; Metro serves the files on the existing Development Build. If
-  // loading errors we render anyway and text falls back to the system font.
+  // The brand typeface — Cairo (Arabic + Latin), the single Dar family. Pure asset
+  // load from @expo-google-fonts/cairo — no native module, no rebuild; Metro serves
+  // the files on the existing Development Build. If loading errors we render anyway
+  // and text falls back to the system font. Weights 400/600/700/800/900 map to the
+  // FontFamily keys regular/medium/semibold/bold/black.
   const [fontsLoaded, fontsError] = useFonts({
-    [FontFamily.regular]: require('@/assets/fonts/IBMPlexSansArabic-Regular.ttf'),
-    [FontFamily.medium]: require('@/assets/fonts/IBMPlexSansArabic-Medium.ttf'),
-    [FontFamily.semibold]: require('@/assets/fonts/IBMPlexSansArabic-SemiBold.ttf'),
-    [FontFamily.bold]: require('@/assets/fonts/IBMPlexSansArabic-Bold.ttf'),
+    [FontFamily.regular]: Cairo_400Regular,
+    [FontFamily.medium]: Cairo_600SemiBold,
+    [FontFamily.semibold]: Cairo_700Bold,
+    [FontFamily.bold]: Cairo_800ExtraBold,
+    [FontFamily.black]: Cairo_900Black,
     // Vector icon glyph fonts (Ionicons + MaterialCommunityIcons), so icons are
     // ready before first paint — same expo-font path, no native rebuild.
     ...IconFonts,
