@@ -58,3 +58,23 @@ appointment; unread badge 0 / 5 / 9+.
 | Read-only member: no log buttons; family member: only own doses | | | | | | |
 | RTL: forward chevrons left, times/counts LTR; both themes swap tokens only | | | | | | |
 
+---
+
+## Add-medication form — إضافة دواء (frame 6b)  ·  commit: form rebuild
+
+| Check | Light | Dark | 100% | 130% | 200% | Notes |
+|---|---|---|---|---|---|---|
+| Green form band (back + title + subtitle), only top chrome | | | | | | new route hides native header |
+| Gold non-diagnostic banner (goldFill + goldInk + info icon) | | | | | | |
+| Section cards with the 10x10-square section header | | | | | | |
+| Text fields: 2px border, sunken fill, acc focus ring, ghost placeholder | | | | | | bare «ميتفورمين» etc. |
+| Validation error: terr fill + err border + icon + message; «(مطلوب)» on name | | | | | | tap Save empty to trigger |
+| With-food toggle (48x28), on/off states, thumb visible | | | | | | |
+| Responsible chips: unselected card / selected green + check; «غير محدد»/«أنا»/names | | | | | | neutral names |
+| Day chips (7): selected green+800 / idle card+700; «كل الأيام» toggle | | | | | | |
+| Dose-time rows: wheel picker opens; add (dashed) / delete (terr square) | | | | | | picker row is pre-Dar (reused) |
+| Duplicate-time highlight + message; date period start/end | | | | | | |
+| Save = full-width green; invalid press shows inline errors (not disabled) | | | | | | keyboard-avoid on iOS |
+| RTL + LTR times/dates; both themes; managers-only gate (non-manager → empty) | | | | | | |
+
+

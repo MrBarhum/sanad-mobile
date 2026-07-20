@@ -204,9 +204,36 @@ Arabic hardcoded (2 new keys at ar/en parity); body ≥16; every status icon+tex
 LTR-isolated times; both themes; all behaviour/data/routing/permissions/logging
 preserved (scopeToMine, setStatus, tabs, orderedDoses, schedule chips). Quartet green.
 
-**Deferred to the form (6b) + later medication screens:** the add/edit form, the
-shared form primitives (FormField, OptionSelect, WeekdaySelector, DateField/TimeField,
-Button, FigmaFormScreen), the detail/editor, and the schedule modal.
+## Phase 3 — Add-medication form (frame 6b) — delta
+
+Built inline-Dar, scoped to Medications: a per-screen green **form** band header (not
+FigmaFormScreen), inline text fields / chips / toggle / save, and the Dar-restyled
+`figma-schedule-fields` (medications-only). The shared **wheel pickers**
+(`TimeField`/`DateField`) are reused as-is (behaviour-critical + shared) — their row
+gets a Dar polish in the later forms pass. A new additive `useMemberOptions` hook
+exposes the responsible-chip options (MemberSelect now consumes it — no behaviour change).
+
+| Block | HTML / spec | Implemented | Match |
+|---|---|---|---|
+| Form band header | band + top inset; 44 bordered back, title 20/800 + subtitle 14/600 @85%, 44 spacer | inline | ✅ |
+| Gold disclaimer | goldFill + goldInk, 2px border, info icon + 15/700 | inline (`medications.disclaimer`) | ✅ |
+| Section cards | Surface + section header (10×10 square + 16/800) | Surface + SectionHeader | ✅ |
+| Text fields | 2px border, sunken fill, value 16/600, ghost placeholder mut; **error = terr fill + err border + icon + 15/700 message**; label 15/700 + «(مطلوب)» in err | inline `MedField` | ✅ |
+| Placeholders | bare example (ghost) | «ميتفورمين» etc. — «مثال:» stripped (correction #2, ar+en) | ✅ |
+| Dosage / unit | HTML: value input + unit chips (ملغ/مل/حبة) | rendered the app's free-text `dosage` + `form` fields | 🔸 the value+unit split isn't in the data model (no data change) |
+| Extra fields | (HTML shows a subset) | kept the app's full field set (form, with-food, notes, period) — no feature change | 🔸 |
+| With-food toggle | 48×28 pill, 2px border, sunken off / btn on, card thumb | inline `DarSwitch` | ✅ |
+| Responsible chips | 2px border r8, card / btn(selected)+check, 15/700–800 | inline (via `useMemberOptions`); neutral names | ✅ |
+| Days | 7 chips 2px r6, btn+btnInk 14/800 on / card+mut 14/700 off; «كل الأيام» link | `figma-schedule-fields` (Dar) | ✅ |
+| Dose times | sunken rows + clock + time 17/800 + chevron; delete = terr+err square; dashed add row 16/800; help + errors | reused TimeField row (as-is) + Dar delete/add/help/errors | 🔸 TimeField/DateField rows reuse the shared picker (Dar polish deferred) |
+| Period | start/end DateFields | reused DateField (as-is) | 🔸 |
+| Save | btn fill + 2px border r8, 17/800, full-width | inline | ✅ |
+
+**Self-check:** no new token file; only `figma-schedule-fields` (medications-only) +
+one additive hook touched — no other screen changes; 3 new copy keys
+(`figma.medications.summaryEmpty/browseAll`, `common.required`) + placeholder edits
+at ar/en parity; body ≥16; RTL + LTR times; both themes; all validation/submit/guard
+behaviour preserved verbatim. Quartet green.
 
 ## Invented values (neither spec nor HTML covered)
 - `primaryPressed` (darker `btn`): light #0A3A32, dark #6BB3A0.
@@ -222,5 +249,12 @@ Button, FigmaFormScreen), the detail/editor, and the schedule modal.
 ## Deferrals
 - The remaining Phase-2 component restyles (see the sequencing note) land with their
   first screen in Phase 3.
-- Runtime/visual verification of Home is deferred to the user's device review (this is
-  the requested checkpoint) — the static quartet is green.
+- **Medication detail / editor** (`medication-editor.tsx`, route `/medications/[id]`)
+  — the read/edit/activate/delete + schedule-manager + schedule-modal screen. It is a
+  *detail* archetype (SCREENS.md maps it to the 7b pattern), not the 6a/6b frames, so
+  it will be rebuilt with the detail screens. Its Dar text inputs / chips / pickers /
+  sheet chrome ride on the shared-primitive restyle done at that point.
+- The wheel `TimeField`/`DateField` **row** display + `PickerSheet`/`FormModal` sheet
+  chrome get their Dar polish in the dedicated forms/sheets pass.
+- Runtime/visual verification is deferred to the user's device review at each
+  checkpoint — the static quartet is green after every commit.
