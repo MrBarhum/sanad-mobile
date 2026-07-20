@@ -10,35 +10,22 @@ import { GlyphChip } from '@/components/glyph-chip';
 import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
-import { ChipSize, FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { Doctor } from './api';
 import { DoctorFormModal } from './doctor-form-modal';
 import { useDeleteDoctor, useDoctors } from './hooks';
 
-/** Per-doctor Stethoscope-chip accent, cycled by index (Figma uses varied hues). */
-const CHIP_COLORS = [
-  'categoryGreen',
-  'categoryBlue',
-  'categoryGold',
-  'categoryPurple',
-  'categoryTeal',
-] as const;
-
 /**
- * The Figma Make DoctorsScreen, recreated as literally as possible in React Native
- * and wired to real Sanad data. Mirrors `DoctorsScreen.tsx`: a back/title/teal-"+"
- * header and a list of bordered cards — each a Stethoscope icon chip (category
- * color), the doctor name, specialty, and clinic/hospital line, plus a round
- * one-tap CALL button (tel: via Linking) and a quiet phone well with the number
- * LTR-isolated.
+ * The Dar DoctorsScreen, wired to real Sanad data (mirrors `DoctorsScreen.tsx`):
+ * the green sub-screen header (back + title + add), then bordered doctor cards —
+ * a green doctor icon square, name + specialty + clinic, a tinted one-tap CALL
+ * circle (tel: via Linking), and a sunken phone well with the number LTR-isolated.
  *
  * Managers additionally get Edit and Delete actions on each card (delete behind a
- * two-step inline confirm) — previously these lived only in the unrouted legacy
- * DoctorsManager, so a manager could add and call a doctor but never correct or
- * remove one. Reuses the manager's validated `DoctorFormModal` for both add and
- * edit and the `useDeleteDoctor` hook; Cairo + theme tokens, RTL.
+ * two-step inline confirm), reusing the validated `DoctorFormModal` and the
+ * `useDeleteDoctor` hook. Cairo + Dar tokens, both themes, RTL.
  */
 export function FigmaDoctors({ circleId, canManage }: { circleId: string; canManage: boolean }) {
   const { t } = useTranslation();
@@ -83,15 +70,15 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
         {doctorsQuery.isLoading ? (
           <SkeletonList />
         ) : doctorsQuery.isError ? (
-          <Surface tone="card" radius={Radius.lg} padded={20}>
+          <View style={[styles.errorCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
             <Text style={[styles.errorText, { color: c.errorFg }]}>{t('doctors.loadError')}</Text>
             <Pressable
               onPress={() => doctorsQuery.refetch()}
               accessibilityRole="button"
-              style={[styles.retry, { backgroundColor: c.primary }]}>
+              style={[styles.retry, { backgroundColor: c.primary, borderColor: c.border }]}>
               <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
             </Pressable>
-          </Surface>
+          </View>
         ) : doctors.length === 0 ? (
           <EmptyState
             iconName="doctor"
@@ -109,11 +96,10 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
               </Text>
             ) : null}
             <View style={styles.list}>
-              {doctors.map((doctor, index) => (
+              {doctors.map((doctor) => (
                 <DoctorCard
                   key={doctor.id}
                   doctor={doctor}
-                  chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
                   canManage={canManage}
                   deleting={deletingId === doctor.id}
                   onEdit={() => setEditing(doctor)}
@@ -139,14 +125,12 @@ export function FigmaDoctors({ circleId, canManage }: { circleId: string; canMan
 
 function DoctorCard({
   doctor,
-  chipColor,
   canManage,
   deleting,
   onEdit,
   onDelete,
 }: {
   doctor: Doctor;
-  chipColor: ThemeColor;
   canManage: boolean;
   deleting: boolean;
   onEdit: () => void;
@@ -170,20 +154,20 @@ function DoctorCard({
   }
 
   return (
-    <Surface tone="card" radius={Radius.xl} padded={16}>
+    <Surface tone="card" radius={Radius.card} padded={16}>
       <View style={styles.cardTop}>
-        <GlyphChip iconName="doctor" color={chipColor} size="md" />
+        <GlyphChip iconName="doctor" tone="primary" size="md" />
         <View style={styles.cardInfo}>
           <Text style={[styles.cardName, { color: c.text }]} numberOfLines={1}>
             {doctor.name}
           </Text>
           {specialty ? (
-            <Text style={[styles.cardSpecialty, { color: c.textSecondary }]} numberOfLines={1}>
+            <Text style={[styles.cardMeta, { color: c.textSecondary }]} numberOfLines={1}>
               {specialty}
             </Text>
           ) : null}
           {clinic ? (
-            <Text style={[styles.cardClinic, { color: c.textSecondary }]} numberOfLines={1}>
+            <Text style={[styles.cardMeta, { color: c.textSecondary }]} numberOfLines={1}>
               {clinic}
             </Text>
           ) : null}
@@ -195,10 +179,10 @@ function DoctorCard({
             accessibilityLabel={`${t('common.call')} ${doctor.name}`}
             style={({ pressed }) => [
               styles.callButton,
-              { backgroundColor: withAlpha(c.primary, 0.12) },
+              { backgroundColor: c.primaryBg, borderColor: c.border },
               pressed && styles.pressed,
             ]}>
-            <Phone size={20} color={c.primary} />
+            <Phone size={20} color={c.primaryText} strokeWidth={2.2} />
           </Pressable>
         ) : null}
       </View>
@@ -232,12 +216,7 @@ function DoctorCard({
             </>
           ) : (
             <>
-              <ActionButton
-                Icon={Pencil}
-                label={t('common.edit')}
-                tone="muted"
-                onPress={onEdit}
-              />
+              <ActionButton Icon={Pencil} label={t('common.edit')} tone="muted" onPress={onEdit} />
               <ActionButton
                 Icon={Trash2}
                 label={t('common.delete')}
@@ -252,7 +231,7 @@ function DoctorCard({
   );
 }
 
-/** A compact card-footer action pill (≥48dp), icon + label, RTL-safe, theme-tinted. */
+/** A compact card-footer action pill (≥48dp): icon + label, RTL-safe, Dar-toned. */
 function ActionButton({
   label,
   Icon,
@@ -272,9 +251,11 @@ function ActionButton({
 }) {
   const c = useTheme();
   const danger = tone === 'danger';
-  const fg = filled ? '#FFFFFF' : danger ? c.errorFg : c.text;
-  const bg = filled ? c.dangerSolid : danger ? withAlpha(c.dangerSolid, 0.1) : c.backgroundSunken;
-  const border = filled ? 'transparent' : danger ? withAlpha(c.dangerSolid, 0.25) : c.border;
+  // Restrained danger: outline (card + err border + err text); the confirm step
+  // is the one solid fill (dangerSolid + onError). Muted = sunken + line + ink.
+  const fg = filled ? c.onError : danger ? c.errorFg : c.text;
+  const bg = filled ? c.dangerSolid : danger ? c.backgroundElement : c.backgroundSunken;
+  const border = filled ? c.dangerSolid : danger ? c.errorFg : c.border;
 
   return (
     <Pressable
@@ -292,7 +273,7 @@ function ActionButton({
         <ActivityIndicator size="small" color={fg} />
       ) : (
         <>
-          {Icon ? <Icon size={16} color={fg} /> : null}
+          {Icon ? <Icon size={16} color={fg} strokeWidth={2} /> : null}
           <Text style={[styles.actionLabel, { color: fg }]}>{label}</Text>
         </>
       )}
@@ -301,48 +282,50 @@ function ActionButton({
 }
 
 const styles = StyleSheet.create({
-  center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
+  errorCard: { borderWidth: BorderWidth.standard, borderRadius: Radius.card, padding: 20 },
+  errorText: { fontSize: 16, fontFamily: FontFamily.semibold, textAlign: 'center' },
   deleteError: { fontSize: 14, fontFamily: FontFamily.medium },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: Radius.md,
-    paddingHorizontal: 16,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
+    paddingHorizontal: 18,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
+  retryText: { fontSize: 15, fontFamily: FontFamily.bold },
   list: { gap: 12 },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardInfo: { flex: 1, gap: 2 },
-  cardName: { fontSize: 17, fontFamily: FontFamily.bold },
-  cardSpecialty: { fontSize: 14, fontFamily: FontFamily.regular },
-  cardClinic: { fontSize: 14, fontFamily: FontFamily.regular },
+  cardInfo: { flex: 1, minWidth: 0, gap: 2 },
+  cardName: { fontSize: 16, fontFamily: FontFamily.bold },
+  cardMeta: { fontSize: 14, fontFamily: FontFamily.medium },
   callButton: {
-    width: ChipSize.xl,
-    height: ChipSize.xl,
+    width: 46,
+    height: 46,
     borderRadius: Radius.pill,
+    borderWidth: BorderWidth.standard,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   pressed: { opacity: 0.7 },
   phoneWell: {
     marginTop: 12,
-    borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 9,
   },
-  phoneText: { fontSize: 14, fontFamily: FontFamily.regular, writingDirection: 'ltr' },
+  phoneText: { fontSize: 14, fontFamily: FontFamily.medium, writingDirection: 'ltr' },
   // Manager actions footer
   actions: {
     flexDirection: 'row',
     gap: 8,
     marginTop: 14,
     paddingTop: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: BorderWidth.standard,
   },
   actionBtn: {
     flex: 1,
@@ -351,9 +334,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     minHeight: 48,
-    borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
     paddingHorizontal: 12,
   },
-  actionLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  actionLabel: { fontSize: 14, fontFamily: FontFamily.bold },
 });
