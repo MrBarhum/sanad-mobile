@@ -1,16 +1,16 @@
+import { Bell } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SkeletonList } from '@/components/skeleton';
 import { useTranslation } from 'react-i18next';
 
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { GlyphChip } from '@/components/glyph-chip';
+import { GlyphChip, type GlyphChipTone } from '@/components/glyph-chip';
 import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
 import { type IconName } from '@/constants/icons';
-import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { hmFromInstant, ymdFromInstant } from '@/utils/date';
 
@@ -25,38 +25,44 @@ import {
 import { useState } from 'react';
 
 /**
- * Per-type Figma anchor: a lucide icon + accent color for the row's icon chip.
- * The chip is decorative; the type label text below always carries the meaning.
- * Colors come from the Figma category/status ramps (constant across modes, as in
- * the export's `notifs` array — medication=teal, appointment=blue, task=gold).
+ * Per-type Dar anchor: a lucide icon (kept from the prior map) + a semantic
+ * GlyphChip `tone` that paints the row's 38dp icon square with the matching
+ * Dar tint pair (frame 7c). The chip is decorative; the type label text below
+ * always carries the meaning. Tint→tone follows the frame: tok/ok = `success`
+ * (medication, completions), twarn/warn = `warning` (overdue), tacc/acc =
+ * `primary` (reminders/updates/info), terr/err = `error` (missed dose /
+ * emergency), and the SANCTIONED gold pair (goldFill/goldInk) = `accent`,
+ * reserved for the «متاح للتكفّل» claim digest only (Dar gold law).
  */
-const TYPE_ICON: Record<NotificationType, { iconName: IconName; colorKey: ThemeColor }> = {
-  medication_due: { iconName: 'medication', colorKey: 'categoryTeal' },
-  medication_missed: { iconName: 'medication', colorKey: 'errorFg' },
-  task_due: { iconName: 'success', colorKey: 'categoryGold' },
-  appointment_upcoming: { iconName: 'appointment', colorKey: 'categoryBlue' },
-  visit_update: { iconName: 'doctor', colorKey: 'categoryGreen' },
-  care_update: { iconName: 'dailyLog', colorKey: 'categoryPurple' },
-  emergency: { iconName: 'emergency', colorKey: 'errorFg' },
-  system: { iconName: 'notification', colorKey: 'categoryBlue' },
-  // Phase 2F responsibility-aware types. Decorative icon + calm category/status tint;
-  // item_cancelled uses a muted purple (NOT error red) so "not completed" doesn't alarm.
-  item_assigned: { iconName: 'member', colorKey: 'categoryBlue' },
-  task_overdue: { iconName: 'clock', colorKey: 'warningFg' },
-  visit_upcoming: { iconName: 'appointment', colorKey: 'categoryGreen' },
-  item_claimed: { iconName: 'claim', colorKey: 'categoryTeal' },
-  item_completed: { iconName: 'success', colorKey: 'successFg' },
-  item_cancelled: { iconName: 'error', colorKey: 'categoryPurple' },
-  claim_digest: { iconName: 'sparkle', colorKey: 'categoryGold' },
+const TYPE_ICON: Record<NotificationType, { iconName: IconName; tone: GlyphChipTone }> = {
+  medication_due: { iconName: 'medication', tone: 'success' },
+  medication_missed: { iconName: 'medication', tone: 'error' },
+  task_due: { iconName: 'success', tone: 'primary' },
+  appointment_upcoming: { iconName: 'appointment', tone: 'primary' },
+  visit_update: { iconName: 'doctor', tone: 'success' },
+  care_update: { iconName: 'dailyLog', tone: 'primary' },
+  emergency: { iconName: 'emergency', tone: 'error' },
+  system: { iconName: 'notification', tone: 'primary' },
+  // Phase 2F responsibility-aware types. item_cancelled stays a calm `primary`
+  // (NOT error) so "not completed" doesn't alarm; claim_digest is the one
+  // sanctioned gold surface (available-to-claim).
+  item_assigned: { iconName: 'member', tone: 'primary' },
+  task_overdue: { iconName: 'clock', tone: 'warning' },
+  visit_upcoming: { iconName: 'appointment', tone: 'primary' },
+  item_claimed: { iconName: 'claim', tone: 'success' },
+  item_completed: { iconName: 'success', tone: 'success' },
+  item_cancelled: { iconName: 'error', tone: 'primary' },
+  claim_digest: { iconName: 'sparkle', tone: 'accent' },
 };
 
 /**
- * The Figma Make NotificationsScreen, recreated as literally as possible in
- * React Native and wired to real Sanad data. Mirrors `NotificationsScreen.tsx`:
- * a back + centered title header with a "mark all read" text action (only when
- * there are unread items), an unread-count banner, and a recent-first list of
- * rows — each a per-type icon chip + title + body + time + unread dot, with
- * unread rows tinted and read rows plain. Cairo + theme tokens, dark-first, RTL.
+ * The Dar notifications feed (frame 7c), wired to real Sanad data. A green band
+ * header with a centered title + an underlined "mark all read" action (only when
+ * there are unread items), an unread-count banner (bell + count), and a
+ * recent-first list of rows — each a per-type tinted icon square + title + body
+ * + type-label·time meta + an unread dot. Unread rows carry a `tacc` fill; read
+ * rows a plain `card` fill; both share the 2px `line` border. Cairo, RTL, both
+ * themes.
  *
  * Reuses the NotificationsCenter hooks/data VERBATIM (useNotifications /
  * useMarkAllRead / useMarkNotificationRead / useOpenNotification), keeping the
@@ -65,7 +71,6 @@ const TYPE_ICON: Record<NotificationType, { iconName: IconName; colorKey: ThemeC
  */
 export function FigmaNotifications() {
   const { t } = useTranslation();
-  const scheme: 'light' | 'dark' = useColorScheme() === 'dark' ? 'dark' : 'light';
   const c = useTheme();
 
   // The global inbox is recent-first across circles (filter stays null here —
@@ -85,7 +90,7 @@ export function FigmaNotifications() {
   }
 
   return (
-    <FigmaScreen gap={8}>
+    <FigmaScreen gap={12}>
       <FigmaHeader
         title={t('figma.notifications.title')}
         trailing={
@@ -96,7 +101,8 @@ export function FigmaNotifications() {
               accessibilityRole="button"
               hitSlop={8}
               style={styles.markAll}>
-              <Text style={[styles.markAllText, { color: c.primary, opacity: markAll.isPending ? 0.5 : 1 }]}>
+              <Text
+                style={[styles.markAllText, { color: c.bandInk, opacity: markAll.isPending ? 0.5 : 1 }]}>
                 {t('figma.notifications.markAllRead')}
               </Text>
             </Pressable>
@@ -105,12 +111,9 @@ export function FigmaNotifications() {
       />
 
       {unreadCount > 0 ? (
-        <View
-          style={[
-            styles.banner,
-            { backgroundColor: withAlpha(c.primary, 0.1), borderColor: withAlpha(c.primary, 0.15) },
-          ]}>
-          <Text style={[styles.bannerText, { color: c.primary }]}>
+        <View style={[styles.banner, { backgroundColor: c.primaryBg, borderColor: c.border }]}>
+          <Bell size={17} color={c.primaryText} strokeWidth={2.2} />
+          <Text style={[styles.bannerText, { color: c.primaryText }]}>
             {t('figma.notifications.unreadBanner', { count: unreadCount })}
           </Text>
         </View>
@@ -121,10 +124,10 @@ export function FigmaNotifications() {
       ) : list.isError ? (
         <Surface radius={Radius.card} padded={20}>
           <View style={styles.stateBody}>
-            <GlyphChip iconName="error" color="errorFg" size="md" />
+            <GlyphChip iconName="error" tone="error" size="md" />
             <Text style={[styles.stateTitle, { color: c.text }]}>{t('figma.notifications.loadError')}</Text>
             <Pressable onPress={() => list.refetch()} accessibilityRole="button" hitSlop={8}>
-              <Text style={[styles.markAllText, { color: c.primary }]}>{t('figma.notifications.retry')}</Text>
+              <Text style={[styles.retryText, { color: c.primaryText }]}>{t('figma.notifications.retry')}</Text>
             </Pressable>
           </View>
         </Surface>
@@ -137,7 +140,7 @@ export function FigmaNotifications() {
       ) : (
         <View style={styles.list}>
           {items.map((n) => (
-            <NotificationRow key={n.id} n={n} scheme={scheme} onOpen={() => onOpen(n)} />
+            <NotificationRow key={n.id} n={n} onOpen={() => onOpen(n)} />
           ))}
 
           {items.length >= limit ? (
@@ -145,7 +148,7 @@ export function FigmaNotifications() {
               onPress={() => setLimit((v) => v + NOTIFICATIONS_PAGE_SIZE)}
               accessibilityRole="button"
               style={[styles.loadMore, { borderColor: c.border, backgroundColor: c.backgroundElement }]}>
-              <Text style={[styles.loadMoreText, { color: c.primary }]}>{t('figma.notifications.loadMore')}</Text>
+              <Text style={[styles.loadMoreText, { color: c.primaryText }]}>{t('figma.notifications.loadMore')}</Text>
             </Pressable>
           ) : null}
         </View>
@@ -154,15 +157,7 @@ export function FigmaNotifications() {
   );
 }
 
-function NotificationRow({
-  n,
-  scheme,
-  onOpen,
-}: {
-  n: AppNotification;
-  scheme: 'light' | 'dark';
-  onOpen: () => void;
-}) {
+function NotificationRow({ n, onOpen }: { n: AppNotification; onOpen: () => void }) {
   const { t } = useTranslation();
   const c = useTheme();
   const unread = !n.read_at;
@@ -176,71 +171,65 @@ function NotificationRow({
       accessibilityRole="button"
       style={[
         styles.row,
-        {
-          backgroundColor: unread ? withAlpha(c.primary, scheme === 'dark' ? 0.08 : 0.06) : c.backgroundElement,
-          borderColor: unread ? withAlpha(c.primary, 0.15) : c.border,
-        },
+        { backgroundColor: unread ? c.primaryBg : c.backgroundElement, borderColor: c.border },
       ]}>
-      <GlyphChip iconName={cfg.iconName} color={cfg.colorKey} size="sm" style={styles.chip} />
+      <GlyphChip iconName={cfg.iconName} tone={cfg.tone} size="sm" style={styles.chip} />
       <View style={styles.body}>
         <View style={styles.titleLine}>
           <Text
-            style={[styles.title, { color: c.text, fontFamily: unread ? FontFamily.bold : FontFamily.medium }]}
+            style={[styles.title, { color: c.text, fontFamily: unread ? FontFamily.bold : FontFamily.semibold }]}
             numberOfLines={2}>
             {n.title}
           </Text>
-          {unread ? <View style={[styles.dot, { backgroundColor: c.primary }]} /> : null}
+          {unread ? <View style={[styles.dot, { backgroundColor: c.primaryText }]} /> : null}
         </View>
-        <Text style={[styles.bodyText, muted(c)]}>{n.body}</Text>
-        <Text style={[styles.time, muted(c)]}>
-          {t(meta.labelKey)}
-          {stamp ? `  ${isolateLtr(stamp)}` : ''}
+        {n.body ? <Text style={[styles.bodyText, { color: c.textSecondary }]}>{n.body}</Text> : null}
+        <Text style={[styles.time, { color: c.textSecondary }]}>
+          {stamp ? `${t(meta.labelKey)}  ·  ${isolateLtr(stamp)}` : t(meta.labelKey)}
         </Text>
       </View>
     </Pressable>
   );
 }
 
-function muted(c: ReturnType<typeof useTheme>) {
-  return { color: c.textSecondary, fontFamily: FontFamily.regular };
-}
-
 const styles = StyleSheet.create({
   markAll: { paddingVertical: 4, justifyContent: 'center' },
-  markAllText: { fontSize: 14, fontFamily: FontFamily.medium },
+  markAllText: { fontSize: 15, fontFamily: FontFamily.bold, textDecorationLine: 'underline' },
   banner: {
-    borderRadius: Radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
-  bannerText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  center: { paddingVertical: 48, alignItems: 'center' },
+  bannerText: { fontSize: 15, fontFamily: FontFamily.bold },
   stateBody: { alignItems: 'center', gap: 8 },
-  stateTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
-  list: { gap: 8, marginTop: 4 },
+  stateTitle: { fontSize: 16, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  retryText: { fontSize: 15, fontFamily: FontFamily.bold },
+  list: { gap: 8 },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    borderRadius: Radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  chip: { marginTop: 2 },
-  body: { flex: 1, gap: 2 },
-  titleLine: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
-  title: { fontSize: 14, flexShrink: 1 },
-  dot: { width: 8, height: 8, borderRadius: Radius.pill, marginTop: 5, flexShrink: 0 },
-  bodyText: { fontSize: 14, lineHeight: 20, marginTop: 2 },
-  time: { fontSize: 14, marginTop: 4 },
+  chip: { width: 38, height: 38 },
+  body: { flex: 1 },
+  titleLine: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  title: { flex: 1, fontSize: 16, lineHeight: 24 },
+  dot: { width: 9, height: 9, borderRadius: Radius.pill, flexShrink: 0 },
+  bodyText: { fontSize: 15, lineHeight: 24, marginTop: 2, fontFamily: FontFamily.medium },
+  time: { fontSize: 14, lineHeight: 20, marginTop: 3, fontFamily: FontFamily.semibold },
   loadMore: {
-    borderRadius: Radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 14,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
+    paddingVertical: 12,
     alignItems: 'center',
-    marginTop: 4,
   },
-  loadMoreText: { fontSize: 14, fontFamily: FontFamily.semibold },
+  loadMoreText: { fontSize: 16, fontFamily: FontFamily.bold },
 });
