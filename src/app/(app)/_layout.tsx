@@ -43,11 +43,11 @@ export default function AppLayout() {
         }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="circle-members" options={{ headerShown: false }} />
-        <Stack.Screen name="join-circle" options={{ title: t('joinCircle.title') }} />
+        <Stack.Screen name="join-circle" options={{ title: t('joinCircle.title'), headerShown: false }} />
         <Stack.Screen name="notifications" options={{ title: t('notifications.title'), headerShown: false }} />
         <Stack.Screen
           name="notification-settings"
-          options={{ title: t('notificationSettings.title') }}
+          options={{ title: t('notificationSettings.title'), headerShown: false }}
         />
         <Stack.Screen name="medications" options={{ headerShown: false }} />
         <Stack.Screen name="tasks" options={{ headerShown: false }} />
@@ -57,9 +57,9 @@ export default function AppLayout() {
         <Stack.Screen name="pulse" options={{ headerShown: false }} />
         <Stack.Screen name="daily-logs" options={{ headerShown: false }} />
         <Stack.Screen name="vitals" options={{ headerShown: false }} />
-        <Stack.Screen name="recipient-profile" options={{ title: t('recipientProfile.title') }} />
+        <Stack.Screen name="recipient-profile" options={{ title: t('recipientProfile.title'), headerShown: false }} />
         <Stack.Screen name="emergency-card" options={{ title: t('emergencyCard.title'), headerShown: false }} />
-        <Stack.Screen name="emergency-contacts" options={{ title: t('emergencyContacts.title') }} />
+        <Stack.Screen name="emergency-contacts" options={{ title: t('emergencyContacts.title'), headerShown: false }} />
         <Stack.Screen name="doctors" options={{ title: t('doctors.title'), headerShown: false }} />
       </Stack>
     </>

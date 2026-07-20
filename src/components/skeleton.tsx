@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 
-import { Radius, Spacing } from '@/constants/theme';
+import { BorderWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 /** True while the OS "reduce motion" setting is on (subscribes to changes). */
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.three,
     borderRadius: Radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: BorderWidth.standard,
     padding: Spacing.three,
   },
   lines: { flex: 1, gap: Spacing.two },

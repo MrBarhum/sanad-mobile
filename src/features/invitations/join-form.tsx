@@ -1,16 +1,15 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import { FigmaFormScreen } from '@/components/figma/figma-form-screen';
 import { FormField } from '@/components/form-field';
-import { Icon } from '@/components/icon';
+import { GlyphChip } from '@/components/glyph-chip';
 import { InfoBanner } from '@/components/info-banner';
-import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
-import { Fonts, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
+import { Fonts, FontFamily } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 
@@ -18,15 +17,17 @@ import { acceptErrorKey } from './api';
 import { useAcceptInvitation } from './hooks';
 
 /**
- * Join a circle by invitation code — an exact rebuild of the Figma JoinCircle
- * screen: a trust warning banner first, the code in its own bordered card
- * (centered monospace LTR), the filled teal join CTA, and a centered success step
- * with an 80×80 success badge. Figma blue → Sanad teal. The accept-invitation flow
- * and preferred-circle update are unchanged.
+ * Join a circle by invitation code — rebuilt to the Dar "6b" form frame: a deep-green
+ * band header (back + title + subtitle), an amber trust-warning banner first, the code
+ * in its own bordered card (centered monospace LTR so SANAD-XXXXX reads cleanly
+ * regardless of app RTL), and a full-width green join CTA in the footer. On success the
+ * card flips to a quiet green success moment with a Continue CTA. The accept-invitation
+ * flow, deep-link prefill and preferred-circle update are unchanged — only the shell
+ * moved off the native header onto the Dar band.
  */
 export function JoinCircleForm() {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const c = useTheme();
   const router = useRouter();
   const accept = useAcceptInvitation();
   const { setPreferredCircleId } = useCircleSelection();
@@ -63,30 +64,38 @@ export function JoinCircleForm() {
   }
 
   return (
-    <Screen maxWidth={MaxFormWidth} keyboardAvoiding gap={Spacing.three}>
-      {done ? (
-        <>
-          <View style={styles.successTop}>
-            <View style={[styles.successBadge, { backgroundColor: theme.successBg, borderColor: theme.successFg }]}>
-              <Icon name="success" size={36} color="successFg" />
-            </View>
-            <ThemedText type="sectionTitle" accessibilityRole="header" style={styles.center}>
-              {t('joinCircle.successTitle')}
-            </ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.center}>
-              {t('joinCircle.successSubtitle')}
-            </ThemedText>
-          </View>
+    <FigmaFormScreen
+      title={t('joinCircle.title')}
+      subtitle={done ? undefined : t('joinCircle.subtitle')}
+      onBack={() => router.back()}
+      footer={
+        done ? (
           <FigmaFooterPrimaryButton label={t('joinCircle.continue')} onPress={() => router.replace('/')} />
-        </>
+        ) : (
+          <FigmaFooterPrimaryButton
+            label={t('joinCircle.submit')}
+            onPress={onSubmit}
+            loading={accept.isPending}
+          />
+        )
+      }>
+      {done ? (
+        <Surface tone="card" padded={24} style={styles.successCard}>
+          <GlyphChip iconName="success" tone="success" size="lg" shape="circle" />
+          <Text accessibilityRole="header" style={[styles.successTitle, { color: c.text }]}>
+            {t('joinCircle.successTitle')}
+          </Text>
+          <Text style={[styles.successSubtitle, { color: c.textSecondary }]}>
+            {t('joinCircle.successSubtitle')}
+          </Text>
+        </Surface>
       ) : (
         <>
-          {/* Trust/safety note sits BEFORE the code field (Figma order). */}
+          {/* Trust/safety note sits BEFORE the code field (Dar order). */}
           <InfoBanner tone="warning" text={t('joinCircle.warning')} />
 
-          {/* Code in its own bordered card; centered monospace LTR so SANAD-XXXXX
-              reads cleanly regardless of app RTL. */}
-          <Surface radius={Radius.lg}>
+          {/* Code in its own bordered card; centered monospace LTR. */}
+          <Surface tone="card" padded={14}>
             <FormField
               label={t('joinCircle.codeLabel')}
               value={code}
@@ -98,30 +107,16 @@ export function JoinCircleForm() {
               style={styles.codeInput}
             />
           </Surface>
-
-          <FigmaFooterPrimaryButton
-            label={t('joinCircle.submit')}
-            onPress={onSubmit}
-            loading={accept.isPending}
-          />
         </>
       )}
-    </Screen>
+    </FigmaFormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  successTop: { alignItems: 'center', gap: Spacing.two, paddingTop: Spacing.four },
-  successBadge: {
-    width: 80,
-    height: 80,
-    borderRadius: Radius.xl,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.two,
-  },
-  center: { textAlign: 'center' },
+  successCard: { alignItems: 'center', gap: 12 },
+  successTitle: { textAlign: 'center', fontSize: 20, fontFamily: FontFamily.bold, lineHeight: 30, marginTop: 4 },
+  successSubtitle: { textAlign: 'center', fontSize: 16, fontFamily: FontFamily.medium, lineHeight: 27 },
   codeInput: {
     fontFamily: Fonts.mono,
     fontSize: 20,

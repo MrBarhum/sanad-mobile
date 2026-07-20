@@ -1,17 +1,19 @@
+import { useRouter } from 'expo-router';
+import { Check } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
-import { FigmaSwitch } from '@/components/figma/figma-form-screen';
+import { FigmaFormScreen, FigmaSwitch } from '@/components/figma/figma-form-screen';
 import { LtrText } from '@/components/ltr-text';
-import { Screen } from '@/components/screen';
-import { Section, Surface } from '@/components/surface';
+import { SectionHeader } from '@/components/section-header';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
 import { TimeField } from '@/components/time-field';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { CircleTimezoneCard } from '@/features/circle-selection/circle-timezone-card';
 import {
@@ -35,10 +37,14 @@ import { PushStatusCard } from './push-status-card';
 import { PREFERENCE_TOGGLES, quietHoursValid, type BooleanPreferenceKey } from './schema';
 
 /** The /notification-settings screen: push status, per-circle/global preferences,
- * quiet hours, timezone, and a safe local test action. */
+ * quiet hours, timezone, and a safe local test action. Rebuilt to the Dar form frame
+ * — a deep-green band header replaces the native header; groups sit under Dar section
+ * headers with 2px-bordered chips, toggles and wells. Behaviour, data and copy are
+ * unchanged. */
 export function NotificationSettings() {
   const { t } = useTranslation();
   const theme = useTheme();
+  const router = useRouter();
   const { circles, activeCircleId, activeCircle } = useCircleSelection();
 
   // null scope = the user's global default; otherwise a specific circle.
@@ -127,24 +133,27 @@ export function NotificationSettings() {
   }
 
   return (
-    <Screen maxWidth={MaxFormWidth} gap={Spacing.four}>
+    <FigmaFormScreen
+      title={t('notificationSettings.title')}
+      onBack={() => router.back()}>
       <UnsavedChangesGuard when={dirty} />
       <PushStatusCard />
 
       {/* Scope: global default or a specific circle */}
-      <Section title={t('notificationSettings.scope.title')} gap={Spacing.two}>
+      <View style={styles.group}>
+        <SectionHeader title={t('notificationSettings.scope.title')} />
         <View style={styles.chips}>
           <ScopeChip
             label={t('notificationSettings.scope.global')}
             active={scope === null}
             onPress={() => setScope(null)}
           />
-          {circles.map((c) => (
+          {circles.map((circle) => (
             <ScopeChip
-              key={c.circleId}
-              label={c.circleName}
-              active={scope === c.circleId}
-              onPress={() => setScope(c.circleId)}
+              key={circle.circleId}
+              label={circle.circleName}
+              active={scope === circle.circleId}
+              onPress={() => setScope(circle.circleId)}
             />
           ))}
         </View>
@@ -153,23 +162,26 @@ export function NotificationSettings() {
             ? t('notificationSettings.scope.globalHint')
             : t('notificationSettings.scope.circleHint', { circle: scopeLabel })}
         </ThemedText>
-      </Section>
+      </View>
 
       {input ? (
         <>
-          {/* Per-type toggles — one calm grouped surface */}
-          <Surface padded={false}>
-            {PREFERENCE_TOGGLES.map((toggle, index) => (
-              <ToggleRow
-                key={toggle.key}
-                topDivider={index > 0}
-                label={t(toggle.labelKey)}
-                description={t(toggle.descriptionKey)}
-                value={input[toggle.key as BooleanPreferenceKey]}
-                onValueChange={(v) => update(toggle.key, v)}
-              />
-            ))}
-          </Surface>
+          {/* Per-type toggles — one calm grouped surface under its section header */}
+          <View style={styles.group}>
+            <SectionHeader title={t('notificationSettings.subtitle')} />
+            <Surface padded={false}>
+              {PREFERENCE_TOGGLES.map((toggle, index) => (
+                <ToggleRow
+                  key={toggle.key}
+                  topDivider={index > 0}
+                  label={t(toggle.labelKey)}
+                  description={t(toggle.descriptionKey)}
+                  value={input[toggle.key as BooleanPreferenceKey]}
+                  onValueChange={(v) => update(toggle.key, v)}
+                />
+              ))}
+            </Surface>
+          </View>
 
           {/* Quiet hours */}
           <Surface padded={false}>
@@ -211,7 +223,7 @@ export function NotificationSettings() {
             <ThemedText type="smallBold">
               {t('notificationSettings.timezone.label')}
             </ThemedText>
-            <View style={[styles.tzWell, { backgroundColor: theme.backgroundSunken }]}>
+            <View style={[styles.tzWell, { backgroundColor: theme.backgroundSunken, borderColor: theme.border }]}>
               <LtrText>{timezone}</LtrText>
             </View>
             <ThemedText type="small" themeColor="textSecondary">
@@ -256,7 +268,8 @@ export function NotificationSettings() {
 
       {/* Local test (native only) */}
       {pushSupport() !== 'web-unsupported' ? (
-        <Section title={t('notificationSettings.test.sectionTitle')} gap={Spacing.two}>
+        <View style={styles.group}>
+          <SectionHeader title={t('notificationSettings.test.sectionTitle')} />
           <ThemedText type="small" themeColor="textSecondary">
             {t('notificationSettings.test.description')}
           </ThemedText>
@@ -281,9 +294,9 @@ export function NotificationSettings() {
               {testFeedback}
             </ThemedText>
           ) : null}
-        </Section>
+        </View>
       ) : null}
-    </Screen>
+    </FigmaFormScreen>
   );
 }
 
@@ -351,7 +364,7 @@ function MissedDoseGraceCard({ circleId }: { circleId: string }) {
           ]}>
           <ThemedText type="cardTitle">{Glyph.minus}</ThemedText>
         </Pressable>
-        <View style={[styles.stepValue, { backgroundColor: theme.backgroundSunken }]}>
+        <View style={[styles.stepValue, { backgroundColor: theme.backgroundSunken, borderColor: theme.border }]}>
           <ThemedText type="cardTitle">
             {t('notificationSettings.missedDoseGrace.minutes', { count: minutes })}
           </ThemedText>
@@ -398,6 +411,7 @@ function MissedDoseGraceCard({ circleId }: { circleId: string }) {
   );
 }
 
+/** The Dar scope chip: 2px-bordered, `btn` fill + check when active, `card` otherwise. */
 function ScopeChip({
   label,
   active,
@@ -407,7 +421,7 @@ function ScopeChip({
   active: boolean;
   onPress: () => void;
 }) {
-  const theme = useTheme();
+  const c = useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -415,16 +429,19 @@ function ScopeChip({
       accessibilityState={{ selected: active }}
       style={[
         styles.chip,
-        {
-          backgroundColor: active ? theme.primaryBg : theme.backgroundSelected,
-          borderColor: active ? 'transparent' : theme.border,
-        },
+        { backgroundColor: active ? c.primary : c.backgroundElement, borderColor: c.border },
       ]}>
-      <ThemedText
-        type={active ? 'smallBold' : 'small'}
-        themeColor={active ? 'primaryText' : 'textSecondary'}>
-        {active ? `${Glyph.check} ${label}` : label}
-      </ThemedText>
+      {active ? <Check size={13} color={c.onPrimary} strokeWidth={2.8} /> : null}
+      <Text
+        style={[
+          styles.chipText,
+          {
+            color: active ? c.onPrimary : c.textSecondary,
+            fontFamily: active ? FontFamily.bold : FontFamily.semibold,
+          },
+        ]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -440,7 +457,7 @@ function ToggleRow({
   description: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
-  /** Hairline separator above the row (every row but the first in a group). */
+  /** 2px `line` separator above the row (every row but the first in a group). */
   topDivider?: boolean;
 }) {
   const theme = useTheme();
@@ -448,7 +465,7 @@ function ToggleRow({
     <View
       style={[
         styles.toggleRow,
-        topDivider && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.divider },
+        topDivider && { borderTopWidth: BorderWidth.standard, borderTopColor: theme.divider },
       ]}>
       <View style={styles.toggleText}>
         <ThemedText type="cardTitle">{label}</ThemedText>
@@ -462,16 +479,19 @@ function ToggleRow({
 }
 
 const styles = StyleSheet.create({
+  group: { gap: Spacing.two },
   chips: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
   chip: {
-    minHeight: TouchTarget.min,
-    borderRadius: Radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three + Spacing.one,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+    minHeight: TouchTarget.min,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
   },
+  chipText: { fontSize: 15 },
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -483,26 +503,26 @@ const styles = StyleSheet.create({
   },
   toggleText: { flex: 1, gap: Spacing.half },
   quietBody: {
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: BorderWidth.standard,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
   },
   quietNote: {
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: BorderWidth.standard,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
   },
   quietRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.three },
   quietCol: { flexGrow: 1, flexBasis: 140 },
   tzCard: { gap: Spacing.two },
-  tzWell: { borderRadius: Radius.md, padding: Spacing.three },
+  tzWell: { borderRadius: Radius.md, borderWidth: BorderWidth.standard, padding: Spacing.three },
   graceCard: { gap: Spacing.two },
   stepperRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, marginVertical: Spacing.one },
   stepBtn: {
     width: TouchTarget.min,
     height: TouchTarget.min,
-    borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.control,
+    borderWidth: BorderWidth.standard,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -510,6 +530,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: TouchTarget.min,
     borderRadius: Radius.md,
+    borderWidth: BorderWidth.standard,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.three,

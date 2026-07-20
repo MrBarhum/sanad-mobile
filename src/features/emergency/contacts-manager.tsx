@@ -1,19 +1,23 @@
+import { Phone } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/button';
-import { ContactCard } from '@/components/contact-card';
+import { FigmaHeader } from '@/components/figma/figma-header';
+import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSwitch } from '@/components/figma/figma-form-screen';
 import { FormField } from '@/components/form-field';
 import { FormModal } from '@/components/form-modal';
+import { GlyphChip } from '@/components/glyph-chip';
 import { ItemActions } from '@/components/item-actions';
-import { Screen } from '@/components/screen';
+import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge } from '@/components/status-badge';
+import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { Glyph } from '@/constants/glyphs';
-import { Spacing } from '@/constants/theme';
+import { initialFor } from '@/constants/glyphs';
+import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { confirmDiscard } from '@/utils/confirm';
 import { fieldErrors } from '@/utils/form';
@@ -29,7 +33,20 @@ import { emergencyContactSchema } from './schema';
 
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
-/** Emergency contacts list with add/edit/delete (managers only can mutate). */
+/** Open the dialer for a phone number (sanitize, then tel:). */
+function callNumber(phone: string) {
+  const sanitized = phone.replace(/[^\d+]/g, '');
+  Linking.openURL(`tel:${sanitized}`).catch(() => {
+    // Device may not support telephony (tablet / emulator) — ignore quietly.
+  });
+}
+
+/**
+ * The Dar emergency-contacts manager: the green sub-screen header (back + add),
+ * bordered contact cards (letter avatar + name + relationship + LTR phone + a
+ * tinted call circle + primary badge + manager edit/delete), and the add/edit
+ * form sheet. Managers only can mutate. Cairo + Dar tokens, both themes, RTL.
+ */
 export function EmergencyContactsManager({
   circleId,
   canManage,
@@ -60,14 +77,24 @@ export function EmergencyContactsManager({
     }
   }
 
-  if (contacts.isLoading) return <LoadingState />;
+  if (contacts.isLoading) {
+    return (
+      <FigmaScreen>
+        <FigmaHeader title={t('emergencyContacts.title')} />
+        <LoadingState />
+      </FigmaScreen>
+    );
+  }
   if (contacts.isError) {
     return (
-      <ErrorState
-        message={t('emergencyContacts.loadError')}
-        retryLabel={t('retry')}
-        onRetry={() => contacts.refetch()}
-      />
+      <FigmaScreen>
+        <FigmaHeader title={t('emergencyContacts.title')} />
+        <ErrorState
+          message={t('emergencyContacts.loadError')}
+          retryLabel={t('retry')}
+          onRetry={() => contacts.refetch()}
+        />
+      </FigmaScreen>
     );
   }
 
@@ -75,14 +102,16 @@ export function EmergencyContactsManager({
 
   return (
     <>
-      <Screen>
-        {canManage ? (
-          <Button glyph={Glyph.plus} label={t('emergencyContacts.add')} onPress={() => setAdding(true)} />
-        ) : null}
+      <FigmaScreen>
+        <FigmaHeader
+          title={t('emergencyContacts.title')}
+          onAdd={canManage ? () => setAdding(true) : undefined}
+          addAccessibilityLabel={t('emergencyContacts.add')}
+        />
 
         {items.length === 0 ? (
           <EmptyState
-            icon={Glyph.contact}
+            iconName="member"
             title={t('emergencyContacts.emptyTitle')}
             subtitle={canManage ? t('emergencyContacts.emptySubtitle') : undefined}
           />
@@ -100,7 +129,7 @@ export function EmergencyContactsManager({
             ))}
           </View>
         )}
-      </Screen>
+      </FigmaScreen>
 
       {modalOpen ? (
         <ContactFormModal
@@ -128,17 +157,55 @@ function ContactRow({
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
+  const c = useTheme();
+  const phone = contact.phone ?? null;
 
   return (
-    <ContactCard
-      name={contact.name}
-      subtitle={contact.relationship}
-      phone={contact.phone}
-      callLabel={`${t('common.call')} ${contact.name}`}
-      notes={contact.notes}>
-      {contact.is_primary ? (
-        <StatusBadge tone="info" label={t('emergencyContacts.primaryBadge')} />
+    <Surface tone="card" radius={Radius.card} padded={14} gap={12}>
+      <View style={styles.cardTop}>
+        <GlyphChip glyph={initialFor(contact.name)} tone="primary" size="md" shape="circle" />
+        <View style={styles.info}>
+          <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>
+            {contact.name}
+          </Text>
+          {contact.relationship ? (
+            <Text style={[styles.meta, { color: c.textSecondary }]} numberOfLines={1}>
+              {contact.relationship}
+            </Text>
+          ) : null}
+          {phone ? (
+            <Text style={[styles.phone, { color: c.primaryText }]} numberOfLines={1} selectable>
+              {isolateLtr(phone)}
+            </Text>
+          ) : null}
+        </View>
+        {phone ? (
+          <Pressable
+            onPress={() => callNumber(phone)}
+            accessibilityRole="button"
+            accessibilityLabel={`${t('common.call')} ${contact.name}`}
+            style={({ pressed }) => [
+              styles.callBtn,
+              { backgroundColor: c.primaryBg, borderColor: c.border },
+              pressed && styles.pressed,
+            ]}>
+            <Phone size={19} color={c.primaryText} strokeWidth={2.2} />
+          </Pressable>
+        ) : null}
+      </View>
+
+      {contact.notes ? (
+        <View style={[styles.notesWell, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
+          <Text style={[styles.notesText, { color: c.textSecondary }]}>{contact.notes}</Text>
+        </View>
       ) : null}
+
+      {contact.is_primary ? (
+        <View style={styles.badgeRow}>
+          <StatusBadge tone="info" label={t('emergencyContacts.primaryBadge')} />
+        </View>
+      ) : null}
+
       {canManage ? (
         <ItemActions
           deleting={deleting}
@@ -152,7 +219,7 @@ function ContactRow({
           }}
         />
       ) : null}
-    </ContactCard>
+    </Surface>
   );
 }
 
@@ -301,6 +368,29 @@ function ContactFormModal({
 
 const styles = StyleSheet.create({
   list: { gap: Spacing.three },
+  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  info: { flex: 1, minWidth: 0, gap: 2 },
+  name: { fontSize: 16, fontFamily: FontFamily.bold },
+  meta: { fontSize: 14, fontFamily: FontFamily.medium },
+  phone: { fontSize: 15, fontFamily: FontFamily.bold, marginTop: 2 },
+  callBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: Radius.pill,
+    borderWidth: BorderWidth.standard,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  pressed: { opacity: 0.7 },
+  notesWell: {
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  notesText: { fontSize: 14, fontFamily: FontFamily.medium, lineHeight: 23 },
+  badgeRow: { flexDirection: 'row' },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
