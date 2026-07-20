@@ -1,4 +1,5 @@
 import { Stack, useRouter } from 'expo-router';
+import { Info } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
@@ -6,6 +7,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FigmaHeader } from '@/components/figma/figma-header';
+import { FigmaScreen } from '@/components/figma/figma-screen';
 import { isolateLtr } from '@/components/ltr-text';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
@@ -13,7 +16,7 @@ import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Radius, Spacing } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import type { Doctor } from '@/features/doctors/api';
 import { useDoctors } from '@/features/doctors/hooks';
@@ -228,26 +231,40 @@ function AppointmentViewScreen({
   const responsible = useMemberLookup(circleId)(appointment.assigned_to);
 
   return (
-    <FigmaFormScreen title={t('appointments.detailTitle')} onBack={() => router.back()}>
-      <FigmaMutedNote>{t(canMarkOutcome ? 'appointments.statusOnly' : 'appointments.readOnly')}</FigmaMutedNote>
+    <FigmaScreen gap={12}>
+      <FigmaHeader title={t('appointments.detailTitle')} onBack={() => router.back()} />
 
-      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
-        <Text style={[styles.title, { color: theme.text }]}>{appointment.title}</Text>
-        <ReadOnlyRow
-          label={t('appointments.fields.type')}
-          value={t(`appointments.type.${appointment.appointment_type}`)}
-        />
-        <ReadOnlyRow label={t('appointments.whenLabel')} value={when} />
-        {appointment.location ? (
-          <ReadOnlyRow label={t('appointments.locationLabel')} value={appointment.location} />
-        ) : null}
-        {doctorName ? <ReadOnlyRow label={t('appointments.doctorLabel')} value={doctorName} /> : null}
-        {responsible ? (
-          <ReadOnlyRow label={t('assignment.responsible')} value={responsible.label} />
-        ) : null}
-        {appointment.notes ? (
-          <ReadOnlyRow label={t('appointments.fields.notes')} value={appointment.notes} />
-        ) : null}
+      {/* Permission note — a sunken bordered card with an info glyph (frame 7b). */}
+      <Surface tone="sunken" padded={false} style={styles.note}>
+        <Info size={18} color={theme.textSecondary} strokeWidth={2.2} />
+        <Text style={[styles.noteText, { color: theme.textSecondary }]}>
+          {t(canMarkOutcome ? 'appointments.statusOnly' : 'appointments.readOnly')}
+        </Text>
+      </Surface>
+
+      {/* Main info card — title, hairline divider, labeled label/value rows. */}
+      <Surface tone="card" padded={14}>
+        <Text style={[styles.infoTitle, { color: theme.text }]}>{appointment.title}</Text>
+        <View style={[styles.divider, { backgroundColor: theme.backgroundSunken }]} />
+        <View style={styles.rowsGroup}>
+          <DetailRow
+            label={t('appointments.fields.type')}
+            value={t(`appointments.type.${appointment.appointment_type}`)}
+          />
+          <DetailRow label={t('appointments.whenLabel')} value={when} alignEnd />
+          {appointment.location ? (
+            <DetailRow label={t('appointments.locationLabel')} value={appointment.location} />
+          ) : null}
+          {doctorName ? (
+            <DetailRow label={t('appointments.doctorLabel')} value={doctorName} />
+          ) : null}
+          {responsible ? (
+            <DetailRow label={t('assignment.responsible')} value={responsible.label} />
+          ) : null}
+          {appointment.notes ? (
+            <DetailRow label={t('appointments.fields.notes')} value={appointment.notes} notes />
+          ) : null}
+        </View>
       </Surface>
 
       <StatusSection
@@ -256,16 +273,36 @@ function AppointmentViewScreen({
         canMarkOutcome={canMarkOutcome}
         canReopen={false}
       />
-    </FigmaFormScreen>
+    </FigmaScreen>
   );
 }
 
-function ReadOnlyRow({ label, value }: { label: string; value: string }) {
+/**
+ * A labeled read-only row: a muted label on the start, its value filling the rest.
+ * `alignEnd` pushes an LTR value (the date/time) to the end of the row (frame 7b);
+ * `notes` uses the lighter, taller body treatment for free-text.
+ */
+function DetailRow({
+  label,
+  value,
+  alignEnd,
+  notes,
+}: {
+  label: string;
+  value: string;
+  alignEnd?: boolean;
+  notes?: boolean;
+}) {
   const theme = useTheme();
+  const valueStyle = notes
+    ? styles.detailValueNotes
+    : alignEnd
+      ? styles.detailValueEnd
+      : styles.detailValue;
   return (
-    <View style={styles.row}>
-      <Text style={[styles.rowLabel, { color: theme.textSecondary }]}>{label}</Text>
-      <Text style={[styles.rowValue, { color: theme.text }]}>{value}</Text>
+    <View style={[styles.detailRow, alignEnd && styles.detailRowBetween]}>
+      <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>{label}</Text>
+      <Text style={[valueStyle, { color: theme.text }]}>{value}</Text>
     </View>
   );
 }
@@ -327,7 +364,7 @@ function StatusSection({
   const showReopen = canReopen && appointment.status !== 'scheduled';
 
   return (
-    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+    <Surface tone="card" radius={Radius.lg} padded={14} gap={12}>
       <View style={styles.statusHeader}>
         <Text style={[styles.statusLabel, { color: theme.text }]}>{t('appointments.fields.status')}</Text>
         <StatusBadge
@@ -452,17 +489,26 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
   statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
-  title: { fontSize: 18, fontFamily: FontFamily.bold },
-  row: { gap: 2 },
-  rowLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
-  rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
+  // Permission note (sunken card)
+  note: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, paddingHorizontal: 14 },
+  noteText: { flex: 1, fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 22 },
+  // Main info card
+  infoTitle: { fontSize: 19, fontFamily: FontFamily.bold, lineHeight: 28 },
+  divider: { height: BorderWidth.standard, alignSelf: 'stretch', marginVertical: 12 },
+  rowsGroup: { gap: 12 },
+  detailRow: { flexDirection: 'row', alignItems: 'baseline', gap: 16 },
+  detailRowBetween: { justifyContent: 'space-between' },
+  detailLabel: { fontSize: 15, fontFamily: FontFamily.semibold, flexShrink: 0 },
+  detailValue: { flex: 1, fontSize: 16, fontFamily: FontFamily.semibold, lineHeight: 24 },
+  detailValueEnd: { flexShrink: 1, fontSize: 16, fontFamily: FontFamily.semibold, lineHeight: 24, writingDirection: 'ltr' },
+  detailValueNotes: { flex: 1, fontSize: 16, fontFamily: FontFamily.medium, lineHeight: 26 },
   statusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  statusLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  statusLabel: { fontSize: 16, fontFamily: FontFamily.bold },
   statusError: { fontSize: 14, fontFamily: FontFamily.semibold },
   actionRow: { flexDirection: 'row', gap: Spacing.two },
   actionCol: { flex: 1 },
