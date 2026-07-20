@@ -22,7 +22,7 @@ export default function AppointmentsLayout() {
         headerShadowVisible: false,
         contentStyle: { backgroundColor: theme.background },
       }}>
-      <Stack.Screen name="index" options={{ title: t('appointments.title') }} />
+      <Stack.Screen name="index" options={{ title: t('appointments.title'), headerShown: false }} />
       <Stack.Screen name="new" options={{ title: t('appointments.addTitle') }} />
       <Stack.Screen name="[id]" options={{ title: t('appointments.detailTitle') }} />
     </Stack>

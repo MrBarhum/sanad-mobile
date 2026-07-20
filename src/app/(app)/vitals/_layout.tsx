@@ -22,7 +22,7 @@ export default function VitalsLayout() {
         headerShadowVisible: false,
         contentStyle: { backgroundColor: theme.background },
       }}>
-      <Stack.Screen name="index" options={{ title: t('vitals.title') }} />
+      <Stack.Screen name="index" options={{ title: t('vitals.title'), headerShown: false }} />
       <Stack.Screen name="new" options={{ title: t('vitals.addTitle') }} />
       <Stack.Screen name="[id]" options={{ title: t('vitals.detailTitle') }} />
     </Stack>

@@ -22,7 +22,7 @@ export default function VisitsLayout() {
         headerShadowVisible: false,
         contentStyle: { backgroundColor: theme.background },
       }}>
-      <Stack.Screen name="index" options={{ title: t('visits.title') }} />
+      <Stack.Screen name="index" options={{ title: t('visits.title'), headerShown: false }} />
       <Stack.Screen name="new" options={{ title: t('visits.addTitle') }} />
       <Stack.Screen name="[id]" options={{ title: t('visits.detailTitle') }} />
     </Stack>

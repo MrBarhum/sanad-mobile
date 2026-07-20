@@ -22,7 +22,7 @@ export default function DailyLogsLayout() {
         headerShadowVisible: false,
         contentStyle: { backgroundColor: theme.background },
       }}>
-      <Stack.Screen name="index" options={{ title: t('dailyLogs.title') }} />
+      <Stack.Screen name="index" options={{ title: t('dailyLogs.title'), headerShown: false }} />
       <Stack.Screen name="new" options={{ title: t('dailyLogs.addTitle') }} />
       <Stack.Screen name="[id]" options={{ title: t('dailyLogs.detailTitle') }} />
     </Stack>
