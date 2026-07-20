@@ -77,4 +77,25 @@ appointment; unread badge 0 / 5 / 9+.
 | Save = full-width green; invalid press shows inline errors (not disabled) | | | | | | keyboard-avoid on iOS |
 | RTL + LTR times/dates; both themes; managers-only gate (non-manager → empty) | | | | | | |
 
+---
+
+## Tasks list + confirm sheet — المهام (frame 8c)  ·  commit: tasks rebuild
+
+| Check | Light | Dark | 100% | 130% | 200% | Notes |
+|---|---|---|---|---|---|---|
+| Green band (back + المهام + add), only top chrome | | | | | | native header hidden |
+| Status tabs (اليوم/مفتوحة/مكتملة): active green block, 2px dividers | | | | | | |
+| Scope pills (مهامي/كل المهام): shown to assignable members; default per role | | | | | | manager=all, collaborator=mine |
+| Task rows grouped in one 2px card, split by 2px dividers | | | | | | |
+| Checkbox states: open outline / done ok+tok+check / cancelled err+terr+X | | | | | | actionable only when canAct |
+| Open row: title 800, due (clock+LTR) + assignee acc; note if present | | | | | | |
+| Unassigned open row: «أنا متكفّل» claim pill → confirm → assign | | | | | | claiming spinner |
+| Could-not-complete: 34px err X square (canAct) → cancel confirm sheet | | | | | | |
+| Done/cancelled row: strikethrough title + «منجزة»/«ملغاة» pill + assignee | | | | | | cancelled row dimmed |
+| Complete tap → bottom sheet (title/body/task-chip/تم الإنجاز/إلغاء) | | | | | | danger CTA for could-not-complete |
+| Empty (per scope): tok circle + check + reassuring title | | | | | | mine vs all copy |
+| Loading skeleton; load-error card + retry | | | | | | |
+| RTL + LTR due; both themes; sheet scrim + slide | | | | | | |
+
+
 

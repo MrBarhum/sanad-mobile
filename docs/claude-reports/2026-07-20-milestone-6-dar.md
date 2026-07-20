@@ -235,6 +235,33 @@ one additive hook touched — no other screen changes; 3 new copy keys
 at ar/en parity; body ≥16; RTL + LTR times; both themes; all validation/submit/guard
 behaviour preserved verbatim. Quartet green.
 
+## Phase 3 — Tasks list + confirm sheet (frame 8c) — delta
+
+Inline-Dar, scoped to Tasks: no shared component restyled (the confirm/claim
+bottom sheets are built inline, so `FigmaBottomSheet` and other sheet consumers are
+untouched). The task **add/edit form** is "compose from archetype" (SCREENS.md — not
+a drawn frame); it rides the medications-form inline-Dar pattern and comes next.
+
+| Block | HTML / spec | Implemented | Match |
+|---|---|---|---|
+| Sub-screen band | back + «المهام» + add (managers) | inline; native header hidden | ✅ |
+| Status tabs | 3 cells (اليوم/مفتوحة/مكتملة), active btn+btnInk 16/800, idle mut 16/700 + 2px dividers | inline | ✅ |
+| Scope pills | مهامي/كل المهام, 2px r999, card/mut off · btn/btnInk on; shown to assignable members | inline | ✅ |
+| Task group card | one 2px-r8 card, rows split by 2px dividers | inline | ✅ |
+| Checkbox | 28px r999 2px; open = line outline; done = ok border + tok fill + check; cancelled = err + terr + X | inline (actionable when canAct) | ✅ |
+| Row body | title 16/800 (done → 16/700 strikethrough @.65); note 14/600; meta = due (clock+LTR) + assignee acc | inline (no «·» separator, per HTML) | ✅ |
+| Done status pill | «منجزة»/«ملغاة» 1.5px stroke r4 icon+text | inline (added — HTML shows it) | ✅ |
+| Claim pill | «أنا متكفّل» btn+btnInk r6, handshake icon, on open+unassigned | inline (claim confirmAction preserved) | ✅ |
+| Could-not-complete | 34px r6 2px square + err X (when canAct) | inline | ✅ |
+| Confirm sheet | scrim + card sheet (2px top border, r16, sunken grab), centered title 18/800 + body 16/600 + task-chip + «تم الإنجاز» primary / «تعذّر الإنجاز» danger + «إلغاء» secondary | inline `BottomSheet` + `SheetButton` | ✅ |
+| States | skeleton / bordered error+retry / quiet empty (tok circle + check + title) | inline | ✅ |
+
+**Self-check:** no new token file; no shared component restyled (sheets inlined); no
+new copy (all keys existed — parity unchanged); body ≥16; every status icon+text; RTL
++ LTR due; both themes; scope defaults/visibility, overdue→priority→due ordering,
+canActOn/canClaim gating, confirm-before-mutate, and claim race/failure flows all
+preserved. Quartet green.
+
 ## Invented values (neither spec nor HTML covered)
 - `primaryPressed` (darker `btn`): light #0A3A32, dark #6BB3A0.
 - `ringTrack` (decorative, ring retired): rgba ink/bandInk @ .12.
