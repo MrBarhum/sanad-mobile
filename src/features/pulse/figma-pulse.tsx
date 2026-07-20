@@ -1,17 +1,27 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Share2 } from 'lucide-react-native';
+import {
+  Calendar,
+  Check,
+  ClipboardList,
+  Heart,
+  Pill,
+  Share2,
+  User,
+  Users,
+  X,
+} from 'lucide-react-native';
+import type { ComponentType } from 'react';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { GlyphChip } from '@/components/glyph-chip';
-import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
-import { Surface } from '@/components/surface';
-import { FontFamily, Radius, withAlpha } from '@/constants/theme';
+import { SkeletonList } from '@/components/skeleton';
+import { EmptyState } from '@/components/states';
+import { BorderWidth, FontFamily, Radius, type ThemeColor } from '@/constants/theme';
+import { type IconName } from '@/constants/icons';
 import { useTheme } from '@/hooks/use-theme';
 import { hmInTimeZone, todayYmdInTimeZone, ymdInTimeZone } from '@/utils/date';
 
@@ -26,14 +36,30 @@ import {
   usePulseActorLabel,
 } from './present';
 
+type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+
+/** Event icon → lucide glyph + Dar tint pair (per the 9f frame: care actions =
+ *  accent, completions = success, people events = amber). */
+type Visual = { Icon: IconCmp; fg: ThemeColor; tint: ThemeColor };
+const FALLBACK: Visual = { Icon: Check, fg: 'primaryText', tint: 'primaryBg' };
+const VISUAL: Partial<Record<IconName, Visual>> = {
+  medication: { Icon: Pill, fg: 'primaryText', tint: 'primaryBg' },
+  appointment: { Icon: Calendar, fg: 'primaryText', tint: 'primaryBg' },
+  dailyLog: { Icon: ClipboardList, fg: 'primaryText', tint: 'primaryBg' },
+  success: { Icon: Check, fg: 'successFg', tint: 'successBg' },
+  vital: { Icon: Heart, fg: 'successFg', tint: 'successBg' },
+  close: { Icon: X, fg: 'warningFg', tint: 'warningBg' },
+  visit: { Icon: User, fg: 'warningFg', tint: 'warningBg' },
+  member: { Icon: Users, fg: 'warningFg', tint: 'warningBg' },
+};
+
 const PAGE = 20;
 
 /**
- * Care Pulse («نبض اليوم») — a read-only, member-gated activity feed built on the
- * `list_care_activity` RPC. Each row: a per-type icon, the actor's resolved name,
- * a localized description, and a bidi-isolated time; tapping deep-links to the
- * source item. Handles loading / generic error / RPC-not-yet-enabled / empty /
- * load-more. RTL, Cairo, theme tokens.
+ * Care activity log («سجل النشاط», frame 9f) — a read-only, member-gated feed on
+ * the `list_care_activity` RPC. A share pill, then per-event cards (a tinted icon
+ * square + actor·masdar description + LTR time), then load-more. Handles loading /
+ * generic error / RPC-not-enabled / empty. Dar tokens, Cairo, RTL.
  */
 export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone: string }) {
   const { t } = useTranslation();
@@ -44,10 +70,6 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
   const [limit, setLimit] = useState(PAGE);
   const activity = useCareActivity(circleId, limit);
 
-  // Refetch on focus so returning to the log after acting elsewhere reconciles the
-  // feed (matches the available-to-claim convention; FigmaScreen has no pull-to-
-  // refresh). Mutations also invalidate the pulse key, so an in-place action shows
-  // up immediately (D1).
   const refetch = activity.refetch;
   useFocusEffect(
     useCallback(() => {
@@ -59,7 +81,6 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
   const canLoadMore = events.length >= limit;
 
   function whenLabel(occurredAt: string): string {
-    // Circle-local frame so a row's date + time match the feed's day grouping.
     const ymd = ymdInTimeZone(occurredAt, timezone);
     const hm = hmInTimeZone(occurredAt, timezone);
     if (ymd === todayYmdInTimeZone(timezone)) return isolateLtr(hm);
@@ -80,9 +101,9 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
             onPress={onShare}
             accessibilityRole="button"
             accessibilityLabel={t('pulse.share')}
-            style={[styles.shareBtn, { borderColor: withAlpha(c.primary, 0.4) }]}>
-            <Share2 size={14} color={c.primary} />
-            <Text style={[styles.shareText, { color: c.primary }]}>{t('pulse.share')}</Text>
+            style={[styles.shareBtn, { borderColor: c.border, backgroundColor: c.backgroundElement }]}>
+            <Share2 size={14} color={c.primaryText} strokeWidth={2} />
+            <Text style={[styles.shareText, { color: c.primaryText }]}>{t('pulse.share')}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -90,7 +111,7 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
       {activity.isLoading ? (
         <SkeletonList />
       ) : activity.isError ? (
-        <Surface tone="card" radius={Radius.lg} padded={20}>
+        <View style={[styles.errorCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
           <Text style={[styles.errorText, { color: c.errorFg }]}>
             {isMissingPulseRpc(activity.error) ? t('pulse.notEnabled') : t('pulse.loadError')}
           </Text>
@@ -102,109 +123,108 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
               <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
             </Pressable>
           ) : null}
-        </Surface>
+        </View>
       ) : events.length === 0 ? (
         <EmptyState iconName="activity" title={t('pulse.empty')} />
       ) : (
-        <>
-          <View style={styles.list}>
-            {events.map((event) => {
-              const { iconName, colorKey } = pulseEventVisual(event);
-              return (
-                <Pressable
-                  key={`${event.event_type}:${event.event_id}`}
-                  onPress={() => router.push(pulseRouteFor(event.item_type, event.item_id))}
-                  accessibilityRole="button"
-                  accessibilityHint={t('common.details')}
-                  style={({ pressed }) => [
-                    styles.row,
-                    { backgroundColor: c.backgroundElement, borderColor: c.border },
-                    pressed && styles.rowPressed,
-                  ]}>
-                  <GlyphChip iconName={iconName} color={colorKey} size="md" />
-                  <View style={styles.info}>
-                    <Text style={[styles.desc, { color: c.text }]} numberOfLines={2}>
-                      {pulseDescription(event, t, actorLabel)}
-                    </Text>
-                    <Text style={[styles.time, { color: c.textSecondary }]}>{whenLabel(event.occurred_at)}</Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
+        <View style={styles.list}>
+          {events.map((event) => {
+            const { iconName } = pulseEventVisual(event);
+            const visual = VISUAL[iconName] ?? FALLBACK;
+            const EventIcon = visual.Icon;
+            return (
+              <Pressable
+                key={`${event.event_type}:${event.event_id}`}
+                onPress={() => router.push(pulseRouteFor(event.item_type, event.item_id))}
+                accessibilityRole="button"
+                accessibilityHint={t('common.details')}
+                style={({ pressed }) => [
+                  styles.row,
+                  { backgroundColor: c.backgroundElement, borderColor: c.border },
+                  pressed && styles.rowPressed,
+                ]}>
+                <View style={[styles.icon, { backgroundColor: c[visual.tint], borderColor: c.border }]}>
+                  <EventIcon size={17} color={c[visual.fg]} strokeWidth={2.2} />
+                </View>
+                <Text style={[styles.desc, { color: c.text }]} numberOfLines={2}>
+                  {pulseDescription(event, t, actorLabel)}
+                </Text>
+                <Text style={[styles.time, { color: c.textSecondary }]}>{whenLabel(event.occurred_at)}</Text>
+              </Pressable>
+            );
+          })}
 
           {canLoadMore ? (
             <Pressable
               onPress={() => setLimit((n) => n + PAGE)}
               accessibilityRole="button"
-              style={[styles.loadMore, { borderColor: c.border }]}>
+              style={[styles.loadMore, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
               {activity.isFetching ? (
-                <ActivityIndicator size="small" color={c.primary} />
+                <ActivityIndicator size="small" color={c.primaryText} />
               ) : (
-                <Text style={[styles.loadMoreText, { color: c.primary }]}>{t('pulse.loadMore')}</Text>
+                <Text style={[styles.loadMoreText, { color: c.primaryText }]}>{t('pulse.loadMore')}</Text>
               )}
             </Pressable>
           ) : null}
-        </>
+        </View>
       )}
     </FigmaScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  subtitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginTop: -8,
-  },
-  subtitle: { fontSize: 14, fontFamily: FontFamily.regular, flexShrink: 1 },
+  subtitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: -8 },
+  subtitle: { fontSize: 15, fontFamily: FontFamily.medium, flexShrink: 1 },
   shareBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     minHeight: 36,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     borderRadius: Radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: BorderWidth.standard,
   },
-  shareText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
+  shareText: { fontSize: 14, fontFamily: FontFamily.bold },
+  errorCard: { borderWidth: BorderWidth.standard, borderRadius: Radius.card, padding: 20 },
+  errorText: { fontSize: 16, fontFamily: FontFamily.semibold, textAlign: 'center' },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: Radius.md,
-    paddingHorizontal: 16,
+    borderRadius: Radius.control,
+    paddingHorizontal: 18,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
+  retryText: { fontSize: 15, fontFamily: FontFamily.bold },
   list: { gap: 8 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    borderRadius: Radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: 56,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
   },
   rowPressed: { opacity: 0.7 },
-  info: { flex: 1, gap: 3 },
-  desc: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 20 },
-  time: { fontSize: 14, fontFamily: FontFamily.regular },
+  icon: {
+    width: 40,
+    height: 40,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.control,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  desc: { flex: 1, fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 23 },
+  time: { fontSize: 14, fontFamily: FontFamily.medium, writingDirection: 'ltr' },
   loadMore: {
-    alignSelf: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.pill,
-    paddingHorizontal: 20,
-    minHeight: 44,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  loadMoreText: { fontSize: 14, fontFamily: FontFamily.semibold },
+  loadMoreText: { fontSize: 16, fontFamily: FontFamily.bold },
 });
