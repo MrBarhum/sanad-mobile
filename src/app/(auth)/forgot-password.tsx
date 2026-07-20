@@ -4,14 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 import { z } from 'zod';
 
-import { AuthField } from '@/components/auth-field';
-import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import { Button } from '@/components/button';
+import { FormField } from '@/components/form-field';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { FontFamily, Gutter, MaxFormWidth, Spacing } from '@/constants/theme';
+import { FontFamily, MaxFormWidth, Spacing } from '@/constants/theme';
+import { AuthHeader } from '@/features/auth/auth-chrome';
 import { passwordResetRedirectTo } from '@/features/auth/password-reset';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -27,7 +26,7 @@ const emailSchema = z.string().email();
  */
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const c = useTheme();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -53,67 +52,46 @@ export default function ForgotPasswordScreen() {
 
   return (
     <Screen edges={{ top: true }} maxWidth={MaxFormWidth} keyboardAvoiding gap={Spacing.three}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { fontFamily: FontFamily.bold }, { color: theme.text }]}>
-          {t('auth.forgotTitle')}
-        </Text>
-        <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-          {t('auth.forgotSubtitle')}
-        </ThemedText>
-      </View>
+      <AuthHeader title={t('auth.forgotTitle')} subtitle={t('auth.forgotSubtitle')} />
 
-      <Surface padded={false} style={styles.card}>
-        <View style={styles.cardContent}>
-          {sent ? (
+      <Surface tone="card" padded={16} gap={14}>
+        {sent ? (
+          <>
             <InfoBanner tone="info" text={t('auth.forgotSent')} />
-          ) : (
-            <>
-              <AuthField
-                label={t('auth.email')}
-                value={email}
-                onChangeText={setEmail}
-                error={error}
-                ltr
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                inputMode="email"
-                autoComplete="email"
-                textContentType="emailAddress"
-                placeholder={t('auth.emailPlaceholder')}
-              />
-              <FigmaFooterPrimaryButton
-                label={t('auth.forgotSend')}
-                onPress={onSubmit}
-                loading={submitting}
-              />
-            </>
-          )}
-          {sent ? (
-            <FigmaFooterPrimaryButton
-              label={t('auth.backToSignIn')}
-              onPress={() => router.replace('/sign-in')}
+            <Button label={t('auth.backToSignIn')} onPress={() => router.replace('/sign-in')} />
+          </>
+        ) : (
+          <>
+            <FormField
+              label={t('auth.email')}
+              value={email}
+              onChangeText={setEmail}
+              error={error}
+              style={styles.ltr}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              inputMode="email"
+              autoComplete="email"
+              textContentType="emailAddress"
+              placeholder={t('auth.emailPlaceholder')}
             />
-          ) : null}
-        </View>
+            <Button label={t('auth.forgotSend')} onPress={onSubmit} loading={submitting} />
+          </>
+        )}
       </Surface>
 
-      <ThemedView style={styles.footer}>
+      <View style={styles.footer}>
         <Link href="/sign-in">
-          <ThemedText type="link">
-            {t('auth.backToSignIn')}
-          </ThemedText>
+          <Text style={[styles.footerLink, { color: c.primaryText }]}>{t('auth.backToSignIn')}</Text>
         </Link>
-      </ThemedView>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { alignItems: 'center', paddingTop: Spacing.four, paddingBottom: Spacing.two },
-  title: { fontSize: 26, lineHeight: 36, textAlign: 'center' },
-  subtitle: { fontSize: 14, textAlign: 'center' },
-  card: { paddingVertical: Spacing.four, paddingHorizontal: Gutter },
-  cardContent: { gap: Gutter },
+  ltr: { writingDirection: 'ltr', textAlign: 'left' },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.one },
+  footerLink: { fontSize: 16, fontFamily: FontFamily.bold, textDecorationLine: 'underline' },
 });

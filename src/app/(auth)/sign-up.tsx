@@ -4,14 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 import { z } from 'zod';
 
-import { AuthField } from '@/components/auth-field';
-import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import { Button } from '@/components/button';
+import { FormField } from '@/components/form-field';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { FontFamily, Gutter, MaxFormWidth, Spacing } from '@/constants/theme';
+import { FontFamily, MaxFormWidth, Spacing } from '@/constants/theme';
+import { AuthError, AuthHeader } from '@/features/auth/auth-chrome';
 import { useTheme } from '@/hooks/use-theme';
 
 import { supabase } from '../../../lib/supabase';
@@ -24,7 +23,7 @@ const credentialsSchema = z.object({
 
 export default function SignUpScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const c = useTheme();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -88,105 +87,85 @@ export default function SignUpScreen() {
 
   return (
     <Screen edges={{ top: true }} maxWidth={MaxFormWidth} keyboardAvoiding gap={Spacing.three}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { fontFamily: FontFamily.bold }, { color: theme.text }]}>{t('auth.signUpTitle')}</Text>
-        <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-          {t('auth.signUpSubtitle')}
-        </ThemedText>
-      </View>
+      <AuthHeader title={t('auth.signUpTitle')} subtitle={t('auth.signUpSubtitle')} />
 
-      <Surface padded={false} style={styles.card}>
-        <View style={styles.cardContent}>
-          <AuthField
-            label={t('auth.fullName')}
-            value={fullName}
-            onChangeText={setFullName}
-            error={errors.fullName}
-            autoCapitalize="words"
-            autoComplete="name"
-            textContentType="name"
-            placeholder={t('auth.fullNamePlaceholder')}
-          />
+      <Surface tone="card" padded={16} gap={14}>
+        <FormField
+          label={t('auth.fullName')}
+          value={fullName}
+          onChangeText={setFullName}
+          error={errors.fullName}
+          autoCapitalize="words"
+          autoComplete="name"
+          textContentType="name"
+          placeholder={t('auth.fullNamePlaceholder')}
+        />
 
-          <AuthField
-            label={t('auth.email')}
-            value={email}
-            onChangeText={setEmail}
-            error={errors.email}
-            ltr
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            inputMode="email"
-            autoComplete="email"
-            textContentType="emailAddress"
-            placeholder={t('auth.emailPlaceholder')}
-          />
+        <FormField
+          label={t('auth.email')}
+          value={email}
+          onChangeText={setEmail}
+          error={errors.email}
+          style={styles.ltr}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          inputMode="email"
+          autoComplete="email"
+          textContentType="emailAddress"
+          placeholder={t('auth.emailPlaceholder')}
+        />
 
-          <AuthField
-            label={t('auth.password')}
-            value={password}
-            onChangeText={setPassword}
-            error={errors.password}
-            hint={t('auth.passwordHint')}
-            isPassword
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="new-password"
-            textContentType="newPassword"
-            placeholder={t('auth.passwordPlaceholder')}
-          />
+        <FormField
+          label={t('auth.password')}
+          value={password}
+          onChangeText={setPassword}
+          error={errors.password}
+          hint={t('auth.passwordHint')}
+          secureToggle
+          revealLabel={t('auth.showPassword')}
+          hideLabel={t('auth.hidePassword')}
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="new-password"
+          textContentType="newPassword"
+          placeholder={t('auth.passwordPlaceholder')}
+        />
 
-          <AuthField
-            label={t('auth.confirmPassword')}
-            value={confirm}
-            onChangeText={setConfirm}
-            error={errors.confirm}
-            isPassword
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="new-password"
-            textContentType="newPassword"
-            placeholder={t('auth.passwordPlaceholder')}
-          />
+        <FormField
+          label={t('auth.confirmPassword')}
+          value={confirm}
+          onChangeText={setConfirm}
+          error={errors.confirm}
+          secureToggle
+          revealLabel={t('auth.showPassword')}
+          hideLabel={t('auth.hidePassword')}
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="new-password"
+          textContentType="newPassword"
+          placeholder={t('auth.passwordPlaceholder')}
+        />
 
-          {submitError ? (
-            <ThemedText
-              themeColor="errorFg"
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite">
-              {submitError}
-            </ThemedText>
-          ) : null}
-          {notice ? <InfoBanner tone="info" text={notice} /> : null}
+        {submitError ? <AuthError message={submitError} /> : null}
+        {notice ? <InfoBanner tone="info" text={notice} /> : null}
 
-          <FigmaFooterPrimaryButton
-            label={t('auth.signUpButton')}
-            onPress={onSubmit}
-            loading={submitting}
-          />
-        </View>
+        <Button label={t('auth.signUpButton')} onPress={onSubmit} loading={submitting} />
       </Surface>
 
-      <ThemedView style={styles.footer}>
-        <ThemedText themeColor="textSecondary">
-          {t('auth.haveAccount')}
-        </ThemedText>
+      <View style={styles.footer}>
+        <Text style={[styles.footerText, { color: c.textSecondary }]}>{t('auth.haveAccount')}</Text>
         <Link href="/sign-in">
-          <ThemedText type="link" style={{ fontFamily: FontFamily.semibold }}>
-            {t('auth.signInLink')}
-          </ThemedText>
+          <Text style={[styles.footerLink, { color: c.primaryText }]}>{t('auth.signInLink')}</Text>
         </Link>
-      </ThemedView>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { alignItems: 'center', paddingTop: Spacing.four, paddingBottom: Spacing.two },
-  title: { fontSize: 26, lineHeight: 36, textAlign: 'center' },
-  subtitle: { fontSize: 14, textAlign: 'center' },
-  card: { paddingVertical: Spacing.four, paddingHorizontal: Gutter },
-  cardContent: { gap: Gutter },
+  ltr: { writingDirection: 'ltr', textAlign: 'left' },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.one },
+  footerText: { fontSize: 16, fontFamily: FontFamily.medium },
+  footerLink: { fontSize: 16, fontFamily: FontFamily.bold, textDecorationLine: 'underline' },
 });

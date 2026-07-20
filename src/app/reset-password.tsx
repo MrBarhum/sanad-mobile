@@ -2,15 +2,16 @@ import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
-import { AuthField } from '@/components/auth-field';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
+import { FormField } from '@/components/form-field';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { FontFamily, Gutter, MaxFormWidth, Spacing } from '@/constants/theme';
+import { MaxFormWidth, Radius, Spacing } from '@/constants/theme';
+import { AuthError, AuthHeader } from '@/features/auth/auth-chrome';
 import { parseRecoveryParams } from '@/features/auth/password-reset';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -24,8 +25,9 @@ type Phase = 'checking' | 'ready' | 'invalid';
  * recovery token establishes a session — otherwise the auth guard would bounce the
  * user off this screen mid-reset. It resolves the incoming URL once, exchanges the
  * recovery token for a session, then lets the user set a new password via
- * `updateUser`. End-to-end this needs on-device QA (deep-link delivery + the
- * Supabase redirect-URL allow-list) — see the milestone-4 runbook.
+ * `updateUser`. Dar 7a lockup + FormField, both themes, RTL. End-to-end this needs
+ * on-device QA (deep-link delivery + the Supabase redirect-URL allow-list) — see
+ * the milestone-4 runbook.
  */
 export default function ResetPasswordScreen() {
   const { t } = useTranslation();
@@ -110,82 +112,65 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <Screen edges={{ top: true }} maxWidth={MaxFormWidth} keyboardAvoiding gap={Spacing.three}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { fontFamily: FontFamily.bold }, { color: theme.text }]}>{t('auth.resetTitle')}</Text>
-        <ThemedText themeColor="textSecondary" style={[styles.subtitle]}>
-          {t('auth.resetSubtitle')}
-        </ThemedText>
-      </View>
+    <Screen edges={{ top: true }} maxWidth={MaxFormWidth} keyboardAvoiding gap={Spacing.four}>
+      <AuthHeader title={t('auth.resetTitle')} subtitle={t('auth.resetSubtitle')} />
 
-      <Surface padded={false} style={styles.card}>
-        <View style={styles.cardContent}>
-          {phase === 'checking' ? (
-            <View style={styles.centered}>
-              <ActivityIndicator color={theme.primary} />
-              <ThemedText themeColor="textSecondary">
-                {t('auth.resetChecking')}
-              </ThemedText>
-            </View>
-          ) : phase === 'invalid' ? (
-            <>
-              <InfoBanner tone="warning" text={t('auth.resetInvalid')} />
-              <FigmaFooterPrimaryButton
-                label={t('auth.requestNewLink')}
-                onPress={() => router.replace('/forgot-password')}
-              />
-            </>
-          ) : done ? (
-            <>
-              <InfoBanner tone="info" text={t('auth.resetSuccess')} />
-              <FigmaFooterPrimaryButton
-                label={t('auth.continue')}
-                onPress={() => router.replace('/')}
-              />
-            </>
-          ) : (
-            <>
-              <AuthField
-                label={t('auth.newPassword')}
-                value={password}
-                onChangeText={setPassword}
-                isPassword
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="new-password"
-                textContentType="newPassword"
-                placeholder={t('auth.passwordPlaceholder')}
-              />
-              <AuthField
-                label={t('auth.confirmNewPassword')}
-                value={confirm}
-                onChangeText={setConfirm}
-                isPassword
-                error={error}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="new-password"
-                textContentType="newPassword"
-                placeholder={t('auth.passwordPlaceholder')}
-              />
-              <FigmaFooterPrimaryButton
-                label={t('auth.resetSubmit')}
-                onPress={onSave}
-                loading={saving}
-              />
-            </>
-          )}
-        </View>
+      <Surface tone="card" radius={Radius.card} padded={20} gap={16}>
+        {phase === 'checking' ? (
+          <View style={styles.centered}>
+            <ActivityIndicator color={theme.primary} />
+            <ThemedText themeColor="textSecondary">{t('auth.resetChecking')}</ThemedText>
+          </View>
+        ) : phase === 'invalid' ? (
+          <>
+            <InfoBanner tone="warning" text={t('auth.resetInvalid')} />
+            <FigmaFooterPrimaryButton
+              label={t('auth.requestNewLink')}
+              onPress={() => router.replace('/forgot-password')}
+            />
+          </>
+        ) : done ? (
+          <>
+            <InfoBanner tone="info" text={t('auth.resetSuccess')} />
+            <FigmaFooterPrimaryButton label={t('auth.continue')} onPress={() => router.replace('/')} />
+          </>
+        ) : (
+          <>
+            <FormField
+              label={t('auth.newPassword')}
+              value={password}
+              onChangeText={setPassword}
+              secureToggle
+              revealLabel={t('auth.showPassword')}
+              hideLabel={t('auth.hidePassword')}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="new-password"
+              textContentType="newPassword"
+              placeholder={t('auth.passwordPlaceholder')}
+            />
+            <FormField
+              label={t('auth.confirmNewPassword')}
+              value={confirm}
+              onChangeText={setConfirm}
+              secureToggle
+              revealLabel={t('auth.showPassword')}
+              hideLabel={t('auth.hidePassword')}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="new-password"
+              textContentType="newPassword"
+              placeholder={t('auth.passwordPlaceholder')}
+            />
+            {error ? <AuthError message={error} /> : null}
+            <FigmaFooterPrimaryButton label={t('auth.resetSubmit')} onPress={onSave} loading={saving} />
+          </>
+        )}
       </Surface>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { alignItems: 'center', paddingTop: Spacing.four, paddingBottom: Spacing.two },
-  title: { fontSize: 26, lineHeight: 36, textAlign: 'center' },
-  subtitle: { fontSize: 14, textAlign: 'center' },
-  card: { paddingVertical: Spacing.four, paddingHorizontal: Gutter },
-  cardContent: { gap: Gutter },
   centered: { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.four },
 });
