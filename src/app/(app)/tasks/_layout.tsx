@@ -22,7 +22,7 @@ export default function TasksLayout() {
         headerShadowVisible: false,
         contentStyle: { backgroundColor: theme.background },
       }}>
-      <Stack.Screen name="index" options={{ title: t('tasks.title') }} />
+      <Stack.Screen name="index" options={{ title: t('tasks.title'), headerShown: false }} />
       <Stack.Screen name="new" options={{ title: t('tasks.addTitle') }} />
       <Stack.Screen name="[id]" options={{ title: t('tasks.detailTitle') }} />
     </Stack>
