@@ -1357,6 +1357,8 @@
       "activeCount": "{{count}} active medications",
       "tabToday": "Today's doses",
       "tabAll": "All medications",
+      "summaryEmpty": "No doses scheduled today",
+      "browseAll": "Browse all medications",
       "logAction": "Log",
       "doseUnlogged": "Not logged",
       "active": "Active",

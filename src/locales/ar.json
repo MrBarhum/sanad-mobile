@@ -1357,6 +1357,8 @@
       "activeCount": "{{count}} أدوية نشطة",
       "tabToday": "جرعات اليوم",
       "tabAll": "كل الأدوية",
+      "summaryEmpty": "لا جرعات مجدولة اليوم",
+      "browseAll": "استعراض كل الأدوية",
       "logAction": "تسجيل",
       "doseUnlogged": "لم تُسجَّل",
       "active": "فعّال",

@@ -26,7 +26,7 @@ export default function MedicationsLayout() {
         headerShadowVisible: false,
         contentStyle: { backgroundColor: theme.background },
       }}>
-      <Stack.Screen name="index" options={{ title: t('medications.title') }} />
+      <Stack.Screen name="index" options={{ title: t('medications.title'), headerShown: false }} />
       <Stack.Screen name="new" options={{ title: t('medications.addTitle') }} />
       <Stack.Screen name="[id]" options={{ title: t('medications.detailTitle') }} />
     </Stack>

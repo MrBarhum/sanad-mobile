@@ -1,21 +1,15 @@
 import { useRouter } from 'expo-router';
-import { AlertCircle, Check, Clock, Users, X } from 'lucide-react-native';
-import type { ComponentType } from 'react';
+import { AlertCircle, Check, ChevronRight, Clock, Pill, Plus, Users, X } from 'lucide-react-native';
+import type { ComponentType, ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SkeletonList } from '@/components/skeleton';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
-import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
-import { GlyphChip } from '@/components/glyph-chip';
-import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
-import { StatusBadge, type StatusTone } from '@/components/status-badge';
-import { Surface } from '@/components/surface';
-import { type IconName } from '@/constants/icons';
-import { FontFamily, Radius, withAlpha, type ThemeColor } from '@/constants/theme';
+import { SkeletonList } from '@/components/skeleton';
+import { BorderWidth, FontFamily, Radius, type ThemeColor } from '@/constants/theme';
 import { useResponsibleLabel } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
@@ -28,40 +22,23 @@ import { summarizeDoses, type DoseItem } from './today';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
-/** Dose-status colors as theme tokens (AA-safe + mode-adaptive), resolved at render. */
-const DOSE_STATUS: Record<MedicationLogStatus, { colorKey: ThemeColor; Icon: IconCmp }> = {
-  given: { colorKey: 'successFg', Icon: Check },
-  postponed: { colorKey: 'warningFg', Icon: Clock },
-  missed: { colorKey: 'errorFg', Icon: X },
+/** Dose-status → status-square + pill treatment (fill · stroke/text · icon · stroke). */
+const DOSE_STATUS: Record<MedicationLogStatus, { fg: ThemeColor; tint: ThemeColor; Icon: IconCmp }> = {
+  given: { fg: 'successFg', tint: 'successBg', Icon: Check },
+  postponed: { fg: 'warningFg', tint: 'warningBg', Icon: Clock },
+  missed: { fg: 'errorFg', tint: 'errorBg', Icon: X },
 };
 const DOSE_ACTIONS: MedicationLogStatus[] = ['given', 'postponed', 'missed'];
-
-/** Dose status → StatusBadge tone (+ icon override where the tone icon isn't apt). */
-const DOSE_TONE: Record<MedicationLogStatus, { tone: StatusTone; iconName?: IconName }> = {
-  given: { tone: 'success' },
-  postponed: { tone: 'warning', iconName: 'clock' },
-  missed: { tone: 'error' },
-};
-
-/** Per-medication category tint, cycled by index (mirrors the Figma color field). */
-const MED_COLORS = [
-  'categoryBlue',
-  'categoryGreen',
-  'categoryGold',
-  'categoryPurple',
-  'categoryTeal',
-] as const;
 
 type TabKey = 'today' | 'all';
 
 /**
- * The Figma Make MedicationsScreen, recreated as literally as possible in React
- * Native and wired to real Sanad data. Mirrors `MedicationsScreen.tsx`: header
- * (back + title + teal add), a summary pill (doses given today + active meds), a
- * today/all segmented control, today = dose cards with inline given/postponed/
- * missed logging (via the real `useLogDose`), and all = medication rows with Pill
- * chip + dosage + schedule chips + active badge tapping through to the detail
- * screen. Cairo + theme tokens, RTL. No old Sanad Screen/Surface/Section/Button.
+ * The Dar medications list (frames 6a): a deep-green sub-screen band (back + title
+ * + add), a summary pill (doses given today · active count), a today/all segmented
+ * control, the today doses as a grouped card of status-square rows with inline
+ * given/postponed/missed logging (real `useLogDose`), the all-medications cards
+ * (Pill chip + dosage + schedule chips + active badge → detail), and the quiet
+ * empty state. Cairo + Dar tokens, both themes, RTL. Behaviour/data/routing unchanged.
  */
 export function FigmaMedications({
   circleId,
@@ -75,6 +52,7 @@ export function FigmaMedications({
   const { t } = useTranslation();
   const router = useRouter();
   const c = useTheme();
+  const insets = useSafeAreaInsets();
   const date = todayYmd();
 
   const { user } = useAuth();
@@ -110,13 +88,6 @@ export function FigmaMedications({
     [visibleDoses],
   );
 
-  // Stable per-medication accent color (by index in the alphabetical list).
-  const colorByMedId = useMemo(() => {
-    const map = new Map<string, ThemeColor>();
-    meds.forEach((m, i) => map.set(m.id, MED_COLORS[i % MED_COLORS.length]));
-    return map;
-  }, [meds]);
-
   // Active schedules grouped by medication, for the "all" tab's time chips.
   const schedulesByMedId = useMemo(() => {
     const map = new Map<string, MedicationSchedule[]>();
@@ -142,80 +113,116 @@ export function FigmaMedications({
     }
   }
 
-  const muted = { color: c.textSecondary, fontFamily: FontFamily.regular };
+  const band = (
+    <View style={[styles.band, { backgroundColor: c.band, paddingTop: insets.top + 18 }]}>
+      <Pressable
+        onPress={() => router.back()}
+        accessibilityRole="button"
+        accessibilityLabel={t('common.back')}
+        style={[styles.bandBack, { borderColor: c.bandInk }]}>
+        <ChevronRight size={20} color={c.bandInk} strokeWidth={2.4} />
+      </Pressable>
+      <Text style={[styles.bandTitle, { color: c.bandInk }]} numberOfLines={1}>
+        {t('medications.title')}
+      </Text>
+      {canManage ? (
+        <Pressable
+          onPress={() => router.push('/medications/new')}
+          accessibilityRole="button"
+          accessibilityLabel={t('medications.add')}
+          style={[styles.bandAdd, { backgroundColor: c.bandInk }]}>
+          <Plus size={20} color={c.band} strokeWidth={2.6} />
+        </Pressable>
+      ) : (
+        <View style={styles.bandSpacer} />
+      )}
+    </View>
+  );
 
   return (
-    <FigmaScreen gap={16}>
-      <FigmaHeader
-        title={t('medications.title')}
-        onAdd={canManage ? () => router.push('/medications/new') : undefined}
-        addAccessibilityLabel={t('medications.add')}
-      />
-
+    <FigmaScreen band={band} contentGutter={16} gap={12}>
       {/* Summary pill — doses given today + active medication count */}
-      <Surface tone="card" radius={Radius.card} padded={14}>
-        <View style={styles.summaryRow}>
-          <GlyphChip iconName="medication" color="primary" size="md" />
-          <View style={styles.summaryText}>
-            <Text style={[styles.summaryTitle, { color: c.text }]} numberOfLines={1}>
-              {t('figma.medications.summary', { given: String(given), total: String(total) })}
-            </Text>
-            <Text style={[styles.summarySub, muted]} numberOfLines={1}>
-              {t('figma.medications.activeCount', { count: meds.length })}
-            </Text>
-          </View>
+      <View style={[styles.summary, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+        <View style={[styles.summaryIcon, { backgroundColor: c.successBg, borderColor: c.border }]}>
+          <Pill size={20} color={c.successFg} strokeWidth={2} />
         </View>
-      </Surface>
+        <View style={styles.summaryText}>
+          <Text style={[styles.summaryTitle, { color: c.text }]} numberOfLines={1}>
+            {total > 0
+              ? t('figma.medications.summary', { given: String(given), total: String(total) })
+              : t('figma.medications.summaryEmpty')}
+          </Text>
+          <Text style={[styles.summarySub, { color: c.textSecondary }]} numberOfLines={1}>
+            {t('figma.medications.activeCount', { count: meds.length })}
+          </Text>
+        </View>
+      </View>
 
       {/* Tab switcher */}
-      <FigmaSegmentedTabs
-        tabs={[
-          { key: 'today', label: t('figma.medications.tabToday') },
-          { key: 'all', label: t('figma.medications.tabAll') },
-        ]}
-        activeKey={tab}
-        onChange={(key) => setTab(key as TabKey)}
-      />
+      <View style={[styles.tabs, { borderColor: c.border }]}>
+        {(['today', 'all'] as TabKey[]).map((key, i) => {
+          const active = tab === key;
+          return (
+            <Pressable
+              key={key}
+              onPress={() => setTab(key)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              style={[
+                styles.tab,
+                { backgroundColor: active ? c.primary : c.backgroundElement },
+                i > 0 && { borderStartWidth: BorderWidth.standard, borderStartColor: c.border },
+              ]}>
+              <Text
+                style={[
+                  active ? styles.tabActiveLabel : styles.tabLabel,
+                  { color: active ? c.onPrimary : c.textSecondary },
+                ]}>
+                {t(key === 'today' ? 'figma.medications.tabToday' : 'figma.medications.tabAll')}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
 
       {logError ? (
         <View
-          style={[
-            styles.logErrorBanner,
-            { backgroundColor: withAlpha(c.dangerSolid, 0.1), borderColor: withAlpha(c.dangerSolid, 0.25) },
-          ]}
+          style={[styles.logErrorBanner, { backgroundColor: c.errorBg, borderColor: c.errorFg }]}
           accessibilityRole="alert"
           accessibilityLiveRegion="polite">
-          <AlertCircle size={16} color={c.errorFg} />
+          <AlertCircle size={18} color={c.errorFg} strokeWidth={2.2} />
           <Text style={[styles.logErrorText, { color: c.errorFg }]}>{logError}</Text>
         </View>
       ) : null}
 
       {/* Content */}
       {today.isError ? (
-        <Surface tone="card" radius={Radius.card} padded={20}>
-          <Text style={[styles.emptyTitle, { color: c.text }]}>{t('medications.loadError')}</Text>
+        <View style={[styles.errorCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+          <Text style={[styles.errorTitle, { color: c.text }]}>{t('medications.loadError')}</Text>
           <Pressable
             onPress={() => today.refetch()}
             accessibilityRole="button"
             style={[styles.retryBtn, { backgroundColor: c.primary }]}>
             <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
           </Pressable>
-        </Surface>
+        </View>
       ) : today.isLoading ? (
         <SkeletonList />
       ) : tab === 'today' ? (
         visibleDoses.length === 0 ? (
-          <EmptyCard
+          <MedEmpty
             title={t('medications.noDosesTitle')}
             subtitle={t('medications.noDosesSubtitle')}
+            actionLabel={t('figma.medications.browseAll')}
+            onAction={() => setTab('all')}
           />
         ) : (
-          <View style={styles.list}>
-            {orderedDoses.map((dose) => (
+          <View style={[styles.groupCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+            {orderedDoses.map((dose, i) => (
               <DoseCard
                 key={dose.key}
                 dose={dose}
-                color={colorByMedId.get(dose.medicationId) ?? 'categoryBlue'}
+                first={i === 0}
                 responsibleText={canManage ? responsibleLabel(dose.responsibleUserId) : null}
                 canLog={canLog && (canManage || dose.responsibleUserId === userId)}
                 open={openDoseKey === dose.key}
@@ -227,17 +234,13 @@ export function FigmaMedications({
           </View>
         )
       ) : meds.length === 0 ? (
-        <EmptyCard
-          title={t('medications.noMedsTitle')}
-          subtitle={canManage ? t('medications.noMedsSubtitle') : undefined}
-        />
+        <MedEmpty title={t('medications.noMedsTitle')} subtitle={canManage ? t('medications.noMedsSubtitle') : undefined} />
       ) : (
         <View style={styles.list}>
           {meds.map((medication) => (
             <MedicationRow
               key={medication.id}
               medication={medication}
-              color={colorByMedId.get(medication.id) ?? 'categoryBlue'}
               schedules={schedulesByMedId.get(medication.id) ?? []}
               responsibleText={canManage ? responsibleLabel(medication.responsible_user_id) : null}
               onPress={() => router.push(`/medications/${medication.id}`)}
@@ -249,13 +252,14 @@ export function FigmaMedications({
   );
 }
 
-function EmptyCard({ title, subtitle }: { title: string; subtitle?: string }) {
-  return <EmptyState iconName="medication" title={title} subtitle={subtitle} />;
+/** A dose-status square + pill pair, shared by the row and its status tag. */
+function statusVisual(status: MedicationLogStatus | null) {
+  return status ? DOSE_STATUS[status] : null;
 }
 
 function DoseCard({
   dose,
-  color,
+  first,
   responsibleText,
   canLog,
   open,
@@ -264,7 +268,7 @@ function DoseCard({
   onSetStatus,
 }: {
   dose: DoseItem;
-  color: ThemeColor;
+  first: boolean;
   responsibleText: string | null;
   canLog: boolean;
   open: boolean;
@@ -275,13 +279,13 @@ function DoseCard({
   const { t } = useTranslation();
   const c = useTheme();
   const status = dose.status;
-  // Logged doses use their status tone; an unlogged dose is a calm neutral pill
-  // with a clock (still icon + text, never color-only).
-  const pill = status ? DOSE_TONE[status] : { tone: 'neutral' as const, iconName: 'clock' as const };
-  const statusLabel = status
-    ? t(`medications.status.${status}`)
-    : t('figma.medications.doseUnlogged');
+  const cfg = statusVisual(status);
+  const StatusIcon = cfg ? cfg.Icon : Clock;
+  const statusColor = cfg ? c[cfg.fg] : c.textSecondary;
+  const statusBg = cfg ? c[cfg.tint] : c.backgroundSunken;
+  const statusLabel = status ? t(`medications.status.${status}`) : t('figma.medications.doseUnlogged');
   const isLogged = status !== null;
+  const strokeFor = (Icon: IconCmp) => (Icon === Check ? 2.8 : 2.4);
 
   // Correcting an already-logged dose asks for a confirm before overwriting the
   // record; the first log of an unlogged dose still applies on a single tap.
@@ -291,71 +295,53 @@ function DoseCard({
   }, [open]);
 
   function pick(s: MedicationLogStatus) {
-    if (!isLogged) {
-      onSetStatus(s);
-    } else if (s === status) {
-      onToggle(); // same status chosen → nothing to change, just close the tray
-    } else {
-      setConfirmStatus(s);
-    }
+    if (!isLogged) onSetStatus(s);
+    else if (s === status) onToggle();
+    else setConfirmStatus(s);
   }
 
   return (
-    <View>
-      <View style={[styles.doseCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
-        <GlyphChip iconName="medication" color={color} size="md" />
+    <View style={!first && { borderTopWidth: BorderWidth.standard, borderTopColor: c.border }}>
+      <View style={styles.doseRow}>
+        <View style={[styles.doseSquare, { backgroundColor: statusBg, borderColor: c.border }]}>
+          <StatusIcon size={17} color={statusColor} strokeWidth={strokeFor(StatusIcon)} />
+        </View>
         <View style={styles.doseInfo}>
           {/* Name wraps to two lines (never truncated); dosage on its own line. */}
           <Text style={[styles.doseName, { color: c.text }]} numberOfLines={2}>
             {dose.medicationName}
           </Text>
-          {dose.dosage ? (
-            <Text style={[styles.doseDosage, { color: c.textSecondary, fontFamily: FontFamily.regular }]} numberOfLines={1}>
-              {dose.dosage}
-            </Text>
-          ) : null}
+          {dose.dosage ? <Text style={[styles.doseDosage, { color: c.textSecondary }]}>{dose.dosage}</Text> : null}
           <View style={styles.doseMetaRow}>
-            <Clock size={12} color={c.textSecondary} />
-            <Text style={[styles.doseTime, { color: c.textSecondary, fontFamily: FontFamily.regular }]}>
-              {isolateLtr(formatHm(dose.scheduledTime))}
-            </Text>
-            <StatusBadge tone={pill.tone} iconName={pill.iconName} label={statusLabel} />
-          </View>
-          {responsibleText ? (
-            <View style={styles.responsibleRow}>
-              <Users size={12} color={c.textSecondary} />
-              <Text
-                style={[styles.responsibleText, { color: c.textSecondary, fontFamily: FontFamily.regular }]}
-                numberOfLines={1}>
-                {responsibleText}
-              </Text>
+            <Text style={[styles.doseTime, { color: c.text }]}>{isolateLtr(formatHm(dose.scheduledTime))}</Text>
+            <View style={[styles.doseTag, { borderColor: statusColor }]}>
+              <StatusIcon size={12} color={statusColor} strokeWidth={strokeFor(StatusIcon)} />
+              <Text style={[styles.doseTagText, { color: statusColor }]}>{statusLabel}</Text>
             </View>
-          ) : null}
+            {responsibleText ? (
+              <View style={styles.responsibleRow}>
+                <Users size={12} color={c.textSecondary} strokeWidth={2} />
+                <Text style={[styles.responsibleText, { color: c.textSecondary }]} numberOfLines={1}>
+                  {responsibleText}
+                </Text>
+              </View>
+            ) : null}
+          </View>
         </View>
         {canLog ? (
-          // Unlogged → filled "تسجيل"; already logged → quiet "تعديل الحالة" so a
-          // mis-tapped or corrected dose can be fixed (P2-4).
           <Pressable
             onPress={onToggle}
             accessibilityRole="button"
             accessibilityLabel={`${isLogged ? t('medications.editStatus') : t('figma.medications.logAction')} ${dose.medicationName}`}
-            style={
-              isLogged
-                ? [styles.editBtn, { borderColor: withAlpha(c.primary, 0.4) }]
-                : [styles.logBtn, { backgroundColor: c.primary }]
-            }>
-            <Text
-              style={[
-                styles.logBtnText,
-                { color: isLogged ? c.primary : c.onPrimary },
-              ]}>
+            style={isLogged ? [styles.editBtn, { borderColor: c.border }] : [styles.logBtn, { backgroundColor: c.primary }]}>
+            <Text style={[styles.logBtnText, { color: isLogged ? c.text : c.onPrimary }]}>
               {isLogged ? t('medications.editStatus') : t('figma.medications.logAction')}
             </Text>
           </Pressable>
         ) : null}
       </View>
       {open && canLog ? (
-        <View style={[styles.doseActions, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
+        <View style={[styles.doseActions, { backgroundColor: c.backgroundSunken, borderTopColor: c.border }]}>
           {confirmStatus ? (
             <DoseCorrectionConfirm
               nextStatus={confirmStatus}
@@ -367,7 +353,7 @@ function DoseCard({
             DOSE_ACTIONS.map((s) => {
               const a = DOSE_STATUS[s];
               const ActionIcon = a.Icon;
-              const color = c[a.colorKey];
+              const color = c[a.fg];
               const selected = s === status;
               return (
                 <Pressable
@@ -378,12 +364,9 @@ function DoseCard({
                   accessibilityState={{ selected }}
                   style={[
                     styles.doseAction,
-                    {
-                      backgroundColor: withAlpha(color, selected ? 0.22 : 0.12),
-                      opacity: pending ? 0.5 : 1,
-                    },
+                    { backgroundColor: c[a.tint], borderColor: selected ? color : c.border, opacity: pending ? 0.5 : 1 },
                   ]}>
-                  <ActionIcon size={14} color={color} />
+                  <ActionIcon size={14} color={color} strokeWidth={strokeFor(ActionIcon)} />
                   <Text style={[styles.doseActionText, { color }]}>{t(`medications.status.${s}`)}</Text>
                 </Pressable>
               );
@@ -398,7 +381,7 @@ function DoseCard({
 /**
  * Inline confirm shown inside the dose tray when a logged dose's status is being
  * changed — a correction overwrites a real record, so it never applies on a lone
- * tap. Reused visual language: teal confirm + quiet cancel, announced politely.
+ * tap. Reused visual language: green confirm + quiet cancel, announced politely.
  */
 function DoseCorrectionConfirm({
   nextStatus,
@@ -413,7 +396,6 @@ function DoseCorrectionConfirm({
 }) {
   const { t } = useTranslation();
   const c = useTheme();
-
   return (
     <View style={styles.correctionRow}>
       <Text
@@ -439,7 +421,7 @@ function DoseCorrectionConfirm({
           disabled={pending}
           accessibilityRole="button"
           style={[styles.correctionCancel, { borderColor: c.border }]}>
-          <Text style={[styles.correctionCancelText, { color: c.textSecondary }]}>{t('common.cancel')}</Text>
+          <Text style={[styles.correctionCancelText, { color: c.text }]}>{t('common.cancel')}</Text>
         </Pressable>
       </View>
     </View>
@@ -448,13 +430,11 @@ function DoseCorrectionConfirm({
 
 function MedicationRow({
   medication,
-  color,
   schedules,
   responsibleText,
   onPress,
 }: {
   medication: Medication;
-  color: ThemeColor;
   schedules: MedicationSchedule[];
   responsibleText: string | null;
   onPress: () => void;
@@ -495,14 +475,16 @@ function MedicationRow({
       accessibilityHint={t('medications.tapToEdit')}
       style={[styles.medCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
       <View style={styles.medTop}>
-        <GlyphChip iconName="medication" color={color} size="md" />
+        <View style={[styles.medIcon, { backgroundColor: c.primaryBg, borderColor: c.border }]}>
+          <Pill size={20} color={c.primaryText} strokeWidth={2} />
+        </View>
         <View style={styles.medText}>
-          {/* Name wraps to two lines (never truncated); dosage already on its own line. */}
+          {/* Name wraps to two lines (never truncated); dosage on its own line. */}
           <Text style={[styles.medName, { color: c.text }]} numberOfLines={2}>
             {medication.name}
           </Text>
           {medication.dosage ? (
-            <Text style={[styles.medDosage, { color: c.textSecondary, fontFamily: FontFamily.regular }]} numberOfLines={1}>
+            <Text style={[styles.medDosage, { color: c.textSecondary }]} numberOfLines={1}>
               {medication.dosage}
             </Text>
           ) : null}
@@ -510,15 +492,11 @@ function MedicationRow({
         <View
           style={[
             styles.activeBadge,
-            {
-              backgroundColor: active ? withAlpha(c.successFg, 0.12) : c.backgroundSunken,
-            },
+            active
+              ? { backgroundColor: c.successBg, borderColor: c.successFg }
+              : { backgroundColor: c.backgroundSunken, borderColor: c.border },
           ]}>
-          <Text
-            style={[
-              styles.activeBadgeText,
-              { color: active ? c.successFg : c.textSecondary },
-            ]}>
+          <Text style={[styles.activeBadgeText, { color: active ? c.successFg : c.textSecondary }]}>
             {active ? t('figma.medications.active') : t('figma.medications.inactive')}
           </Text>
         </View>
@@ -530,9 +508,9 @@ function MedicationRow({
             <View
               key={`${chip.time}-${i}`}
               style={[styles.scheduleChip, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
-              <Clock size={12} color={c.primary} />
+              <Clock size={12} color={c.primaryText} strokeWidth={2.2} />
               <Text style={[styles.chipTime, { color: c.text }]}>{isolateLtr(formatHm(chip.time))}</Text>
-              <Text style={[styles.chipDays, { color: c.textSecondary, fontFamily: FontFamily.regular }]} numberOfLines={1}>
+              <Text style={[styles.chipDays, { color: c.textSecondary }]} numberOfLines={1}>
                 {chip.days}
               </Text>
             </View>
@@ -541,10 +519,8 @@ function MedicationRow({
       ) : null}
       {responsibleText ? (
         <View style={styles.responsibleRow}>
-          <Users size={12} color={c.textSecondary} />
-          <Text
-            style={[styles.responsibleText, { color: c.textSecondary, fontFamily: FontFamily.regular }]}
-            numberOfLines={1}>
+          <Users size={12} color={c.textSecondary} strokeWidth={2} />
+          <Text style={[styles.responsibleText, { color: c.textSecondary }]} numberOfLines={1}>
             {responsibleText}
           </Text>
         </View>
@@ -553,135 +529,236 @@ function MedicationRow({
   );
 }
 
+/** The Dar quiet empty: a tinted 68px circle + ok check, title, reassuring line,
+ *  an optional gold-diamond divider + a bordered browse action. */
+function MedEmpty({
+  title,
+  subtitle,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  subtitle?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}): ReactNode {
+  const c = useTheme();
+  return (
+    <View style={[styles.empty, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
+      <View style={[styles.emptyCircle, { backgroundColor: c.successBg, borderColor: c.border }]}>
+        <Check size={28} color={c.successFg} strokeWidth={2} />
+      </View>
+      <Text style={[styles.emptyTitle, { color: c.text }]}>{title}</Text>
+      {subtitle ? <Text style={[styles.emptySub, { color: c.textSecondary }]}>{subtitle}</Text> : null}
+      {actionLabel && onAction ? (
+        <>
+          <View style={styles.emptyDivider}>
+            <View style={[styles.emptyRule, { backgroundColor: c.backgroundSunken }]} />
+            <View style={[styles.emptyDiamond, { backgroundColor: c.goldFill }]} />
+            <View style={[styles.emptyRule, { backgroundColor: c.backgroundSunken }]} />
+          </View>
+          <Pressable
+            onPress={onAction}
+            accessibilityRole="button"
+            style={[styles.emptyAction, { borderColor: c.border }]}>
+            <Text style={[styles.emptyActionText, { color: c.text }]}>{actionLabel}</Text>
+          </Pressable>
+        </>
+      ) : null}
+    </View>
+  );
+}
+
+const R8 = Radius.card; // 8
+const R6 = Radius.control; // 6
+
 const styles = StyleSheet.create({
-  list: { gap: 12 },
-  loading: { paddingVertical: 40, alignItems: 'center' },
+  // Header band
+  band: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingBottom: 18 },
+  bandBack: {
+    width: 44,
+    height: 44,
+    borderWidth: BorderWidth.standard,
+    borderRadius: R8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  bandTitle: { flex: 1, textAlign: 'center', fontSize: 20, fontFamily: FontFamily.bold },
+  bandAdd: { width: 44, height: 44, borderRadius: R8, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  bandSpacer: { width: 44, flexShrink: 0 },
+  // Summary pill
+  summary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: BorderWidth.standard,
+    borderRadius: R8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  summaryIcon: {
+    width: 44,
+    height: 44,
+    borderWidth: BorderWidth.standard,
+    borderRadius: R8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  summaryText: { flex: 1, minWidth: 0 },
+  summaryTitle: { fontSize: 16, fontFamily: FontFamily.bold, lineHeight: 24 },
+  summarySub: { fontSize: 14, fontFamily: FontFamily.medium },
+  // Segmented tabs
+  tabs: { flexDirection: 'row', borderWidth: BorderWidth.standard, borderRadius: R8, overflow: 'hidden' },
+  tab: { flex: 1, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
+  tabActiveLabel: { fontSize: 16, fontFamily: FontFamily.bold },
+  tabLabel: { fontSize: 16, fontFamily: FontFamily.semibold },
+  // Log-error banner
   logErrorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: R8,
+    borderWidth: BorderWidth.standard,
     paddingHorizontal: 14,
     paddingVertical: 12,
     minHeight: 48,
   },
   logErrorText: { flex: 1, fontSize: 14, fontFamily: FontFamily.medium },
-  // Summary pill
-  summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  summaryText: { flex: 1, gap: 2 },
-  summaryTitle: { fontSize: 14, fontFamily: FontFamily.semibold },
-  summarySub: { fontSize: 14 },
-  // Empty / error
-  emptyTitle: { fontSize: 15, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  // Error card
+  errorCard: { borderWidth: BorderWidth.standard, borderRadius: R8, padding: 20 },
+  errorTitle: { fontSize: 16, fontFamily: FontFamily.bold, textAlign: 'center' },
   retryBtn: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: Radius.md,
-    paddingHorizontal: 16,
+    borderRadius: R6,
+    paddingHorizontal: 18,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  // Dose card (today)
-  doseCard: {
+  retryText: { fontSize: 15, fontFamily: FontFamily.bold },
+  // Lists
+  list: { gap: 12 },
+  groupCard: { borderWidth: BorderWidth.standard, borderRadius: R8, overflow: 'hidden' },
+  // Dose rows
+  doseRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', paddingVertical: 12, paddingHorizontal: 14 },
+  doseSquare: {
+    width: 40,
+    height: 40,
+    borderWidth: BorderWidth.standard,
+    borderRadius: R6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  doseInfo: { flex: 1, minWidth: 0 },
+  doseName: { fontSize: 16, fontFamily: FontFamily.bold, lineHeight: 24 },
+  doseDosage: { fontSize: 14, fontFamily: FontFamily.medium, marginTop: 1 },
+  doseMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 },
+  doseTime: { fontSize: 14, fontFamily: FontFamily.semibold, writingDirection: 'ltr' },
+  doseTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    borderRadius: Radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    gap: 5,
+    borderWidth: BorderWidth.thin,
+    borderRadius: Radius.tiny,
+    paddingHorizontal: 9,
+    paddingVertical: 2,
   },
-  doseInfo: { flex: 1, gap: 4 },
-  doseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  doseName: { fontSize: 15, fontFamily: FontFamily.semibold, flexShrink: 1 },
-  doseDosage: { fontSize: 14, flexShrink: 1 },
-  doseMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  doseTime: { fontSize: 14 },
-  logBtn: {
-    borderRadius: Radius.md,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    minHeight: 40,
-    justifyContent: 'center',
-  },
+  doseTagText: { fontSize: 14, fontFamily: FontFamily.semibold },
+  logBtn: { borderRadius: R6, paddingHorizontal: 16, paddingVertical: 8, justifyContent: 'center', flexShrink: 0 },
   editBtn: {
-    borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    minHeight: 40,
+    borderWidth: BorderWidth.standard,
+    borderRadius: R6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  logBtnText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  doseActions: {
-    flexDirection: 'row',
-    gap: 8,
-    borderRadius: Radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 12,
-    marginTop: 6,
-  },
-  // Dose correction confirm (inside the tray)
-  correctionRow: { flex: 1, gap: 10 },
-  correctionText: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 20 },
-  correctionActions: { flexDirection: 'row', gap: 8 },
-  correctionConfirm: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radius.md,
-    minHeight: 44,
-  },
-  correctionConfirmText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  correctionCancel: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    minHeight: 44,
-  },
-  correctionCancelText: { fontSize: 14, fontFamily: FontFamily.semibold },
+  logBtnText: { fontSize: 15, fontFamily: FontFamily.bold },
+  // Dose action tray
+  doseActions: { flexDirection: 'row', gap: 8, borderTopWidth: BorderWidth.standard, padding: 12 },
   doseAction: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    borderRadius: Radius.md,
-    paddingVertical: 12,
+    borderWidth: BorderWidth.thin,
+    borderRadius: R6,
+    paddingVertical: 10,
     minHeight: 44,
   },
   doseActionText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  // Medication row (all)
-  medCard: {
-    borderRadius: Radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 16,
-    gap: 12,
+  correctionRow: { flex: 1, gap: 10 },
+  correctionText: { fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 22 },
+  correctionActions: { flexDirection: 'row', gap: 8 },
+  correctionConfirm: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: R6,
+    minHeight: 44,
   },
+  correctionConfirmText: { fontSize: 15, fontFamily: FontFamily.bold },
+  correctionCancel: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: BorderWidth.standard,
+    borderRadius: R6,
+    minHeight: 44,
+  },
+  correctionCancelText: { fontSize: 15, fontFamily: FontFamily.bold },
+  // Medication row (all)
+  medCard: { borderWidth: BorderWidth.standard, borderRadius: R8, padding: 14, gap: 12 },
   medTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  medText: { flex: 1, gap: 2 },
-  medName: { fontSize: 16, fontFamily: FontFamily.bold },
-  medDosage: { fontSize: 14 },
-  activeBadge: { borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
+  medIcon: {
+    width: 40,
+    height: 40,
+    borderWidth: BorderWidth.standard,
+    borderRadius: R6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  medText: { flex: 1, minWidth: 0 },
+  medName: { fontSize: 16, fontFamily: FontFamily.bold, lineHeight: 24 },
+  medDosage: { fontSize: 14, fontFamily: FontFamily.medium },
+  activeBadge: { borderWidth: BorderWidth.thin, borderRadius: Radius.tiny, paddingHorizontal: 9, paddingVertical: 2, flexShrink: 0 },
   activeBadgeText: { fontSize: 14, fontFamily: FontFamily.semibold },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   scheduleChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    borderRadius: Radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: BorderWidth.standard,
+    borderRadius: R6,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  chipTime: { fontSize: 14, fontFamily: FontFamily.medium },
-  chipDays: { fontSize: 14 },
-  responsibleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  responsibleText: { fontSize: 14 },
+  chipTime: { fontSize: 14, fontFamily: FontFamily.medium, writingDirection: 'ltr' },
+  chipDays: { fontSize: 14, fontFamily: FontFamily.medium },
+  responsibleRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  responsibleText: { fontSize: 14, fontFamily: FontFamily.medium, flexShrink: 1 },
+  // Empty state
+  empty: { borderWidth: BorderWidth.standard, borderRadius: R8, paddingVertical: 36, paddingHorizontal: 24, alignItems: 'center' },
+  emptyCircle: {
+    width: 68,
+    height: 68,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: { fontSize: 20, fontFamily: FontFamily.bold, marginTop: 16, textAlign: 'center' },
+  emptySub: { fontSize: 16, fontFamily: FontFamily.medium, lineHeight: 28, marginTop: 4, textAlign: 'center' },
+  emptyDivider: { flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'stretch', marginVertical: 18, marginHorizontal: 8 },
+  emptyRule: { flex: 1, height: 1.5 },
+  emptyDiamond: { width: 7, height: 7, transform: [{ rotate: '45deg' }] },
+  emptyAction: { borderWidth: BorderWidth.standard, borderRadius: R6, paddingHorizontal: 24, paddingVertical: 9 },
+  emptyActionText: { fontSize: 16, fontFamily: FontFamily.bold },
 });
