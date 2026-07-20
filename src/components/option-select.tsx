@@ -1,10 +1,8 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Check } from 'lucide-react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Glyph } from '@/constants/glyphs';
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-
-import { ThemedText } from './themed-text';
 
 export type SelectOption<T extends string> = {
   value: T;
@@ -20,23 +18,19 @@ type OptionSelectProps<T extends string> = {
   onChange: (value: T) => void;
   disabled?: boolean;
   /**
-   * `chip` (default) — a wrap of compact segmented chips.
+   * `chip` (default) — a wrap of compact Dar chips (2px border, radius 8; selected =
+   * `btn` fill + `btnInk` + a leading check).
    * `card` — full-width stacked cards with a radio + title + optional description
-   * (the "pick one, with explanation" choice, e.g. a role picker).
+   * (selected = `acc` border + `tacc` fill + a filled radio).
    */
   variant?: 'chip' | 'card';
 };
 
 /**
- * A labeled single-choice selector — the ONE selection primitive for category /
- * priority / type / unit / role enums on the care forms.
- *
- * Each option is a FULL-AREA Pressable with a clearly visible outline so it reads
- * as a tappable control, never loose text: unselected = soft neutral fill +
- * hairline; selected = brand tint + brand border + a leading check + bold label,
- * so the choice is never carried by color alone (a11y). Meets the 48dp touch
- * floor, RTL-safe, identical on web + native. `chip` wraps compact pills; `card`
- * stacks full-width rows with a radio + title + optional description.
+ * The Dar single-choice selector — the ONE selection primitive for category /
+ * priority / type / unit / role enums on the care forms. Each option is a
+ * full-area Pressable; the selection is never carried by colour alone (a leading
+ * check + bold label). Meets the 48dp touch floor, RTL-safe.
  */
 export function OptionSelect<T extends string>({
   label,
@@ -46,11 +40,11 @@ export function OptionSelect<T extends string>({
   disabled = false,
   variant = 'chip',
 }: OptionSelectProps<T>) {
-  const theme = useTheme();
+  const c = useTheme();
 
   return (
     <View style={styles.field}>
-      {label ? <ThemedText type="smallBold">{label}</ThemedText> : null}
+      {label ? <Text style={[styles.groupLabel, { color: c.text }]}>{label}</Text> : null}
       {variant === 'card' ? (
         <View style={styles.cardList}>
           {options.map((option) => {
@@ -66,8 +60,8 @@ export function OptionSelect<T extends string>({
                 style={({ pressed }) => [
                   styles.optionCard,
                   {
-                    backgroundColor: selected ? theme.primaryBg : theme.backgroundSelected,
-                    borderColor: selected ? theme.primary : theme.border,
+                    backgroundColor: selected ? c.primaryBg : c.backgroundElement,
+                    borderColor: selected ? c.primaryText : c.border,
                   },
                   pressed && !disabled && styles.pressed,
                   disabled && styles.disabled,
@@ -75,20 +69,17 @@ export function OptionSelect<T extends string>({
                 <View
                   style={[
                     styles.radio,
-                    { borderColor: selected ? theme.primary : theme.border, backgroundColor: selected ? theme.primary : 'transparent' },
+                    { borderColor: selected ? c.primaryText : c.border, backgroundColor: selected ? c.primary : 'transparent' },
                   ]}>
-                  {selected ? (
-                    <ThemedText style={[styles.radioCheck, { color: theme.onPrimary }]}>{Glyph.check}</ThemedText>
-                  ) : null}
+                  {selected ? <Check size={13} color={c.onPrimary} strokeWidth={2.8} /> : null}
                 </View>
                 <View style={styles.optionText}>
-                  <ThemedText type={selected ? 'smallBold' : 'small'} themeColor={selected ? 'primaryText' : 'text'}>
+                  <Text
+                    style={[styles.cardTitle, { color: c.text, fontFamily: selected ? FontFamily.bold : FontFamily.semibold }]}>
                     {option.label}
-                  </ThemedText>
+                  </Text>
                   {option.description ? (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {option.description}
-                    </ThemedText>
+                    <Text style={[styles.cardDesc, { color: c.textSecondary }]}>{option.description}</Text>
                   ) : null}
                 </View>
               </Pressable>
@@ -109,18 +100,18 @@ export function OptionSelect<T extends string>({
                 accessibilityLabel={option.label}
                 style={({ pressed }) => [
                   styles.chip,
-                  {
-                    backgroundColor: selected ? theme.primaryBg : theme.backgroundSelected,
-                    borderColor: selected ? theme.primary : theme.border,
-                  },
+                  { backgroundColor: selected ? c.primary : c.backgroundElement, borderColor: c.border },
                   pressed && !disabled && styles.pressed,
                   disabled && styles.disabled,
                 ]}>
-                <ThemedText
-                  type={selected ? 'smallBold' : 'small'}
-                  themeColor={selected ? 'primaryText' : 'text'}>
-                  {selected ? `${Glyph.check} ${option.label}` : option.label}
-                </ThemedText>
+                {selected ? <Check size={13} color={c.onPrimary} strokeWidth={2.8} /> : null}
+                <Text
+                  style={[
+                    styles.chipText,
+                    { color: selected ? c.onPrimary : c.textSecondary, fontFamily: selected ? FontFamily.bold : FontFamily.semibold },
+                  ]}>
+                  {option.label}
+                </Text>
               </Pressable>
             );
           })}
@@ -131,39 +122,43 @@ export function OptionSelect<T extends string>({
 }
 
 const styles = StyleSheet.create({
-  field: { gap: Spacing.two },
-  options: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  field: { gap: 8 },
+  groupLabel: { fontSize: 15, fontFamily: FontFamily.semibold },
+  options: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
-    minHeight: TouchTarget.min,
-    borderRadius: Radius.pill,
-    borderWidth: 1.5,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+    minHeight: 44,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
   },
-  cardList: { gap: Spacing.two },
+  chipText: { fontSize: 15 },
+  cardList: { gap: 8 },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: Spacing.three,
-    minHeight: TouchTarget.min,
-    borderRadius: Radius.md,
-    borderWidth: 1.5,
-    paddingVertical: Spacing.three - 2,
-    paddingHorizontal: Spacing.three,
+    gap: 12,
+    minHeight: 48,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
   radio: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    borderWidth: 2,
+    borderWidth: BorderWidth.standard,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
   },
-  radioCheck: { fontSize: 13, lineHeight: 15, fontWeight: '800' },
   optionText: { flex: 1, gap: 2 },
+  cardTitle: { fontSize: 16, lineHeight: 24 },
+  cardDesc: { fontSize: 14, fontFamily: FontFamily.medium, lineHeight: 22 },
   pressed: { opacity: 0.7 },
   disabled: { opacity: 0.5 },
 });

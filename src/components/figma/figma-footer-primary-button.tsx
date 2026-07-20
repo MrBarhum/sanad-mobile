@@ -1,5 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
+import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type FigmaFooterPrimaryButtonProps = {
@@ -46,7 +47,7 @@ export function FigmaFooterPrimaryButton({
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ busy: loading }}
-      style={[styles.button, { backgroundColor: theme.primary }]}>
+      style={[styles.button, { backgroundColor: theme.primary, borderColor: theme.border }]}>
       {loading ? (
         <ActivityIndicator color={theme.onPrimary} />
       ) : (
@@ -59,11 +60,13 @@ export function FigmaFooterPrimaryButton({
 const styles = StyleSheet.create({
   button: {
     width: '100%',
-    minHeight: 56,
-    borderRadius: 12,
+    minHeight: 52,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
     paddingHorizontal: 20,
+    paddingVertical: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: { fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  label: { fontSize: 17, fontFamily: FontFamily.bold, textAlign: 'center' },
 });

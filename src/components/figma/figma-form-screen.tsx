@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react-native';
+import { ChevronRight, Info } from 'lucide-react-native';
 import { type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
@@ -10,18 +10,17 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
-import { FontFamily, Gutter, Radius, Spacing } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 /**
- * The "add screen" shell: a fixed header (rounded back button + stacked
- * title/subtitle + hairline divider), an optional full-bleed gold disclaimer
- * banner, a scrolling stack of cards, and the save footer.
- *
- * Colors and type both come from the single token system (theme.ts + Cairo
- * Sans Arabic). The caller passes the save button as `footer` so each screen keeps
- * its own disabled/loading/error wiring.
+ * The Dar "add / edit" form shell: a full-bleed deep-green header band (bordered
+ * back square + stacked title/subtitle), an optional gold non-diagnostic banner as
+ * the first bordered card, a scrolling stack of cards, and the save footer as the
+ * last in-flow block. Cairo + Dar tokens, both themes, RTL. The caller passes the
+ * save button as `footer` so each screen keeps its own loading/error wiring.
  */
 export function FigmaFormScreen({
   title,
@@ -40,91 +39,85 @@ export function FigmaFormScreen({
   footer?: ReactNode;
   children: ReactNode;
 }) {
-  const theme = useTheme();
+  const { t } = useTranslation();
+  const c = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.fill, { backgroundColor: theme.background }]}>
-      <KeyboardAvoidingView
-        style={styles.fill}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {/* Header */}
-        <View
-          style={[
-            styles.header,
-            { paddingTop: insets.top + Spacing.two, borderBottomColor: theme.divider },
-          ]}>
+    <View style={[styles.fill, { backgroundColor: c.background }]}>
+      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {/* Header band */}
+        <View style={[styles.band, { backgroundColor: c.band, paddingTop: insets.top + 16 }]}>
           <Pressable
             onPress={onBack}
             accessibilityRole="button"
-            accessibilityLabel={title}
-            style={[styles.backButton, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-            {/* ArrowRight = "back" in RTL (points toward the start edge) — matches FigmaHeader. */}
-            <ArrowRight size={20} color={theme.text} />
+            accessibilityLabel={t('common.back')}
+            style={[styles.backButton, { borderColor: c.bandInk }]}>
+            <ChevronRight size={20} color={c.bandInk} strokeWidth={2.4} />
           </Pressable>
           <View style={styles.headerText}>
-            <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
+            <Text style={[styles.headerTitle, { color: c.bandInk }]} numberOfLines={1}>
               {title}
             </Text>
             {subtitle ? (
-              <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+              <Text style={[styles.headerSubtitle, { color: c.bandInk }]} numberOfLines={1}>
                 {subtitle}
               </Text>
             ) : null}
           </View>
+          <View style={styles.headerSpacer} />
         </View>
-
-        {/* Medical / non-diagnostic disclaimer banner (gold) — only when provided. */}
-        {disclaimer ? (
-          <View style={[styles.banner, { backgroundColor: theme.accentBg }]}>
-            <Text style={[styles.bannerText, { color: theme.accentFg }]}>{disclaimer}</Text>
-          </View>
-        ) : null}
 
         <ScrollView
           style={styles.fill}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.four }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          {children}
-
-          {/* Inline footer (fallback) — rendered as the FINAL block INSIDE the
-              ScrollView content, NOT pinned. Pinned/KAV-sibling footers proved
-              invisible on the Android device, so the CTA lives in the normal scroll
-              flow as the last visible block; on long forms the user scrolls to
-              reach it. Its own bottom padding clears the Android nav / safe area,
-              and it stretches full-width like the form cards above it. */}
-          {footer ? (
-            <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.three }]}>
-              {footer}
+          {/* Gold non-diagnostic disclaimer (first card) — only when provided. */}
+          {disclaimer ? (
+            <View style={[styles.banner, { backgroundColor: c.goldFill, borderColor: c.border }]}>
+              <Info size={20} color={c.goldInk} strokeWidth={2.2} style={styles.bannerIcon} />
+              <Text style={[styles.bannerText, { color: c.goldInk }]}>{disclaimer}</Text>
             </View>
           ) : null}
+
+          {children}
+
+          {/* Inline footer — the FINAL block INSIDE the ScrollView (not pinned; a
+              pinned KAV-sibling footer proved invisible on Android). */}
+          {footer ? <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>{footer}</View> : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
 }
 
-/** The muted card section label (14 / 600 / muted). */
+/** The Dar card section header: a 10×10 solid `btn` square + a 16/800 title. */
 export function FigmaSectionLabel({ children }: { children: ReactNode }) {
-  const theme = useTheme();
-  return <Text style={[styles.sectionLabel, { color: theme.textMuted }]}>{children}</Text>;
+  const c = useTheme();
+  return (
+    <View style={styles.sectionHeader}>
+      <View style={[styles.sectionSquare, { backgroundColor: c.primary }]} />
+      <Text style={[styles.sectionTitle, { color: c.text }]}>{children}</Text>
+    </View>
+  );
 }
 
-/** A field label (14 / 600 / textSecondary) with an optional required mark. */
+/** A field label (15 / 700) with an optional « (مطلوب)» marker in the danger tone. */
 export function FigmaFieldLabel({ label, required }: { label: string; required?: boolean }) {
-  const theme = useTheme();
+  const { t } = useTranslation();
+  const c = useTheme();
   return (
-    <Text style={[styles.fieldLabel, { color: theme.textSecondary }]}>
+    <Text style={[styles.fieldLabel, { color: c.text }]}>
       {label}
-      {required ? <Text style={{ color: theme.errorFg }}> *</Text> : null}
+      {required ? <Text style={{ color: c.errorFg }}>{` (${t('common.required')})`}</Text> : null}
     </Text>
   );
 }
 
 /**
- * A pill toggle: a 48×28 track with a white thumb that slides to the trailing edge
- * when on. Accessible as a switch; the caller owns the boolean.
+ * The Dar brand toggle (48×28 pill): 2px-thin border, `sunken` off / `btn` on, a
+ * `card`-colored thumb with a border. Accessible as a switch; the caller owns the boolean.
  */
 export function FigmaSwitch({
   value,
@@ -135,7 +128,7 @@ export function FigmaSwitch({
   onValueChange: (next: boolean) => void;
   accessibilityLabel?: string;
 }) {
-  const theme = useTheme();
+  const c = useTheme();
   return (
     <Pressable
       onPress={() => onValueChange(!value)}
@@ -145,28 +138,23 @@ export function FigmaSwitch({
       style={[
         styles.switchTrack,
         {
-          backgroundColor: value ? theme.primary : theme.backgroundSunken,
-          borderColor: value ? theme.primary : theme.border,
-          // RTL-aware via flexbox: off = leading edge, on = trailing edge.
+          backgroundColor: value ? c.primary : c.backgroundSunken,
+          borderColor: value ? c.primary : c.border,
           justifyContent: value ? 'flex-end' : 'flex-start',
         },
       ]}>
-      <View style={styles.switchThumb} />
+      <View style={[styles.switchThumb, { backgroundColor: c.backgroundElement, borderColor: c.border }]} />
     </Pressable>
   );
 }
 
 /** A small muted explanatory line (e.g. the non-medical coordination disclaimers). */
 export function FigmaMutedNote({ children }: { children: ReactNode }) {
-  const theme = useTheme();
-  return <Text style={[styles.mutedNote, { color: theme.textSecondary }]}>{children}</Text>;
+  const c = useTheme();
+  return <Text style={[styles.mutedNote, { color: c.textSecondary }]}>{children}</Text>;
 }
 
-/**
- * A label + optional hint on the start, a pill switch on the end — the "with food"
- * / "link to my account" row. Optional top divider for when it follows other
- * fields inside the same card.
- */
+/** A label + optional hint on the start, a pill switch on the end. */
 export function FigmaToggleRow({
   label,
   hint,
@@ -180,14 +168,14 @@ export function FigmaToggleRow({
   onValueChange: (next: boolean) => void;
   topDivider?: boolean;
 }) {
-  const theme = useTheme();
+  const c = useTheme();
   return (
     <View>
-      {topDivider ? <View style={[styles.toggleDivider, { backgroundColor: theme.divider }]} /> : null}
+      {topDivider ? <View style={[styles.toggleDivider, { backgroundColor: c.border }]} /> : null}
       <View style={styles.toggleRow}>
         <View style={styles.toggleText}>
-          <Text style={[styles.toggleLabel, { color: theme.text }]}>{label}</Text>
-          {hint ? <Text style={[styles.toggleHint, { color: theme.textSecondary }]}>{hint}</Text> : null}
+          <Text style={[styles.toggleLabel, { color: c.text }]}>{label}</Text>
+          {hint ? <Text style={[styles.toggleHint, { color: c.textSecondary }]}>{hint}</Text> : null}
         </View>
         <FigmaSwitch value={value} onValueChange={onValueChange} accessibilityLabel={label} />
       </View>
@@ -197,60 +185,52 @@ export function FigmaToggleRow({
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingHorizontal: Gutter,
-    paddingBottom: Spacing.three,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  // Matches FigmaHeader's canonical round back affordance (44dp pill).
+  band: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 16 },
   backButton: {
     width: 44,
     height: 44,
-    borderRadius: Radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  headerText: { flex: 1 },
-  headerTitle: { fontSize: 18, fontFamily: FontFamily.bold },
-  // Raised to the 14 content floor (was 12).
-  headerSubtitle: { fontSize: 14, fontFamily: FontFamily.regular, marginTop: 1 },
-  banner: { paddingVertical: 10, paddingHorizontal: Gutter },
-  bannerText: { fontSize: 14, lineHeight: 21, fontFamily: FontFamily.regular },
-  scrollContent: { paddingHorizontal: Gutter, paddingTop: Spacing.three, gap: Spacing.three },
-  // Inline footer block: extra separation above the CTA beyond the scroll-content
-  // gap. Horizontal inset comes from scrollContent's padding; bottom (safe-area)
-  // padding is applied inline at the call site.
-  footer: { marginTop: Spacing.two },
-  sectionLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
-  fieldLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  headerText: { flex: 1, minWidth: 0 },
+  headerTitle: { fontSize: 20, fontFamily: FontFamily.bold, lineHeight: 28 },
+  headerSubtitle: { fontSize: 14, fontFamily: FontFamily.medium, opacity: 0.85, marginTop: 1 },
+  headerSpacer: { width: 44, flexShrink: 0 },
+  scrollContent: { paddingHorizontal: 14, paddingTop: 14, gap: 12 },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  bannerIcon: { marginTop: 2 },
+  bannerText: { flex: 1, fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 25 },
+  footer: { marginTop: 8 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sectionSquare: { width: 10, height: 10 },
+  sectionTitle: { fontSize: 16, fontFamily: FontFamily.bold },
+  fieldLabel: { fontSize: 15, fontFamily: FontFamily.semibold },
   switchTrack: {
     width: 48,
     height: 28,
-    borderRadius: 14,
-    borderWidth: 1.5,
+    borderRadius: Radius.pill,
+    borderWidth: BorderWidth.thin,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 2,
+    flexShrink: 0,
   },
-  switchThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-  },
-  mutedNote: { fontSize: 14, lineHeight: 21, fontFamily: FontFamily.regular },
-  toggleDivider: { height: StyleSheet.hairlineWidth, marginBottom: Spacing.three },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
-  },
+  switchThumb: { width: 20, height: 20, borderRadius: 10, borderWidth: BorderWidth.thin },
+  mutedNote: { fontSize: 14, lineHeight: 22, fontFamily: FontFamily.medium },
+  toggleDivider: { height: BorderWidth.standard, marginBottom: 12 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   toggleText: { flex: 1, gap: 2 },
-  toggleLabel: { fontSize: 15, fontFamily: FontFamily.regular },
-  toggleHint: { fontSize: 14, fontFamily: FontFamily.regular },
+  toggleLabel: { fontSize: 15, fontFamily: FontFamily.medium },
+  toggleHint: { fontSize: 14, fontFamily: FontFamily.medium },
 });

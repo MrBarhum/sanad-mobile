@@ -1,46 +1,49 @@
+import { AlertCircle } from 'lucide-react-native';
 import { useState } from 'react';
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
-import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-
-import { ThemedText } from './themed-text';
 
 type FormFieldProps = TextInputProps & {
   label?: string;
   error?: string | null;
-  /** Adds a required `*` after the label. */
+  /** Appends « (مطلوب)» to the label in the danger tone. */
   required?: boolean;
   /** Quiet helper line under the input (hidden while an error shows). */
   hint?: string;
 };
 
 /**
- * Labeled, themed text input used by the care forms. Adds an inline label, an
- * optional error and a clear focus ring (brand-colored border) so the active
- * field is always obvious — important under keyboard navigation and for older
- * users. Direction follows the app's RTL/LTR setting (no hardcoded textAlign),
- * so Arabic content aligns to the start automatically. Pass `multiline` for
- * notes fields. All standard TextInput props pass through.
+ * The Dar labeled text field used across the care forms: a 15/700 label (+ a
+ * «(مطلوب)» marker in the danger tone), a 2px-bordered `sunken` input at radius 8
+ * with a 16px value, an `acc` focus ring, and a `terr`+`err` validation state with
+ * an icon + 15/700 message. Direction follows the app RTL/LTR (no hardcoded
+ * textAlign), so Arabic aligns to the start. Pass `multiline` for notes. All
+ * standard TextInput props pass through.
  */
 export function FormField({ label, error, required, hint, style, multiline, onFocus, onBlur, ...rest }: FormFieldProps) {
-  const theme = useTheme();
+  const { t } = useTranslation();
+  const c = useTheme();
   const [focused, setFocused] = useState(false);
 
-  const borderColor = error ? theme.errorFg : focused ? theme.primary : theme.border;
+  const borderColor = error ? c.errorFg : focused ? c.primaryText : c.border;
+  const backgroundColor = error ? c.errorBg : c.backgroundSunken;
 
   return (
     <View style={styles.field}>
       {label ? (
-        <ThemedText type="smallBold">
+        <Text style={[styles.label, { color: c.text }]}>
           {label}
-          {required ? <ThemedText style={{ color: theme.errorFg }}> *</ThemedText> : null}
-        </ThemedText>
+          {required ? <Text style={{ color: c.errorFg }}>{` (${t('common.required')})`}</Text> : null}
+        </Text>
       ) : null}
       <TextInput
-        placeholderTextColor={theme.textMuted}
+        placeholderTextColor={c.textSecondary}
         accessibilityLabel={label}
         multiline={multiline}
+        textAlignVertical={multiline ? 'top' : 'center'}
         onFocus={(e) => {
           setFocused(true);
           onFocus?.(e);
@@ -51,46 +54,37 @@ export function FormField({ label, error, required, hint, style, multiline, onFo
         }}
         style={[
           styles.input,
-          { fontFamily: FontFamily.regular },
           multiline && styles.multiline,
-          focused && styles.inputFocused,
-          {
-            color: theme.text,
-            backgroundColor: theme.backgroundElement,
-            borderColor,
-          },
+          { color: c.text, backgroundColor, borderColor },
           style,
         ]}
         {...rest}
       />
-      {hint && !error ? (
-        <ThemedText type="small" themeColor="textMuted">
-          {hint}
-        </ThemedText>
-      ) : null}
+      {hint && !error ? <Text style={[styles.hint, { color: c.textSecondary }]}>{hint}</Text> : null}
       {error ? (
-        <ThemedText
-          type="small"
-          style={[{ color: theme.errorFg }]}
-          accessibilityRole="alert"
-          accessibilityLiveRegion="polite">
-          {error}
-        </ThemedText>
+        <View style={styles.errorRow} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          <AlertCircle size={15} color={c.errorFg} strokeWidth={2.4} />
+          <Text style={[styles.errorText, { color: c.errorFg }]}>{error}</Text>
+        </View>
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  field: { gap: Spacing.two },
+  field: { gap: 5 },
+  label: { fontSize: 15, fontFamily: FontFamily.semibold },
   input: {
-    borderWidth: 1,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
     fontSize: 16,
-    minHeight: TouchTarget.comfortable,
+    fontFamily: FontFamily.medium,
+    minHeight: 48,
   },
-  inputFocused: { borderWidth: 2, paddingHorizontal: Spacing.three - 1, paddingVertical: Spacing.three - 1 },
-  multiline: { minHeight: 112, paddingTop: Spacing.three, textAlignVertical: 'top' },
+  multiline: { minHeight: 84, paddingTop: 11 },
+  hint: { fontSize: 14, fontFamily: FontFamily.medium },
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 1 },
+  errorText: { flex: 1, fontSize: 15, fontFamily: FontFamily.semibold },
 });
