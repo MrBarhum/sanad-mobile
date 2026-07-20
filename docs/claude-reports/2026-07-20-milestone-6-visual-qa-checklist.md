@@ -37,3 +37,24 @@ Static checks already green for every commit: `tsc --noEmit`, `check:mojibake`,
 all doses given; a postponed + a missed dose; today-load error banner (retry);
 dose-log failure banner; read-only member (no log buttons, no claim card); no next
 appointment; unread badge 0 / 5 / 9+.
+
+---
+
+## Medications list — الأدوية (frame 6a)  ·  commit: list rebuild
+
+| Check | Light | Dark | 100% | 130% | 200% | Notes |
+|---|---|---|---|---|---|---|
+| Green sub-screen band = only top chrome (no native header above it) | | | | | | native header hidden on index |
+| Back square (bordered) + centered «الأدوية» + filled add (managers only) | | | | | | |
+| Summary pill: pill square + given/total (or «لا جرعات مجدولة اليوم») + active count | | | | | | |
+| Segmented control: active = solid green, 2px divider between the two | | | | | | |
+| Today doses grouped in one 2px card, rows split by 2px dividers | | | | | | |
+| Status square + status pill (icon+text) per state (given/postponed/missed/unlogged) | | | | | | |
+| Log → tray (3 chips) → immediate; edit → correction confirm | | | | | | |
+| All tab: med cards, Pill square, schedule chips (LTR times), active/stopped badge | | | | | | |
+| Empty (today): tok circle + check, reassuring line, gold-diamond divider, browse button | | | | | | |
+| Empty (all): «لا أدوية بعد» (+ subtitle for managers) | | | | | | |
+| Loading skeleton; load-error card + retry; dose-log-failure banner | | | | | | |
+| Read-only member: no log buttons; family member: only own doses | | | | | | |
+| RTL: forward chevrons left, times/counts LTR; both themes swap tokens only | | | | | | |
+

@@ -180,6 +180,34 @@ Legend: ✅ matches HTML · 🔸 deliberate deviation (reasoned).
 - ✅ All behaviour/data/routing/permission logic preserved verbatim (scopeToMine, setStatus, retryToday, subtitle/emergency computation, quick-action routes, pulse scope).
 - ✅ Quartet green after the commit.
 
+## Phase 3 — Medications list (frame 6a) — delta
+
+Rollout decision: **screen-by-screen** (user's choice). The list is built with inline
+Dar styling scoped to `figma-medications.tsx` + its route — no shared component
+(FigmaHeader, FigmaSegmentedTabs, StatusBadge, EmptyState) is restyled, so no other
+screen changes. The form (6b) + those shared restyles come next.
+
+| Block | HTML / spec | Implemented | Match |
+|---|---|---|---|
+| Sub-screen band | band bg + top inset, pad 18/16; 44 bordered back (ChevronRight), centered «الأدوية» 20/800, 44 filled add (managers) | inline band via FigmaScreen `band` slot; native stack header hidden | ✅ |
+| Summary pill | card 2px r8; 44 r8 tok square + ok pill; title 16/800 (or «لا جرعات مجدولة اليوم» when 0), sub 14/600 | same (`summaryEmpty` key added) | ✅ |
+| Segmented tabs | container 2px r8; active btn+btnInk 16/800; idle mut 16/700 + 2px start divider | inline (not the shared FigmaSegmentedTabs) | ✅ |
+| Today doses | grouped 2px-r8 card, rows 2px divider; 40 r6 status square (sunken/twarn/terr/tok); name 16/800; dosage 14/600; time 14/700; status pill 1.5px r4 icon+text; responsible; تسجيل/تعديل الحالة | same (+ log/edit/correction tray preserved) | ✅ |
+| Status square (list) | HTML shows a **status** square, not a med-identity pill | status square (given/postponed/missed/unlogged) — matches HTML (the old build showed a Pill chip; corrected) | ✅ |
+| Responsible line | HTML: gendered «المسؤول: خالد» / «المسؤولة: سارة» | neutral `responsibleLabel` (person icon + «المسؤول: {name}», never «المسؤولة») — correction #1 | 🔸 keeps the app's fixed neutral role label |
+| All-medications | (not drawn) med cards: Pill r6 tacc square + name 16/800 + dosage + active/stopped badge (1.5px pill) + schedule chips + responsible → detail | composed from archetype | ✅ |
+| Empty (today) | card; 68px tok circle + ok check 28; «لا جرعات اليوم» 20/800; reassuring 16/600; gold-diamond divider; «استعراض كل الأدوية» bordered button | inline `MedEmpty` (`browseAll` key added → switches to all tab) | ✅ |
+| Loading / error | skeleton list / bordered card + retry | `SkeletonList` (kept) / inline error card | ✅ |
+
+**Self-check:** no new token file; no shared component restyled (screen-scoped); no
+Arabic hardcoded (2 new keys at ar/en parity); body ≥16; every status icon+text; RTL +
+LTR-isolated times; both themes; all behaviour/data/routing/permissions/logging
+preserved (scopeToMine, setStatus, tabs, orderedDoses, schedule chips). Quartet green.
+
+**Deferred to the form (6b) + later medication screens:** the add/edit form, the
+shared form primitives (FormField, OptionSelect, WeekdaySelector, DateField/TimeField,
+Button, FigmaFormScreen), the detail/editor, and the schedule modal.
+
 ## Invented values (neither spec nor HTML covered)
 - `primaryPressed` (darker `btn`): light #0A3A32, dark #6BB3A0.
 - `ringTrack` (decorative, ring retired): rgba ink/bandInk @ .12.
