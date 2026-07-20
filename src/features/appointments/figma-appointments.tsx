@@ -1,19 +1,18 @@
 import { useRouter } from 'expo-router';
-import { Clock, MapPin, Users } from 'lucide-react-native';
+import { Calendar, ChevronLeft, Clock, MapPin, Stethoscope, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SkeletonList } from '@/components/skeleton';
 
-import { Surface } from '@/components/surface';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
-import { StatusBadge } from '@/components/status-badge';
-import { GlyphChip } from '@/components/glyph-chip';
-import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
-import { FontFamily, Radius, type ThemeColor } from '@/constants/theme';
+import { SkeletonList } from '@/components/skeleton';
+import { StatusBadge } from '@/components/status-badge';
+import { EmptyState } from '@/components/states';
+import { Surface } from '@/components/surface';
+import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useDoctors } from '@/features/doctors/hooks';
 import { useTheme } from '@/hooks/use-theme';
@@ -25,29 +24,20 @@ import { useCompletedAppointments, useUpcomingAppointments } from './hooks';
 
 type ApptTab = 'upcoming' | 'completed';
 
-/** Per-appointment Calendar-chip accent, cycled by index (Figma uses varied hues). */
-const CHIP_COLORS = [
-  'categoryBlue',
-  'categoryPurple',
-  'categoryGreen',
-  'categoryGold',
-] as const;
-
 /**
- * The Figma Make Appointments screen, recreated as literally as possible in React
- * Native and wired to real Sanad data. Mirrors `AppointmentsScreen.tsx`: a
- * back/title/teal-"+" header, an upcoming/completed segmented control, and a list
- * of bordered cards — each a Calendar icon chip, the title, the doctor + type
- * line, an optional "completed" status pill, and Clock(date, time) + MapPin
- * (location) meta rows. Tapping a card opens the existing detail route. Reuses the
- * `AppointmentsCenter` hooks (`useUpcomingAppointments`, `useDoctors`) and its
- * status/type locale keys verbatim. Cairo + theme tokens, RTL. No old Sanad
- * Screen/Surface/Section/Button/StatusBadge.
+ * The Dar appointments list (frame 8f idiom, mirroring family-visits): a deep-green
+ * sub-screen band (back + title + add), a القادمة/المنتهية segmented control, and a
+ * list of bordered cards — each a tinted `primary` calendar-icon square, the
+ * appointment title, its type label, a wrapping meta row (Clock + LTR date/time, the
+ * doctor, the location, and an accent assignee tag), an optional «تمّ» completed
+ * status pill, and a forward chevron. Tapping a card opens the existing detail route.
+ * Reuses `useUpcomingAppointments` / `useCompletedAppointments` / `useDoctors` and
+ * their status/type locale keys verbatim. Cairo + Dar tokens, both themes, RTL.
  *
- * The "upcoming" tab uses the future-only `useUpcomingAppointments`; the
- * "completed" tab uses `useCompletedAppointments`, which returns completed
- * appointments across ALL dates (newest first) so past history actually shows
- * (the future-only source could never populate it).
+ * The "upcoming" tab uses the future-only `useUpcomingAppointments`; the "completed"
+ * tab uses `useCompletedAppointments`, which returns completed appointments across
+ * ALL dates (newest first) so past history actually shows. Behaviour / data / routing
+ * / scoping unchanged — only the visuals move to the Dar identity.
  */
 export function FigmaAppointments({
   circleId,
@@ -97,7 +87,7 @@ export function FigmaAppointments({
   ];
 
   return (
-    <FigmaScreen>
+    <FigmaScreen gap={16}>
       <FigmaHeader
         title={t('figma.appointments.title')}
         onAdd={canManage ? () => router.push('/appointments/new') : undefined}
@@ -109,7 +99,7 @@ export function FigmaAppointments({
       {appointmentsQuery.isLoading ? (
         <SkeletonList />
       ) : appointmentsQuery.isError ? (
-        <Surface tone="card" radius={Radius.lg} padded={20}>
+        <View style={[styles.errorCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
           <Text style={[styles.errorText, { color: c.errorFg }]}>{t('appointments.loadError')}</Text>
           <Pressable
             onPress={() => appointmentsQuery.refetch()}
@@ -117,7 +107,7 @@ export function FigmaAppointments({
             style={[styles.retry, { backgroundColor: c.primary }]}>
             <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
           </Pressable>
-        </Surface>
+        </View>
       ) : filtered.length === 0 ? (
         <EmptyState
           iconName="appointment"
@@ -129,7 +119,7 @@ export function FigmaAppointments({
         />
       ) : (
         <View style={styles.list}>
-          {filtered.map((appointment, index) => (
+          {filtered.map((appointment) => (
             <AppointmentCard
               key={appointment.id}
               appointment={appointment}
@@ -139,7 +129,6 @@ export function FigmaAppointments({
               assigneeName={
                 appointment.assigned_to ? (lookup(appointment.assigned_to)?.label ?? null) : null
               }
-              chipColor={CHIP_COLORS[index % CHIP_COLORS.length]}
               onOpen={() => router.push(`/appointments/${appointment.id}`)}
             />
           ))}
@@ -153,13 +142,11 @@ function AppointmentCard({
   appointment,
   doctorName,
   assigneeName,
-  chipColor,
   onOpen,
 }: {
   appointment: CareAppointment;
   doctorName: string | null;
   assigneeName: string | null;
-  chipColor: ThemeColor;
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
@@ -174,77 +161,105 @@ function AppointmentCard({
   return (
     <Surface
       tone="card"
-      radius={Radius.xl}
-      padded={16}
+      padded={false}
       onPress={onOpen}
       accessibilityLabel={appointment.title}
-      accessibilityHint={t('common.details')}>
-      <View style={styles.cardTop}>
-        <GlyphChip iconName="appointment" color={chipColor} size="md" />
-        <View style={styles.cardInfo}>
-          <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={2}>
+      accessibilityHint={t('common.details')}
+      style={styles.card}>
+      <View style={styles.cardRow}>
+        <View style={[styles.iconSquare, { backgroundColor: c.primaryBg, borderColor: c.border }]}>
+          <Calendar size={18} color={c.primaryText} strokeWidth={2} />
+        </View>
+
+        <View style={styles.info}>
+          <Text style={[styles.title, { color: c.text }]} numberOfLines={2}>
             {appointment.title}
           </Text>
-          {doctorName ? (
-            <Text style={[styles.cardDoctor, { color: c.text }]} numberOfLines={1}>
-              {doctorName}
-            </Text>
-          ) : null}
-          <Text style={[styles.cardType, { color: c.textSecondary }]} numberOfLines={1}>
+          <Text style={[styles.subtitle, { color: c.textSecondary }]} numberOfLines={1}>
             {t(`appointments.type.${appointment.appointment_type}`)}
           </Text>
-        </View>
-        {isCompleted ? (
-          <StatusBadge tone="success" label={t('appointments.status.completed')} />
-        ) : null}
-      </View>
 
-      <View style={styles.metaList}>
-        <View style={styles.metaRow}>
-          <Clock size={13} color={c.textSecondary} />
-          <Text style={[styles.metaText, { color: c.textSecondary }]}>{whenText}</Text>
+          <View style={styles.metaRow}>
+            <View style={styles.metaGroup}>
+              <Clock size={12} color={c.textSecondary} strokeWidth={2.2} />
+              <Text style={[styles.whenText, { color: c.textSecondary }]}>{whenText}</Text>
+            </View>
+
+            {doctorName ? (
+              <View style={styles.metaGroup}>
+                <Stethoscope size={12} color={c.textSecondary} strokeWidth={2} />
+                <Text style={[styles.metaText, { color: c.textSecondary }]} numberOfLines={1}>
+                  {doctorName}
+                </Text>
+              </View>
+            ) : null}
+
+            {appointment.location ? (
+              <View style={styles.metaGroup}>
+                <MapPin size={12} color={c.textSecondary} strokeWidth={2} />
+                <Text style={[styles.metaText, { color: c.textSecondary }]} numberOfLines={1}>
+                  {appointment.location}
+                </Text>
+              </View>
+            ) : null}
+
+            {assigneeName ? (
+              <View style={styles.metaGroup}>
+                <Users size={12} color={c.primaryText} strokeWidth={2} />
+                <Text style={[styles.tagText, { color: c.primaryText }]} numberOfLines={1}>
+                  {assigneeName}
+                </Text>
+              </View>
+            ) : null}
+
+            {isCompleted ? (
+              <StatusBadge tone="success" label={t('appointments.status.completed')} />
+            ) : null}
+          </View>
         </View>
-        {appointment.location ? (
-          <View style={styles.metaRow}>
-            <MapPin size={13} color={c.textSecondary} />
-            <Text style={[styles.metaText, { color: c.textSecondary }]} numberOfLines={1}>
-              {appointment.location}
-            </Text>
-          </View>
-        ) : null}
-        {assigneeName ? (
-          <View style={styles.metaRow}>
-            <Users size={13} color={c.textSecondary} />
-            <Text style={[styles.metaText, { color: c.textSecondary }]} numberOfLines={1}>
-              {assigneeName}
-            </Text>
-          </View>
-        ) : null}
+
+        <View style={styles.chevron}>
+          <ChevronLeft size={17} color={c.textSecondary} strokeWidth={2.2} />
+        </View>
       </View>
     </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { paddingVertical: 48, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
+  list: { gap: 8 },
+  // Error card (shared Dar system-state treatment)
+  errorCard: { borderWidth: BorderWidth.standard, borderRadius: Radius.card, padding: 20 },
+  errorText: { fontSize: 16, fontFamily: FontFamily.semibold, textAlign: 'center' },
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: Radius.md,
-    paddingHorizontal: 16,
+    borderRadius: Radius.control,
+    paddingHorizontal: 18,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
-  retryText: { fontSize: 14, fontFamily: FontFamily.semibold },
-  list: { gap: 12 },
-  cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  cardInfo: { flex: 1, gap: 2 },
-  cardTitle: { fontSize: 16, fontFamily: FontFamily.bold },
-  cardDoctor: { fontSize: 14, fontFamily: FontFamily.regular },
-  cardType: { fontSize: 14, fontFamily: FontFamily.regular },
-  metaList: { gap: 6, marginTop: 12 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  metaText: { fontSize: 14, fontFamily: FontFamily.regular },
+  retryText: { fontSize: 15, fontFamily: FontFamily.bold },
+  // Appointment card
+  card: { paddingVertical: 12, paddingHorizontal: 14 },
+  cardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  iconSquare: {
+    width: 40,
+    height: 40,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.control,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  info: { flex: 1, minWidth: 0 },
+  title: { fontSize: 16, fontFamily: FontFamily.bold, lineHeight: 24 },
+  subtitle: { fontSize: 14, fontFamily: FontFamily.medium },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 4 },
+  metaGroup: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
+  whenText: { fontSize: 14, fontFamily: FontFamily.semibold, writingDirection: 'ltr' },
+  metaText: { fontSize: 14, fontFamily: FontFamily.medium, flexShrink: 1 },
+  tagText: { fontSize: 14, fontFamily: FontFamily.bold, flexShrink: 1 },
+  chevron: { marginTop: 4, flexShrink: 0 },
 });
