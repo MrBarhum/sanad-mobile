@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { GlyphChip } from '@/components/glyph-chip';
 import { StatusBadge } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
@@ -73,7 +74,7 @@ export function PushStatusCard() {
             />
           </View>
         ) : (
-          <Button
+          <FigmaFooterPrimaryButton
             label={t('notificationSettings.push.enable')}
             loading={isWorking}
             onPress={onEnable}

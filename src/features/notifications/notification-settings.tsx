@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FigmaFormScreen, FigmaSwitch } from '@/components/figma/figma-form-screen';
 import { LtrText } from '@/components/ltr-text';
 import { SectionHeader } from '@/components/section-header';
@@ -245,11 +246,10 @@ export function NotificationSettings() {
             </ThemedText>
           ) : null}
 
-          <Button
+          <FigmaFooterPrimaryButton
             label={t('notificationSettings.save')}
             onPress={onSave}
             loading={upsert.isPending}
-            disabled={upsert.isPending}
           />
         </>
       ) : null}

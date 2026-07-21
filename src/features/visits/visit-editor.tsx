@@ -328,12 +328,22 @@ function StatusSection({
                   : 'visits.confirmCancelledBody',
               )}
             </Text>
-            <Button
-              label={t(confirm === 'completed' ? 'visits.markCompleted' : 'visits.markCancelled')}
-              variant={confirm === 'completed' ? 'primary' : 'danger'}
-              loading={pending}
-              onPress={() => run(confirm)}
-            />
+            {/* Complete = the proven body-rendered CTA (Button variant="primary"
+                renders dark in this nested form); could-not = red danger. */}
+            {confirm === 'completed' ? (
+              <FigmaFooterPrimaryButton
+                label={t('visits.markCompleted')}
+                onPress={() => run(confirm)}
+                loading={pending}
+              />
+            ) : (
+              <Button
+                label={t('visits.markCancelled')}
+                variant="danger"
+                loading={pending}
+                onPress={() => run(confirm)}
+              />
+            )}
             <Button
               label={t('common.cancel')}
               variant="secondary"
@@ -342,17 +352,16 @@ function StatusSection({
             />
           </View>
         ) : (
-          <View style={styles.actionRow}>
-            <View style={styles.actionCol}>
-              <Button label={t('visits.markCompleted')} onPress={() => setConfirm('completed')} />
-            </View>
-            <View style={styles.actionCol}>
-              <Button
-                label={t('visits.markCancelled')}
-                variant="secondary"
-                onPress={() => setConfirm('cancelled')}
-              />
-            </View>
+          <View style={styles.confirmStack}>
+            <FigmaFooterPrimaryButton
+              label={t('visits.markCompleted')}
+              onPress={() => setConfirm('completed')}
+            />
+            <Button
+              label={t('visits.markCancelled')}
+              variant="secondary"
+              onPress={() => setConfirm('cancelled')}
+            />
           </View>
         )
       ) : showReopen ? (

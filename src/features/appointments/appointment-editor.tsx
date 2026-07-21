@@ -393,12 +393,22 @@ function StatusSection({
                   : 'appointments.confirmCancelledBody',
               )}
             </Text>
-            <Button
-              label={t(confirm === 'completed' ? 'appointments.markCompleted' : 'appointments.markCancelled')}
-              variant={confirm === 'completed' ? 'primary' : 'danger'}
-              loading={pending}
-              onPress={() => mark(confirm)}
-            />
+            {/* Complete = the proven body-rendered CTA (Button variant="primary"
+                renders dark in this nested form); could-not = red danger. */}
+            {confirm === 'completed' ? (
+              <FigmaFooterPrimaryButton
+                label={t('appointments.markCompleted')}
+                onPress={() => mark(confirm)}
+                loading={pending}
+              />
+            ) : (
+              <Button
+                label={t('appointments.markCancelled')}
+                variant="danger"
+                loading={pending}
+                onPress={() => mark(confirm)}
+              />
+            )}
             <Button
               label={t('common.cancel')}
               variant="secondary"
@@ -407,20 +417,16 @@ function StatusSection({
             />
           </View>
         ) : (
-          <View style={styles.actionRow}>
-            <View style={styles.actionCol}>
-              <Button
-                label={t('appointments.markCompleted')}
-                onPress={() => setConfirm('completed')}
-              />
-            </View>
-            <View style={styles.actionCol}>
-              <Button
-                label={t('appointments.markCancelled')}
-                variant="secondary"
-                onPress={() => setConfirm('cancelled')}
-              />
-            </View>
+          <View style={styles.confirmStack}>
+            <FigmaFooterPrimaryButton
+              label={t('appointments.markCompleted')}
+              onPress={() => setConfirm('completed')}
+            />
+            <Button
+              label={t('appointments.markCancelled')}
+              variant="secondary"
+              onPress={() => setConfirm('cancelled')}
+            />
           </View>
         )
       ) : showReopen ? (
