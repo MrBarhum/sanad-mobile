@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 import { z } from 'zod';
 
-import { Button } from '@/components/button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FormField } from '@/components/form-field';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
@@ -150,7 +150,7 @@ export default function SignUpScreen() {
         {submitError ? <AuthError message={submitError} /> : null}
         {notice ? <InfoBanner tone="info" text={notice} /> : null}
 
-        <Button label={t('auth.signUpButton')} onPress={onSubmit} loading={submitting} />
+        <FigmaFooterPrimaryButton label={t('auth.signUpButton')} onPress={onSubmit} loading={submitting} />
       </Surface>
 
       <View style={styles.footer}>

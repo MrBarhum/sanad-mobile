@@ -548,7 +548,7 @@
       "name": "Metformin",
       "dosage": "500 mg",
       "form": "tablet, syrup, injection",
-      "instructions": "take with water",
+      "instructions": "Before or after meals",
       "endDate": "Optional — YYYY-MM-DD",
       "scheduleNotes": "Any special instructions..."
     },

@@ -1,15 +1,15 @@
 import { useFocusEffect } from 'expo-router';
+import { Clock, HandHelping } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SkeletonList } from '@/components/skeleton';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
-import { Button } from '@/components/button';
 import { GlyphChip, type GlyphChipTone } from '@/components/glyph-chip';
-import { Icon } from '@/components/icon';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
+import { SectionHeader } from '@/components/section-header';
 import { EmptyState } from '@/components/states';
 import { isolateLtr } from '@/components/ltr-text';
 import { type IconName } from '@/constants/icons';
@@ -25,24 +25,24 @@ type FeedbackTone = 'success' | 'warning' | 'error';
 /** A claim result shown in the bottom-anchored sheet (visible at any scroll pos). */
 type Feedback = { tone: FeedbackTone; title: string; body: string | null };
 
-/** Fixed section order, matching the feed's item types (frame 9d groups by kind). */
-const SECTIONS: { type: ClaimItemType; labelKey: string }[] = [
-  { type: 'task', labelKey: 'claiming.sections.tasks' },
-  { type: 'medication', labelKey: 'claiming.sections.medications' },
-  { type: 'appointment', labelKey: 'claiming.sections.appointments' },
-  { type: 'visit', labelKey: 'claiming.sections.visits' },
+/** Fixed section order + each type's identity chip (icon + Dar tone), matching the
+ *  Explore rows so the feed reads in the same visual language as the rest of the app. */
+const SECTIONS: { type: ClaimItemType; labelKey: string; iconName: IconName; tone: GlyphChipTone }[] = [
+  { type: 'task', labelKey: 'claiming.sections.tasks', iconName: 'task', tone: 'success' },
+  { type: 'medication', labelKey: 'claiming.sections.medications', iconName: 'medication', tone: 'primary' },
+  { type: 'appointment', labelKey: 'claiming.sections.appointments', iconName: 'appointment', tone: 'primary' },
+  { type: 'visit', labelKey: 'claiming.sections.visits', iconName: 'visit', tone: 'warning' },
 ];
 
 /**
- * The Dar "متاح للتكفّل" / available-to-claim feed (frame 9d). A single unified feed
- * of unowned care items a claim-capable member can take responsibility for, grouped
- * by kind (tasks → medications → appointments → visits) each with a plain
- * label + count header. Each bordered card is title + an LTR date / subtitle + a
- * compact «أنا متكفّل» claim pill. Claiming is immediate: one tap fills the
- * responsibility column server-side, the item leaves this feed and appears on the
- * owner's own screen. Claim feedback shows in a bottom-anchored sheet (visible at
- * any scroll position). remote_member / elder never reach this surface. Cairo,
- * Dar tokens, both themes, RTL.
+ * "متاح للتكفّل" / available-to-claim: a unified feed of unowned care items a
+ * claim-capable member can take responsibility for, grouped by kind (tasks →
+ * medications → appointments → visits). Each group is a Dar `SectionHeader` (10×10
+ * square + label + count) over bordered cards — a toned type-icon square + title +
+ * an LTR date / subtitle + the green «أنا متكفّل» claim pill (the same pill the
+ * tasks rows use). Claiming is immediate; feedback shows in a bottom-anchored sheet
+ * so it's visible at any scroll position. remote_member / elder never reach this
+ * surface. Cairo + Dar tokens, both themes, RTL.
  */
 export function FigmaAvailableToClaim({
   circleId,
@@ -141,7 +141,7 @@ export function FigmaAvailableToClaim({
             <Pressable
               onPress={() => refetch()}
               accessibilityRole="button"
-              style={[styles.retry, { backgroundColor: c.primary, borderColor: c.border }]}>
+              style={[styles.retry, { backgroundColor: c.primary }]}>
               <Text style={[styles.retryText, { color: c.onPrimary }]}>{t('retry')}</Text>
             </Pressable>
           </View>
@@ -152,17 +152,21 @@ export function FigmaAvailableToClaim({
             .filter((section) => section.items.length > 0)
             .map((section) => (
               <View key={section.type} style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionLabel, { color: c.text }]}>{t(section.labelKey)}</Text>
-                  <Text style={[styles.sectionCount, { color: c.textSecondary }]}>
-                    {isolateLtr(String(section.items.length))}
-                  </Text>
-                </View>
+                <SectionHeader
+                  title={t(section.labelKey)}
+                  trailing={
+                    <Text style={[styles.count, { color: c.textSecondary }]}>
+                      {isolateLtr(String(section.items.length))}
+                    </Text>
+                  }
+                />
                 <View style={styles.cards}>
                   {section.items.map((item) => (
                     <ClaimCard
                       key={item.item_id}
                       item={item}
+                      iconName={section.iconName}
+                      tone={section.tone}
                       pending={pendingId === item.item_id}
                       onClaim={() => onClaim(item)}
                     />
@@ -187,9 +191,8 @@ const FEEDBACK_ICON: Record<FeedbackTone, IconName> = {
 
 /**
  * Bottom-anchored claim result. A `FigmaBottomSheet` (Modal over a scrim) so the
- * confirmation is visible whatever the scroll position — the old top-of-content
- * notice scrolled out of view. Status is icon + text + tone (never tone-only),
- * announced as an alert, dismissed with a large "حسنًا / OK" button.
+ * confirmation is visible whatever the scroll position. Status is icon + text +
+ * tone (never tone-only), announced as an alert, dismissed with a large OK button.
  */
 function ClaimFeedbackSheet({
   feedback,
@@ -202,6 +205,7 @@ function ClaimFeedbackSheet({
   const c = useTheme();
 
   const tone: FeedbackTone = feedback?.tone ?? 'success';
+  const success = tone === 'success';
 
   return (
     <FigmaBottomSheet visible={feedback !== null} onClose={onClose} title={feedback?.title ?? ''}>
@@ -211,11 +215,19 @@ function ClaimFeedbackSheet({
           <Text style={[styles.feedbackBody, { color: c.textSecondary }]}>{feedback.body}</Text>
         ) : null}
       </View>
-      <Button
-        label={t('common.ok')}
-        variant={tone === 'success' ? 'primary' : 'secondary'}
+      <Pressable
         onPress={onClose}
-      />
+        accessibilityRole="button"
+        accessibilityLabel={t('common.ok')}
+        style={[
+          styles.okBtn,
+          {
+            backgroundColor: success ? c.primary : c.backgroundElement,
+            borderColor: c.border,
+          },
+        ]}>
+        <Text style={[styles.okText, { color: success ? c.onPrimary : c.text }]}>{t('common.ok')}</Text>
+      </Pressable>
     </FigmaBottomSheet>
   );
 }
@@ -235,10 +247,14 @@ function whenText(item: AvailableClaimItem): string | null {
 
 function ClaimCard({
   item,
+  iconName,
+  tone,
   pending,
   onClaim,
 }: {
   item: AvailableClaimItem;
+  iconName: IconName;
+  tone: GlyphChipTone;
   pending: boolean;
   onClaim: () => void;
 }) {
@@ -248,33 +264,41 @@ function ClaimCard({
 
   return (
     <View style={[styles.card, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
-      <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={2}>
-        {item.title}
-      </Text>
-      {when ? <Text style={[styles.cardWhen, { color: c.text }]}>{when}</Text> : null}
-      {item.subtitle ? (
-        <Text style={[styles.cardSub, { color: c.textSecondary }]} numberOfLines={1}>
-          {item.subtitle}
+      <GlyphChip iconName={iconName} tone={tone} size="md" />
+      <View style={styles.info}>
+        <Text style={[styles.title, { color: c.text }]} numberOfLines={2}>
+          {item.title}
         </Text>
-      ) : null}
+        {when ? (
+          <View style={styles.metaRow}>
+            <Clock size={12} color={c.textSecondary} strokeWidth={2.2} />
+            <Text style={[styles.metaText, { color: c.textSecondary }]}>{when}</Text>
+          </View>
+        ) : null}
+        {item.subtitle ? (
+          <Text style={[styles.subtitle, { color: c.textSecondary }]} numberOfLines={1}>
+            {item.subtitle}
+          </Text>
+        ) : null}
 
-      <Pressable
-        onPress={onClaim}
-        disabled={pending}
-        accessibilityRole="button"
-        accessibilityLabel={t('claiming.cta')}
-        accessibilityHint={t('claiming.ctaHint')}
-        accessibilityState={{ busy: pending }}
-        style={({ pressed }) => [styles.claimPill, { backgroundColor: c.primary }, pressed && styles.pressed]}>
-        {pending ? (
-          <ActivityIndicator size="small" color={c.onPrimary} />
-        ) : (
-          <>
-            <Icon name="claim" size={15} color="onPrimary" />
-            <Text style={[styles.claimText, { color: c.onPrimary }]}>{t('claiming.cta')}</Text>
-          </>
-        )}
-      </Pressable>
+        <Pressable
+          onPress={onClaim}
+          disabled={pending}
+          accessibilityRole="button"
+          accessibilityLabel={t('claiming.cta')}
+          accessibilityHint={t('claiming.ctaHint')}
+          accessibilityState={{ busy: pending }}
+          style={[styles.claimBtn, { backgroundColor: c.primary }]}>
+          {pending ? (
+            <ActivityIndicator size="small" color={c.onPrimary} />
+          ) : (
+            <>
+              <HandHelping size={15} color={c.onPrimary} strokeWidth={2} />
+              <Text style={[styles.claimText, { color: c.onPrimary }]}>{t('claiming.cta')}</Text>
+            </>
+          )}
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -285,42 +309,51 @@ const styles = StyleSheet.create({
   retry: {
     marginTop: 12,
     alignSelf: 'center',
-    borderRadius: Radius.card,
-    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.control,
     paddingHorizontal: 18,
     paddingVertical: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
   retryText: { fontSize: 15, fontFamily: FontFamily.bold },
-  feedbackRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  feedbackBody: { flex: 1, fontSize: 15, lineHeight: 24, fontFamily: FontFamily.medium },
-  section: { gap: 8 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sectionLabel: { fontSize: 16, fontFamily: FontFamily.bold, flex: 1 },
-  sectionCount: { fontSize: 14, fontFamily: FontFamily.semibold, writingDirection: 'ltr' },
+  section: { gap: 10 },
+  count: { fontSize: 14, fontFamily: FontFamily.bold, writingDirection: 'ltr' },
   cards: { gap: 8 },
   card: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
     borderWidth: BorderWidth.standard,
     borderRadius: Radius.card,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
-  cardTitle: { fontSize: 16, fontFamily: FontFamily.bold, lineHeight: 24 },
-  cardWhen: { fontSize: 14, fontFamily: FontFamily.semibold, marginTop: 4, writingDirection: 'ltr' },
-  cardSub: { fontSize: 14, fontFamily: FontFamily.medium, marginTop: 4 },
-  claimPill: {
-    alignSelf: 'flex-start',
+  info: { flex: 1, minWidth: 0 },
+  title: { fontSize: 16, fontFamily: FontFamily.bold, lineHeight: 24 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
+  metaText: { fontSize: 14, fontFamily: FontFamily.semibold, writingDirection: 'ltr' },
+  subtitle: { fontSize: 14, fontFamily: FontFamily.medium, marginTop: 4 },
+  claimBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'flex-start',
     gap: 7,
-    minHeight: 44,
-    borderRadius: Radius.control,
+    marginTop: 10,
+    minHeight: 34,
     paddingHorizontal: 16,
-    paddingVertical: 9,
-    marginTop: 12,
+    borderRadius: Radius.control,
   },
   claimText: { fontSize: 15, fontFamily: FontFamily.bold },
-  pressed: { opacity: 0.75 },
+  feedbackRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  feedbackBody: { flex: 1, fontSize: 15, lineHeight: 24, fontFamily: FontFamily.medium },
+  okBtn: {
+    marginTop: 12,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  okText: { fontSize: 17, fontFamily: FontFamily.bold },
 });

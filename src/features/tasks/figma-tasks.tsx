@@ -93,11 +93,12 @@ export function FigmaTasks({
   const today = todayYmd();
 
   // Transparent-circle visibility: everyone SEES the whole circle's tasks; an
-  // explicit مهامي/كل المهام scope replaces role-hiding. Assignable members default
-  // to their own; managers default to all; pure followers only ever see all.
+  // explicit مهامي/كل المهام scope replaces role-hiding. Assignable members (managers
+  // included) default to «مهامي» so the screen opens on the caller's own work; pure
+  // followers only ever see «كل المهام». The scope pill toggles to all at any time.
   const canBeAssigned = canManage || canCollaborate;
   const canClaim = canManage || canCollaborate;
-  const [scope, setScope] = useState<TaskScope>(canManage ? 'all' : 'mine');
+  const [scope, setScope] = useState<TaskScope>('mine');
   const effectiveScope: TaskScope = canBeAssigned ? scope : 'all';
 
   /** A task is "mine" when it's assigned to me, or I completed it (history). */

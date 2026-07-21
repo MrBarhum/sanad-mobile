@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 import { z } from 'zod';
 
-import { Button } from '@/components/button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FormField } from '@/components/form-field';
 import { InfoBanner } from '@/components/info-banner';
 import { Screen } from '@/components/screen';
@@ -58,7 +58,7 @@ export default function ForgotPasswordScreen() {
         {sent ? (
           <>
             <InfoBanner tone="info" text={t('auth.forgotSent')} />
-            <Button label={t('auth.backToSignIn')} onPress={() => router.replace('/sign-in')} />
+            <FigmaFooterPrimaryButton label={t('auth.backToSignIn')} onPress={() => router.replace('/sign-in')} />
           </>
         ) : (
           <>
@@ -76,7 +76,7 @@ export default function ForgotPasswordScreen() {
               textContentType="emailAddress"
               placeholder={t('auth.emailPlaceholder')}
             />
-            <Button label={t('auth.forgotSend')} onPress={onSubmit} loading={submitting} />
+            <FigmaFooterPrimaryButton label={t('auth.forgotSend')} onPress={onSubmit} loading={submitting} />
           </>
         )}
       </Surface>

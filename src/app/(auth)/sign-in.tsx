@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 import { z } from 'zod';
 
-import { Button } from '@/components/button';
+import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FormField } from '@/components/form-field';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
@@ -92,7 +92,7 @@ export default function SignInScreen() {
 
         {error ? <AuthError message={error} /> : null}
 
-        <Button label={t('auth.signInButton')} onPress={onSubmit} loading={submitting} />
+        <FigmaFooterPrimaryButton label={t('auth.signInButton')} onPress={onSubmit} loading={submitting} />
       </Surface>
 
       <View style={styles.footer}>
