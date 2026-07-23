@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FigmaFormScreen } from '@/components/figma/figma-form-screen';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -63,9 +63,11 @@ export function AppointmentForm({ circleId }: { circleId: string }) {
   }
 
   return (
-    <FigmaFormScreen title={t('appointments.addTitle')} onBack={() => router.back()}>
+    <FigmaFormScreen
+      title={t('appointments.addTitle')}
+      onBack={() => router.back()}
+      disclaimer={t('appointments.disclaimer')}>
       <UnsavedChangesGuard when={dirty && !submitted} />
-      <FigmaMutedNote>{t('appointments.disclaimer')}</FigmaMutedNote>
 
       <FigmaAppointmentFields
         circleId={circleId}
