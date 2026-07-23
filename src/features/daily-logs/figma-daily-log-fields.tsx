@@ -8,7 +8,7 @@ import { FormField } from '@/components/form-field';
 import { OptionSelect } from '@/components/option-select';
 import { Surface } from '@/components/surface';
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { DailyLogDraft } from './log-fields';
@@ -263,9 +263,9 @@ const styles = StyleSheet.create({
   painHint: { fontSize: 14, lineHeight: 18, fontFamily: FontFamily.regular },
   noneChip: {
     minHeight: TouchTarget.min,
-    borderRadius: Radius.pill,
-    borderWidth: 1.5,
-    paddingHorizontal: 14,
+    borderRadius: Radius.card,
+    borderWidth: BorderWidth.standard,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'flex-start',
