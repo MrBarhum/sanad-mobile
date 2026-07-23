@@ -2,11 +2,11 @@ import { Stack, useRouter } from 'expo-router';
 import { Info } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { FigmaFormScreen } from '@/components/figma/figma-form-screen';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { isolateLtr } from '@/components/ltr-text';
@@ -16,7 +16,7 @@ import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import type { Doctor } from '@/features/doctors/api';
 import { useDoctors } from '@/features/doctors/hooks';
@@ -167,9 +167,11 @@ function AppointmentEditScreen({
   }
 
   return (
-    <FigmaFormScreen title={t('appointments.detailTitle')} onBack={() => router.back()}>
+    <FigmaFormScreen
+      title={t('appointments.detailTitle')}
+      subtitle={t('appointments.managerViewSubtitle')}
+      onBack={() => router.back()}>
       <UnsavedChangesGuard when={dirty} />
-      <FigmaMutedNote>{t('appointments.disclaimer')}</FigmaMutedNote>
 
       <FigmaAppointmentFields
         circleId={circleId}
@@ -444,6 +446,7 @@ function StatusSection({
 
 function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const router = useRouter();
   const del = useDeleteAppointment(circleId);
   const [confirming, setConfirming] = useState(false);
@@ -460,30 +463,46 @@ function DeleteAppointmentRow({ circleId, id }: { circleId: string; id: string }
   }
 
   return (
-    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+    <Surface tone="card" radius={Radius.lg} padded={14} gap={Spacing.two}>
       {confirming ? (
-        <View style={styles.actionRow}>
-          <View style={styles.actionCol}>
-            <Button
-              label={t('common.confirmDelete')}
-              variant="danger"
-              loading={pending}
+        <>
+          {/* Two-step prompt (frame 10c): a muted line then a filled-danger confirm
+              (dangerSolid fill + onError text — the sanctioned solid-danger pairing)
+              beside the quiet outline cancel. */}
+          <Text style={[styles.deletePrompt, { color: theme.textSecondary }]}>
+            {t('appointments.deletePermanently')}
+          </Text>
+          <View style={styles.actionRow}>
+            <Pressable
               onPress={onDelete}
-            />
-          </View>
-          <View style={styles.actionCol}>
-            <Button
-              label={t('common.cancel')}
-              variant="secondary"
               disabled={pending}
-              onPress={() => setConfirming(false)}
-            />
+              accessibilityRole="button"
+              accessibilityLabel={t('common.confirmDelete')}
+              accessibilityState={{ busy: pending }}
+              style={[styles.confirmDelete, { backgroundColor: theme.dangerSolid, borderColor: theme.border }]}>
+              {pending ? (
+                <ActivityIndicator color={theme.onError} />
+              ) : (
+                <Text style={[styles.confirmDeleteLabel, { color: theme.onError }]}>
+                  {t('common.confirmDelete')}
+                </Text>
+              )}
+            </Pressable>
+            <View style={styles.cancelCol}>
+              <Button
+                label={t('common.cancel')}
+                variant="secondary"
+                disabled={pending}
+                onPress={() => setConfirming(false)}
+              />
+            </View>
           </View>
-        </View>
+        </>
       ) : (
         <Button
           label={t('appointments.deleteAppointment')}
           variant="danger"
+          iconName="delete"
           onPress={() => setConfirming(true)}
         />
       )}
@@ -517,7 +536,20 @@ const styles = StyleSheet.create({
   statusLabel: { fontSize: 16, fontFamily: FontFamily.bold },
   statusError: { fontSize: 14, fontFamily: FontFamily.semibold },
   actionRow: { flexDirection: 'row', gap: Spacing.two },
-  actionCol: { flex: 1 },
+  // Frame 10c gives the destructive confirm a touch more width (1.3 : 1) than cancel.
+  cancelCol: { flex: 1 },
+  deletePrompt: { fontSize: 14, fontFamily: FontFamily.semibold },
+  confirmDelete: {
+    flex: 1.3,
+    minHeight: TouchTarget.comfortable,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+  },
+  confirmDeleteLabel: { fontSize: 16, fontFamily: FontFamily.bold },
   confirmStack: { gap: Spacing.two },
   confirmBody: { fontSize: 14, fontFamily: FontFamily.regular, lineHeight: 21 },
 });
