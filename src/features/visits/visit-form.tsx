@@ -7,7 +7,7 @@ import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primar
 import { FigmaFormScreen, FigmaMutedNote } from '@/components/figma/figma-form-screen';
 import { Surface } from '@/components/surface';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
-import { FontFamily, Radius, Spacing } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -72,16 +72,18 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
   }
 
   return (
-    <FigmaFormScreen title={t('visits.addTitle')} onBack={() => router.back()}>
+    <FigmaFormScreen
+      title={t('visits.addTitle')}
+      onBack={() => router.back()}
+      disclaimer={t('visits.disclaimer')}>
       <UnsavedChangesGuard when={dirty && !submitted} />
-      <FigmaMutedNote>{t('visits.disclaimer')}</FigmaMutedNote>
 
-      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+      <Surface tone="card" radius={Radius.card} padded={14} gap={14}>
         <FigmaVisitFields draft={draft} onChange={patch} errors={errors} />
 
         {canManage ? (
           <View>
-            <View style={[styles.divider, { backgroundColor: theme.divider }]} />
+            <View style={[styles.divider, { backgroundColor: theme.backgroundSunken }]} />
             <MemberSelect
               circleId={circleId}
               value={linkedUserId}
@@ -91,7 +93,7 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
           </View>
         ) : (
           <View>
-            <View style={[styles.divider, { backgroundColor: theme.divider }]} />
+            <View style={[styles.divider, { backgroundColor: theme.backgroundSunken }]} />
             <FigmaMutedNote>{t('visits.ownVisitNote')}</FigmaMutedNote>
           </View>
         )}
@@ -118,5 +120,6 @@ export function VisitForm({ circleId, canManage }: { circleId: string; canManage
 const styles = StyleSheet.create({
   footer: { gap: Spacing.two },
   footerError: { fontSize: 14, fontFamily: FontFamily.regular, textAlign: 'center' },
-  divider: { height: StyleSheet.hairlineWidth, marginBottom: Spacing.three },
+  // Dar 10f: a 2px sunken-toned separator (not a hairline) before «ربط بعضو».
+  divider: { height: BorderWidth.standard, marginBottom: Spacing.three },
 });
