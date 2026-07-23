@@ -121,8 +121,12 @@ Every screen restyle was adversarially verified (behaviour byte-equivalent + fra
 fidelity). The 10a `flex` (active-toggle width) issue the verify pass caught was
 fixed. A dedicated final workflow adversarially verified the shared-component + theme
 blast radius (StatusBadge tint, sheet chrome, theme resolution/provider wiring, the
-cross-file edits + i18n). Runtime/visual verification (light+dark, font-scale, RTL, and
-the theme-persistence flow) is the owner's on-device review — see the QA checklist.
+cross-file edits + i18n): StatusBadge, the theme selector, and the i18n/edits all
+passed; it surfaced **one** real regression — the restyled FormModal close button had
+shrunk its tap target to a hard 34dp — which was fixed (`d081557`) by restoring
+`hitSlop` over the 44dp floor while keeping the 34dp visual. Runtime/visual
+verification (light+dark, font-scale, RTL, and the theme-persistence flow) is the
+owner's on-device review — see the QA checklist.
 
 ---
 
