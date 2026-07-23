@@ -11,6 +11,7 @@ import { Surface } from '@/components/surface';
 import { FigmaTabBand } from '@/components/figma/figma-header';
 import { FigmaListRow } from '@/components/figma/figma-list-row';
 import { FigmaScreen } from '@/components/figma/figma-screen';
+import { FigmaSegmentedTabs } from '@/components/figma/figma-segmented-tabs';
 import { GlyphChip } from '@/components/glyph-chip';
 import { LtrText } from '@/components/ltr-text';
 import { SectionHeader } from '@/components/section-header';
@@ -21,7 +22,8 @@ import { deactivatePushToken } from '@/features/notifications/api';
 import { getRememberedToken } from '@/features/notifications/hooks';
 import { useMyProfile, useUpdateMyName } from '@/features/profile/hooks';
 import { useTheme } from '@/hooks/use-theme';
-import { useAuth } from '@/providers';
+import { useAuth, useThemePreference } from '@/providers';
+import { type ThemePreference } from '@/providers/theme-provider';
 import { confirmAction } from '@/utils/confirm';
 
 import { supabase } from '../../../../lib/supabase';
@@ -42,6 +44,7 @@ export default function AccountScreen() {
   const router = useRouter();
   const c = useTheme();
   const { activeCircle } = useCircleSelection();
+  const { preference, setPreference } = useThemePreference();
   const profile = useMyProfile(user?.id);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,6 +168,20 @@ export default function AccountScreen() {
             onPress={() => router.push('/join-circle')}
           />
         </Surface>
+      </View>
+
+      {/* Appearance — in-app theme preference (light / dark / follow system) */}
+      <View style={styles.section}>
+        <SectionHeader title={t('account.appearance.title')} />
+        <FigmaSegmentedTabs
+          tabs={[
+            { key: 'light', label: t('account.appearance.light') },
+            { key: 'dark', label: t('account.appearance.dark') },
+            { key: 'system', label: t('account.appearance.system') },
+          ]}
+          activeKey={preference}
+          onChange={(key) => setPreference(key as ThemePreference)}
+        />
       </View>
 
       {/* Danger sign-out */}

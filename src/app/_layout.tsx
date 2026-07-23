@@ -10,11 +10,11 @@ import {
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { IconFonts } from '@/components/icon';
 import { Colors, FontFamily } from '@/constants/theme';
+import { useResolvedScheme } from '@/hooks/use-theme';
 import { PendingJoinLink } from '@/features/invitations/pending-join-link';
 import { bootstrapNotifications } from '@/features/notifications/push-registration';
 import { AppProviders } from '@/providers';
@@ -38,7 +38,6 @@ function navTheme(scheme: 'light' | 'dark') {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   // The brand typeface — Cairo (Arabic + Latin), the single Dar family. Pure asset
   // load from @expo-google-fonts/cairo — no native module, no rebuild; Metro serves
   // the files on the existing Development Build. If loading errors we render anyway
@@ -70,13 +69,25 @@ export default function RootLayout() {
 
   return (
     <AppProviders>
-      <ThemeProvider value={navTheme(colorScheme === 'dark' ? 'dark' : 'light')}>
-        {/* Headless: replays a WhatsApp join code captured while signed out into
-            /join-circle after authentication (survives the auth gate). */}
-        <PendingJoinLink />
-        <AnimatedSplashOverlay />
-        <Stack screenOptions={{ headerShown: false }} />
-      </ThemeProvider>
+      <ThemedNavigationRoot />
     </AppProviders>
+  );
+}
+
+/**
+ * The navigation container, themed by the RESOLVED scheme (in-app appearance
+ * preference over the OS). Lives inside `AppProviders` so it reads the same
+ * `ThemePreferenceProvider` every screen reads — one theming mechanism.
+ */
+function ThemedNavigationRoot() {
+  const scheme = useResolvedScheme();
+  return (
+    <ThemeProvider value={navTheme(scheme)}>
+      {/* Headless: replays a WhatsApp join code captured while signed out into
+          /join-circle after authentication (survives the auth gate). */}
+      <PendingJoinLink />
+      <AnimatedSplashOverlay />
+      <Stack screenOptions={{ headerShown: false }} />
+    </ThemeProvider>
   );
 }

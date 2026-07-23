@@ -8,23 +8,29 @@ import { CircleSelectionProvider } from '@/features/circle-selection/provider';
 
 import { AuthProvider } from './auth-provider';
 import { QueryProvider } from './query-provider';
+import { ThemePreferenceProvider } from './theme-provider';
 
 /**
  * Composes the app-wide foundation providers. Order (outer -> inner):
- * SafeAreaProvider -> QueryProvider -> AuthProvider -> CircleSelectionProvider.
- * The circle-selection layer needs both the session (AuthProvider) and the query
- * client (QueryProvider), so it sits innermost.
+ * SafeAreaProvider -> ThemePreferenceProvider -> QueryProvider -> AuthProvider ->
+ * CircleSelectionProvider. ThemePreferenceProvider sits high so both the root
+ * navigation theme and every screen read the same appearance choice; the
+ * circle-selection layer needs both the session and the query client, so it stays
+ * innermost.
  */
 export function AppProviders({ children }: PropsWithChildren) {
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <QueryProvider>
-        <AuthProvider>
-          <CircleSelectionProvider>{children}</CircleSelectionProvider>
-        </AuthProvider>
-      </QueryProvider>
+      <ThemePreferenceProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <CircleSelectionProvider>{children}</CircleSelectionProvider>
+          </AuthProvider>
+        </QueryProvider>
+      </ThemePreferenceProvider>
     </SafeAreaProvider>
   );
 }
 
 export { useAuth } from './auth-provider';
+export { useThemePreference } from './theme-provider';
