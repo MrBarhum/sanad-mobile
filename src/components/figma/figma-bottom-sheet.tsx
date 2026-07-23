@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Gutter, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
+import { BorderWidth, Gutter, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type FigmaBottomSheetProps = {
@@ -61,9 +61,9 @@ const styles = StyleSheet.create({
   sheetWrap: { width: '100%', maxWidth: MaxFormWidth, alignSelf: 'center' },
   sheet: {
     width: '100%',
-    borderTopLeftRadius: Radius.card,
-    borderTopRightRadius: Radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderTopLeftRadius: Radius.sheet,
+    borderTopRightRadius: Radius.sheet,
+    borderWidth: BorderWidth.standard,
     maxHeight: '85%',
     paddingTop: Spacing.two,
     paddingHorizontal: Gutter,

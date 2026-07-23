@@ -22,7 +22,9 @@
     "unsavedTitle": "تغييرات غير محفوظة",
     "unsavedMessage": "لديك تغييرات غير محفوظة. هل تريد المغادرة دون حفظ؟",
     "discardChanges": "تجاهل التغييرات",
-    "keepEditing": "متابعة التعديل"
+    "keepEditing": "متابعة التعديل",
+    "toggleOn": "مفعّل",
+    "toggleOff": "غير مفعّل"
   },
   "validation": {
     "tooLong": "النص طويل جدًا",
@@ -446,8 +448,8 @@
       "notes": "ملاحظات"
     },
     "placeholders": {
-      "specialty": "مثال: قلب، باطنية",
-      "clinicName": "مثال: عيادة الشفاء",
+      "specialty": "قلب، باطنية",
+      "clinicName": "عيادة الشفاء",
       "notes": "ملاحظات إضافية"
     },
     "errors": {
@@ -766,11 +768,11 @@
       "status": "الحالة"
     },
     "placeholders": {
-      "title": "مثال: مراجعة طبيب القلب",
+      "title": "مراجعة طبيب القلب",
       "date": "YYYY-MM-DD",
       "startTime": "HH:MM",
       "endTime": "اختياري — HH:MM",
-      "location": "مثال: مستشفى الملك فهد",
+      "location": "مستشفى الملك فهد",
       "notes": "تعليمات أو معلومات إضافية..."
     },
     "errors": {
@@ -797,7 +799,9 @@
     "summary": {
       "none": "لا مواعيد اليوم",
       "count": "مواعيد اليوم: {{count}}"
-    }
+    },
+    "managerViewSubtitle": "عرض المدير — تعديل كامل",
+    "deletePermanently": "حذف هذا الموعد نهائيًا"
   },
   "visits": {
     "title": "الزيارات العائلية",
@@ -861,7 +865,8 @@
     "summary": {
       "none": "لا زيارات اليوم",
       "count": "زيارات اليوم: {{count}}"
-    }
+    },
+    "managerEditSubtitle": "عرض المدير — تعديل كامل"
   },
   "dailyLogs": {
     "title": "السجلات اليومية",
@@ -1119,6 +1124,12 @@
     "namePlaceholder": "اكتب اسمك",
     "nameSaved": "تم حفظ الاسم",
     "nameError": "تعذّر حفظ الاسم. حاول مرة أخرى.",
+    "appearance": {
+      "title": "المظهر",
+      "light": "فاتح",
+      "dark": "داكن",
+      "system": "تلقائي"
+    },
     "circleSectionTitle": "دوائر الرعاية",
     "notificationsSectionTitle": "الإشعارات",
     "joinAnother": "الانضمام إلى دائرة أخرى",

@@ -22,7 +22,9 @@
     "unsavedTitle": "Unsaved changes",
     "unsavedMessage": "You have unsaved changes. Leave without saving?",
     "discardChanges": "Discard changes",
-    "keepEditing": "Keep editing"
+    "keepEditing": "Keep editing",
+    "toggleOn": "On",
+    "toggleOff": "Off"
   },
   "validation": {
     "tooLong": "This text is too long",
@@ -446,8 +448,8 @@
       "notes": "Notes"
     },
     "placeholders": {
-      "specialty": "e.g. Cardiology, internal medicine",
-      "clinicName": "e.g. Al-Shifa Clinic",
+      "specialty": "Cardiology, internal medicine",
+      "clinicName": "Al-Shifa Clinic",
       "notes": "Additional notes"
     },
     "errors": {
@@ -766,11 +768,11 @@
       "status": "Status"
     },
     "placeholders": {
-      "title": "e.g. Cardiology follow-up",
+      "title": "Cardiology follow-up",
       "date": "YYYY-MM-DD",
       "startTime": "HH:MM",
       "endTime": "Optional — HH:MM",
-      "location": "e.g. King Fahd Hospital",
+      "location": "King Fahd Hospital",
       "notes": "Instructions or additional information..."
     },
     "errors": {
@@ -797,7 +799,9 @@
     "summary": {
       "none": "No appointments today",
       "count": "Today's appointments: {{count}}"
-    }
+    },
+    "managerViewSubtitle": "Manager view — full edit",
+    "deletePermanently": "Permanently delete this appointment"
   },
   "visits": {
     "title": "Family visits",
@@ -861,7 +865,8 @@
     "summary": {
       "none": "No visits today",
       "count": "Today's visits: {{count}}"
-    }
+    },
+    "managerEditSubtitle": "Manager view — full edit"
   },
   "dailyLogs": {
     "title": "Daily logs",
@@ -1119,6 +1124,12 @@
     "namePlaceholder": "Enter your name",
     "nameSaved": "Name saved",
     "nameError": "Could not save your name. Please try again.",
+    "appearance": {
+      "title": "Appearance",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Automatic"
+    },
     "circleSectionTitle": "Care circles",
     "notificationsSectionTitle": "Notifications",
     "joinAnother": "Join another circle",

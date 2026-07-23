@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Gutter, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { BorderWidth, FontFamily, Gutter, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { FigmaFooterPrimaryButton } from './figma/figma-footer-primary-button';
 import { Button } from './button';
+import { Icon } from './icon';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -53,17 +53,20 @@ export function FormModal({
         <ThemedView type="backgroundElement" style={[styles.sheet, { borderColor: theme.border }]}>
           <View style={[styles.grabber, { backgroundColor: theme.backgroundSelected }]} />
           <View style={styles.header}>
-            <ThemedText type="sectionTitle" style={styles.title} accessibilityRole="header">
-              {title}
-            </ThemedText>
             <Pressable
               onPress={onClose}
               accessibilityRole="button"
               accessibilityLabel={closeLabel}
-              hitSlop={Spacing.two}
-              style={styles.closeButton}>
-              <ThemedText style={styles.close}>{Glyph.cross}</ThemedText>
+              style={[
+                styles.closeSquare,
+                { borderColor: theme.border, backgroundColor: theme.backgroundElement },
+              ]}>
+              <Icon name="close" size={18} color="text" />
             </Pressable>
+            <ThemedText style={[styles.title, { color: theme.text }]} accessibilityRole="header">
+              {title}
+            </ThemedText>
+            <View style={styles.headerSpacer} />
           </View>
 
           <ScrollView
@@ -112,9 +115,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MaxFormWidth,
     alignSelf: 'center',
-    borderTopLeftRadius: Radius.card,
-    borderTopRightRadius: Radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderTopLeftRadius: Radius.sheet,
+    borderTopRightRadius: Radius.sheet,
+    borderWidth: BorderWidth.standard,
     maxHeight: '92%',
     paddingTop: Spacing.two,
   },
@@ -129,18 +132,20 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: Gutter,
-    gap: Spacing.three,
+    gap: Spacing.two,
   },
-  title: { flexShrink: 1 },
-  closeButton: {
-    minWidth: TouchTarget.min,
-    minHeight: TouchTarget.min,
+  // Centered 18/800 title, balanced by the close square (start) + an equal spacer.
+  title: { flex: 1, textAlign: 'center', fontSize: 18, fontFamily: FontFamily.bold },
+  closeSquare: {
+    width: 34,
+    height: 34,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.control,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  close: { fontSize: 20, fontFamily: FontFamily.semibold },
+  headerSpacer: { width: 34 },
   content: {
     paddingHorizontal: Gutter,
     paddingTop: Spacing.three,

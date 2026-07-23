@@ -17,6 +17,15 @@ const FG_BY_TONE: Record<StatusTone, ThemeColor> = {
   neutral: 'textSecondary',
 };
 
+/** The Dar status pill carries a soft tone TINT fill behind the stroke + label. */
+const BG_BY_TONE: Record<StatusTone, ThemeColor> = {
+  success: 'successBg',
+  warning: 'warningBg',
+  error: 'errorBg',
+  info: 'infoBg',
+  neutral: 'backgroundSunken',
+};
+
 /**
  * A distinct icon per tone so status is never communicated by color alone — the
  * shape carries meaning for low-vision / color-blind users, reinforced by the
@@ -41,16 +50,18 @@ type StatusBadgeProps = {
 };
 
 /**
- * The Dar status pill: a 1.5px stroke border in the tone color, radius 4, a tone
- * icon + a 14/700 label — icon + text (never color-only), calm rather than loud.
- * Matches the dose / task status pills exactly.
+ * The Dar status pill: a soft tone tint fill behind a 1.5px stroke in the tone
+ * color, radius 4, a tone icon + a 14/700 label — icon + text (never color-only),
+ * calm rather than loud. Matches the dose / task status pills exactly.
  */
 export function StatusBadge({ tone, label, iconName, glyph, style }: StatusBadgeProps) {
   const c = useTheme();
   const fg = c[FG_BY_TONE[tone]];
 
   return (
-    <View style={[styles.badge, { borderColor: fg }, style]} accessibilityRole="text">
+    <View
+      style={[styles.badge, { borderColor: fg, backgroundColor: c[BG_BY_TONE[tone]] }, style]}
+      accessibilityRole="text">
       {glyph ? (
         <ThemedText style={[styles.glyph, { color: fg }]}>{glyph}</ThemedText>
       ) : (

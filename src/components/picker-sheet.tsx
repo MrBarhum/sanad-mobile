@@ -3,7 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Gutter, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { BorderWidth, FontFamily, Gutter, MaxFormWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { ThemedText } from './themed-text';
@@ -210,9 +210,9 @@ const styles = StyleSheet.create({
   sheet: {
     width: '100%',
     maxHeight: '92%',
-    borderTopLeftRadius: Radius.card,
-    borderTopRightRadius: Radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderTopLeftRadius: Radius.sheet,
+    borderTopRightRadius: Radius.sheet,
+    borderWidth: BorderWidth.standard,
     paddingTop: Spacing.two,
     paddingHorizontal: Gutter,
     gap: Spacing.three,
