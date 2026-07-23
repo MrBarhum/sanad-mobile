@@ -116,6 +116,7 @@ export function DoctorFormModal({
         label={t('doctors.fields.name')}
         value={name}
         onChangeText={setName}
+        required
         error={fieldError(errors.name)}
       />
       <FormField
