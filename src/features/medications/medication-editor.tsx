@@ -1,7 +1,8 @@
 import { Stack, useRouter } from 'expo-router';
+import { Check, Pencil, Plus, Trash2, type LucideIcon } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
@@ -12,14 +13,15 @@ import {
   FigmaSwitch,
 } from '@/components/figma/figma-form-screen';
 import { FormField } from '@/components/form-field';
-import { ItemActions } from '@/components/item-actions';
+import { isolateLtr } from '@/components/ltr-text';
+import { SectionHeader } from '@/components/section-header';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { StatusBadge } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Radius, Spacing } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -45,16 +47,15 @@ import { ScheduleSummary } from './schedule-summary';
 const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
 /**
- * View / edit a medication + its dose schedules — rebuilt in the Figma editor
- * language (FigmaFormScreen header + gold non-diagnostic banner + grouped
- * Surface cards). The medication-info section mirrors the Add-Medication form's
- * info card and saves with a body-rendered teal CTA; the dose-schedule manager
- * (add / edit via the schedule modal, activate / deactivate, delete), the
- * activation toggle, and the two-step delete keep their exact existing behavior —
- * only their surfaces are restyled. Real hooks, schema validation, and permissions
- * are unchanged. (Unlike the single-submit add form, this is a multi-section
- * management screen, so the info save sits with the info section and schedules are
- * managed live.)
+ * View / edit a medication + its dose schedules — the Dar "10a" manager editor
+ * (FigmaFormScreen green band + gold non-diagnostic banner + grouped Surface
+ * cards). The medication-info section mirrors the Add-Medication form's info card
+ * and saves with a body-rendered teal CTA; the dose-schedule manager (add / edit
+ * via the schedule modal, activate / deactivate, delete), the activation row, and
+ * the two-step delete keep their exact existing behavior — only their surfaces are
+ * restyled to the frame. Real hooks, schema validation, and permissions are
+ * unchanged. (Unlike the single-submit add form, this is a multi-section management
+ * screen, so the info save sits with the info section and schedules are managed live.)
  */
 export function MedicationEditor({
   circleId,
@@ -221,7 +222,7 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
   return (
     <>
       <UnsavedChangesGuard when={dirty} />
-      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+      <Surface tone="card" radius={Radius.card} padded={16} gap={16}>
         <FigmaSectionLabel>{t('medications.medicationInfoTitle')}</FigmaSectionLabel>
         <FormField
           label={t('medications.fields.name')}
@@ -265,7 +266,7 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
           error={fieldError(errors.instructions)}
         />
 
-        <View style={[styles.divider, { backgroundColor: theme.divider }]} />
+        <View style={[styles.divider, { backgroundColor: theme.backgroundSunken }]} />
         <View style={styles.switchRow}>
           <View style={styles.switchText}>
             <Text style={[styles.switchLabel, { color: theme.text }]}>
@@ -275,6 +276,14 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
               {t('medications.withFoodReminder')}
             </Text>
           </View>
+          {/* State word so the toggle is never communicated by color alone. */}
+          <Text
+            style={[
+              styles.stateWord,
+              { color: withFood ? theme.primaryText : theme.textSecondary },
+            ]}>
+            {withFood ? t('common.toggleOn') : t('common.toggleOff')}
+          </Text>
           <FigmaSwitch
             value={withFood}
             onValueChange={(v) => {
@@ -286,8 +295,8 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
         </View>
       </Surface>
 
-      {/* Responsible person */}
-      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+      {/* Responsible person — neutral chips (person name only, never gendered). */}
+      <Surface tone="card" radius={Radius.card} padded={16} gap={16}>
         <MemberSelect
           circleId={circleId}
           value={responsibleUserId}
@@ -304,9 +313,10 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
           (schedules below are managed live via their own modal). */}
       <View style={styles.footer}>
         {status === 'saved' ? (
-          <Text style={[styles.statusText, { color: theme.successFg }]} accessibilityLiveRegion="polite">
-            {t('medications.saved')}
-          </Text>
+          <View style={styles.savedRow} accessibilityLiveRegion="polite">
+            <Check size={16} color={theme.successFg} strokeWidth={2.8} />
+            <Text style={[styles.savedText, { color: theme.successFg }]}>{t('medications.saved')}</Text>
+          </View>
         ) : null}
         {status === 'error' ? (
           <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert">
@@ -336,7 +346,7 @@ function ReadOnlyMedicationInfo({
   return (
     <>
       <FigmaMutedNote>{t('medications.readOnly')}</FigmaMutedNote>
-      <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+      <Surface tone="card" radius={Radius.card} padded={16} gap={12}>
         <FigmaSectionLabel>{t('medications.medicationInfoTitle')}</FigmaSectionLabel>
         <Text style={[styles.title, { color: theme.text }]}>{medication.name}</Text>
         {medication.dosage ? (
@@ -360,6 +370,7 @@ function ReadOnlyMedicationInfo({
   );
 }
 
+/** A Dar info row: a muted 15/700 label on the start, an 15/800 value on the end. */
 function InfoRow({ label, value }: { label: string; value: string }) {
   const theme = useTheme();
   return (
@@ -412,22 +423,33 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
   }
 
   return (
-    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
-      <Text style={[styles.statusLabel, { color: theme.text }]}>
-        {medication.is_active ? t('medications.activeLabel') : t('medications.inactiveLabel')}
-      </Text>
+    <Surface tone="card" radius={Radius.card} padded={16} gap={12}>
       {error ? (
-        <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
+        <Text
+          style={[styles.statusText, { color: theme.errorFg }]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite">
           {error}
         </Text>
       ) : null}
-      <Button
-        variant="secondary"
-        label={medication.is_active ? t('medications.deactivate') : t('medications.reactivate')}
-        loading={pending}
-        disabled={pending}
-        onPress={onToggle}
-      />
+      <View style={styles.activationRow}>
+        <View style={styles.activationLabelGroup}>
+          {medication.is_active ? (
+            <Check size={16} color={theme.successFg} strokeWidth={2.6} />
+          ) : null}
+          <Text style={[styles.blockTitle, { color: theme.text }]}>
+            {medication.is_active ? t('medications.activeLabel') : t('medications.inactiveLabel')}
+          </Text>
+        </View>
+        <Button
+          size="sm"
+          variant="secondary"
+          label={medication.is_active ? t('medications.deactivate') : t('medications.reactivate')}
+          loading={pending}
+          disabled={pending}
+          onPress={onToggle}
+        />
+      </View>
     </Surface>
   );
 }
@@ -455,9 +477,12 @@ function DeleteMedicationRow({ circleId, id }: { circleId: string; id: string })
   }
 
   return (
-    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+    <View style={styles.deleteBlock}>
       {error ? (
-        <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
+        <Text
+          style={[styles.statusText, { color: theme.errorFg }]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite">
           {error}
         </Text>
       ) : null}
@@ -481,13 +506,15 @@ function DeleteMedicationRow({ circleId, id }: { circleId: string; id: string })
           </View>
         </View>
       ) : (
-        <Button
+        <DarActionButton
+          size="block"
+          tone="danger"
+          Icon={Trash2}
           label={t('medications.deleteMedication')}
-          variant="danger"
           onPress={() => setConfirming(true)}
         />
       )}
-    </Surface>
+    </View>
   );
 }
 
@@ -566,12 +593,13 @@ function SchedulesManager({
 
   return (
     <View style={styles.schedules}>
-      <Text style={[styles.sectionHeading, { color: theme.text }]} accessibilityRole="header">
-        {t('medications.dosesSectionTitle')}
-      </Text>
+      <SectionHeader title={t('medications.dosesSectionTitle')} />
       <FigmaMutedNote>{t('medications.scheduleGroupsHelp')}</FigmaMutedNote>
       {actionError ? (
-        <Text style={[styles.statusText, { color: theme.errorFg }]} accessibilityRole="alert" accessibilityLiveRegion="polite">
+        <Text
+          style={[styles.statusText, { color: theme.errorFg }]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="polite">
           {actionError}
         </Text>
       ) : null}
@@ -598,8 +626,10 @@ function SchedulesManager({
 
       {canManage ? (
         <>
-          <Button
-            variant="secondary"
+          <DarActionButton
+            size="block"
+            tone="accent"
+            Icon={Plus}
             label={t('medications.addScheduleAtMed')}
             onPress={() => setAdding(true)}
           />
@@ -642,6 +672,9 @@ function ScheduleCard({
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
+  // Inline two-step delete confirm (replaces the buttons in place) — same guarded
+  // flow as before, laid out to the frame's single action row.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const daysText =
     schedule.days_of_week.length >= 7
@@ -650,15 +683,17 @@ function ScheduleCard({
           .sort((a, b) => a - b)
           .map((day) => t(`medications.weekdaysShort.${WEEKDAY_KEYS[day]}`))
           .join('، ');
-  const timesText = [...schedule.times].map(formatHm).sort().join('، ');
+  const timesText = isolateLtr([...schedule.times].map(formatHm).sort().join('، '));
   const rangeText = schedule.end_date
-    ? `${schedule.start_date} — ${schedule.end_date}`
-    : `${t('medications.fromDate')} ${schedule.start_date}`;
+    ? `${isolateLtr(schedule.start_date)} — ${isolateLtr(schedule.end_date)}`
+    : `${t('medications.fromDate')} ${isolateLtr(schedule.start_date)}`;
 
   return (
-    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
+    <Surface tone="card" radius={Radius.card} padded={16} gap={12}>
       <View style={styles.scheduleHeader}>
-        <Text style={[styles.statusLabel, { color: theme.text }]}>{t('medications.scheduleNumber', { number })}</Text>
+        <Text style={[styles.blockTitle, { color: theme.text }]}>
+          {t('medications.scheduleNumber', { number })}
+        </Text>
         <StatusBadge
           tone={schedule.is_active ? 'success' : 'neutral'}
           label={
@@ -669,36 +704,125 @@ function ScheduleCard({
         />
       </View>
 
-      <InfoRow label={t('medications.fields.days')} value={daysText} />
-      <InfoRow label={t('medications.fields.times')} value={timesText} />
-      <InfoRow label={t('medications.fields.startDate')} value={rangeText} />
-      {schedule.notes ? (
-        <InfoRow label={t('medications.fields.scheduleNotes')} value={schedule.notes} />
-      ) : null}
+      <View style={styles.infoGrid}>
+        <InfoRow label={t('medications.fields.days')} value={daysText} />
+        <InfoRow label={t('medications.fields.times')} value={timesText} />
+        <InfoRow label={t('medications.fields.startDate')} value={rangeText} />
+        {schedule.notes ? (
+          <InfoRow label={t('medications.fields.scheduleNotes')} value={schedule.notes} />
+        ) : null}
+      </View>
 
       {canManage ? (
-        <View style={styles.scheduleActions}>
-          <Button
-            variant="secondary"
-            label={schedule.is_active ? t('medications.deactivate') : t('medications.reactivate')}
-            loading={toggling}
-            disabled={toggling}
-            onPress={onToggleActive}
-          />
-          <ItemActions
-            deleting={deleting}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            labels={{
-              edit: t('common.edit'),
-              delete: t('common.delete'),
-              confirm: t('common.confirmDelete'),
-              cancel: t('common.cancel'),
-            }}
-          />
-        </View>
+        confirmingDelete ? (
+          <View style={styles.actionRow}>
+            <View style={styles.actionCol}>
+              <Button
+                size="sm"
+                label={t('common.confirmDelete')}
+                variant="danger"
+                loading={deleting}
+                onPress={onDelete}
+              />
+            </View>
+            <View style={styles.actionCol}>
+              <Button
+                size="sm"
+                label={t('common.cancel')}
+                variant="secondary"
+                disabled={deleting}
+                onPress={() => setConfirmingDelete(false)}
+              />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.scheduleActions}>
+            <DarActionButton
+              flex={schedule.is_active ? 1 : 1.3}
+              tone="neutral"
+              label={
+                schedule.is_active ? t('medications.deactivate') : t('medications.reactivate')
+              }
+              loading={toggling}
+              disabled={toggling}
+              onPress={onToggleActive}
+            />
+            <DarActionButton flex={1} tone="accent" Icon={Pencil} label={t('common.edit')} onPress={onEdit} />
+            <DarActionButton
+              flex={1}
+              tone="danger"
+              Icon={Trash2}
+              label={t('common.delete')}
+              onPress={() => setConfirmingDelete(true)}
+            />
+          </View>
+        )
       ) : null}
     </Surface>
+  );
+}
+
+/**
+ * A Dar bordered action button matching the frame's schedule / add / delete rows:
+ * a 2px border + `card` fill, a lucide glyph + label in the tone color. `neutral`
+ * = `line` border + `ink` text, `accent` = `line` border + `acc` text, `danger` =
+ * `err` border + `err` text. `size="row"` for the compact schedule actions (flex
+ * cells), `size="block"` for a full-width primary/destructive button.
+ */
+function DarActionButton({
+  label,
+  tone,
+  Icon,
+  onPress,
+  loading = false,
+  disabled = false,
+  flex,
+  size = 'row',
+}: {
+  label: string;
+  tone: 'neutral' | 'accent' | 'danger';
+  Icon?: LucideIcon;
+  onPress: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+  flex?: number;
+  size?: 'row' | 'block';
+}) {
+  const c = useTheme();
+  const textColor = tone === 'accent' ? c.primaryText : tone === 'danger' ? c.errorFg : c.text;
+  const borderColor = tone === 'danger' ? c.errorFg : c.border;
+  const isDisabled = disabled || loading;
+  const iconSize = size === 'block' ? 16 : 15;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      style={({ pressed }) => [
+        styles.darBtn,
+        size === 'block' ? styles.darBtnBlock : styles.darBtnRow,
+        { backgroundColor: c.backgroundElement, borderColor, opacity: pressed && !isDisabled ? 0.8 : 1 },
+        flex != null ? { flex } : styles.darBtnStretch,
+      ]}>
+      {loading ? (
+        <ActivityIndicator color={textColor} />
+      ) : (
+        <View style={styles.darBtnContent}>
+          {Icon ? <Icon size={iconSize} color={textColor} strokeWidth={2} /> : null}
+          <Text
+            style={[
+              size === 'block' ? styles.darBtnLabelBlock : styles.darBtnLabelRow,
+              { color: textColor },
+            ]}
+            numberOfLines={1}>
+            {label}
+          </Text>
+        </View>
+      )}
+    </Pressable>
   );
 }
 
@@ -706,22 +830,23 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
   footer: { gap: Spacing.two },
   statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  savedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  savedText: { fontSize: 15, fontFamily: FontFamily.semibold },
   title: { fontSize: 18, fontFamily: FontFamily.bold },
-  sectionHeading: { fontSize: 16, fontFamily: FontFamily.bold },
-  infoRow: { gap: 2 },
-  rowLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
-  rowValue: { fontSize: 16, fontFamily: FontFamily.regular },
-  statusLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
-  divider: { height: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
-  },
-  switchText: { flex: 1, gap: 2 },
-  switchLabel: { fontSize: 15, fontFamily: FontFamily.regular },
-  switchHint: { fontSize: 14, fontFamily: FontFamily.regular },
+  blockTitle: { fontSize: 16, fontFamily: FontFamily.bold },
+  // Info rows: label on the start, value on the end (numbers/dates are LTR-isolated).
+  infoGrid: { gap: 6 },
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 },
+  rowLabel: { fontSize: 15, fontFamily: FontFamily.semibold, flexShrink: 0 },
+  rowValue: { fontSize: 15, fontFamily: FontFamily.bold, flexShrink: 1 },
+  divider: { height: BorderWidth.standard, alignSelf: 'stretch' },
+  switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  switchText: { flex: 1, minWidth: 0, gap: 2 },
+  switchLabel: { fontSize: 16, fontFamily: FontFamily.bold },
+  switchHint: { fontSize: 14, fontFamily: FontFamily.medium },
+  stateWord: { fontSize: 14, fontFamily: FontFamily.bold },
+  activationRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  activationLabelGroup: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6 },
   schedules: { gap: Spacing.three },
   scheduleHeader: {
     flexDirection: 'row',
@@ -729,7 +854,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  scheduleActions: { gap: Spacing.two, marginTop: Spacing.one },
+  scheduleActions: { flexDirection: 'row', gap: Spacing.two },
+  deleteBlock: { gap: Spacing.two },
   actionRow: { flexDirection: 'row', gap: Spacing.two },
   actionCol: { flex: 1 },
+  // Dar bordered action button
+  darBtn: {
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  darBtnRow: { minHeight: 44, paddingVertical: 9, paddingHorizontal: 8 },
+  darBtnBlock: { minHeight: 52, paddingVertical: 13, paddingHorizontal: 16 },
+  darBtnStretch: { alignSelf: 'stretch' },
+  darBtnContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  darBtnLabelRow: { fontSize: 15, fontFamily: FontFamily.bold },
+  darBtnLabelBlock: { fontSize: 16, fontFamily: FontFamily.bold },
 });

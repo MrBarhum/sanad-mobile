@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { LtrText, isolateLtr } from '@/components/ltr-text';
+import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
-import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { FontFamily, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { formatHm } from '@/utils/date';
 
 import type { MedicationSchedule } from './api';
@@ -24,6 +24,7 @@ function uniqueSortedTimes(times: string[]): string[] {
  */
 export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[] }) {
   const { t } = useTranslation();
+  const c = useTheme();
   const [expanded, setExpanded] = useState(false);
 
   const active = useMemo(() => schedules.filter((s) => s.is_active), [schedules]);
@@ -63,43 +64,46 @@ export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[]
   }
 
   return (
-    <Surface style={styles.card}>
-      <ThemedText type="cardTitle">{t('medications.summary.weeklyTitle')}</ThemedText>
+    <Surface tone="info">
+      {/* Title + per-day toggle share one baseline-aligned header row. */}
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: c.text }]}>{t('medications.summary.weeklyTitle')}</Text>
+        <Pressable
+          onPress={() => setExpanded((value) => !value)}
+          accessibilityRole="button"
+          hitSlop={Spacing.two}>
+          <Text style={[styles.toggle, { color: c.primaryText }]}>
+            {expanded ? t('medications.summary.hidePerDay') : t('medications.summary.showPerDay')}
+          </Text>
+        </Pressable>
+      </View>
 
-      {groups.map((group, index) => (
-        <ThemedText key={index} type="small">
-          {t('medications.summary.line', {
-            days: daysLabel(group.days),
-            times: isolateLtr(group.times.join('، ')),
-          })}
-        </ThemedText>
-      ))}
-
-      <Pressable
-        onPress={() => setExpanded((value) => !value)}
-        accessibilityRole="button"
-        hitSlop={Spacing.two}>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.toggle}>
-          {expanded ? t('medications.summary.hidePerDay') : t('medications.summary.showPerDay')}
-        </ThemedText>
-      </Pressable>
+      <View style={styles.lines}>
+        {groups.map((group, index) => (
+          <Text key={index} style={[styles.line, { color: c.text }]}>
+            {t('medications.summary.line', {
+              days: daysLabel(group.days),
+              times: isolateLtr(group.times.join('، ')),
+            })}
+          </Text>
+        ))}
+      </View>
 
       {expanded ? (
         <View style={styles.perDay}>
           {perDay.map((times, day) => (
             <View key={day} style={styles.perDayRow}>
-              <ThemedText type="smallBold">
+              <Text style={[styles.line, { color: c.text }]}>
                 {t(`medications.weekdays.${WEEKDAY_KEYS[day]}`)}
-              </ThemedText>
-              {times.length ? (
-                <LtrText type="small" themeColor="textSecondary" style={styles.perDayTimes}>
-                  {times.join('، ')}
-                </LtrText>
-              ) : (
-                <ThemedText type="small" themeColor="textSecondary" style={styles.perDayTimes}>
-                  {t('medications.summary.perDayNone')}
-                </ThemedText>
-              )}
+              </Text>
+              <Text
+                style={[
+                  styles.perDayTimes,
+                  { color: c.textSecondary },
+                  times.length ? styles.ltr : null,
+                ]}>
+                {times.length ? isolateLtr(times.join('، ')) : t('medications.summary.perDayNone')}
+              </Text>
             </View>
           ))}
         </View>
@@ -109,9 +113,18 @@ export function ScheduleSummary({ schedules }: { schedules: MedicationSchedule[]
 }
 
 const styles = StyleSheet.create({
-  card: { gap: Spacing.two },
-  toggle: { textDecorationLine: 'underline', marginTop: Spacing.one },
-  perDay: { gap: Spacing.one, marginTop: Spacing.one },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
+  title: { fontSize: 16, fontFamily: FontFamily.bold, lineHeight: 24 },
+  toggle: { fontSize: 14, fontFamily: FontFamily.bold, lineHeight: 22, textDecorationLine: 'underline' },
+  lines: { gap: Spacing.one, marginTop: Spacing.one },
+  line: { fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 24 },
+  perDay: { gap: Spacing.one, marginTop: Spacing.two },
   perDayRow: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.three },
-  perDayTimes: { flexShrink: 1, textAlign: 'right' },
+  perDayTimes: { flexShrink: 1, textAlign: 'right', fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 24 },
+  ltr: { writingDirection: 'ltr' },
 });
