@@ -141,8 +141,10 @@ function DoctorCard({
   const [confirming, setConfirming] = useState(false);
 
   const phone = doctor.phone ?? null;
-  const specialty = doctor.specialty ?? null;
-  const clinic = doctor.clinic_name ?? null;
+  const specialty = doctor.specialty?.trim() || null;
+  const clinic = doctor.clinic_name?.trim() || null;
+  // Frame joins «التخصص · العيادة» onto one meta line with a «·» separator.
+  const meta = [specialty, clinic].filter(Boolean).join('  ·  ');
 
   // Existing one-tap call pattern (mirrors ContactCard): sanitize, then tel:.
   function call() {
@@ -154,21 +156,16 @@ function DoctorCard({
   }
 
   return (
-    <Surface tone="card" radius={Radius.card} padded={16}>
+    <Surface tone="card" radius={Radius.card} padded={12} style={styles.card}>
       <View style={styles.cardTop}>
-        <GlyphChip iconName="doctor" tone="primary" size="md" />
+        <GlyphChip iconName="doctor" tone="success" size="md" style={styles.iconSquare} />
         <View style={styles.cardInfo}>
           <Text style={[styles.cardName, { color: c.text }]} numberOfLines={1}>
             {doctor.name}
           </Text>
-          {specialty ? (
+          {meta ? (
             <Text style={[styles.cardMeta, { color: c.textSecondary }]} numberOfLines={1}>
-              {specialty}
-            </Text>
-          ) : null}
-          {clinic ? (
-            <Text style={[styles.cardMeta, { color: c.textSecondary }]} numberOfLines={1}>
-              {clinic}
+              {meta}
             </Text>
           ) : null}
         </View>
@@ -182,50 +179,54 @@ function DoctorCard({
               { backgroundColor: c.primaryBg, borderColor: c.border },
               pressed && styles.pressed,
             ]}>
-            <Phone size={20} color={c.primaryText} strokeWidth={2.2} />
+            <Phone size={19} color={c.primaryText} strokeWidth={2.2} />
           </Pressable>
         ) : null}
       </View>
 
       {phone ? (
         <View style={[styles.phoneWell, { backgroundColor: c.backgroundSunken, borderColor: c.border }]}>
-          <Text style={[styles.phoneText, { color: c.textSecondary }]} selectable>
+          <Text style={[styles.phoneText, { color: c.text }]} selectable>
             {isolateLtr(phone)}
           </Text>
         </View>
       ) : null}
 
       {canManage ? (
-        <View style={[styles.actions, { borderTopColor: c.border }]}>
-          {confirming ? (
-            <>
-              <ActionButton
-                Icon={Trash2}
-                label={t('common.confirmDelete')}
-                tone="danger"
-                filled
-                loading={deleting}
-                onPress={onDelete}
-              />
-              <ActionButton
-                label={t('common.cancel')}
-                tone="muted"
-                disabled={deleting}
-                onPress={() => setConfirming(false)}
-              />
-            </>
-          ) : (
-            <>
-              <ActionButton Icon={Pencil} label={t('common.edit')} tone="muted" onPress={onEdit} />
-              <ActionButton
-                Icon={Trash2}
-                label={t('common.delete')}
-                tone="danger"
-                onPress={() => setConfirming(true)}
-              />
-            </>
-          )}
-        </View>
+        <>
+          <View style={[styles.divider, { backgroundColor: c.backgroundSunken }]} />
+          <View style={styles.actions}>
+            {confirming ? (
+              <>
+                <ActionButton
+                  Icon={Trash2}
+                  label={t('common.confirmDelete')}
+                  tone="danger"
+                  filled
+                  flex={1.3}
+                  loading={deleting}
+                  onPress={onDelete}
+                />
+                <ActionButton
+                  label={t('common.cancel')}
+                  tone="muted"
+                  disabled={deleting}
+                  onPress={() => setConfirming(false)}
+                />
+              </>
+            ) : (
+              <>
+                <ActionButton Icon={Pencil} label={t('common.edit')} tone="muted" onPress={onEdit} />
+                <ActionButton
+                  Icon={Trash2}
+                  label={t('common.delete')}
+                  tone="danger"
+                  onPress={() => setConfirming(true)}
+                />
+              </>
+            )}
+          </View>
+        </>
       ) : null}
     </Surface>
   );
@@ -237,6 +238,7 @@ function ActionButton({
   Icon,
   tone,
   filled = false,
+  flex = 1,
   loading = false,
   disabled = false,
   onPress,
@@ -245,6 +247,7 @@ function ActionButton({
   Icon?: typeof Pencil;
   tone: 'muted' | 'danger';
   filled?: boolean;
+  flex?: number;
   loading?: boolean;
   disabled?: boolean;
   onPress: () => void;
@@ -252,10 +255,11 @@ function ActionButton({
   const c = useTheme();
   const danger = tone === 'danger';
   // Restrained danger: outline (card + err border + err text); the confirm step
-  // is the one solid fill (dangerSolid + onError). Muted = sunken + line + ink.
+  // is the one solid err fill with bg-colored text and a `line` border (frame).
+  // Muted = card fill + line border + ink (edit / cancel outline buttons).
   const fg = filled ? c.onError : danger ? c.errorFg : c.text;
-  const bg = filled ? c.dangerSolid : danger ? c.backgroundElement : c.backgroundSunken;
-  const border = filled ? c.dangerSolid : danger ? c.errorFg : c.border;
+  const bg = filled ? c.dangerSolid : c.backgroundElement;
+  const border = filled ? c.border : danger ? c.errorFg : c.border;
 
   return (
     <Pressable
@@ -266,14 +270,14 @@ function ActionButton({
       accessibilityState={{ disabled: loading || disabled, busy: loading }}
       style={({ pressed }) => [
         styles.actionBtn,
-        { backgroundColor: bg, borderColor: border },
+        { flex, backgroundColor: bg, borderColor: border },
         (pressed || disabled) && styles.pressed,
       ]}>
       {loading ? (
         <ActivityIndicator size="small" color={fg} />
       ) : (
         <>
-          {Icon ? <Icon size={16} color={fg} strokeWidth={2} /> : null}
+          {Icon ? <Icon size={14} color={fg} strokeWidth={2} /> : null}
           <Text style={[styles.actionLabel, { color: fg }]}>{label}</Text>
         </>
       )}
@@ -296,10 +300,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   retryText: { fontSize: 15, fontFamily: FontFamily.bold },
-  list: { gap: 12 },
+  list: { gap: 10 },
+  // Card: frame padding is 12v / 14h — `padded={12}` sets 12 all round, this
+  // overrides the horizontal to 14 (paddingHorizontal wins over padding for L/R).
+  card: { paddingHorizontal: 14 },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  // GlyphChip `md` is 40dp; the frame icon square is 44×44 (glyph stays 20).
+  iconSquare: { width: 44, height: 44 },
   cardInfo: { flex: 1, minWidth: 0, gap: 2 },
-  cardName: { fontSize: 16, fontFamily: FontFamily.bold },
+  cardName: { fontSize: 17, lineHeight: 26, fontFamily: FontFamily.bold },
   cardMeta: { fontSize: 14, fontFamily: FontFamily.medium },
   callButton: {
     width: 46,
@@ -312,23 +321,22 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.7 },
   phoneWell: {
-    marginTop: 12,
+    marginTop: 10,
     borderRadius: Radius.card,
     borderWidth: BorderWidth.standard,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 9,
   },
-  phoneText: { fontSize: 14, fontFamily: FontFamily.medium, writingDirection: 'ltr' },
-  // Manager actions footer
-  actions: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 14,
-    paddingTop: 14,
-    borderTopWidth: BorderWidth.standard,
+  phoneText: {
+    fontSize: 15,
+    fontFamily: FontFamily.bold,
+    textAlign: 'center',
+    writingDirection: 'ltr',
   },
+  // Manager actions footer — a 2px `sunken` bar separates it from the well/top row.
+  divider: { height: 2, marginTop: 12, marginBottom: 10 },
+  actions: { flexDirection: 'row', gap: 8 },
   actionBtn: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -338,5 +346,5 @@ const styles = StyleSheet.create({
     borderWidth: BorderWidth.standard,
     paddingHorizontal: 12,
   },
-  actionLabel: { fontSize: 14, fontFamily: FontFamily.bold },
+  actionLabel: { fontSize: 15, fontFamily: FontFamily.bold },
 });
