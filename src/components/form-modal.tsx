@@ -57,10 +57,13 @@ export function FormModal({
               onPress={onClose}
               accessibilityRole="button"
               accessibilityLabel={closeLabel}
+              hitSlop={Spacing.two}
               style={[
                 styles.closeSquare,
                 { borderColor: theme.border, backgroundColor: theme.backgroundElement },
               ]}>
+              {/* 34dp visual per the frame; hitSlop lifts the tap target back over
+                  the 44dp floor (older-adult accessibility). */}
               <Icon name="close" size={18} color="text" />
             </Pressable>
             <ThemedText style={[styles.title, { color: theme.text }]} accessibilityRole="header">
