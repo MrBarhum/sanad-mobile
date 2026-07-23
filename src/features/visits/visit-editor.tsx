@@ -13,7 +13,7 @@ import { Surface } from '@/components/surface';
 import { ThemedView } from '@/components/themed-view';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { Glyph } from '@/constants/glyphs';
-import { FontFamily, Radius, Spacing } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -163,15 +163,18 @@ function VisitEditScreen({
   }
 
   return (
-    <FigmaFormScreen title={t('visits.detailTitle')} onBack={() => router.back()}>
+    <FigmaFormScreen
+      title={t('visits.detailTitle')}
+      subtitle={t('visits.managerEditSubtitle')}
+      onBack={() => router.back()}
+      disclaimer={t('visits.disclaimer')}>
       <UnsavedChangesGuard when={dirty} />
-      <FigmaMutedNote>{t('visits.disclaimer')}</FigmaMutedNote>
 
       <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
         <FigmaVisitFields draft={draft} onChange={patch} errors={errors} />
         {canManage ? (
           <View>
-            <View style={[styles.divider, { backgroundColor: theme.divider }]} />
+            <View style={[styles.divider, { backgroundColor: theme.backgroundSunken }]} />
             <MemberSelect
               circleId={circleId}
               value={linkedUserId}
@@ -352,16 +355,20 @@ function StatusSection({
             />
           </View>
         ) : (
-          <View style={styles.confirmStack}>
-            <FigmaFooterPrimaryButton
-              label={t('visits.markCompleted')}
-              onPress={() => setConfirm('completed')}
-            />
-            <Button
-              label={t('visits.markCancelled')}
-              variant="secondary"
-              onPress={() => setConfirm('cancelled')}
-            />
+          <View style={styles.statusActionsRow}>
+            <View style={styles.actionCol}>
+              <FigmaFooterPrimaryButton
+                label={t('visits.markCompleted')}
+                onPress={() => setConfirm('completed')}
+              />
+            </View>
+            <View style={styles.actionCol}>
+              <Button
+                label={t('visits.markCancelled')}
+                variant="secondary"
+                onPress={() => setConfirm('cancelled')}
+              />
+            </View>
           </View>
         )
       ) : showReopen ? (
@@ -394,41 +401,37 @@ function DeleteVisitRow({ circleId, id }: { circleId: string; id: string }) {
     }
   }
 
-  return (
-    <Surface tone="card" radius={Radius.lg} padded={16} gap={16}>
-      {confirming ? (
-        <View style={styles.actionRow}>
-          <View style={styles.actionCol}>
-            <Button
-              label={t('common.confirmDelete')}
-              variant="danger"
-              loading={pending}
-              onPress={onDelete}
-            />
-          </View>
-          <View style={styles.actionCol}>
-            <Button
-              label={t('common.cancel')}
-              variant="secondary"
-              disabled={pending}
-              onPress={() => setConfirming(false)}
-            />
-          </View>
-        </View>
-      ) : (
+  // Flat single-affordance delete (frame 10g): the danger button IS the bordered
+  // element — no outer card. The two-step confirm swaps it for a confirm/cancel row.
+  return confirming ? (
+    <View style={styles.actionRow}>
+      <View style={styles.actionCol}>
         <Button
-          label={t('visits.deleteVisit')}
+          label={t('common.confirmDelete')}
           variant="danger"
-          onPress={() => setConfirming(true)}
+          loading={pending}
+          onPress={onDelete}
         />
-      )}
-    </Surface>
+      </View>
+      <View style={styles.actionCol}>
+        <Button
+          label={t('common.cancel')}
+          variant="secondary"
+          disabled={pending}
+          onPress={() => setConfirming(false)}
+        />
+      </View>
+    </View>
+  ) : (
+    <Button label={t('visits.deleteVisit')} variant="danger" iconName="delete" onPress={() => setConfirming(true)} />
   );
 }
 
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: Spacing.four },
-  divider: { height: StyleSheet.hairlineWidth, marginBottom: Spacing.three },
+  // In-card separator before «ربط بعضو» — the frame draws a 2px `sunken` rule (a
+  // softer in-card break than a border-colored line), not a hairline.
+  divider: { height: BorderWidth.standard, marginTop: Spacing.half, marginBottom: 12 },
   footer: { gap: Spacing.two },
   statusText: { fontSize: 14, fontFamily: FontFamily.semibold, textAlign: 'center' },
   title: { fontSize: 18, fontFamily: FontFamily.bold },
@@ -441,10 +444,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  statusLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  statusLabel: { fontSize: 16, fontFamily: FontFamily.bold },
   statusError: { fontSize: 14, fontFamily: FontFamily.semibold },
   actionRow: { flexDirection: 'row', gap: Spacing.two },
   actionCol: { flex: 1 },
+  // Frame 10g outcome pair: «تمت الزيارة» + «تعذّرت الزيارة» sit side by side.
+  statusActionsRow: { flexDirection: 'row', gap: Spacing.two },
   confirmStack: { gap: Spacing.two },
   confirmBody: { fontSize: 14, fontFamily: FontFamily.regular, lineHeight: 21 },
 });
