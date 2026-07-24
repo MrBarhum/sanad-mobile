@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type SelectOption<T extends string> = {
@@ -31,6 +31,14 @@ type OptionSelectProps<T extends string> = {
  * priority / type / unit / role enums on the care forms. Each option is a
  * full-area Pressable; the selection is never carried by colour alone (a leading
  * check + bold label). Meets the 48dp touch floor, RTL-safe.
+ *
+ * Device constraint (do NOT reintroduce): the `style` prop MUST stay a plain
+ * ARRAY, never the function form `({ pressed }) => [...]`. Under this project's
+ * NativeWind css-interop (`jsxImportSource: 'nativewind'`), a function-form
+ * Pressable `style` is dropped on the Android device — the box (border + fill +
+ * padding) never renders and the option collapses to bare text (see the
+ * 2026-06-19 FigmaFooterPrimaryButton fix). Press feedback comes from
+ * `android_ripple`, not a `pressed` style callback.
  */
 export function OptionSelect<T extends string>({
   label,
@@ -57,13 +65,13 @@ export function OptionSelect<T extends string>({
                 accessibilityRole="radio"
                 accessibilityState={{ selected, disabled }}
                 accessibilityLabel={option.label}
-                style={({ pressed }) => [
+                android_ripple={{ color: c.backgroundSelected }}
+                style={[
                   styles.optionCard,
                   {
                     backgroundColor: selected ? c.primaryBg : c.backgroundElement,
                     borderColor: selected ? c.primaryText : c.border,
                   },
-                  pressed && !disabled && styles.pressed,
                   disabled && styles.disabled,
                 ]}>
                 <View
@@ -98,10 +106,10 @@ export function OptionSelect<T extends string>({
                 accessibilityRole="radio"
                 accessibilityState={{ selected, disabled }}
                 accessibilityLabel={option.label}
-                style={({ pressed }) => [
+                android_ripple={{ color: c.backgroundSelected }}
+                style={[
                   styles.chip,
                   { backgroundColor: selected ? c.primary : c.backgroundElement, borderColor: c.border },
-                  pressed && !disabled && styles.pressed,
                   disabled && styles.disabled,
                 ]}>
                 {selected ? <Check size={13} color={c.onPrimary} strokeWidth={2.8} /> : null}
@@ -129,7 +137,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    minHeight: 44,
+    minHeight: TouchTarget.min,
     borderRadius: Radius.card,
     borderWidth: BorderWidth.standard,
     paddingHorizontal: 16,
@@ -159,6 +167,5 @@ const styles = StyleSheet.create({
   optionText: { flex: 1, gap: 2 },
   cardTitle: { fontSize: 16, lineHeight: 24 },
   cardDesc: { fontSize: 14, fontFamily: FontFamily.medium, lineHeight: 22 },
-  pressed: { opacity: 0.7 },
   disabled: { opacity: 0.5 },
 });

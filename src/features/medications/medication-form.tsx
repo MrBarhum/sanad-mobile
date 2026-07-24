@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { AlertCircle, Check, ChevronRight, Info } from 'lucide-react-native';
+import { AlertCircle, ChevronRight, Info } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { OptionSelect } from '@/components/option-select';
 import { SectionHeader } from '@/components/section-header';
 import { Surface } from '@/components/surface';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
@@ -205,34 +206,15 @@ export function MedicationForm({ circleId }: { circleId: string }) {
             </View>
           </Surface>
 
-          {/* Responsible person */}
+          {/* Responsible person — the ONE shared selector (per the single-component
+              law); no per-screen custom chips. */}
           <Surface tone="card" padded={14} gap={12}>
             <SectionHeader title={t('assignment.responsible')} />
-            <View style={styles.chipsWrap}>
-              {responsibleOptions.map((opt) => {
-                const selected = opt.value === responsibleUserId;
-                return (
-                  <Pressable
-                    key={opt.value || 'none'}
-                    onPress={() => setResponsibleUserId(opt.value)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    style={[
-                      styles.chip,
-                      { backgroundColor: selected ? c.primary : c.backgroundElement, borderColor: c.border },
-                    ]}>
-                    {selected ? <Check size={13} color={c.onPrimary} strokeWidth={2.8} /> : null}
-                    <Text
-                      style={[
-                        styles.chipText,
-                        { color: selected ? c.onPrimary : c.textSecondary, fontFamily: selected ? FontFamily.bold : FontFamily.semibold },
-                      ]}>
-                      {opt.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <OptionSelect
+              value={responsibleUserId}
+              options={responsibleOptions}
+              onChange={setResponsibleUserId}
+            />
           </Surface>
 
           {/* Dose schedule */}
@@ -422,18 +404,6 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   thumb: { width: 20, height: 20, borderRadius: 10, borderWidth: BorderWidth.thin },
-  // Responsible chips
-  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: BorderWidth.standard,
-    borderRadius: R8,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-  },
-  chipText: { fontSize: 15 },
   // Footer
   footerError: { fontSize: 14, fontFamily: FontFamily.medium, textAlign: 'center' },
   saveBtn: {
