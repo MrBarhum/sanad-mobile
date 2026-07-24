@@ -819,10 +819,10 @@ function PulseSection({ circleId, timezone }: { circleId: string; timezone: stri
               onPress={() => router.push(pulseRouteFor(event.item_type, event.item_id))}
               accessibilityRole="button"
               accessibilityHint={t('common.details')}
-              style={({ pressed }) => [
+              android_ripple={{ color: c.backgroundSelected }}
+              style={[
                 styles.pulseRow,
                 i > 0 && { borderTopWidth: BorderWidth.standard, borderTopColor: c.border },
-                pressed && { opacity: 0.7 },
               ]}>
               <View style={[styles.pulseIcon, { backgroundColor: c[visual.tint], borderColor: c.border }]}>
                 <PulseIcon size={14} color={c[visual.fg]} strokeWidth={2.2} />

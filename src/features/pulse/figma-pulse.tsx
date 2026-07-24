@@ -138,10 +138,10 @@ export function FigmaPulse({ circleId, timezone }: { circleId: string; timezone:
                 onPress={() => router.push(pulseRouteFor(event.item_type, event.item_id))}
                 accessibilityRole="button"
                 accessibilityHint={t('common.details')}
-                style={({ pressed }) => [
+                android_ripple={{ color: c.backgroundSelected }}
+                style={[
                   styles.row,
                   { backgroundColor: c.backgroundElement, borderColor: c.border },
-                  pressed && styles.rowPressed,
                 ]}>
                 <View style={[styles.icon, { backgroundColor: c[visual.tint], borderColor: c.border }]}>
                   <EventIcon size={17} color={c[visual.fg]} strokeWidth={2.2} />
@@ -207,7 +207,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 11,
   },
-  rowPressed: { opacity: 0.7 },
   icon: {
     width: 40,
     height: 40,

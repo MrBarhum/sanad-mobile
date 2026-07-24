@@ -177,7 +177,8 @@ export function FigmaMembers({
         accessibilityRole="button"
         accessibilityLabel={displayName}
         accessibilityHint={t('circleMembers.manage')}
-        style={({ pressed }) => [...rowStyle, pressed && styles.rowPressed]}>
+        android_ripple={{ color: c.backgroundSelected }}
+        style={rowStyle}>
         {content}
       </Pressable>
     );
@@ -304,7 +305,6 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   rowDim: { opacity: 0.6 },
-  rowPressed: { opacity: 0.7 },
   avatar: {
     width: 44,
     height: 44,

@@ -174,10 +174,10 @@ function DoctorCard({
             onPress={call}
             accessibilityRole="button"
             accessibilityLabel={`${t('common.call')} ${doctor.name}`}
-            style={({ pressed }) => [
+            android_ripple={{ color: c.primary }}
+            style={[
               styles.callButton,
               { backgroundColor: c.primaryBg, borderColor: c.border },
-              pressed && styles.pressed,
             ]}>
             <Phone size={19} color={c.primaryText} strokeWidth={2.2} />
           </Pressable>
@@ -268,10 +268,11 @@ function ActionButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: loading || disabled, busy: loading }}
-      style={({ pressed }) => [
+      android_ripple={{ color: c.backgroundSelected }}
+      style={[
         styles.actionBtn,
         { flex, backgroundColor: bg, borderColor: border },
-        (pressed || disabled) && styles.pressed,
+        disabled && styles.pressed,
       ]}>
       {loading ? (
         <ActivityIndicator size="small" color={fg} />

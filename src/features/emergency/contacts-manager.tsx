@@ -184,10 +184,10 @@ function ContactRow({
             onPress={() => callNumber(phone)}
             accessibilityRole="button"
             accessibilityLabel={`${t('common.call')} ${contact.name}`}
-            style={({ pressed }) => [
+            android_ripple={{ color: c.primary }}
+            style={[
               styles.callBtn,
               { backgroundColor: c.primaryBg, borderColor: c.border },
-              pressed && styles.pressed,
             ]}>
             <Phone size={19} color={c.primaryText} strokeWidth={2.2} />
           </Pressable>
@@ -382,7 +382,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  pressed: { opacity: 0.7 },
   notesWell: {
     borderRadius: Radius.card,
     borderWidth: BorderWidth.standard,

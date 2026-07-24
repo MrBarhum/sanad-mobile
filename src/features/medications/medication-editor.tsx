@@ -801,10 +801,11 @@ function DarActionButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
-      style={({ pressed }) => [
+      android_ripple={{ color: c.backgroundSelected }}
+      style={[
         styles.darBtn,
         size === 'block' ? styles.darBtnBlock : styles.darBtnRow,
-        { backgroundColor: c.backgroundElement, borderColor, opacity: pressed && !isDisabled ? 0.8 : 1 },
+        { backgroundColor: c.backgroundElement, borderColor },
         flex != null ? { flex } : styles.darBtnStretch,
       ]}>
       {loading ? (

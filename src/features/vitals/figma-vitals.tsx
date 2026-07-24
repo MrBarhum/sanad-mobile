@@ -185,10 +185,10 @@ function VitalCard({
       accessibilityRole="button"
       accessibilityLabel={`${typeLabel}${value ? `: ${value} ${unit}` : ''}`}
       accessibilityHint={when}
-      style={({ pressed }) => [
+      android_ripple={{ color: c.backgroundSelected }}
+      style={[
         styles.cell,
         { backgroundColor: c.backgroundElement, borderColor: c.border },
-        pressed && styles.cellPressed,
       ]}>
       <GlyphChip iconName={visual.iconName} tone={visual.tone} size="sm" style={styles.cellChip} />
       <Text style={[styles.type, { color: c.textSecondary }]} numberOfLines={1}>
@@ -235,7 +235,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
-  cellPressed: { opacity: 0.7 },
   // Frame's 38px tinted icon square (GlyphChip keeps its 2px border + radius 6).
   cellChip: { width: 38, height: 38 },
   type: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 22, marginTop: 8 },
