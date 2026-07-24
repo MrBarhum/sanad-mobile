@@ -1,5 +1,19 @@
 @AGENTS.md
 
+# Standing engineering law — NEVER a function-form Pressable `style` (device-verified)
+
+**This bug has been found and fixed twice and reintroduced once. Do not bring it back a third time.**
+
+Under this project's NativeWind setup (`babel.config.js` uses `jsxImportSource: 'nativewind'`, so `react-native-css-interop` wraps **every** RN core component), a **function-form `style` on a `Pressable`** — `style={({ pressed }) => [...]}` (or `=> pressed && x`, or any callback) — is **dropped on the Android device**. The css-interop resolves the inline `style` prop, cannot walk a function, spreads it to `{}`, and overwrites the real style. Result: the box (border + fill + padding + radius) never renders and the control collapses to bare, borderless text/icons. Static styles are unaffected. This is device-only (native) — `tsc`/web/most tooling look fine, so it is NOT caught by CI; it is only visible on the Android device.
+
+- **BROKEN (never write this on a Pressable):**
+  `style={({ pressed }) => [styles.chip, { backgroundColor }, pressed && styles.pressed]}`
+- **CORRECT:**
+  `android_ripple={{ color: theme.backgroundSelected }}` + `style={[styles.chip, { backgroundColor }, disabled && styles.disabled]}`
+  Get press feedback from **`android_ripple`**, never a `pressed` style callback. Keep all `disabled`/`selected`/tone branches as **static** array entries (they are fine — it is only the `({ pressed }) =>` wrapper that breaks).
+
+History: first isolated 2026-06-19 (`docs/claude-reports/2026-06-19-fix-figma-footer-primary-button-raw-implementation.md`), reintroduced by the `acccdcd` Dar restyle into `OptionSelect`, then swept app-wide 2026-07-24. The one intentional exception is `app-tabs.web.tsx` — a **web-only** file where the native css-interop path does not run (its native twin `app-tabs.tsx` is unaffected). A quick guard: `grep -rnE "style=\{\(\{\s*pressed" src/` should return only that web file.
+
 # Standing decisions (Milestone 4 — "The Pulse")
 
 These are settled product/engineering conventions for Sanad. Follow them by default; call out any deliberate departure in your session report.
