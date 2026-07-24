@@ -87,7 +87,7 @@ export function FigmaListRow({
         accessibilityLabel={title}
         accessibilityHint={subtitle}
         android_ripple={{ color: c.backgroundSunken }}
-        style={({ pressed }) => [rowStyle, pressed && styles.pressed]}>
+        style={rowStyle}>
         {body}
       </Pressable>
     );
@@ -116,5 +116,4 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, fontFamily: FontFamily.medium },
   // Section eyebrow raised 13 -> 14 to meet the content floor.
   sectionLabel: { fontSize: 14, fontFamily: FontFamily.bold, letterSpacing: 0.5, marginBottom: 10 },
-  pressed: { opacity: 0.85 },
 });

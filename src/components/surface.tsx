@@ -107,11 +107,10 @@ export function Surface({
         accessibilityState={{ disabled, selected }}
         testID={testID}
         android_ripple={{ color: theme.backgroundSelected, foreground: true }}
-        style={({ pressed }) => [
+        style={[
           content,
           // Ripple handles Android feedback; clip it to the rounded corners.
           Platform.OS === 'android' && styles.rippleClip,
-          pressed && Platform.OS !== 'android' && styles.pressed,
           disabled && styles.disabled,
         ]}>
         {children}
@@ -166,7 +165,6 @@ export function Section({ title, action, children, gap = Spacing.three, style }:
 }
 
 const styles = StyleSheet.create({
-  pressed: { opacity: 0.8 },
   disabled: { opacity: 0.5 },
   rippleClip: { overflow: 'hidden' },
   header: {

@@ -52,11 +52,10 @@ export function IconButton({
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled }}
       hitSlop={8}
-      style={({ pressed }) => [
+      android_ripple={{ color: theme.border }}
+      style={[
         styles.button,
         filled && { backgroundColor: theme.backgroundSelected },
-        pressed && { backgroundColor: theme.border },
-        pressed && styles.pressed,
         disabled && styles.disabled,
         style,
       ]}>
@@ -79,6 +78,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   icon: { fontSize: 20, lineHeight: 24 },
-  pressed: { opacity: 0.6 },
   disabled: { opacity: 0.5 },
 });

@@ -76,15 +76,16 @@ export function Button({
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
-      style={({ pressed }) => [
+      android_ripple={{ color: colors.pressed }}
+      style={[
         styles.base,
         size === 'sm' ? styles.sm : styles.md,
         variant === 'plain' && styles.plain,
         {
-          backgroundColor: pressed && !isDisabled ? colors.pressed : colors.background,
+          backgroundColor: colors.background,
           borderColor: colors.border,
           borderWidth: variant === 'plain' ? 0 : BorderWidth.standard,
-          opacity: fadedDisabled ? 0.45 : pressed && variant === 'danger' ? 0.75 : 1,
+          opacity: fadedDisabled ? 0.45 : 1,
         },
         style,
       ]}>

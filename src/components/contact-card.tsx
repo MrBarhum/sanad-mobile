@@ -81,10 +81,10 @@ export function ContactCard({ name, subtitle, details, phone, callLabel, notes, 
           onPress={call}
           accessibilityRole="button"
           accessibilityLabel={callLabel ?? phone}
-          style={({ pressed }) => [
+          android_ripple={{ color: theme.backgroundSelected }}
+          style={[
             styles.phoneRow,
             { backgroundColor: theme.primaryBg },
-            pressed && styles.pressed,
           ]}>
           <Icon name="call" size={20} color="primaryText" />
           <LtrText style={[styles.phoneText, { color: theme.primaryText }]} selectable>
@@ -115,7 +115,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   phoneText: { fontSize: 18, lineHeight: 26, fontWeight: '700' },
-  pressed: { opacity: 0.7 },
   actions: {
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: Spacing.three,

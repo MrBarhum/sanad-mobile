@@ -89,10 +89,8 @@ export function PickerSheet({
                 onPress={onDone}
                 accessibilityRole="button"
                 accessibilityLabel={doneLabel}
-                style={({ pressed }) => [
-                  styles.actionRow,
-                  pressed ? { backgroundColor: theme.backgroundSelected } : null,
-                ]}>
+                android_ripple={{ color: theme.backgroundSelected }}
+                style={styles.actionRow}>
                 <ThemedText style={[styles.actionLabel, { color: theme.primary, fontFamily: FontFamily.bold }]}>
                   {doneLabel}
                 </ThemedText>
@@ -102,10 +100,8 @@ export function PickerSheet({
                   onPress={onClear}
                   accessibilityRole="button"
                   accessibilityLabel={clearLabel}
-                  style={({ pressed }) => [
-                    styles.actionRow,
-                    pressed ? { backgroundColor: theme.backgroundSelected } : null,
-                  ]}>
+                  android_ripple={{ color: theme.backgroundSelected }}
+                  style={styles.actionRow}>
                   <ThemedText style={[styles.actionLabel, { color: theme.text }]}>
                     {clearLabel}
                   </ThemedText>
@@ -115,10 +111,8 @@ export function PickerSheet({
                 onPress={onCancel}
                 accessibilityRole="button"
                 accessibilityLabel={cancelLabel}
-                style={({ pressed }) => [
-                  styles.actionRow,
-                  pressed ? { backgroundColor: theme.backgroundSelected } : null,
-                ]}>
+                android_ripple={{ color: theme.backgroundSelected }}
+                style={styles.actionRow}>
                 <ThemedText style={[styles.actionLabel, { color: theme.text }]}>
                   {cancelLabel}
                 </ThemedText>

@@ -172,13 +172,13 @@ function Row({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      style={({ pressed }) => [
+      android_ripple={{ color: theme.primary }}
+      style={[
         styles.row,
         {
           backgroundColor: selected ? theme.primaryBg : theme.backgroundSelected,
           borderColor: selected ? 'transparent' : theme.border,
         },
-        pressed && styles.pressed,
       ]}>
       <View style={styles.rowText}>
         <ThemedText
@@ -248,7 +248,6 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: Spacing.four, paddingTop: Spacing.three, gap: Spacing.two },
   sectionLabel: { marginTop: Spacing.two },
   empty: { paddingVertical: Spacing.three },
-  pressed: { opacity: 0.7 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

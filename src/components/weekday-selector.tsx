@@ -102,14 +102,14 @@ function Chip({
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
       accessibilityLabel={accessibilityLabel ?? label}
-      style={({ pressed }) => [
+      android_ripple={{ color: theme.primary }}
+      style={[
         styles.chipWrap,
         fullWidth && styles.chipFull,
         {
           backgroundColor: selected ? theme.primaryBg : theme.backgroundSelected,
           borderColor: selected ? theme.primary : theme.border,
         },
-        pressed && styles.pressed,
       ]}>
       <ThemedText
         type={selected ? 'smallBold' : 'small'}
@@ -138,5 +138,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   chipFullText: { paddingVertical: Spacing.three },
-  pressed: { opacity: 0.7 },
 });
