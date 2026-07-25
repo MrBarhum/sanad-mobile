@@ -43,7 +43,8 @@
       "expo-secure-store",
       "expo-notifications",
       "expo-image",
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ],
     "extra": {
       "supportsRTL": true,
