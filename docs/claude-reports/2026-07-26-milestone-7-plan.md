@@ -1,4 +1,4 @@
-# Milestone 7 — Pre-launch: implementation plan, decisions needed, and Track A record
+﻿# Milestone 7 — Pre-launch: implementation plan, decisions needed, and Track A record
 
 **Branch:** `milestone-7-prelaunch` (worktree `.claude/worktrees/milestone-7-prelaunch`, based on `master` @ `88a44aa`)
 **Date:** 2026-07-26
@@ -479,16 +479,64 @@ Updated as each item lands. Quartet = `tsc` · mojibake · `diff --check` · ar/
 
 | Item | Commit | Quartet | Notes |
 |---|---|---|---|
-| Setup | — | ✅ baseline: tsc 0 · mojibake clean (257) · diff clean · parity 1102=1102 | Worktree created off `master` @ `88a44aa`; branch renamed `milestone-7-prelaunch`; `node_modules` de-junctioned to an isolated install. |
+| Setup | — | ✅ baseline: tsc 0 · mojibake clean (257) · diff clean · parity 1102=1102 | Worktree created off `master` @ `88a44aa`; branch renamed `milestone-7-prelaunch`; `node_modules` de-junctioned to an isolated `npm ci` so A2/A3 cannot desync the main checkout. |
+| Plan | `d49853b` | n/a | This document. |
+| **A1** | `57ea47c` | ✅ tsc 0 · mojibake clean (257) · diff clean · **parity 1118=1118** | Shipped all three fixes. Found a **third** bug during implementation: `PendingJoinLink` (root-mounted) replaces the route to `/join-circle` the instant a session exists — which is exactly when a recovery completes — so it would yank the user off `/reset-password` with the token already spent. Guarded on `usePathname()`. Also closed the security smell where the no-token fallback accepted any existing session as "ready". +17 i18n keys, −1 (`auth.forgotSent`, now unused). **Lint note:** master's baseline is 32 problems / 28 errors; this branch is 31 / 27. The one error inside a file I touched (`pending-join-link.tsx` setState-in-effect) is pre-existing — same statement, shifted line. Lint is not in the quartet and was already failing on `master`. |
+| **A2** | `91f93e1` | ✅ tsc 0 · lint unchanged · quartet unaffected (no source change) | See the A2 addendum below — the raw count rose while the actual posture improved. |
+| **A3** | `672958c` | ✅ tsc 0 · mojibake clean · diff clean · parity 1118=1118 · lint 31/27 (unchanged) | All 10 packages now at their SDK-56 targets; `npx expo install --check` = **"Dependencies are up to date"**; `npx expo-doctor` = **21/21 checks passed**. See the A3 addendum below — only 7 declarations moved, and `--fix` also edited `app.json`. |
 | A6 (partial) | _pending_ | | |
-| A2 | _pending_ | | |
-| A3 | _pending_ | | |
 | A7 | _pending_ | | |
 | A8 | _pending_ | | |
 | A9 | _pending_ | | |
-| A1 | _pending_ | | |
 | A4 | _blocked on spike + rebuild_ | | |
 | A5 | _blocked on rebuild_ | | |
+
+### A2 addendum — why the vulnerability count went UP
+
+`npm audit fix` (no `--force`) took the report from **15 (11 moderate, 4 high)** to **20 (11 moderate, 9 high)**. That reads like a regression. It isn't — npm re-classified one finding and then enumerated its dependents.
+
+**Genuinely fixed — 3 of the 4 high advisories are gone:**
+
+| Package | Before | After | Advisory cleared |
+|---|---|---|---|
+| `js-yaml` | 4.2.0 | **4.3.0** | GHSA-52cp-r559-cp3m |
+| `postcss` | 8.5.15 | **8.5.23** | GHSA-r28c-9q8g-f849 |
+| `shell-quote` | 1.8.4 | **1.10.0** | GHSA-395f-4hp3-45gv |
+| `brace-expansion` (root) | 5.0.6 | **5.0.8** (latest published) | GHSA-3jxr-9vmj-r5cp — and `node_modules/brace-expansion` no longer appears in the flagged path list at all |
+
+**What remains:** five *nested* `brace-expansion@1.1.16` copies under eslint tooling (`eslint`, `@eslint/config-array`, `@eslint/eslintrc`, `eslint-plugin-import`, `eslint-plugin-react`), flagged by **GHSA-mh99-v99m-4gvg** — for which npm reports **"No fix available"** on the 1.x line (5.0.8 is the newest published version overall and is already installed at the root). Before the fix npm collapsed these under "fix available via `npm audit fix`"; now that no fix exists it enumerates the whole chain — brace-expansion → minimatch → @eslint/config-array → eslint → eslint-plugin-expo → eslint-config-expo, plus @eslint/eslintrc, eslint-plugin-import, eslint-plugin-react = **9 entries**. Nine report lines, one underlying advisory, zero new exposure.
+
+**Deliberately left, with reasons:**
+1. **The `brace-expansion` chain.** An `overrides` pin to `^5.0.8` would clear it, but it forces a 1.x→5.x major into `minimatch@3.x`, which declares `^1.1.7`. That risks breaking `expo lint` — the only automated quality gate this repo has (§7.5) — to silence a DoS-via-crafted-brace-pattern in a linter that only ever parses this repo's own glob patterns. Not worth it.
+2. **The `uuid` chain (11 moderate).** Reachability analysis in §4.2. Unchanged.
+3. **`npm audit fix --force`.** Re-confirmed on the live tree: it still proposes `expo@46.0.21`. Never run it here.
+
+Verification after the fix: `tsc --noEmit` = 0; `expo lint` = 31 problems / 27 errors, **identical** to before the fix (and one fewer than master's 32/28). Only `package-lock.json` changed; `package.json` is untouched.
+
+### A3 addendum — 10 packages moved, 7 declarations changed, and `app.json` was edited
+
+Ran `npx expo install --fix`. All ten packages reached their SDK-56 targets:
+
+| Package | Before | After | `package.json` changed? |
+|---|---|---|---|
+| `expo` | 56.0.12 | **56.0.17** | no — `~56.0.12` already permitted it |
+| `expo-constants` | 56.0.18 | **56.0.22** | no — `~56.0.17` already permitted it |
+| `expo-splash-screen` | 56.0.10 | **56.0.14** | no — `~56.0.10` already permitted it |
+| `@expo/ui` | 56.0.18 | **56.0.23** | yes |
+| `expo-dev-client` | 56.0.20 | **56.0.24** | yes |
+| `expo-linking` | 56.0.14 | **56.0.16** | yes |
+| `expo-notifications` | 56.0.18 | **56.0.22** | yes |
+| `expo-router` | 56.2.11 | **56.2.16** | yes |
+| `expo-web-browser` | 56.0.5 | **56.0.6** | yes |
+| `react-native-screens` | 4.25.2 | **4.26.2** | yes (`4.25.2` → `~4.26.0`) |
+
+Three packages upgraded *inside* their existing `~` ranges, so only seven declarations moved — which is why `--fix` reported "Installing 7 SDK 56.0.0 compatible native modules" for a ten-package drift.
+
+**`--fix` also modified `app.json` on its own**, appending `"expo-web-browser"` to `expo.plugins`. I verified this is legitimate rather than noise: `node_modules/expo-web-browser/app.plugin.js` exists in 56.0.6, so the package now ships a required config plugin and Expo's tooling adds the entry. **Consequence: it needs a native rebuild to take effect** — folded into the A4/A5 rebuild batch, so it costs nothing extra. (`expo-web-browser` is used only by `src/components/external-link.tsx`, which currently has zero call sites.)
+
+**A1 cross-check:** `expo-linking` moved 56.0.14 → 56.0.16, and A1 depends on its API. Re-verified in the bumped build: `useLinkingURL()` is still exported, and `useURL()` still carries `@deprecated Use useLinkingURL hook instead`. The A1 fix stands.
+
+Post-verification: `npx expo install --check` = "Dependencies are up to date"; `npx expo-doctor` = **21/21 checks passed, no issues detected**; `tsc --noEmit` = 0; parity 1118=1118; lint unchanged at 31/27.
 
 ---
 
