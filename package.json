@@ -60,7 +60,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "check:mojibake": "node ./scripts/check-mojibake.js"
+    "check:mojibake": "node ./scripts/check-mojibake.js",
+    "check:i18n": "node ./scripts/check-i18n-parity.js"
   },
   "private": true
 }
