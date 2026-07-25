@@ -484,12 +484,16 @@ Updated as each item lands. Quartet = `tsc` · mojibake · `diff --check` · ar/
 | **A1** | `57ea47c` | ✅ tsc 0 · mojibake clean (257) · diff clean · **parity 1118=1118** | Shipped all three fixes. Found a **third** bug during implementation: `PendingJoinLink` (root-mounted) replaces the route to `/join-circle` the instant a session exists — which is exactly when a recovery completes — so it would yank the user off `/reset-password` with the token already spent. Guarded on `usePathname()`. Also closed the security smell where the no-token fallback accepted any existing session as "ready". +17 i18n keys, −1 (`auth.forgotSent`, now unused). **Lint note:** master's baseline is 32 problems / 28 errors; this branch is 31 / 27. The one error inside a file I touched (`pending-join-link.tsx` setState-in-effect) is pre-existing — same statement, shifted line. Lint is not in the quartet and was already failing on `master`. |
 | **A2** | `91f93e1` | ✅ tsc 0 · lint unchanged · quartet unaffected (no source change) | See the A2 addendum below — the raw count rose while the actual posture improved. |
 | **A3** | `672958c` | ✅ tsc 0 · mojibake clean · diff clean · parity 1118=1118 · lint 31/27 (unchanged) | All 10 packages now at their SDK-56 targets; `npx expo install --check` = **"Dependencies are up to date"**; `npx expo-doctor` = **21/21 checks passed**. See the A3 addendum below — only 7 declarations moved, and `--fix` also edited `app.json`. |
-| A6 (partial) | _pending_ | | |
-| A7 | _pending_ | | |
-| A8 | _pending_ | | |
-| A9 | _pending_ | | |
-| A4 | _blocked on spike + rebuild_ | | |
-| A5 | _blocked on rebuild_ | | |
+| **A6** (partial) | `8f7f180` | ✅ tsc 0 · mojibake clean · parity 1118=1118 | Removed cast #6 only. Verified all six Phase-2E claim RPCs **are** in the current generated file (`:1254`–`:1674`), so the `supabase as unknown as { rpc }` wrapper was already unnecessary and its "not yet in the generated types" comment was stale. One narrowing cast remains — on the **result**, not the client — because `supabase gen types` emits every `RETURNS TABLE` column as non-nullable `string`. **Casts 1–5 still stand**; they need the regen (runbook R3). |
+| **A7** | `7b1b67d` | n/a (doc) | Full inventory at `docs/claude-reports/2026-07-26-rename-readiness-audit.md`. **Nothing renamed.** Line numbers re-verified *after* A1 and A3 shifted them. |
+| **A8** | `3ccb3a2` | n/a (migration file, not applied) | `supabase/migrations/20260726120000_restore_claim_bypass_in_care_task_trigger.sql`. Runbook R4. |
+| **A9** | `d832677` | ✅ tsc 0 (edge functions are outside tsconfig — every symbol verified by hand instead) | `fetchCircleGrace()` lifted into `_shared/enqueue.ts`; `enqueue-due-reminders` now expires a due reminder on the **circle's own** grace. `REMINDER_CONFIG.missedDoseGraceMinutes` (60) → `missedDoseGraceFallbackMinutes` (30, matching the DB default); it had exactly one consumer, which was the bug. Needs a redeploy — runbook R5. |
+| **A5** (server half) | `ba6edac` | n/a (files only, not applied) | `supabase/migrations/20260726130000_dose_proof_helpers.sql` + `docs/deployment/dose-proof-storage.sql`. Runbook R6. **Client half not started** — needs the rebuild. |
+| **+ i18n parity guard** | `15254a4` | ✅ passes at 1118 leaf keys | §7.6. `npm run check:i18n`. Negative-tested against all four defect classes; each fails, the clean control passes. |
+| **+ Design brief** | `46b7b56` | n/a (doc) | `docs/design/DESIGN_BRIEF_MILESTONE_7.md` — **33 frames** across B1/B2/B3/C1, written and then passed through a consistency review (20 defects corrected, including a cream-on-cream token pairing and six gendered imperatives). |
+| A4 | **not started** | | Gated on the Expo Go font spike **and** the EAS rebuild. |
+| A5 (client half) | **not started** | | Gated on the EAS rebuild. |
+| A10 (account deletion) | **not started** | | Awaiting **D7**. |
 
 ### A2 addendum — why the vulnerability count went UP
 
@@ -578,10 +582,14 @@ Apply `supabase/migrations/<ts>_restore_claim_trigger_bypass.sql` via the Dashbo
 supabase functions deploy enqueue-due-reminders --project-ref qccgshanmoeybagxwvcs
 ```
 
-### R6 — A5: storage (in this order)
-1. Dashboard SQL Editor: `supabase/migrations/<ts>_dose_proof_helpers.sql` (public schema).
-2. Dashboard SQL Editor: `docs/deployment/dose-proof-storage.sql` (bucket + `storage.objects` policies). **Never** `db push` this file.
-3. Smoke test: one throwaway `create policy` + `drop policy` on `storage.objects` first, to confirm the Dashboard path works on this project.
+### R6 — A5: storage (strictly in this order)
+1. **Smoke test first.** In the Dashboard SQL Editor, run the throwaway pair at the top of `docs/deployment/dose-proof-storage.sql`:
+   `create policy "zz_throwaway" on storage.objects for select to authenticated using (false);` then `drop policy "zz_throwaway" on storage.objects;`
+   If that succeeds, the real policies will. If it raises `42501`, stop and create them from Storage → Policies instead (the predicates paste in unchanged).
+2. **R6.1** — Dashboard SQL Editor: `supabase/migrations/20260726130000_dose_proof_helpers.sql` (public schema: the column, its scoping CHECK, and `storage_path_uuid`).
+3. **R6.2** — Dashboard SQL Editor: `docs/deployment/dose-proof-storage.sql` (bucket + the four `storage.objects` policies). **Never `db push` this file** — it is deliberately outside `supabase/migrations/`.
+   Order matters: every policy calls `public.storage_path_uuid()`, so R6.2 before R6.1 fails with "function does not exist".
+4. Run the read-only verification queries at the bottom of that file, then the three-account device check (manager · responsible member · **a family_member who is NOT responsible for that medication — their `createSignedUrl` must fail**).
 
 ### R7 — the EAS rebuild (after A2, A3, and the A4 spike)
 ```
