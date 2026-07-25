@@ -27,6 +27,7 @@ import { authorizeScheduledRequest, unauthorized } from '../_shared/auth.ts';
 import { REMINDER_CONFIG } from '../_shared/config.ts';
 import {
   enqueueForRecipient,
+  fetchCircleGrace,
   fetchCircleTimezones,
   notificationManagers,
   recipientsForItem,
@@ -36,8 +37,6 @@ import { log, logError } from '../_shared/log.ts';
 import { medicationMissedMessage } from '../_shared/messages.ts';
 import { serviceClient } from '../_shared/supabase.ts';
 import { localWeekday, localYmd, parseHms, wallTimeToInstant, ymdInRange } from '../_shared/time.ts';
-
-import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -204,13 +203,6 @@ Deno.serve(async (req) => {
   return json({ ok: true, missed: count, escalated });
 });
 
-/** Map of circle_id → missed-dose grace minutes (default 30 if unset). */
-async function fetchCircleGrace(sb: SupabaseClient): Promise<Map<string, number>> {
-  const { data, error } = await sb.from('care_circles').select('id, missed_dose_grace_minutes');
-  if (error) throw error;
-  const map = new Map<string, number>();
-  for (const row of data ?? []) {
-    map.set(row.id, (row.missed_dose_grace_minutes as number | null) ?? 30);
-  }
-  return map;
-}
+// fetchCircleGrace moved to ../_shared/enqueue.ts in Milestone 7 (A9) so
+// enqueue-due-reminders resolves the SAME per-circle grace when it sets a due
+// reminder's expires_at. Behaviour here is unchanged.

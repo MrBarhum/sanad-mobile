@@ -20,10 +20,23 @@
 //
 // REQUIRES migrations 20260626163000 + 20260626164000 to be applied first (they add
 // the enum values + the responsibility resolver). Do NOT deploy this before them.
+//
+// ALSO REQUIRES 20260715150000 (care_circles.missed_dose_grace_minutes). Since
+// Milestone 7 (A9) a medication due reminder's `expires_at` is doseAt + the
+// CIRCLE's own grace, read via fetchCircleGrace(), so it expires exactly when
+// check-missed-doses takes over with the "not recorded" alert. It previously used
+// a hardcoded 60 while check-missed-doses read the per-circle column, so the two
+// halves of the missed-dose feature disagreed whenever a manager changed the
+// setting. Redeploy this function together with any change to that boundary.
 
 import { authorizeScheduledRequest, unauthorized } from '../_shared/auth.ts';
 import { REMINDER_CONFIG } from '../_shared/config.ts';
-import { enqueueForRecipient, fetchCircleTimezones, recipientsForItem } from '../_shared/enqueue.ts';
+import {
+  enqueueForRecipient,
+  fetchCircleGrace,
+  fetchCircleTimezones,
+  recipientsForItem,
+} from '../_shared/enqueue.ts';
 import { log, logError } from '../_shared/log.ts';
 import {
   appointmentMessage,
@@ -50,7 +63,10 @@ Deno.serve(async (req) => {
 
   try {
     const circleTz = await fetchCircleTimezones(sb);
-    counters.medication = await enqueueMedicationDue(sb, now, circleTz);
+    // Per-circle missed-dose grace — a due reminder must expire exactly when the
+    // "not recorded" alert takes over, and that boundary is manager-configurable.
+    const graceByCircle = await fetchCircleGrace(sb);
+    counters.medication = await enqueueMedicationDue(sb, now, circleTz, graceByCircle);
     counters.task = await enqueueTaskDue(sb, now, circleTz);
     counters.taskOverdue = await enqueueTaskOverdue(sb, now, circleTz);
     counters.appointment = await enqueueAppointmentUpcoming(sb, now);
@@ -78,6 +94,7 @@ async function enqueueMedicationDue(
   sb: SupabaseClient,
   now: Date,
   circleTz: Map<string, string>,
+  graceByCircle: Map<string, number>,
 ): Promise<number> {
   const windowEnd = new Date(now.getTime() + REMINDER_CONFIG.medicationLookaheadMinutes * 60000);
 
@@ -121,10 +138,13 @@ async function enqueueMedicationDue(
         const recipients = await recipientsForItem(sb, s.circle_id, 'medication_due', 'medication', s.medication_id);
         if (recipients.length === 0) continue;
         const msg = medicationDueMessage(medName, time);
-        // A due reminder is only relevant until the missed-dose grace boundary.
-        const expiresAt = new Date(
-          doseAt.getTime() + REMINDER_CONFIG.missedDoseGraceMinutes * 60000,
-        ).toISOString();
+        // A due reminder is only relevant until the missed-dose grace boundary —
+        // past it, check-missed-doses takes over with the "not recorded" alert.
+        // That boundary is the CIRCLE's own manager-configured grace (5..240), not
+        // a global constant, or the two halves of the feature disagree.
+        const graceMinutes =
+          graceByCircle.get(s.circle_id) ?? REMINDER_CONFIG.missedDoseGraceFallbackMinutes;
+        const expiresAt = new Date(doseAt.getTime() + graceMinutes * 60000).toISOString();
         for (const r of recipients) {
           const created = await enqueueForRecipient(sb, r, {
             type: 'medication_due',

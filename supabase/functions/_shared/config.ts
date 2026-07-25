@@ -17,14 +17,20 @@ export const REMINDER_CONFIG = {
 
   // Missed-dose escalation: a scheduled dose with no log this long after its time
   // raises a single neutral "not recorded" alert.
-  missedDoseGraceMinutes: 60,
+  //
+  // The AUTHORITATIVE value is per-circle — care_circles.missed_dose_grace_minutes
+  // (20260715150000, manager-editable, CHECK 5..240). This constant is only the
+  // fallback for a circle whose column is null, and it matches that column's DB
+  // default. Read it through fetchCircleGrace() in _shared/enqueue.ts; never
+  // hardcode a grace anywhere else, or the two halves of the missed-dose feature
+  // disagree (see the Milestone 7 A9 fix).
+  missedDoseGraceFallbackMinutes: 30,
   // Don't backfill history: ignore doses whose time is older than this.
   missedDoseMaxAgeMinutes: 12 * 60,
-  // Tier-2 manager escalation for a still-unrecorded dose of an ASSIGNED medication:
-  // total minutes after the scheduled dose time before the circle's managers are
-  // notified (data.tier='manager'). Must be > missedDoseGraceMinutes (the owner tier)
-  // and <= missedDoseMaxAgeMinutes (still within the follow-up window). 120 = managers
-  // 60 min after the owner tier.
+  // Tier-2 manager escalation for a still-unrecorded dose of an ASSIGNED medication.
+  // NOTE: currently UNREFERENCED — check-missed-doses derives the escalation
+  // boundary as 2x the circle's own grace instead, so the tier-2 delay tracks the
+  // manager's setting. Kept as documentation of the intended 2x relationship.
   missedDoseManagerEscalationMinutes: 120,
 
   // Appointment reminder lead times (minutes before start); each dedupes alone.

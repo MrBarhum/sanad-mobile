@@ -1,3 +1,5 @@
+import { REMINDER_CONFIG } from './config.ts';
+
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
 /** A recipient resolved by the circle_notification_recipients DB function. */
@@ -42,6 +44,39 @@ export async function fetchCircleTimezones(sb: SupabaseClient): Promise<Map<stri
   if (error) throw error;
   const map = new Map<string, string>();
   for (const row of data ?? []) map.set(row.id, row.timezone ?? 'UTC');
+  return map;
+}
+
+/**
+ * Map of circle_id → missed-dose grace minutes, defaulting to
+ * REMINDER_CONFIG.missedDoseGraceFallbackMinutes when the column is null.
+ *
+ * This is the SINGLE source of the grace value for the whole notification engine.
+ * It lives here rather than inside one function because both halves of the
+ * missed-dose feature depend on it and must agree:
+ *
+ *   - enqueue-due-reminders sets a due reminder's `expires_at` to
+ *     doseAt + grace, i.e. "stop nagging once the missed alert takes over";
+ *   - check-missed-doses fires the "not recorded" alert at doseAt + grace, and
+ *     the tier-2 manager escalation at doseAt + 2x grace.
+ *
+ * Before Milestone 7 the first used a hardcoded 60 while the second read the
+ * per-circle column, so a circle that set the grace to 240 had its due reminder
+ * dropped ~3 hours before the missed alert fired, and a circle that set 5 got the
+ * missed alert while a still-valid due reminder was queued. The manager-facing
+ * stepper presents the setting as authoritative; it must actually be.
+ */
+export async function fetchCircleGrace(sb: SupabaseClient): Promise<Map<string, number>> {
+  const { data, error } = await sb.from('care_circles').select('id, missed_dose_grace_minutes');
+  if (error) throw error;
+  const map = new Map<string, number>();
+  for (const row of data ?? []) {
+    map.set(
+      row.id,
+      (row.missed_dose_grace_minutes as number | null) ??
+        REMINDER_CONFIG.missedDoseGraceFallbackMinutes,
+    );
+  }
   return map;
 }
 
