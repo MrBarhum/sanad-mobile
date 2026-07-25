@@ -1,5 +1,5 @@
 import * as Linking from 'expo-linking';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 
 import { useAuth } from '@/providers';
@@ -27,6 +27,7 @@ import {
 export function PendingJoinLink() {
   const { session, isLoading } = useAuth();
   const url = Linking.useURL();
+  const pathname = usePathname();
   const [pending, setPending] = useState<string | null>(null);
   const processedUrl = useRef<string | null>(null);
 
@@ -62,13 +63,21 @@ export function PendingJoinLink() {
 
   // Once authenticated with a pending code, replay it into the join screen and
   // clear the stash so it is consumed once.
+  //
+  // EXCEPT during a password recovery. Both recovery paths (the 6-digit code and
+  // the legacy link) establish a real session BEFORE the new password is set, so
+  // without this guard the user would be yanked off /reset-password to
+  // /join-circle with the recovery token already spent — and returning would
+  // re-mount the screen with nothing left to resolve. The code stays stashed and
+  // replays as soon as the user leaves the reset screen.
   useEffect(() => {
     if (isLoading || !session || !pending) return;
+    if (pathname === '/reset-password') return;
     const code = pending;
     setPending(null);
     void clearPendingJoinCode();
     router.replace({ pathname: '/join-circle', params: { code } });
-  }, [isLoading, session, pending]);
+  }, [isLoading, session, pending, pathname]);
 
   return null;
 }
