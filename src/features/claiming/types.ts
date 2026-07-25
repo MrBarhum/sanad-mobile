@@ -2,10 +2,15 @@
  * Phase 2E — "متاح للتكفّل" / Available-to-Claim.
  *
  * The claim-flow RPCs are live in the DB (applied manually, see
- * docs/claude-reports/2026-06-26-phase-2e-claim-flow-*), but the generated
- * Supabase types are intentionally NOT regenerated this phase. These local types
- * describe the `list_available_to_claim` row shape so the rest of the app stays
- * fully typed; the only cast lives in `./api`.
+ * docs/claude-reports/2026-06-26-phase-2e-claim-flow-*) AND are now present in
+ * the generated `src/types/supabase.ts`, so `./api` calls them through the typed
+ * client with no client-level cast.
+ *
+ * This file still exists because `supabase gen types` emits every `RETURNS TABLE`
+ * column as non-nullable `string`: the generated row for `list_available_to_claim`
+ * is strictly wider than reality. `AvailableClaimItem` records the RPC's actual
+ * nullability and narrows `item_type` to the four values the function can emit,
+ * and `./api` applies it as a result-level narrowing.
  */
 
 /** The four claimable operational entities. */

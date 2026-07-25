@@ -3,30 +3,18 @@ import { supabase } from '../../../lib/supabase';
 import type { AvailableClaimItem, ClaimItemType } from './types';
 
 /**
- * Phase 2E claim-flow RPCs. These functions are live in the DB but not yet in the
- * generated Supabase types (we deliberately do not regenerate types this phase),
- * so this file is the ONE place that casts around the typed client. Everything
- * else in the app stays fully typed. The wrapper throws the raw PostgREST error so
- * callers can branch on `error.code` — most importantly `'23505'` (someone else
- * already claimed the item).
+ * Phase 2E claim-flow RPCs.
+ *
+ * These used to go through a hand-rolled `supabase as unknown as { rpc … }` cast
+ * because the RPCs post-dated the generated types. They no longer do — all six
+ * (`list_available_to_claim`, `claim_care_task`, `claim_medication_responsibility`,
+ * `claim_care_appointment`, `claim_family_visit`, `set_assigned_appointment_outcome`)
+ * are present in `src/types/supabase.ts` with full `Args`/`Returns`, so the client
+ * cast is gone and every call is checked against the real signature.
+ *
+ * Each wrapper throws the raw PostgREST error so callers can branch on
+ * `error.code` — most importantly `'23505'` (someone else already claimed it).
  */
-async function callClaimRpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
-  // Call `.rpc(...)` AS A METHOD on the client so `this` stays bound. supabase-js
-  // implements `rpc()` as `return this.rest.rpc(...)`, so a detached
-  // `const rpc = supabase.rpc; rpc(...)` loses its receiver and throws
-  // synchronously (before any network request) instead of hitting the endpoint.
-  // We cast only the call SHAPE here — these Phase 2E RPCs are not in the
-  // generated types yet — and the cast stays localized to this file.
-  const client = supabase as unknown as {
-    rpc: (
-      name: string,
-      params?: Record<string, unknown>,
-    ) => PromiseLike<{ data: unknown; error: unknown }>;
-  };
-  const { data, error } = await client.rpc(fn, args);
-  if (error) throw error;
-  return data as T;
-}
 
 // ---------------------------------------------------------------------------
 // Discovery
@@ -38,12 +26,19 @@ async function callClaimRpc<T>(fn: string, args: Record<string, unknown>): Promi
  * planned unlinked visits). The RPC verifies the caller is an active,
  * claim-capable member and returns items across the WHOLE circle (not just seeded
  * rows) — remote_member / elder are rejected server-side with SQLSTATE 42501.
+ *
+ * The one remaining cast is on the RESULT, not the client, and is a narrowing:
+ * `supabase gen types` emits every `RETURNS TABLE` column as non-nullable `string`,
+ * so the generated row is strictly wider than reality. `AvailableClaimItem`
+ * (./types) mirrors the RPC's actual nullability and constrains `item_type` to the
+ * four values the function can emit.
  */
 export async function listAvailableToClaim(circleId: string): Promise<AvailableClaimItem[]> {
-  const rows = await callClaimRpc<AvailableClaimItem[] | null>('list_available_to_claim', {
+  const { data, error } = await supabase.rpc('list_available_to_claim', {
     p_circle_id: circleId,
   });
-  return rows ?? [];
+  if (error) throw error;
+  return (data ?? []) as AvailableClaimItem[];
 }
 
 // ---------------------------------------------------------------------------
@@ -51,19 +46,27 @@ export async function listAvailableToClaim(circleId: string): Promise<AvailableC
 // ---------------------------------------------------------------------------
 
 export async function claimCareTask(taskId: string): Promise<void> {
-  await callClaimRpc('claim_care_task', { p_task_id: taskId });
+  const { error } = await supabase.rpc('claim_care_task', { p_task_id: taskId });
+  if (error) throw error;
 }
 
 export async function claimMedicationResponsibility(medicationId: string): Promise<void> {
-  await callClaimRpc('claim_medication_responsibility', { p_medication_id: medicationId });
+  const { error } = await supabase.rpc('claim_medication_responsibility', {
+    p_medication_id: medicationId,
+  });
+  if (error) throw error;
 }
 
 export async function claimCareAppointment(appointmentId: string): Promise<void> {
-  await callClaimRpc('claim_care_appointment', { p_appointment_id: appointmentId });
+  const { error } = await supabase.rpc('claim_care_appointment', {
+    p_appointment_id: appointmentId,
+  });
+  if (error) throw error;
 }
 
 export async function claimFamilyVisit(visitId: string): Promise<void> {
-  await callClaimRpc('claim_family_visit', { p_visit_id: visitId });
+  const { error } = await supabase.rpc('claim_family_visit', { p_visit_id: visitId });
+  if (error) throw error;
 }
 
 /** Dispatches a feed item to the RPC that matches its `item_type`. */
@@ -92,15 +95,16 @@ export async function claimAvailableItem(item: {
  * `set_assigned_appointment_outcome` RPC. Server-side the RPC allows a manager OR
  * the assigned member, only from `scheduled`, and writes only the status — a
  * family assignee can record the outcome without editing any appointment detail.
- * Lives here (not in appointments/api.ts) so every un-typed claim-flow RPC cast
- * stays in this single file.
+ * Lives here (not in appointments/api.ts) so the whole claim-flow RPC surface
+ * stays in one file.
  */
 export async function setAssignedAppointmentOutcome(
   appointmentId: string,
   status: 'completed' | 'cancelled',
 ): Promise<void> {
-  await callClaimRpc('set_assigned_appointment_outcome', {
+  const { error } = await supabase.rpc('set_assigned_appointment_outcome', {
     p_appointment_id: appointmentId,
     p_status: status,
   });
+  if (error) throw error;
 }
