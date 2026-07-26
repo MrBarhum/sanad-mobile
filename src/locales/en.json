@@ -230,7 +230,7 @@
       "admin": "Full access — manages the circle, members, and all care data.",
       "primary_caregiver": "Manages day-to-day care and can manage members and invitations.",
       "family_member": "Follows the care data and can record updates.",
-      "caregiver": "A hired caregiver. Sees only the doses they are responsible for and the tasks assigned to them, and records what they complete.",
+      "caregiver": "A hired caregiver. Records the doses they are responsible for and the tasks assigned to them, and can open the emergency card and the care recipient's details. Does not see the rest of the circle's data.",
       "remote_member": "Follows the care circle from afar.",
       "elder": "The person receiving care."
     },
@@ -651,12 +651,12 @@
       "sees": {
         "doses": "The doses they are responsible for, and their times",
         "tasks": "The tasks assigned to them",
-        "emergency": "The emergency card and the basic details of the person you care for",
+        "emergency": "The full emergency card — contact and doctor phone numbers, and the care recipient's medical details",
         "own": "The notes and readings they recorded themselves"
       },
       "hiddenTitle": "What they will not see",
       "hidden": {
-        "members": "The other members and their contact details",
+        "members": "The circle's member list and their email addresses",
         "pulse": "The circle's activity log",
         "schedule": "Appointments and family visits",
         "others": "Notes and readings recorded by anyone else"
@@ -713,7 +713,7 @@
       "noPhoto": "No photo attached",
       "noPhotoHint": "Attaching a photo is optional.",
       "loadError": "Couldn't show the photo. Check your connection and try again.",
-      "ownerNote": "This photo is part of the caregiver's own record. Only they can replace it.",
+      "ownerNote": "This photo is part of the caregiver's own record. The family cannot delete or replace it.",
       "close": "Close photo"
     },
     "week": {
@@ -737,7 +737,8 @@
       "pickCaregiver": "Choose a caregiver",
       "managersOnly": "The caregiver summary is available to the admin and the primary caregiver only",
       "scheduledAt": "Dose time",
-      "recordedAt": "Recorded at"
+      "recordedAt": "Recorded at",
+      "notDueYet": "Not due yet"
     }
   },
   "tasks": {
@@ -1594,7 +1595,7 @@
         "viewer": "Viewer",
         "viewerDesc": "Can only view information",
         "caregiver": "Caregiver",
-        "caregiverDesc": "Records only the doses and tasks assigned to them"
+        "caregiverDesc": "Records their assigned doses and tasks, plus their own notes and readings"
       }
     },
     "dailylogs": {

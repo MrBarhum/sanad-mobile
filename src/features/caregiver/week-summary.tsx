@@ -20,10 +20,7 @@ import { DoseProofImage } from '@/features/caregiver/dose-photo';
 import { memberDisplayName } from '@/features/circle-members/display-name';
 import { useCircleMembers } from '@/features/circle-members/hooks';
 import { isManagerRole } from '@/features/circle-members/permissions';
-import {
-  DEFAULT_MISSED_DOSE_GRACE,
-  useMissedDoseGrace,
-} from '@/features/circle-selection/missed-dose-grace';
+import { useMissedDoseGrace } from '@/features/circle-selection/missed-dose-grace';
 import type { ActiveCircle } from '@/features/circle-selection/permissions';
 import { WEEKDAY_KEYS } from '@/features/medications/schedule-fields';
 import { useTheme } from '@/hooks/use-theme';
@@ -77,7 +74,12 @@ export function CaregiverWeekSummary({ circle }: { circle: ActiveCircle }) {
   const week = useMemo(() => weekBoundsFor(anchor, offset), [anchor, offset]);
 
   const grace = useMissedDoseGrace(isManager ? circle.circleId : undefined);
-  const graceMinutes = grace.data ?? DEFAULT_MISSED_DOSE_GRACE;
+  // NOT `?? DEFAULT_MISSED_DOSE_GRACE`. If the circle's grace could not be read,
+  // falling back to a constant would classify doses «متأخّرة» against a threshold
+  // this circle may never have chosen — and the note below would then present
+  // that invented number to the reader as the circle's own setting. Passing null
+  // makes the classifier decline to assert lateness at all.
+  const graceMinutes = grace.data ?? null;
 
   const { summary, isLoading, isError, refetch } = useCaregiverWeek({
     circleId: circle.circleId,
@@ -172,13 +174,15 @@ export function CaregiverWeekSummary({ circle }: { circle: ActiveCircle }) {
               />
             ))}
           </Surface>
-          <Text style={[styles.note, { color: c.textSecondary }]}>
-            {t('caregiver.week.lateNote', {
-              minutes: t('notificationSettings.missedDoseGrace.minutes', {
-                count: summary.graceMinutes,
-              }),
-            })}
-          </Text>
+          {summary.graceMinutes === null ? null : (
+            <Text style={[styles.note, { color: c.textSecondary }]}>
+              {t('caregiver.week.lateNote', {
+                minutes: t('notificationSettings.missedDoseGrace.minutes', {
+                  count: summary.graceMinutes,
+                }),
+              })}
+            </Text>
+          )}
         </View>
 
         <View style={styles.group}>
@@ -310,6 +314,9 @@ const OUTCOME: Record<DoseOutcome, { tone: StatusTone; iconName: IconName; label
   notRecorded: { tone: 'neutral', iconName: 'dot', labelKey: 'caregiver.week.notRecorded' },
   postponed: { tone: 'warning', iconName: 'clock', labelKey: 'medications.status.postponed' },
   missed: { tone: 'error', iconName: 'error', labelKey: 'medications.status.missed' },
+  // A dose whose time has not arrived. Neutral by construction: it is not a
+  // status the caregiver earned, it is the clock.
+  notDueYet: { tone: 'neutral', iconName: 'clock', labelKey: 'caregiver.week.notDueYet' },
 };
 
 const BEAD_STATUS: Record<DoseOutcome, DoseBeadStatus> = {
@@ -318,6 +325,7 @@ const BEAD_STATUS: Record<DoseOutcome, DoseBeadStatus> = {
   notRecorded: null,
   postponed: 'postponed',
   missed: 'missed',
+  notDueYet: null,
 };
 
 /** DoseBeadStrip is built for ≤5 beads per row; a busy day wraps into more rows. */

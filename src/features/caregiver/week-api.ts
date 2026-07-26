@@ -111,7 +111,7 @@ export function activeCaregivers(members: CircleMember[] | undefined): CircleMem
 // ---------------------------------------------------------------------------
 
 /** What happened to one scheduled dose. Five facts, no ranking between them. */
-export type DoseOutcome = 'onTime' | 'late' | 'notRecorded' | 'postponed' | 'missed';
+export type DoseOutcome = 'onTime' | 'late' | 'notRecorded' | 'postponed' | 'missed' | 'notDueYet';
 
 export type CaregiverWeekDose = {
   /** Stable React key. */
@@ -148,8 +148,14 @@ export type CaregiverWeekSummary = {
   /** Only days that carry at least one scheduled or recorded dose, ascending. */
   days: CaregiverWeekDay[];
   tasksCompleted: number;
-  /** The grace the on-time/late split was computed with — shown to the reader. */
-  graceMinutes: number;
+  /**
+   * The grace the on-time/late split was computed with, shown to the reader.
+   * NULL when the circle's setting could not be read — in which case no dose is
+   * classified «متأخّرة» at all and the explanatory note is not drawn. Stating a
+   * threshold we never read, next to a judgement about a person's work, would be
+   * the worst of both.
+   */
+  graceMinutes: number | null;
   /** True when the week holds no dose row and no completed task at all. */
   isEmpty: boolean;
 };
@@ -258,18 +264,36 @@ function classify(
   log: MedicationLog | null,
   date: string,
   scheduledTime: string,
-  graceMinutes: number,
+  graceMinutes: number | null,
+  nowMs: number,
 ): { outcome: DoseOutcome; minutesFromSchedule: number | null } {
-  if (!log) return { outcome: 'notRecorded', minutesFromSchedule: null };
+  const scheduledIso = combineDateTimeToInstant(date, formatHm(scheduledTime));
+  const scheduledMs = scheduledIso ? new Date(scheduledIso).getTime() : NaN;
+
+  if (!log) {
+    // A dose whose time has NOT ARRIVED cannot be "not recorded" — nobody was
+    // late for something that has not happened. Without this, opening the CURRENT
+    // week counts every remaining dose of today and of the days after it against
+    // a named worker, which is precisely the punitive misreading this feature
+    // exists to avoid. Past-but-unlogged stays `notRecorded`; that is a fact.
+    if (!Number.isNaN(scheduledMs) && scheduledMs > nowMs) {
+      return { outcome: 'notDueYet', minutesFromSchedule: null };
+    }
+    return { outcome: 'notRecorded', minutesFromSchedule: null };
+  }
   if (log.status === 'postponed') return { outcome: 'postponed', minutesFromSchedule: null };
   if (log.status === 'missed') return { outcome: 'missed', minutesFromSchedule: null };
 
-  const scheduledIso = combineDateTimeToInstant(date, formatHm(scheduledTime));
   const recordedMs = new Date(log.recorded_at).getTime();
-  if (!scheduledIso || Number.isNaN(recordedMs)) {
+  if (Number.isNaN(scheduledMs) || Number.isNaN(recordedMs)) {
     return { outcome: 'onTime', minutesFromSchedule: null };
   }
-  const delta = Math.round((recordedMs - new Date(scheduledIso).getTime()) / 60_000);
+  const delta = Math.round((recordedMs - scheduledMs) / 60_000);
+  // A null grace means the circle's setting could not be read. Asserting «متأخّرة»
+  // against a number we invented would be stating something about this person's
+  // work that we never actually computed — the same principle the block above
+  // applies to an unresolvable schedule.
+  if (graceMinutes === null) return { outcome: 'onTime', minutesFromSchedule: delta };
   return { outcome: delta > graceMinutes ? 'late' : 'onTime', minutesFromSchedule: delta };
 }
 
@@ -280,10 +304,17 @@ function toDose(params: {
   medicationName: string;
   dosage: string | null;
   log: MedicationLog | null;
-  graceMinutes: number;
+  graceMinutes: number | null;
+  nowMs: number;
 }): CaregiverWeekDose {
-  const { key, date, scheduledTime, medicationName, dosage, log, graceMinutes } = params;
-  const { outcome, minutesFromSchedule } = classify(log, date, scheduledTime, graceMinutes);
+  const { key, date, scheduledTime, medicationName, dosage, log, graceMinutes, nowMs } = params;
+  const { outcome, minutesFromSchedule } = classify(
+    log,
+    date,
+    scheduledTime,
+    graceMinutes,
+    nowMs,
+  );
   return {
     key,
     date,
@@ -308,7 +339,7 @@ function toDose(params: {
 export function summarizeCaregiverWeek(
   raw: CaregiverWeekRaw,
   week: WeekBounds,
-  graceMinutes: number,
+  graceMinutes: number | null,
 ): CaregiverWeekSummary {
   const medicationById = new Map(raw.medications.map((medication) => [medication.id, medication]));
   const logById = new Map(raw.logs.map((log) => [log.id, log]));
@@ -326,8 +357,14 @@ export function summarizeCaregiverWeek(
     notRecorded: 0,
     postponed: 0,
     missed: 0,
+    notDueYet: 0,
   };
   const days: CaregiverWeekDay[] = [];
+
+  // Read the clock ONCE for the whole summary. Reading it per dose would let a
+  // dose flip from notDueYet to notRecorded midway through building one week,
+  // producing a page that does not agree with itself.
+  const nowMs = Date.now();
 
   for (const date of week.days) {
     const dayLogs = logsByDate.get(date) ?? [];
@@ -350,6 +387,7 @@ export function summarizeCaregiverWeek(
         dosage: item.dosage,
         log,
         graceMinutes,
+        nowMs,
       });
     });
 
@@ -365,6 +403,7 @@ export function summarizeCaregiverWeek(
           dosage: medication?.dosage ?? null,
           log,
           graceMinutes,
+          nowMs,
         }),
       );
     }
@@ -402,7 +441,7 @@ export function useCaregiverWeek(params: {
   circleId: string | undefined;
   caregiverUserId: string | undefined;
   week: WeekBounds;
-  graceMinutes: number;
+  graceMinutes: number | null;
   enabled?: boolean;
 }) {
   const { circleId, caregiverUserId, week, graceMinutes, enabled = true } = params;
