@@ -601,6 +601,59 @@ Final state: `a8_bypass_restored=true` · `a8_cancelled_by_kept=true` · `a10_rp
 2. **`revoke all … from public` does not remove `anon` EXECUTE.** Verified repo-wide: `is_circle_member`, `has_circle_role`, `can_view_all_operational`, `claim_care_task`, `list_available_to_claim` and the new `account_deletion_preflight` are **all** anon-executable, because Supabase's default privileges on `public` grant EXECUTE to `anon` and the house `revoke … from public` only revokes the PUBLIC pseudo-role. Not exploitable — every one of them keys off `auth.uid()`, which is NULL for anon, so they return nothing — but the defence-in-depth those `revoke` lines were meant to provide is not actually engaged. A one-line `revoke execute … from anon;` per function would close it. **Not changed here** — it is a pre-existing, repo-wide pattern and changing only the new function would create an inconsistency.
 3. **The type regeneration caught a live bug.** `daily_summary` became a real union member and `tsc` failed on two `Record<NotificationType, …>` maps missing it. Both read through a `?? …system` fallback, which is why it went unnoticed: **the nightly digest has been rendering with the generic bell and the label «تحديث» since it went live.** Fixed. The new i18n parity guard also earned itself, failing the ar-only first pass before tsc could.
 
+## 9c. Follow-ups after the applied batch — 2026-07-26
+
+### Migration history backfilled — `db push` is safe again
+
+The history had 4 rows against 32 files. Rather than trusting filenames, each of the 28 unrecorded migrations was verified against **a distinctive object it creates** (a table, a function, or a specific column) — because recording an *unapplied* migration is the one genuinely dangerous direction here: `db push` would then skip it forever.
+
+**All 28 verified present.** Backfilled with names derived from the filenames, exactly as `db push` itself would write them.
+
+Final state: **32 remote rows = 32 local files · no phantom rows · zero name mismatches.**
+
+`db push --dry-run` was deliberately **not** run (the instruction was not to run `db push`). It is also unnecessary: push computes pending as *local files − recorded versions*, and that set is now provably empty.
+
+> Standing rule going forward: anything applied through the Dashboard records nothing. If a migration is ever applied that way again, insert its `(version, name)` row in the same session or the history drifts straight back out of sync.
+
+### `expo-document-picker` added ahead of B1
+
+`~56.0.4`, confirmed against `node_modules/expo/bundledNativeModules.json` (the table `expo install` itself resolves against) before installing. It is a **native module on both platforms**, which is precisely why it is going in now — B1's document vault would otherwise have needed its own EAS rebuild.
+
+- **No Android permissions** declared. Nothing to add.
+- **No `app.json` plugin entry added, deliberately.** Its config plugin is **iOS-only and a no-op unless `ios.usesIcloudStorage` is true** — all it does is wire iCloud Drive container entitlements. Adding it today would be cargo-cult: there is no `ios.bundleIdentifier` yet (A7 §2), and enabling iCloud needs an Apple Developer container, which is maintainer/identity territory.
+- ⚠️ **Consequence to know:** picking files from **iCloud Drive on iOS** would require adding that plugin + `usesIcloudStorage`, and that is an entitlement change — **another iOS rebuild**. Picking from on-device storage and the Files app works without it. If iCloud Drive is wanted at launch, say so and it goes in before the build.
+
+Post-install: `expo install --check` = up to date · `expo-doctor` = **21/21 passed**.
+
+## 9d. Pre-launch hardening list
+
+Deferred deliberately, not forgotten. Grouped by owner.
+
+### Engineering — mine to do, on your word
+
+| # | Item | Why it is deferred |
+|---|---|---|
+| H1 | **`revoke execute … from anon` on every `public` function.** Supabase's default privileges grant `anon` EXECUTE, and the house `revoke all … from public` only revokes the PUBLIC pseudo-role — so `is_circle_member`, `has_circle_role`, `can_view_all_operational`, `claim_care_task`, `list_available_to_claim`, `account_deletion_preflight` and the rest are **all** anon-executable today. Not exploitable (every one keys off `auth.uid()`, NULL for anon, so they return nothing), but the intended defence-in-depth is not engaged. | **Your call: one deliberate repo-wide pass, not piecemeal.** Doing only the new function would create an inconsistency worse than the current uniform state. |
+| H2 | **Arabic plurals are wrong today.** 11 keys use `{{count}}`, 6 call sites pass `{ count }`, and **zero** keys carry plural suffixes — so «1 أدوية نشطة» renders where «دواء واحد نشط» belongs. Arabic has 6 CLDR plural categories. | Pre-existing, unrelated to M7 scope, and touches copy in both locales. |
+| H3 | **Android notification channel name is hardcoded English** — `push-registration.ts:91` `'Sanad reminders'`, outside i18n. Android will not rename an existing channel, so it only takes effect on a fresh install. | Best done in the same pass as the rename (A7 Phase 4 step 17), which gets the fresh install for free. |
+| H4 | **Zero client telemetry.** No logger, no crash reporter; every `catch` in the auth flow is silent. This is exactly why A1's failure modes were field-indistinguishable. | Any real option (Sentry) is a native dependency and a data-flow decision. Needs your call before the build. |
+| H5 | **Zero test infrastructure and no CI.** Every Track A item is device-verify-or-nothing. | Out of M7 scope; worth a decision before the next milestone. |
+| H6 | **`expo-sqlite` is installed and has zero imports** — dead weight forcing a native module into every build. | Trivial to drop from `app.json` plugins + deps, but it changes the native build, so it belongs *with* a rebuild, not between. |
+| H7 | **No offline behaviour.** React Query is memory-only, mutations are not queued. A photo upload or PDF generation on a poor connection has undefined behaviour. | Real design work, not a patch. |
+| H8 | **Doc/code posture drift.** CLAUDE.md's "transparent circle" says every active member sees all operational data; the actual RLS since `20260626161000` scopes four tables to `can_view_all_operational` OR own-row, with transparency delivered only via SECURITY DEFINER RPCs. | Needs a product decision on which is true, then one of the two changes. |
+| H9 | **Stale comment** `join-form.tsx:22` claims invite codes read `SANAD-XXXXX`; they are `XXXXX-XXXXX` with no prefix. | Cosmetic; sweep with the rename. |
+
+### Yours — identity, credentials, or hosting
+
+| Item | Note |
+|---|---|
+| **Custom SMTP** | **Hard prerequisite.** Without it password reset is capped at 2 emails/hour project-wide. |
+| **Public web account-deletion URL** | Play requires it alongside the in-app flow (R8.4). |
+| **App icon + splash** | Still the Expo template; `app.json:11` points iOS at `./assets/expo.icon`, splash background `#208AEF` is not a Dar colour. Cannot ship. |
+| **Privacy policy + Play Data Safety** | A5 adds camera/photos; B3 would send care data to a third-party model. All declarable. |
+| **`ios.bundleIdentifier`** | Missing entirely — iOS cannot be built at all until it is added (A7 §2). |
+| **The EAS build** | Yours by standing rule. |
+
 ## 10. Maintainer runbook (nothing here is auto-applied)
 
 Project ref: `qccgshanmoeybagxwvcs`. **I will not run any of these.** Each needs your explicit approval of the exact command.
