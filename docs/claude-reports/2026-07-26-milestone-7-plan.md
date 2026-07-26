@@ -581,6 +581,26 @@ Post-verification: `npx expo install --check` = "Dependencies are up to date"; `
 
 ---
 
+## 9b. APPLIED TO PRODUCTION — 2026-07-26
+
+Authorized batch, executed against `qccgshanmoeybagxwvcs` via `supabase db query --linked` (Management API, access token — **no DB password was needed or used**) and `supabase functions deploy --use-api`.
+
+| Step | What | Result |
+|---|---|---|
+| **R0** | A8 claim-trigger fix | **Applied.** Pre-check confirmed the bug live: `enforce_care_task_collaborator_scope` had `has_bypass=false, has_cancelled_by=true`, while the untouched visit trigger had `true/false` — exactly the predicted partial failure. After: **`true/true`**. |
+| **R5** | `enqueue-due-reminders` (A9 grace fix) | **Deployed v3 → v4.** Unauthenticated POST still returns **401**, so `authorizeScheduledRequest` fails closed and cron is unaffected. |
+| **R8** | A10 preflight migration + `delete-account` | **Applied + deployed v1 ACTIVE.** RPC is SECURITY DEFINER, returns TABLE, `authenticated` can execute. Auth gate: unauthenticated **401**, garbage bearer **401**. |
+| **R6** | A5 storage | **Smoke test passed** (create/drop policy on `storage.objects` succeeded, zero leftovers) → **R6.1** column + CHECK + helper, with `storage_path_uuid('not-a-uuid/…')` confirmed returning **null rather than raising** → **R6.2** private bucket (2 MiB, jpeg/png/webp) + **all four policies**. SELECT verified to carry **both** the `can_view_all_operational` arm and the `is_responsible_for_medication` arm; INSERT verified responsibility-scoped **and** `is_circle_medication`-guarded. |
+| **R3** | Regenerate types, clear casts | **Done.** All 8 missing symbols present. Every Supabase client cast removed. Caught a latent bug — see below. |
+
+Final state: `a8_bypass_restored=true` · `a8_cancelled_by_kept=true` · `a10_rpc=1` · `a5_column=1` · `a5_helper=1` · `a5_private_bucket=1` · `a5_policies=4` · `leftover_throwaways=0` · `m7_versions_recorded=3` · existing data untouched (`medication_logs=21`, `care_circles=1`).
+
+### Three findings from doing it for real
+
+1. **The remote migration history had exactly ONE row** (`20260607033000`). Everything since was applied via the Dashboard, which records nothing. So **`supabase db push` would have tried to replay ~27 migrations** — I used `db query -f` per file instead and recorded this milestone's three versions explicitly. The history is still incomplete for everything between; worth backfilling before anyone runs `db push` again.
+2. **`revoke all … from public` does not remove `anon` EXECUTE.** Verified repo-wide: `is_circle_member`, `has_circle_role`, `can_view_all_operational`, `claim_care_task`, `list_available_to_claim` and the new `account_deletion_preflight` are **all** anon-executable, because Supabase's default privileges on `public` grant EXECUTE to `anon` and the house `revoke … from public` only revokes the PUBLIC pseudo-role. Not exploitable — every one of them keys off `auth.uid()`, which is NULL for anon, so they return nothing — but the defence-in-depth those `revoke` lines were meant to provide is not actually engaged. A one-line `revoke execute … from anon;` per function would close it. **Not changed here** — it is a pre-existing, repo-wide pattern and changing only the new function would create an inconsistency.
+3. **The type regeneration caught a live bug.** `daily_summary` became a real union member and `tsc` failed on two `Record<NotificationType, …>` maps missing it. Both read through a `?? …system` fallback, which is why it went unnoticed: **the nightly digest has been rendering with the generic bell and the label «تحديث» since it went live.** Fixed. The new i18n parity guard also earned itself, failing the ar-only first pass before tsc could.
+
 ## 10. Maintainer runbook (nothing here is auto-applied)
 
 Project ref: `qccgshanmoeybagxwvcs`. **I will not run any of these.** Each needs your explicit approval of the exact command.
