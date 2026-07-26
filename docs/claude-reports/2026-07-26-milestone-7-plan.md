@@ -71,7 +71,27 @@ Google Play requires in-app account deletion **and** a publicly reachable web de
 
 ---
 
-## 2. Decisions I need from you
+## 2. Decisions — ANSWERED 2026-07-26
+
+All eleven are settled. Recorded here because several change the plan below; the original framing is kept so the reasoning stays auditable.
+
+| # | Answer | Consequence |
+|---|---|---|
+| **D1** | **Not published on Play** — never, not even internal testing. Name not yet chosen. | The package rename is free *right now* and never will be again. Keep A7 as the plan; **rename nothing** until the name is chosen. Add `ios.bundleIdentifier` in the same pass. |
+| **D2** | **Free plan.** | A5 is client-side compression only. No Supabase image transformations. Global storage ceiling is 50 MB — the 2 MiB bucket cap sits well inside it. |
+| **D3** | **All four `20260715*` migrations were applied 2026-07-16 via `supabase db push`.** Five cron jobs live and active. `check-missed-doses` and `send-daily-summaries` were 401ing until 2026-07-24, fixed by adding `verify_jwt = false` for both and redeploying. | ⚠️ **A8 is not hypothetical — task claiming is broken in production right now.** Promoted to the top of the runbook. Also: **A6's regen is unblocked** (R3), and since `db push` *is* in use, keeping A5's storage SQL outside `supabase/migrations/` is now load-bearing rather than merely tidy. |
+| **D4** | OTP primary + deep-link repair. | As shipped in `57ea47c`. |
+| **D5** | On-device PDF. | Confirmed by the spike. |
+| **D6** | **Custom SMTP will be configured before launch.** | **Hard prerequisite.** Until it is, password reset is capped at 2 emails/hour project-wide — roughly unusable on day one. |
+| **D7** | **Build A10.** | Done (`159f2a1`). The public web deletion URL is runbook R8.4. |
+| **D8** | Both A8 and A9. | Done. |
+| **D9** | PDF scope as proposed; keep the "current schedule only" caveat **visible on the page**. | Carried into the A4 build. |
+| **D10** | `medication_id` in the object path; mirror the live predicate; do not widen. | As shipped in `ba6edac`. |
+| **D11** | **Tagalog + Indonesian first.** Hindi/Amharic and the second-font question deferred with C1. | The design brief's C1 section already scopes it this way. |
+
+Also confirmed as the maintainer's own: **§7.3** (app icon and splash are still the Expo template) and **§7.7** (privacy policy + Play Data Safety). Both stay flagged; neither is built.
+
+### The original framing (kept for the record)
 
 ### Blocking — I cannot finish the affected item without an answer
 
@@ -491,9 +511,26 @@ Updated as each item lands. Quartet = `tsc` · mojibake · `diff --check` · ar/
 | **A5** (server half) | `ba6edac` | n/a (files only, not applied) | `supabase/migrations/20260726130000_dose_proof_helpers.sql` + `docs/deployment/dose-proof-storage.sql`. Runbook R6. **Client half not started** — needs the rebuild. |
 | **+ i18n parity guard** | `15254a4` | ✅ passes at 1118 leaf keys | §7.6. `npm run check:i18n`. Negative-tested against all four defect classes; each fails, the clean control passes. |
 | **+ Design brief** | `46b7b56` | n/a (doc) | `docs/design/DESIGN_BRIEF_MILESTONE_7.md` — **33 frames** across B1/B2/B3/C1, written and then passed through a consistency review (20 defects corrected, including a cream-on-cream token pairing and six gendered imperatives). |
-| A4 | **not started** | | Gated on the Expo Go font spike **and** the EAS rebuild. |
+| **A10** | `159f2a1` | ✅ tsc 0 · mojibake clean · **parity 1138=1138** · diff clean · lint 31/27 | In-app account deletion. Found the real hazard while building it: `care_circles.owner_id → profiles(id) ON DELETE CASCADE` and `profiles.id → auth.users(id) ON DELETE CASCADE`, so deleting an account destroys **every circle the user owns and everything in it** — other members' data included. Gated behind a server-authoritative preflight that blocks that case. First user-invoked edge function in the project; adds `userClient()` and `_shared/http.ts` (CORS), which B3 inherits. Runbook R8. |
+| **A4 spike** | `<spike>` | n/a (investigation) | **PASSED — proceed with the rebuild.** Full findings + the device spike snippet: `docs/claude-reports/2026-07-26-a4-pdf-font-spike.md`. |
+| A4 (build) | **not started** | | Spike cleared it; now gated only on the EAS rebuild. |
 | A5 (client half) | **not started** | | Gated on the EAS rebuild. |
-| A10 (account deletion) | **not started** | | Awaiting **D7**. |
+
+### A4 spike result — Cairo embeds, Arabic shapes, one page
+
+Android's `expo-print` renders through `WebView` → `createPrintDocumentAdapter` → **Chromium's Skia PDF backend**, which is the same backend and the same HarfBuzz shaper desktop headless Chrome uses for `--print-to-pdf`. So the decisive questions were answerable here, without a device and without spending the rebuild first.
+
+Rendered the real HTML shape (both Cairo weights inlined as base64 `@font-face`, `dir="rtl"`, A4 geometry, real summary content) through **Chrome 150**, then inspected the PDF:
+
+- **Cairo is embedded** — `/BaseFont /AAAAAA+Cairo-Bold` and `/BAAAAA+Cairo-Regular`, subsetted CIDFontType2 with `/FontFile2` programs. The 68 KB PDF is *smaller* than the 246 KB of font that went in, which only happens if Chrome parsed and subsetted it.
+- **The text is real Unicode** — `/ToUnicode` maps present, so it selects and copies out. Not outlines.
+- **Shaping is correct** — lam-alef ligature (`لا · للأسف · إلا · الآن`), all four contextual forms of ع, and tashkeel all render. This is exactly what `@react-pdf/renderer` gets wrong (its open issue #3197: the ligature "may disappear entirely").
+- **Exactly one page**, disclaimer clearing the bottom margin. `expo/expo#7435`'s phantom trailing page does not bite at this volume.
+- **The negative control worked** — a deliberately-broken `font-family:'DoesNotExist',serif` line fell back to Times while the Arabic body stayed Cairo. Had Cairo failed, the whole document would look like that line.
+
+**Residual risk, all device-specific and all benign:** the font-ready race (`onPageFinished` vs async `data:` font install — no network involved, but the ordering stands), Android WebView version variance (crbug 1334127), and iOS's entirely separate WKWebView/CoreText path. **In every case the failure mode is correct joined Arabic in the system typeface — never tofu, never broken text.** That is what makes the rebuild a reasonable bet.
+
+| A10 follow-up | | | The **publicly reachable web deletion URL** is still required by Play and is not code — runbook R8. |
 
 ### A2 addendum — why the vulnerability count went UP
 
@@ -548,17 +585,17 @@ Post-verification: `npx expo install --check` = "Dependencies are up to date"; `
 
 Project ref: `qccgshanmoeybagxwvcs`. **I will not run any of these.** Each needs your explicit approval of the exact command.
 
-### R0 — answer the blocking questions (D1–D3)
-```sql
--- which cron jobs exist? (never select cron.job.command)
-select jobname, schedule, active from cron.job order by jobname;
+### R0 — ⚠️ URGENT, do this first: A8, the live claim regression
+`20260715120000` **is applied in production** (confirmed 2026-07-16), so
+`enforce_care_task_collaborator_scope()` currently has no `sanad.in_claim` bypass and
+**no `family_member` or `caregiver` can claim a task today.** Visit claiming still works,
+so the symptom looks like a task-specific bug rather than a regression.
 
--- are the 2026-07-15 migrations applied?
-select column_name from information_schema.columns
- where table_schema='public' and table_name='care_tasks' and column_name='cancelled_by';
-select column_name from information_schema.columns
- where table_schema='public' and table_name='care_circles' and column_name='missed_dose_grace_minutes';
-```
+Apply `supabase/migrations/20260726120000_restore_claim_bypass_in_care_task_trigger.sql`,
+then run the verification query in its footer (expects `has_bypass = t` **and**
+`has_cancelled_by = t`), then confirm on device that a `family_member` can claim a task.
+
+This supersedes the old R4; nothing else in Milestone 7 needs to land first.
 
 ### R1 — A1: Reset Password email template (Dashboard → Authentication → Emails → Templates)
 Replace the body so it renders `{{ .Token }}` and **remove the `{{ .ConfirmationURL }}` line entirely.** Leaving it in keeps a prefetchable URL alive, and a scanner GET on it burns the same `recovery_token` that the printed 6-digit code uses — invalidating the code too.
@@ -590,6 +627,20 @@ supabase functions deploy enqueue-due-reminders --project-ref qccgshanmoeybagxwv
 3. **R6.2** — Dashboard SQL Editor: `docs/deployment/dose-proof-storage.sql` (bucket + the four `storage.objects` policies). **Never `db push` this file** — it is deliberately outside `supabase/migrations/`.
    Order matters: every policy calls `public.storage_path_uuid()`, so R6.2 before R6.1 fails with "function does not exist".
 4. Run the read-only verification queries at the bottom of that file, then the three-account device check (manager · responsible member · **a family_member who is NOT responsible for that medication — their `createSignedUrl` must fail**).
+
+### R8 — A10: account deletion (Play blocker)
+1. Apply `supabase/migrations/20260726140000_account_deletion_preflight.sql`.
+2. Deploy the function — note it is the **only** one that must keep JWT verification ON:
+   ```
+   supabase functions deploy delete-account --project-ref qccgshanmoeybagxwvcs
+   ```
+   Deploying from this repo preserves `supabase/config.toml`, where `[functions.delete-account] verify_jwt = true` is set **explicitly** rather than left to the default, so a neighbouring `verify_jwt = false` block can never be copied onto it by accident.
+3. **Verify the auth gate before trusting it** — an unauthenticated call must be rejected:
+   ```
+   curl -s -o /dev/null -w "%{http_code}" -X POST <FUNCTIONS_BASE_URL>/delete-account     # expect 401
+   ```
+4. **Host the public web deletion URL.** Play requires a publicly reachable page — not behind a login — that explains how to request account deletion and what data is removed. This is a hosting task, not code. It must be listed in the Play Console Data Safety form.
+5. Device check with a throwaway account: (a) an account owning a circle **with another active member** must be **refused** and shown the transfer-ownership path; (b) after transferring ownership, deletion succeeds; (c) a solo account deletes and lands on sign-in; (d) confirm the circle's data is actually gone.
 
 ### R7 — the EAS rebuild (after A2, A3, and the A4 spike)
 ```
