@@ -301,6 +301,7 @@ function MedicationInfoFields({ circleId, initial }: { circleId: string; initial
           circleId={circleId}
           value={responsibleUserId}
           label={t('assignment.responsible')}
+          includeCaregiver
           onChange={(v) => {
             setResponsibleUserId(v);
             touch();

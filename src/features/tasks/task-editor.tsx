@@ -300,6 +300,7 @@ function TaskEditScreen({
           circleId={circleId}
           value={assignedTo}
           label={t('tasks.fields.assignedTo')}
+          includeCaregiver
           onChange={(v) => {
             setAssignedTo(v);
             touch();

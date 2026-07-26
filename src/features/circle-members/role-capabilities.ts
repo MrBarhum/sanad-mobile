@@ -14,17 +14,31 @@ import type { CircleRole } from './api';
 
 /**
  * Roles a manager may actually assign, in display order (highest privilege
- * first). `caregiver` and `elder` exist in the circle_role enum but are
- * deliberately omitted: they are server-authoritatively unavailable until their
- * dedicated least-privilege RLS/UI exists, and BOTH update_circle_member_role and
- * create_circle_invitation reject them. Do NOT surface them as assignable
- * choices anywhere — see the deferred entries in ROLE_CAPABILITIES below.
+ * first).
+ *
+ * `caregiver` joined this list in Milestone 8, when it got the dedicated
+ * least-privilege RLS its absence was always waiting on: restrictive policies in
+ * `20260726160000_caregiver_least_privilege_rls.sql`, RPC scoping in
+ * `20260726160100_caregiver_rpc_scope.sql`, and assignability in
+ * `20260726160200_enable_caregiver_role_assignment.sql`. It sits LAST because it
+ * is the narrowest role, not because it is provisional.
+ *
+ * `elder` is still omitted and is now genuinely rejected by both
+ * `create_circle_invitation` and `update_circle_member_role`.
+ *
+ * A correction worth keeping: until Milestone 8 this file asserted that those two
+ * RPCs rejected `caregiver` and `elder`. They did not — the guard existed only in
+ * the repo's migration file and had never been installed in production, so the
+ * client array below was the ONLY thing preventing either assignment. Treat this
+ * list as UI ergonomics, never as the security boundary; the RLS and the RPC
+ * guards are the boundary.
  */
 export const ASSIGNABLE_ROLE_ORDER: CircleRole[] = [
   'admin',
   'primary_caregiver',
   'family_member',
   'remote_member',
+  'caregiver',
 ];
 
 export type RoleCapability = {
@@ -57,8 +71,8 @@ export const ROLE_CAPABILITIES: Record<CircleRole, RoleCapability> = {
   primary_caregiver: capability('primary_caregiver', true),
   family_member: capability('family_member', true),
   remote_member: capability('remote_member', true),
+  caregiver: capability('caregiver', true),
   // Deferred — unavailable until dedicated least-privilege RLS/UI is built.
-  caregiver: capability('caregiver', false),
   elder: capability('elder', false),
 };
 
@@ -69,14 +83,25 @@ export function roleCapability(role: CircleRole): RoleCapability {
 /**
  * Relative privilege rank, used only to explain whether a role change raises or
  * lowers a member's access in the confirmation dialog. Mirrors the manager
- * hierarchy in the RPCs (admin highest). caregiver/elder rank 0 (unused).
+ * hierarchy in the RPCs (admin highest).
+ *
+ * `caregiver` ranks EQUAL to `remote_member` on purpose, so a change between the
+ * two reads as «lateral» rather than as a promotion or a demotion. The two are
+ * genuinely incomparable: a remote member can view every operational row
+ * (`can_view_all_operational` includes them) but can write nothing; a caregiver
+ * can write in her own lane but sees almost nothing. Calling either direction an
+ * "increase" would be false. The shell-change warning
+ * (`caregiver.roster.shellChangeWarning`) carries the part that actually matters
+ * about that change.
+ *
+ * `elder` stays 0 (unassignable, so unused).
  */
 const ROLE_RANK: Record<CircleRole, number> = {
   admin: 4,
   primary_caregiver: 3,
   family_member: 2,
   remote_member: 1,
-  caregiver: 0,
+  caregiver: 1,
   elder: 0,
 };
 

@@ -230,7 +230,7 @@
       "admin": "Full access — manages the circle, members, and all care data.",
       "primary_caregiver": "Manages day-to-day care and can manage members and invitations.",
       "family_member": "Follows the care data and can record updates.",
-      "caregiver": "Records daily care and logs.",
+      "caregiver": "A hired caregiver. Sees only the doses they are responsible for and the tasks assigned to them, and records what they complete.",
       "remote_member": "Follows the care circle from afar.",
       "elder": "The person receiving care."
     },
@@ -293,10 +293,18 @@
         ]
       },
       "caregiver": {
-        "summary": "Not available yet.",
-        "can": [],
+        "summary": "Records the doses they are responsible for and the tasks assigned to them; does not see the rest of the circle's data.",
+        "can": [
+          "Record the doses they are responsible for",
+          "Complete the tasks assigned to them",
+          "Record a daily note and a vital reading",
+          "Open the emergency card"
+        ],
         "cannot": [
-          "Be assigned until its dedicated least-privilege role is implemented"
+          "View the members or invite anyone",
+          "View the circle's activity log",
+          "Edit medications, tasks or appointments",
+          "View appointments and family visits"
         ]
       },
       "elder": {
@@ -635,6 +643,101 @@
       "medications": "Medications",
       "appointments": "Appointments",
       "visits": "Visits"
+    }
+  },
+  "caregiver": {
+    "invite": {
+      "disclosureTitle": "What the caregiver will see",
+      "sees": {
+        "doses": "The doses they are responsible for, and their times",
+        "tasks": "The tasks assigned to them",
+        "emergency": "The emergency card and the basic details of the person you care for",
+        "own": "The notes and readings they recorded themselves"
+      },
+      "hiddenTitle": "What they will not see",
+      "hidden": {
+        "members": "The other members and their contact details",
+        "pulse": "The circle's activity log",
+        "schedule": "Appointments and family visits",
+        "others": "Notes and readings recorded by anyone else"
+      },
+      "notRecordedTitle": "What the app does not record",
+      "notRecorded": {
+        "location": "Location — never recorded, never requested",
+        "background": "Any background activity",
+        "mic": "The microphone or camera without a tap from them",
+        "photos": "Any photo they did not attach themselves"
+      },
+      "mutualNote": "Nothing is recorded about the caregiver except what they tap themselves.",
+      "codeNote": "This code opens the caregiver view, not the family view."
+    },
+    "roster": {
+      "appBadge": "Caregiver view",
+      "shellChangeWarning": "Changing this role changes which view this person opens. It takes effect the next time they restart their app."
+    },
+    "today": {
+      "title": "Today",
+      "dosesTitle": "Today's doses",
+      "tasksTitle": "Today's tasks",
+      "give": "Record the dose",
+      "logged": "Dose recorded",
+      "markDone": "Mark complete",
+      "cannotDo": "Couldn't complete",
+      "emergency": "Emergency card",
+      "addLog": "Daily note",
+      "addVital": "Vital reading",
+      "emptyTitle": "Nothing scheduled today",
+      "emptySubtitle": "Work will appear here once a dose or task is added.",
+      "allDoneTitle": "Everything for today is done",
+      "allDoneSubtitle": "Nothing left for today.",
+      "loadError": "Couldn't load today's work. Check your connection and try again.",
+      "saveError": "Couldn't save. Check your connection and try again.",
+      "recordTitle": "Record the dose"
+    },
+    "photo": {
+      "addLabel": "Add a photo",
+      "optional": "Optional",
+      "purpose": "Your own record that this dose was given.",
+      "sendOnSave": "The photo is only sent when you save.",
+      "replace": "Replace photo",
+      "remove": "Remove photo",
+      "uploading": "Sending the photo",
+      "uploadFailed": "The dose was saved. The photo couldn't be sent. Try sending it again.",
+      "retry": "Send the photo again",
+      "unavailable": "Adding photos is not available in this build of the app yet.",
+      "permissionDenied": "The camera couldn't open because permission isn't granted. You can allow it in your device settings.",
+      "captureFailed": "Couldn't take the photo. Try again."
+    },
+    "proof": {
+      "photoLabel": "Photo attached by the caregiver",
+      "noPhoto": "No photo attached",
+      "noPhotoHint": "Attaching a photo is optional.",
+      "loadError": "Couldn't show the photo. Check your connection and try again.",
+      "ownerNote": "This photo is part of the caregiver's own record. Only they can replace it.",
+      "close": "Close photo"
+    },
+    "week": {
+      "title": "This week's summary",
+      "entry": "Caregiver summary",
+      "entrySubtitle": "Doses and tasks recorded during the week",
+      "range": "{{from}} — {{to}}",
+      "previous": "Previous week",
+      "next": "Next week",
+      "onTime": "On time",
+      "late": "Late",
+      "notRecorded": "Not recorded",
+      "dosesTitle": "Doses",
+      "tasksTitle": "Tasks",
+      "tasksDone": "Tasks completed",
+      "lateNote": "A dose counts as late if it was recorded more than {{minutes}} after its time.",
+      "mirrorNote": "These are records and counts only, not a rating.",
+      "empty": "A calm week — no records in this period",
+      "loadError": "Couldn't load this week's summary. Check your connection and try again.",
+      "noCaregivers": "There is no hired caregiver in this circle",
+      "pickCaregiver": "Choose a caregiver",
+      "managersOnly": "The caregiver summary is available to the admin and the primary caregiver only",
+      "scheduledAt": "Dose time",
+      "recordedAt": "Recorded at"
     }
   },
   "tasks": {
@@ -1489,7 +1592,9 @@
         "editor": "Editor",
         "editorDesc": "Can add and edit records",
         "viewer": "Viewer",
-        "viewerDesc": "Can only view information"
+        "viewerDesc": "Can only view information",
+        "caregiver": "Caregiver",
+        "caregiverDesc": "Records only the doses and tasks assigned to them"
       }
     },
     "dailylogs": {

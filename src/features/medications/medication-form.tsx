@@ -59,7 +59,10 @@ export function MedicationForm({ circleId }: { circleId: string }) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const responsibleOptions = useMemberOptions(circleId, responsibleUserId);
+  // `includeCaregiver`: a hired caregiver may be made responsible for a
+  // medication — logging its doses is the core of her role. Kept in step with
+  // medication-editor.tsx so add and edit offer the SAME choices.
+  const responsibleOptions = useMemberOptions(circleId, responsibleUserId, true);
 
   const { dirty } = useUnsavedChanges({
     name,

@@ -19,16 +19,17 @@ export function isLastActiveAdmin(member: CircleMember, members: CircleMember[])
  * Returns [] when the actor may not change this member's role at all. The UI uses
  * this to show only valid choices; the RPC remains authoritative.
  */
-// `caregiver` and `elder` are deferred until their dedicated least-privilege RLS
-// exists; they are excluded here AND rejected by update_circle_member_role.
+// `caregiver` became assignable in Milestone 8, once it had dedicated
+// least-privilege RLS (20260726160000 / …160100 / …160200). `elder` is still
+// deferred and is now genuinely rejected by update_circle_member_role.
 export function assignableRolesFor(actorRole: CircleRole, target: CircleMember): CircleRole[] {
   if (!isManagerRole(actorRole)) return [];
   if (actorRole === 'admin') {
-    return ['admin', 'primary_caregiver', 'family_member', 'remote_member'];
+    return ['admin', 'primary_caregiver', 'family_member', 'remote_member', 'caregiver'];
   }
   // primary_caregiver: may not grant manager roles, nor modify a manager peer.
   if (isManagerRole(target.role) && !target.isSelf) return [];
-  return ['family_member', 'remote_member'];
+  return ['family_member', 'remote_member', 'caregiver'];
 }
 
 /** Whether `actorRole` may change `target`'s active/removed status. */

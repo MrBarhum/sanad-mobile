@@ -18,10 +18,24 @@ import { useCircleMembers } from './hooks';
  * medications, and visits all show / pick a responsible person consistently.
  *
  * Only ACTIVE "doer" roles are offered as assignees — admin, primary_caregiver,
- * family_member. remote_member / elder / caregiver are intentionally excluded
+ * family_member. remote_member and elder are intentionally excluded
  * (remote_member is follow-up only and never receives operational reminders;
- * caregiver / elder are server-unassignable today). This mirrors the app's role
- * model; the RLS policies remain authoritative.
+ * elder is server-unassignable). This mirrors the app's role model; the RLS
+ * policies remain authoritative.
+ *
+ * `caregiver` — the hired caregiver added in Milestone 8 — is a SCOPED doer, not
+ * a general one, which is why it is a separate set and an opt-in prop rather
+ * than another entry above. Her permission model gives her exactly two kinds of
+ * work: a medication she is responsible for, and a task assigned to her. She has
+ * no remit over appointments or family visits, and the database now enforces
+ * that — a restrictive policy hides both tables from her entirely, and
+ * `set_assigned_appointment_outcome` refuses her.
+ *
+ * So offering her in the appointment or visit picker would let a manager create
+ * an assignment that is invisible and unusable to the assignee: silently broken
+ * rather than merely useless. Callers opt in with `includeCaregiver`, and only
+ * the task and medication forms do. Defaulting to false also keeps the promise
+ * that a circle which never hires a caregiver behaves exactly as it did before.
  */
 
 /** Roles a person can be made responsible for care work today. */
@@ -31,16 +45,21 @@ const DOER_ROLES: ReadonlySet<CircleRole> = new Set<CircleRole>([
   'family_member',
 ]);
 
+/** Additionally offerable where the work is a dose or a task. */
+const SCOPED_DOER_ROLES: ReadonlySet<CircleRole> = new Set<CircleRole>(['caregiver']);
+
 /** A non-empty user id is "real"; '' is the no-assignment sentinel for the chips. */
 export const NO_ASSIGNEE = '';
 
 export type AssigneeOption = { value: string; label: string };
 type Option = AssigneeOption;
 
-function isAssignableDoer(member: CircleMember): boolean {
+function isAssignableDoer(member: CircleMember, includeCaregiver: boolean): boolean {
+  const roleAllowed =
+    DOER_ROLES.has(member.role) || (includeCaregiver && SCOPED_DOER_ROLES.has(member.role));
   return (
     member.status === 'active' &&
-    DOER_ROLES.has(member.role) &&
+    roleAllowed &&
     Boolean(member.isSelf || member.fullName || member.email)
   );
 }
@@ -57,10 +76,11 @@ function buildOptions(
   selfId: string | null,
   current: string,
   t: (key: string) => string,
+  includeCaregiver: boolean,
 ): Option[] {
   const options: Option[] = [{ value: NO_ASSIGNEE, label: t('assignment.none') }];
 
-  const doers = members.filter(isAssignableDoer);
+  const doers = members.filter((m) => isAssignableDoer(m, includeCaregiver));
   const self = doers.find((m) => m.isSelf || m.userId === selfId);
   if (self) options.push({ value: self.userId, label: t('assignment.me') });
   for (const member of doers) {
@@ -94,13 +114,17 @@ function buildOptions(
  * render the chips in its own visual language while reusing this exact,
  * email-safe option logic (`MemberSelect` renders the shared default chips).
  */
-export function useMemberOptions(circleId: string, value: string): AssigneeOption[] {
+export function useMemberOptions(
+  circleId: string,
+  value: string,
+  includeCaregiver = false,
+): AssigneeOption[] {
   const { t } = useTranslation();
   const { user } = useAuth();
   const membersQuery = useCircleMembers(circleId);
   return useMemo(
-    () => buildOptions(membersQuery.data ?? [], user?.id ?? null, value, t),
-    [membersQuery.data, user?.id, value, t],
+    () => buildOptions(membersQuery.data ?? [], user?.id ?? null, value, t, includeCaregiver),
+    [membersQuery.data, user?.id, value, t, includeCaregiver],
   );
 }
 
@@ -114,15 +138,22 @@ export function MemberSelect({
   value,
   onChange,
   label,
+  includeCaregiver = false,
 }: {
   circleId: string;
   value: string;
   onChange: (value: string) => void;
   label?: string;
+  /**
+   * Offer an active hired caregiver as an assignee. Pass it ONLY where the work
+   * is a dose or a task — the two things her role can actually act on. Default
+   * false, so appointments and visits are untouched.
+   */
+  includeCaregiver?: boolean;
 }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const options = useMemberOptions(circleId, value);
+  const options = useMemberOptions(circleId, value, includeCaregiver);
 
   return (
     <View style={styles.group}>

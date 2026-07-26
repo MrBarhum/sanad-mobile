@@ -40,13 +40,18 @@ export const invitationKeys = {
 
 /**
  * Roles a manager with `actorRole` is permitted to grant by invitation, mirroring
- * the create_circle_invitation RPC checks. `admin` is never invitable; `caregiver`
- * and `elder` are deferred until their dedicated least-privilege RLS exists, so
- * they are excluded here AND rejected by the RPC; a primary caregiver may grant
- * only collaboration roles.
+ * the create_circle_invitation RPC checks. `admin` is never invitable; a primary
+ * caregiver may grant only collaboration roles.
+ *
+ * `caregiver` (the hired, paid caregiver — a different person from the
+ * `primary_caregiver` family role) became invitable in Milestone 8, once it had
+ * dedicated least-privilege RLS. It is listed LAST so the family roles stay in
+ * their existing order and a circle that never hires anyone sees the same first
+ * four cards it always saw. `elder` remains excluded and is now genuinely
+ * rejected by the RPC.
  */
 export function invitableRoles(actorRole: CircleRole): CircleRole[] {
-  const base: CircleRole[] = ['family_member', 'remote_member'];
+  const base: CircleRole[] = ['family_member', 'remote_member', 'caregiver'];
   if (actorRole === 'admin') return ['primary_caregiver', ...base];
   if (actorRole === 'primary_caregiver') return base;
   return [];

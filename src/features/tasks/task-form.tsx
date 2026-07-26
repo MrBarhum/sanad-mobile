@@ -194,6 +194,7 @@ export function TaskForm({ circleId }: { circleId: string }) {
           value={assignedTo}
           label={t('tasks.fields.assignedTo')}
           onChange={setAssignedTo}
+          includeCaregiver
         />
       </Surface>
 
