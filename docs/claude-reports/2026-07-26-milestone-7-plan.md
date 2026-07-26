@@ -512,7 +512,7 @@ Updated as each item lands. Quartet = `tsc` · mojibake · `diff --check` · ar/
 | **+ i18n parity guard** | `15254a4` | ✅ passes at 1118 leaf keys | §7.6. `npm run check:i18n`. Negative-tested against all four defect classes; each fails, the clean control passes. |
 | **+ Design brief** | `46b7b56` | n/a (doc) | `docs/design/DESIGN_BRIEF_MILESTONE_7.md` — **33 frames** across B1/B2/B3/C1, written and then passed through a consistency review (20 defects corrected, including a cream-on-cream token pairing and six gendered imperatives). |
 | **A10** | `159f2a1` | ✅ tsc 0 · mojibake clean · **parity 1138=1138** · diff clean · lint 31/27 | In-app account deletion. Found the real hazard while building it: `care_circles.owner_id → profiles(id) ON DELETE CASCADE` and `profiles.id → auth.users(id) ON DELETE CASCADE`, so deleting an account destroys **every circle the user owns and everything in it** — other members' data included. Gated behind a server-authoritative preflight that blocks that case. First user-invoked edge function in the project; adds `userClient()` and `_shared/http.ts` (CORS), which B3 inherits. Runbook R8. |
-| **A4 spike** | `<spike>` | n/a (investigation) | **PASSED — proceed with the rebuild.** Full findings + the device spike snippet: `docs/claude-reports/2026-07-26-a4-pdf-font-spike.md`. |
+| **A4 spike** | `7ccf7b1` | n/a (investigation) | **PASSED — proceed with the rebuild.** Full findings + the device spike snippet: `docs/claude-reports/2026-07-26-a4-pdf-font-spike.md`. |
 | A4 (build) | **not started** | | Spike cleared it; now gated only on the EAS rebuild. |
 | A5 (client half) | **not started** | | Gated on the EAS rebuild. |
 
