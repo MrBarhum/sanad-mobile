@@ -1153,7 +1153,31 @@
     "signOut": "Sign out",
     "signOutError": "Could not sign out. Please try again.",
     "confirmSignOutTitle": "Sign out?",
-    "confirmSignOutMessage": "This device will stop receiving reminders until you sign in again."
+    "confirmSignOutMessage": "This device will stop receiving reminders until you sign in again.",
+    "delete": {
+      "link": "Delete account",
+      "title": "Delete account",
+      "subtitle": "This is permanent and cannot be undone.",
+      "intro": "This account and its personal data will be permanently removed from the app.",
+      "introIrreversible": "The account and its data cannot be recovered afterwards.",
+      "listTitle": "What happens to your care circles",
+      "accountOnly": "There are no care circles linked to this account.",
+      "untitledCircle": "Care circle",
+      "outcome": {
+        "blocked": "Ownership must be transferred first",
+        "deleted": "The circle and everything in it will be deleted",
+        "left": "Membership ends; the circle's data stays for the other members"
+      },
+      "blockedBody": "These circles are owned by this account and still have other members. To protect their data, ownership must be transferred to another member before the account can be deleted.",
+      "blockedAction": "Manage members",
+      "submit": "Permanently delete account",
+      "confirmTitle": "Confirm account deletion",
+      "confirmMessage": "The account and its data will be permanently deleted, and this cannot be undone.",
+      "loadError": "Could not load the details. Check your connection and try again.",
+      "failed": "Could not delete the account. Please try again.",
+      "blockedError": "Circle ownership must be transferred first.",
+      "sessionExpired": "Your session has ended. Sign in again, then retry."
+    }
   },
   "circleTimezone": {
     "title": "Care circle timezone",

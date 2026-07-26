@@ -405,6 +405,15 @@ verify_jwt = false
 [functions.check-push-receipts]
 verify_jwt = false
 
+# delete-account is the ONE user-invoked function (Milestone 7 · A10) and is the
+# exception to everything above: it is called from the app with the signed-in
+# user's JWT, so platform verification MUST stay on. Stated explicitly rather
+# than left to the default, so that copying a neighbouring block never silently
+# turns it off. It never calls authorizeScheduledRequest(); identity comes from
+# the verified token via userClient() + getUser().
+[functions.delete-account]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

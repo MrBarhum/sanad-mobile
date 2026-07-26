@@ -61,6 +61,10 @@ export default function AppLayout() {
         <Stack.Screen name="emergency-card" options={{ title: t('emergencyCard.title'), headerShown: false }} />
         <Stack.Screen name="emergency-contacts" options={{ title: t('emergencyContacts.title'), headerShown: false }} />
         <Stack.Screen name="doctors" options={{ title: t('doctors.title'), headerShown: false }} />
+        <Stack.Screen
+          name="delete-account"
+          options={{ title: t('account.delete.title'), headerShown: false }}
+        />
       </Stack>
     </>
   );

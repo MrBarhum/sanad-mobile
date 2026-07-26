@@ -202,6 +202,17 @@ export default function AccountScreen() {
           disabled={signingOut}
           onPress={onSignOut}
         />
+        {/* Deleting the account is required to be reachable in-app (Play policy),
+            but it is a NAVIGATION to an explanation screen, not the destructive
+            act — which is why it is a low-emphasis link rather than a second
+            danger button competing with sign-out. The danger tone lives on the
+            screen where the irreversible action actually happens. */}
+        <Button
+          variant="plain"
+          size="sm"
+          label={t('account.delete.link')}
+          onPress={() => router.push('/delete-account')}
+        />
         <Text style={[styles.version, muted]}>
           {t('figma.account.version', {
             version: Constants.expoConfig?.version ?? '1.0.0',
