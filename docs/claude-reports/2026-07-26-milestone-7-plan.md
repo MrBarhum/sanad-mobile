@@ -633,15 +633,15 @@ Deferred deliberately, not forgotten. Grouped by owner.
 
 | # | Item | Why it is deferred |
 |---|---|---|
-| H1 | **`revoke execute … from anon` on every `public` function.** Supabase's default privileges grant `anon` EXECUTE, and the house `revoke all … from public` only revokes the PUBLIC pseudo-role — so `is_circle_member`, `has_circle_role`, `can_view_all_operational`, `claim_care_task`, `list_available_to_claim`, `account_deletion_preflight` and the rest are **all** anon-executable today. Not exploitable (every one keys off `auth.uid()`, NULL for anon, so they return nothing), but the intended defence-in-depth is not engaged. | **Your call: one deliberate repo-wide pass, not piecemeal.** Doing only the new function would create an inconsistency worse than the current uniform state. |
-| H2 | **Arabic plurals are wrong today.** 11 keys use `{{count}}`, 6 call sites pass `{ count }`, and **zero** keys carry plural suffixes — so «1 أدوية نشطة» renders where «دواء واحد نشط» belongs. Arabic has 6 CLDR plural categories. | Pre-existing, unrelated to M7 scope, and touches copy in both locales. |
+| H1 | ✅ **DONE 2026-07-26 — applied to production, see §9e.** **`revoke execute … from anon` on every `public` function.** Supabase's default privileges grant `anon` EXECUTE, and the house `revoke all … from public` only revokes the PUBLIC pseudo-role — so `is_circle_member`, `has_circle_role`, `can_view_all_operational`, `claim_care_task`, `list_available_to_claim`, `account_deletion_preflight` and the rest are **all** anon-executable today. Not exploitable (every one keys off `auth.uid()`, NULL for anon, so they return nothing), but the intended defence-in-depth is not engaged. | **Your call: one deliberate repo-wide pass, not piecemeal.** Doing only the new function would create an inconsistency worse than the current uniform state. |
+| H2 | ✅ **DONE 2026-07-26, see §9e.** **Arabic plurals are wrong today.** 11 keys use `{{count}}`, 6 call sites pass `{ count }`, and **zero** keys carry plural suffixes — so «1 أدوية نشطة» renders where «دواء واحد نشط» belongs. Arabic has 6 CLDR plural categories. | Pre-existing, unrelated to M7 scope, and touches copy in both locales. |
 | H3 | **Android notification channel name is hardcoded English** — `push-registration.ts:91` `'Sanad reminders'`, outside i18n. Android will not rename an existing channel, so it only takes effect on a fresh install. | Best done in the same pass as the rename (A7 Phase 4 step 17), which gets the fresh install for free. |
 | H4 | **Zero client telemetry.** No logger, no crash reporter; every `catch` in the auth flow is silent. This is exactly why A1's failure modes were field-indistinguishable. | Any real option (Sentry) is a native dependency and a data-flow decision. Needs your call before the build. |
 | H5 | **Zero test infrastructure and no CI.** Every Track A item is device-verify-or-nothing. | Out of M7 scope; worth a decision before the next milestone. |
 | H6 | **`expo-sqlite` is installed and has zero imports** — dead weight forcing a native module into every build. | Trivial to drop from `app.json` plugins + deps, but it changes the native build, so it belongs *with* a rebuild, not between. |
 | H7 | **No offline behaviour.** React Query is memory-only, mutations are not queued. A photo upload or PDF generation on a poor connection has undefined behaviour. | Real design work, not a patch. |
 | H8 | **Doc/code posture drift.** CLAUDE.md's "transparent circle" says every active member sees all operational data; the actual RLS since `20260626161000` scopes four tables to `can_view_all_operational` OR own-row, with transparency delivered only via SECURITY DEFINER RPCs. | Needs a product decision on which is true, then one of the two changes. |
-| H9 | **Stale comment** `join-form.tsx:22` claims invite codes read `SANAD-XXXXX`; they are `XXXXX-XXXXX` with no prefix. | Cosmetic; sweep with the rename. |
+| H9 | ✅ **DONE 2026-07-26, see §9e.** **Stale comment** `join-form.tsx:22` claims invite codes read `SANAD-XXXXX`; they are `XXXXX-XXXXX` with no prefix. | Cosmetic; sweep with the rename. |
 
 ### Yours — identity, credentials, or hosting
 
@@ -653,6 +653,162 @@ Deferred deliberately, not forgotten. Grouped by owner.
 | **Privacy policy + Play Data Safety** | A5 adds camera/photos; B3 would send care data to a third-party model. All declarable. |
 | **`ios.bundleIdentifier`** | Missing entirely — iOS cannot be built at all until it is added (A7 §2). |
 | **The EAS build** | Yours by standing rule. |
+
+## 9e. H1 · H2 · H9 — done 2026-07-26
+
+Three items taken off §9d. H1 is **applied to production**; H2 and H9 are code-only.
+
+| # | State | Where |
+|---|---|---|
+| **H1** | **Applied** to `qccgshanmoeybagxwvcs` + history row recorded | `supabase/migrations/20260726150000_revoke_anon_execute_on_public_functions.sql` |
+| **H2** | Code only | `src/locales/{ar,en}.json`, `src/i18n/index.ts`, `scripts/check-i18n-parity.js`, `package.json` |
+| **H9** | Code only | `src/features/invitations/join-form.tsx:22` |
+
+### H1 — the write-up in §9d was half the problem
+
+`revoke execute … from anon` on its own does **not** close it. Six functions —
+`is_circle_member`, `has_circle_role`, `enforce_care_task_collaborator_scope`,
+`enforce_family_visit_collaborator_scope`, `set_updated_at`, `handle_new_user` — never received
+the house `revoke all … from public` line either, so they still carried the CREATE-FUNCTION grant
+to the **PUBLIC pseudo-role**. `anon` is a member of PUBLIC, so `has_function_privilege('anon', …)`
+stays true no matter how often you revoke anon's own grant. Caught by giving the migration an
+assertion of its own outcome: the first rolled-back trial run failed naming exactly those six.
+The migration now revokes from **both** grantees.
+
+That meant revoking PUBLIC on `handle_new_user`, which fires on `auth.users` as
+`supabase_auth_admin` — a role with no explicit grant, reaching it *only* via PUBLIC. Rather than
+trust the docs, it was probed on this instance inside a rolled-back transaction: EXECUTE stripped
+from PUBLIC/anon/authenticated/service_role on `set_updated_at()`, then an UPDATE performed as
+`authenticated` — the trigger still fired and touched the row. **EXECUTE on a trigger function is
+checked at CREATE TRIGGER time, not at fire time** (PostgreSQL CREATE TRIGGER notes; the check was
+added by the CVE-2012-0866 fix precisely *because* none exists at fire time). Sign-up is safe.
+
+Checked before applying: all 61 RLS policies in `public` are `TO authenticated`, so no anon query
+ever evaluates a function — the revoke cannot turn an empty result into a 42501 on a table read;
+and all 65 functions hold **explicit** `authenticated` + `service_role` grants, so revoking PUBLIC
+costs nothing.
+
+**Verified after applying** — `anon_exec 0/65` · `authenticated 65` · `service_role 65` ·
+`public_grants 0` · future-function default ACL is now `postgres, authenticated, service_role`
+(no anon) · history `33 rows = 33 files` · data untouched (`medication_logs=21`, `care_circles=1`,
+`circle_members=6`). Role probe: `anon → refused 42501 permission denied for function
+is_circle_member`, `authenticated → OK`, `service_role → OK`. End-to-end as a real active member:
+`care_tasks=34 medications=9 medication_logs=21 care_appointments=12 family_visits=7
+vital_readings=1 daily_care_logs=3 circle_members=6 list_available_to_claim=5`.
+
+> **New standing rule.** `anon` EXECUTE is revoked **by default** in schema `public`, including for
+> functions created later (the migration also does
+> `alter default privileges for role postgres in schema public revoke execute on functions from anon`).
+> A function that genuinely must be anon-callable now needs an explicit
+> `grant execute on function public.foo(…) to anon;` in its own migration. Without that the symptom
+> is a PostgREST **403 `permission denied for function`** surfacing as a generic «تعذّر …», with
+> nothing in the diff to hint at the cause.
+>
+> Residual gap, cannot be closed from here: `pg_default_acl` also has a `supabase_admin` grantor row
+> granting anon EXECUTE, and `alter default privileges for role supabase_admin …` needs membership
+> in `supabase_admin`, which `postgres` does not have. Anything Supabase itself creates in `public`
+> still lands anon-executable. Re-audit after any platform-side change.
+
+**Two things flagged, deliberately not bundled.** (1) `anon` still holds table-level
+INSERT/SELECT/UPDATE/DELETE on ~16 `public` tables — inert today because no policy admits anon, but
+it means the app is one careless `to public` policy away from an unauthenticated data path with no
+grant-level backstop. Table revokes are far likelier to surface a behavioural regression and deserve
+their own test pass. (2) All 65 functions remain `authenticated`-executable, including internal
+plumbing (`fanout_due_notifications`, `claim_push_deliveries`, `mark_delivery_*`, `set_updated_at`).
+(3) `storage_path_uuid` **is** re-evaluated at query time inside the dose-proof `storage.objects`
+policies — safe only because all four are `to authenticated`. If a `to anon`/`to public` policy is
+ever added there, the revoke turns a clean deny into a raised 42501.
+
+### H2 — Arabic plurals needed a runtime fix before the copy fix
+
+**The blocker nobody had hit yet:** i18next 26 resolves every plural through
+`new Intl.PluralRules(…)`, and **Hermes does not implement it** on either platform — it ships only
+Collator, DateTimeFormat and NumberFormat (`facebook/hermes` has no `PluralRules.java`, no binding in
+`PlatformIntlAndroid.cpp` / `PlatformIntlApple.mm`; issue #1462 is open; i18next's own docs say so).
+When the constructor throws, i18next does **not** warn — it silently substitutes a hardcoded
+English rule, `count === 1 ? 'one' : 'other'`. Six Arabic forms would have been written and four of
+them never reached. There is no non-Intl escape either: `compatibilityJSON: 'v3'` was removed in v24.
+
+Fix: **`intl-pluralrules@2.0.1`**, imported first in `src/i18n/index.ts`. Pure JS, **zero runtime
+dependencies**, no native module, no rebuild — it depends only on `Intl.NumberFormat`, which Hermes
+*does* implement. This is the one new dependency, taken under the "pure-JS with strong
+justification" clause: without it the item cannot be delivered at all. Its Arabic output was diffed
+against Node's full-ICU and is identical across 0,1,2,3,5,10,11,15,99,100,101,102,105,200,240.
+
+**The 11 keys are not 11 plurals.** 5 are live and all 5 are true plurals; **6 are dead** (zero call
+sites — a retired summary-card layer still described in `docs/figma/*inventory.md`). Of the dead, 5
+are `«heading»: {{count}}` shapes where the noun sits *before* the colon and is never governed by
+the number — «مواعيد اليوم: 3» is already correct Arabic. Forcing plurals on them would be wrong,
+so their token was renamed `{{count}}` → `{{n}}`, which also keeps i18next out of plural resolution
+if they are ever revived. The 6th (`tileTasksValue`) is grammatically a real plural and got proper
+forms. **Recommend deleting all six dead keys** in a follow-up — that was not in scope here.
+
+Also corrected en route: `figma.medications.activeCount` said «نشطة», violating the A8
+canonical-terminology law (medication active is «فعّال»); it was already inconsistent with its own
+sibling `figma.medications.status.active`. And the English read wrong at 1 ("1 active medications").
+
+`scripts/check-i18n-parity.js` grew from 4 checks to 8. Parity is now **family-aware** (six Arabic
+forms against two English ones is correct CLDR, not four missing keys); each locale is held to its
+own category set; and the new guard **fails when a `{{count}}` key has no plural forms**. Its
+opt-out list is deliberately **empty** — if the number inflects nothing, rename the token, don't
+allowlist it. All 8 checks are mutation-tested (11/11 fire correctly).
+
+Not fixed, flagged: **none of the 5 live call sites LTR-isolates its number**, though 4 of the files
+already import `isolateLtr`. Highest-risk is `figma-members.tsx:100`, where a possibly-Latin
+`{{name}}` abuts «·» and a digit inside one RTL run. Bidi changes need device eyes.
+
+### Found by adversarial review of the finished diff, and fixed
+
+Four real defects, three of them in the new code:
+
+1. **`tierHint` — a contradiction this change created.** `missedDoseGrace.tierHint` renders in the
+   *same card*, three elements under the stepper, and interpolates two minute counts through
+   `{{tier2}}`/`{{tier3}}` with a hardcoded singular «دقيقة». Before H2 both read «٥ دقيقة» — wrong
+   but consistent. After, the card read «5 دقائق» above «بعد 5 دقيقة». Fixed by composing it from
+   the family that was just written, via i18next nesting
+   (`$t(…minutes, {"count": {{tier2}} })`), so the two can never drift again. Verified across the
+   whole reachable range (5→240, tier3 to 480).
+2. **The parity script had narrowed checks 3 and 4 to non-plural keys**, which exempted every
+   `_zero/_one/_two/_few/_many` form from type and token-drift checking — the forms that render for
+   nearly all real counts. Restored to walk every leaf; both loops already skip a key the other
+   locale lacks, so Arabic's en-less categories are a no-op rather than a false positive. The
+   now-redundant cross-locale `_other` comparison in check 8 was deleted so a drift is reported once.
+3. **Pre-existing bug in the duplicate-key detector.** Its colon lookahead counted newlines that the
+   main loop then counted again, so the reported line number drifted upward through the file — a
+   duplicate at ar.json:1247 was blamed on line 1351, ~100 lines away. One-line fix; `startLine` is
+   now also captured before the string is consumed rather than after.
+4. **Migration header** cited `revoke all on function public.is_circle_member(uuid) from public;` as
+   the house pattern — a statement that exists nowhere, and `is_circle_member` is precisely one of
+   the six that never got it. Replaced with the real exemplar (`20260610110000:57-58`), and
+   "two of the six are trigger functions" corrected to four. The file-scope `set search_path` (a
+   bare SET survives COMMIT and would persist across a `db push` batch) became a transaction-local
+   `set_config(..., true)` inside the DO block, with `pg_catalog` first.
+
+Re-verified after: parity clean, 11/11 guard mutation tests, 5/5 new regression tests (including the
+exact duplicate line number), render probe clean under both a native and a PluralRules-less runtime,
+`tsc` clean, lint byte-identical to HEAD. The edited migration was re-run against production —
+idempotent, assertions passed, and `show search_path` confirmed unchanged.
+
+Left as-is after review: the sweep uses `revoke execute on function`, so if a PROCEDURE is ever added
+to `public` a re-run would error (loudly, not silently) — switch to `on routine` if that day comes.
+Two adjacent Arabic number-agreement bugs are **out of scope and still live**:
+`figma.medications.summary` («{{given}} من {{total}} جرعات») and
+`careCircle.dashboard.today.loopDoses` — both use non-`count` tokens, so the new guard cannot see
+them by design.
+
+**Still needs a device pass:** the Arabic forms render correctly under both a native and a
+PluralRules-less runtime in Node, but no Android device ran this. Check the two width-constrained
+sites — `figma-medications.tsx:155` (`numberOfLines={1}`) and `figma-members.tsx:213`
+(`numberOfLines={2}`) — with the longest forms («{{count}} دواءً فعّالًا», «دائرة رعاية {{name}} ·
+{{count}} عضوًا») and a long recipient name.
+
+### H9
+
+`join-form.tsx:22` said invite codes read `SANAD-XXXXX`. They are `XXXXX-XXXXX`, 10 chars from a
+31-char unambiguous alphabet with no prefix (`generate_invitation_code()`,
+`20260610130000_create_circle_invitations.sql:121`). Corrected. It was the only stale reference in
+`src/` — the i18n placeholder `«مثال: ABCDE-FGHJK»` was already right (though that key still uses a
+«مثال: …» prefix where the M6 law asks for a bare ghost placeholder — separate, untouched).
 
 ## 10. Maintainer runbook (nothing here is auto-applied)
 
