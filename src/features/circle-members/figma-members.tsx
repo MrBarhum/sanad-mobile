@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Crown, Edit3, Eye, MoreHorizontal, Users } from 'lucide-react-native';
+import { Crown, Edit3, Eye, HandHelping, MoreHorizontal, Users } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,29 +28,49 @@ type RoleVisual = { Icon: IconCmp; fg: ThemeColor; tint: ThemeColor };
 /**
  * Per-role visual identity for the Dar roster (frame 9a): an icon + a foreground
  * tone + the matching avatar tint — status is always icon + text + tone, never
- * color-only. The three glyphs mirror the frame over Sanad's real role set:
- * managers (admin / primary_caregiver) read as Crown on the green accent (`acc`
- * text, `tacc` tint); contributors (family_member / caregiver) as a pencil on the
- * amber caution tone (`warn` / `twarn`); view-only (remote_member / elder) as an
- * eye on the neutral muted tone (`mut` / `sunken`). Role labels still come from
- * `circleMembers.roles.*` verbatim.
+ * color-only. Four glyphs over Sanad's real role set: managers (admin /
+ * primary_caregiver) read as Crown on the green accent (`acc` text, `tacc` tint);
+ * a **hired caregiver** reads as HandHelping on that same accent — she is a paid
+ * worker in her own narrow lane, not a family editor, so she never shares the
+ * editor's pencil; family editors (family_member) read as a pencil on the amber
+ * caution tone (`warn` / `twarn`); view-only (remote_member / elder) as an eye on
+ * the neutral muted tone (`mut` / `sunken`). Crown, HandHelping, Edit3 and Eye all
+ * read apart at 12px. Role labels still come from `circleMembers.roles.*` verbatim,
+ * so the glyph never carries the meaning alone.
  */
 function roleVisual(role: CircleRole): RoleVisual {
   if (role === 'admin' || role === 'primary_caregiver') {
     return { Icon: Crown, fg: 'primaryText', tint: 'primaryBg' };
   }
-  if (role === 'family_member' || role === 'caregiver') {
+  if (role === 'caregiver') {
+    return { Icon: HandHelping, fg: 'primaryText', tint: 'primaryBg' };
+  }
+  if (role === 'family_member') {
     return { Icon: Edit3, fg: 'warningFg', tint: 'warningBg' };
   }
   return { Icon: Eye, fg: 'textSecondary', tint: 'backgroundSunken' };
 }
 
+type LegendRow = { fg: ThemeColor; role: string; desc: string };
+
 /** Plain-language role legend rows — tone-matched to the roster role glyphs. */
-const LEGEND: readonly { fg: ThemeColor; role: string; desc: string }[] = [
+const LEGEND: readonly LegendRow[] = [
   { fg: 'primaryText', role: 'manager', desc: 'managerDesc' },
   { fg: 'warningFg', role: 'editor', desc: 'editorDesc' },
   { fg: 'textSecondary', role: 'viewer', desc: 'viewerDesc' },
 ];
+
+/**
+ * The hired-caregiver legend row — appended to {@link LEGEND} ONLY when this
+ * roster actually renders a `caregiver` member. The role is optional and must stay
+ * completely invisible in a circle that never hired one: such a circle sees exactly
+ * the three rows above, unchanged. Tone-matched to the HandHelping glyph.
+ */
+const CAREGIVER_LEGEND: LegendRow = {
+  fg: 'primaryText',
+  role: 'caregiver',
+  desc: 'caregiverDesc',
+};
 
 /** First grapheme of a display name, for the letter avatar. */
 function initialOf(name: string): string {
@@ -69,6 +89,11 @@ function initialOf(name: string): string {
  * authoritative; the gates here (`memberHasActions`, `isManagerRole`) only decide
  * what to surface. Cairo + Dar tokens, both themes, RTL. Behaviour/data/routing
  * unchanged — only the layout/styling was rebuilt to match the frame.
+ *
+ * The optional hired-caregiver role adds exactly two things, and both are gated on
+ * the roster this screen already has in hand (no extra query): a fourth legend row
+ * and a «واجهة مقدّم الرعاية» chip on the caregiver's own row. A circle that never
+ * hired one renders byte-for-byte what it rendered before.
  */
 export function FigmaMembers({
   circleId,
@@ -99,6 +124,15 @@ export function FigmaMembers({
   const summaryName = recipientName?.trim() || circleName;
   const summary = t('figma.members.summary', { name: summaryName, count: active.length });
 
+  // The hired-caregiver role is optional and stays invisible until a circle uses
+  // it. Gate the fourth legend row on the rows this screen actually renders
+  // (active, plus the manager-only inactive list) so the legend explains every
+  // glyph on screen and a circle that never hired one keeps exactly the three rows
+  // it has today. Derived from the roster already loaded — never an extra query.
+  const hasCaregiver =
+    active.some((m) => m.role === 'caregiver') || inactive.some((m) => m.role === 'caregiver');
+  const legend = hasCaregiver ? [...LEGEND, CAREGIVER_LEGEND] : LEGEND;
+
   function renderRow(member: CircleMember) {
     const displayName = memberDisplayName(member, t('circleMembers.unnamed'));
     const dim = member.status !== 'active';
@@ -123,8 +157,10 @@ export function FigmaMembers({
               {displayName}
             </Text>
             {member.isSelf ? (
-              <View style={[styles.youBadge, { borderColor: c.primaryText }]}>
-                <Text style={[styles.youText, { color: c.primaryText }]}>{t('circleMembers.you')}</Text>
+              <View style={[styles.metaBadge, { borderColor: c.primaryText }]}>
+                <Text style={[styles.metaBadgeText, { color: c.primaryText }]}>
+                  {t('circleMembers.you')}
+                </Text>
               </View>
             ) : null}
           </View>
@@ -148,6 +184,21 @@ export function FigmaMembers({
                   {isolateLtr(emailLine)}
                 </Text>
               </>
+            ) : null}
+            {/*
+              A hired caregiver opens the simplified caregiver view, not the family
+              app — a plain fact a manager should see at a glance. Same bordered
+              accent chip as the «أنت» badge above; never the gold badge (gold is
+              reserved for claim surfaces and one-time secrets). Appended after the
+              meta chain so the «role · status · email» dots stay unbroken, and only
+              on active rows, where the statement is still true.
+            */}
+            {member.role === 'caregiver' && !dim ? (
+              <View style={[styles.metaBadge, { borderColor: c.primaryText }]}>
+                <Text style={[styles.metaBadgeText, { color: c.primaryText }]}>
+                  {t('caregiver.roster.appBadge')}
+                </Text>
+              </View>
             ) : null}
           </View>
         </View>
@@ -236,7 +287,7 @@ export function FigmaMembers({
           {/* Role legend (plain-language) */}
           <Surface tone="card" radius={Radius.card} padded={14}>
             <Text style={[styles.legendTitle, { color: c.text }]}>{t('figma.members.rolesTitle')}</Text>
-            {LEGEND.map((r) => (
+            {legend.map((r) => (
               <View key={r.role} style={styles.legendRow}>
                 <View style={[styles.legendDot, { backgroundColor: c[r.fg] }]} />
                 <Text style={[styles.legendText, { color: c.textSecondary }]}>
@@ -318,13 +369,14 @@ const styles = StyleSheet.create({
   info: { flex: 1, gap: 3, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   name: { fontSize: 16, fontFamily: FontFamily.bold, flexShrink: 1 },
-  youBadge: {
+  // One bordered chip, two users: the «أنت» self badge and the caregiver-view chip.
+  metaBadge: {
     borderWidth: BorderWidth.thin,
     borderRadius: Radius.tiny,
     paddingHorizontal: 8,
     paddingVertical: 1,
   },
-  youText: { fontSize: 14, fontFamily: FontFamily.bold },
+  metaBadgeText: { fontSize: 14, fontFamily: FontFamily.bold },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   roleText: { fontSize: 14, fontFamily: FontFamily.bold },
   metaDot: { fontSize: 14, fontFamily: FontFamily.regular },

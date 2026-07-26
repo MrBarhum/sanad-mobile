@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowLeftRight, ArrowUp } from 'lucide-react-native';
+import { AlertTriangle, ArrowDown, ArrowLeftRight, ArrowUp } from 'lucide-react-native';
 import type { ComponentType } from 'react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +36,17 @@ const DIRECTION_VISUAL: Record<RoleChangeDirection, { fg: ThemeColor; tint: Them
   decrease: { fg: 'warningFg', tint: 'warningBg', Icon: ArrowDown },
   lateral: { fg: 'textSecondary', tint: 'backgroundSunken', Icon: ArrowLeftRight },
 };
+
+/**
+ * Whether a pending role change crosses INTO or OUT OF the hired-caregiver role.
+ * That change does something no privilege direction can express: it swaps which app
+ * shell the person opens, and only on their next app launch. `caregiver` ranks
+ * laterally with `remote_member` on purpose (see `role-capabilities.ts`), so the
+ * increase/decrease/lateral note alone would leave the consequential part unsaid.
+ */
+function crossesCaregiverShell(from: CircleRole, to: CircleRole): boolean {
+  return from !== to && (from === 'caregiver' || to === 'caregiver');
+}
 
 /**
  * Whether the actor has at least one action available on this member — the roster
@@ -143,6 +154,7 @@ export function MemberActionsSheet({
   const direction = roleChangeDirection(shown.role, selectedRole);
   const dirVisual = DIRECTION_VISUAL[direction];
   const DirectionIcon = dirVisual.Icon;
+  const shellChanges = crossesCaregiverShell(shown.role, selectedRole);
 
   async function run(action: () => Promise<unknown>, after?: () => void) {
     setError(null);
@@ -290,6 +302,25 @@ export function MemberActionsSheet({
               </Text>
             </View>
           ) : null}
+          {/*
+            Second note, below the direction one: crossing into or out of the hired
+            caregiver role swaps which app view the person opens, and only on their
+            next launch. Amber caution tone — never gold, which belongs to claim
+            surfaces and one-time secrets. Same bordered-callout chrome as the
+            direction note, an AlertTriangle instead of an arrow so the two never
+            read as one repeated message.
+          */}
+          {shellChanges ? (
+            <View
+              style={[styles.directionNote, { borderColor: c.warningFg, backgroundColor: c.warningBg }]}
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite">
+              <AlertTriangle size={17} color={c.warningFg} strokeWidth={2.4} style={styles.shellIcon} />
+              <Text style={[styles.shellText, { color: c.warningFg }]}>
+                {t('caregiver.roster.shellChangeWarning')}
+              </Text>
+            </View>
+          ) : null}
           {errorNode}
           <Button
             label={t('circleMembers.saveRole')}
@@ -346,5 +377,9 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   directionText: { flex: 1, fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 22 },
+  // The shell-change warning is a running sentence, not a meta label, so it sits at
+  // the 16px body floor with a top-aligned icon (the note wraps to 2–3 lines).
+  shellIcon: { alignSelf: 'flex-start', marginTop: 3 },
+  shellText: { flex: 1, fontSize: 16, fontFamily: FontFamily.semibold, lineHeight: 25 },
   error: { fontSize: 14, fontFamily: FontFamily.medium },
 });
