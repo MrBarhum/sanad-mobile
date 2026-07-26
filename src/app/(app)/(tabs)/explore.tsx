@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
@@ -10,6 +11,10 @@ import { Surface } from '@/components/surface';
 import { type GlyphChipTone } from '@/components/glyph-chip';
 import { type IconName } from '@/constants/icons';
 import { Radius } from '@/constants/theme';
+import { useActiveCircle } from '@/features/care-circle/hooks';
+import { activeCaregivers } from '@/features/caregiver/week-api';
+import { useCircleMembers } from '@/features/circle-members/hooks';
+import { isManagerRole } from '@/features/circle-members/permissions';
 
 type ExploreItem = {
   id: string;
@@ -143,16 +148,47 @@ const SECTIONS: ExploreSection[] = [
   },
 ];
 
+/**
+ * The optional hired-caregiver weekly summary row. It is appended to the care-circle
+ * group ONLY when the circle actually has an ACTIVE 'caregiver' member and the
+ * viewer is a manager. A circle that never hired anyone gets the Explore screen it
+ * has always had — same rows, same order, same copy, no empty state.
+ */
+const CAREGIVER_WEEK_ITEM: ExploreItem = {
+  id: 'caregiverWeek',
+  route: '/caregiver-week',
+  titleKey: 'caregiver.week.entry',
+  subtitleKey: 'caregiver.week.entrySubtitle',
+  tone: 'success',
+  iconName: 'calendar',
+};
+
 export default function ExploreScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+
+  const { circle } = useActiveCircle();
+  const isManager = circle ? isManagerRole(circle.role) : false;
+  // Roster is only queried for a manager — the RPC refuses a caregiver outright,
+  // and no other role may open this screen. Shares its cache with the members list.
+  const roster = useCircleMembers(isManager ? circle?.circleId : undefined);
+  const hasCaregiver = activeCaregivers(roster.data).length > 0;
+
+  const sections = useMemo<ExploreSection[]>(() => {
+    if (!isManager || !hasCaregiver) return SECTIONS;
+    return SECTIONS.map((section) =>
+      section.id === 'careCircle'
+        ? { ...section, items: [...section.items, CAREGIVER_WEEK_ITEM] }
+        : section,
+    );
+  }, [isManager, hasCaregiver]);
 
   return (
     <FigmaScreen
       band={<FigmaTabBand title={t('figma.explore.title')} subtitle={t('figma.explore.subtitle')} />}
       contentGutter={14}
       gap={16}>
-      {SECTIONS.map((section) => (
+      {sections.map((section) => (
         <View key={section.id} style={{ gap: 8 }}>
           <SectionHeader title={t(section.titleKey)} />
           <Surface tone="card" radius={Radius.card} padded={0}>

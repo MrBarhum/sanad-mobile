@@ -1,7 +1,8 @@
-import { Redirect, Stack } from 'expo-router';
+import { Redirect, Stack, useSegments } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { FontFamily } from '@/constants/theme';
+import { useCircleSelection } from '@/features/circle-selection/provider';
 import { NotificationObserver } from '@/features/notifications/notification-observer';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
@@ -21,6 +22,17 @@ export default function AppLayout() {
   const { session, isLoading } = useAuth();
   const { t } = useTranslation();
   const theme = useTheme();
+  const segments = useSegments();
+  const { activeCircle } = useCircleSelection();
+
+  // A HIRED caregiver ('caregiver' — not the 'primary_caregiver' family role) has
+  // her own single-purpose shell instead of the family tabs. The bounce is scoped
+  // to the tab group ONLY, so every other route in this stack that she is allowed
+  // to open (the emergency card, the daily-log / vital add forms) still works.
+  // A circle with no caregiver never evaluates true here, so the family
+  // experience is byte-for-byte unchanged.
+  const bounceToCaregiverShell =
+    activeCircle?.role === 'caregiver' && (segments as string[])[1] === '(tabs)';
 
   if (isLoading) return null;
   // Gate the authenticated app behind a session.
@@ -30,6 +42,7 @@ export default function AppLayout() {
     <>
       {/* Headless: notification handler, listeners, token refresh, tap routing. */}
       <NotificationObserver />
+      {bounceToCaregiverShell ? <Redirect href="/caregiver" /> : null}
       <Stack
         screenOptions={{
           headerShown: true,
@@ -57,6 +70,11 @@ export default function AppLayout() {
         <Stack.Screen name="pulse" options={{ headerShown: false }} />
         <Stack.Screen name="daily-logs" options={{ headerShown: false }} />
         <Stack.Screen name="vitals" options={{ headerShown: false }} />
+        <Stack.Screen name="caregiver" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="caregiver-week"
+          options={{ title: t('caregiver.week.title'), headerShown: false }}
+        />
         <Stack.Screen name="recipient-profile" options={{ title: t('recipientProfile.title'), headerShown: false }} />
         <Stack.Screen name="emergency-card" options={{ title: t('emergencyCard.title'), headerShown: false }} />
         <Stack.Screen name="emergency-contacts" options={{ title: t('emergencyContacts.title'), headerShown: false }} />
