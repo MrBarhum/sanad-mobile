@@ -140,7 +140,9 @@
         "tileMedsValue": "{{given}} of {{total}}",
         "tileMedsNone": "No doses today",
         "tileMedsDone": "All done",
-        "tileTasksValue": "{{count}} due",
+        "tileTasksValue_zero": "No tasks today",
+        "tileTasksValue_one": "One task",
+        "tileTasksValue_other": "{{count}} tasks",
         "tileTasksNone": "No tasks today",
         "tileApptNone": "No appointments today",
         "emergencyMeta": "Quick access",
@@ -798,7 +800,7 @@
     },
     "summary": {
       "none": "No appointments today",
-      "count": "Today's appointments: {{count}}"
+      "count": "Today's appointments: {{n}}"
     },
     "managerViewSubtitle": "Manager view — full edit",
     "deletePermanently": "Permanently delete this appointment"
@@ -864,7 +866,7 @@
     },
     "summary": {
       "none": "No visits today",
-      "count": "Today's visits: {{count}}"
+      "count": "Today's visits: {{n}}"
     },
     "managerEditSubtitle": "Manager view — full edit"
   },
@@ -893,7 +895,7 @@
     "deleteFailed": "Couldn't delete the log. Check your connection and try again.",
     "mineLabel": "Your log",
     "notesOnly": "Notes only",
-    "noteCount": "Notes: {{count}}",
+    "noteCount": "Notes: {{n}}",
     "unset": "Not set",
     "painNone": "None",
     "painValue": "{{value}} of 10",
@@ -958,8 +960,8 @@
     },
     "summary": {
       "none": "No logs today",
-      "counts": "Today's logs: {{count}}",
-      "countsMood": "Today's logs: {{count}} • Mood: {{mood}}"
+      "counts": "Today's logs: {{n}}",
+      "countsMood": "Today's logs: {{n}} • Mood: {{mood}}"
     }
   },
   "vitals": {
@@ -1232,7 +1234,9 @@
   "notifications": {
     "title": "Notifications",
     "openCenter": "Open notifications",
-    "openCenterWithCount": "Open notifications, {{count}} unread",
+    "openCenterWithCount_zero": "Open notifications",
+    "openCenterWithCount_one": "Open notifications, one unread notification",
+    "openCenterWithCount_other": "Open notifications, {{count}} unread notifications",
     "markAllRead": "Mark all read",
     "markRead": "Mark read",
     "markUnread": "Mark unread",
@@ -1289,10 +1293,12 @@
     "missedDoseGrace": {
       "title": "Missed-dose grace",
       "description": "How long after a dose time before the responsible person is alerted.",
-      "minutes": "{{count}} min",
+      "minutes_zero": "No grace",
+      "minutes_one": "One minute",
+      "minutes_other": "{{count}} min",
       "decrease": "Decrease grace",
       "increase": "Increase grace",
-      "tierHint": "The responsible person is alerted after {{tier2}} min, and managers after {{tier3}} min.",
+      "tierHint": "The responsible person is alerted after $t(notificationSettings.missedDoseGrace.minutes, {\"count\": {{tier2}} }), and managers after $t(notificationSettings.missedDoseGrace.minutes, {\"count\": {{tier3}} }).",
       "saved": "Grace saved",
       "saveError": "Could not save the grace. Please try again."
     },
@@ -1407,7 +1413,9 @@
     },
     "medications": {
       "summary": "{{given}} of {{total}} doses given today",
-      "activeCount": "{{count}} active medications",
+      "activeCount_zero": "No active medications",
+      "activeCount_one": "One active medication",
+      "activeCount_other": "{{count}} active medications",
       "tabToday": "Today's doses",
       "tabAll": "All medications",
       "summaryEmpty": "No doses scheduled today",
@@ -1427,7 +1435,9 @@
     "notifications": {
       "title": "Notifications",
       "markAllRead": "Mark all read",
-      "unreadBanner": "{{count}} unread notifications",
+      "unreadBanner_zero": "No unread notifications",
+      "unreadBanner_one": "One unread notification",
+      "unreadBanner_other": "{{count}} unread notifications",
       "emptyTitle": "No notifications",
       "emptySubtitle": "Reminders and updates will appear here.",
       "loadError": "Could not load notifications",
@@ -1468,7 +1478,9 @@
     },
     "members": {
       "title": "Care circle",
-      "summary": "{{name}}'s care circle · {{count}} members",
+      "summary_zero": "{{name}}'s care circle · No members",
+      "summary_one": "{{name}}'s care circle · One member",
+      "summary_other": "{{name}}'s care circle · {{count}} members",
       "rolesTitle": "Roles",
       "legendSeparator": ":",
       "legend": {

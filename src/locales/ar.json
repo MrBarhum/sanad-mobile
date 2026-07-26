@@ -140,7 +140,12 @@
         "tileMedsValue": "{{given}} من {{total}}",
         "tileMedsNone": "لا جرعات اليوم",
         "tileMedsDone": "اكتملت",
-        "tileTasksValue": "{{count}} مستحقّة",
+        "tileTasksValue_zero": "لا مهام اليوم",
+        "tileTasksValue_one": "مهمة واحدة",
+        "tileTasksValue_two": "مهمتان",
+        "tileTasksValue_few": "{{count}} مهام",
+        "tileTasksValue_many": "{{count}} مهمةً",
+        "tileTasksValue_other": "{{count}} مهمة",
         "tileTasksNone": "لا مهام اليوم",
         "tileApptNone": "لا مواعيد اليوم",
         "emergencyMeta": "وصول سريع",
@@ -798,7 +803,7 @@
     },
     "summary": {
       "none": "لا مواعيد اليوم",
-      "count": "مواعيد اليوم: {{count}}"
+      "count": "مواعيد اليوم: {{n}}"
     },
     "managerViewSubtitle": "عرض المدير — تعديل كامل",
     "deletePermanently": "حذف هذا الموعد نهائيًا"
@@ -864,7 +869,7 @@
     },
     "summary": {
       "none": "لا زيارات اليوم",
-      "count": "زيارات اليوم: {{count}}"
+      "count": "زيارات اليوم: {{n}}"
     },
     "managerEditSubtitle": "عرض المدير — تعديل كامل"
   },
@@ -893,7 +898,7 @@
     "deleteFailed": "تعذّر حذف السجل. تحقّق من الاتصال وحاول مجددًا.",
     "mineLabel": "سجلك",
     "notesOnly": "ملاحظات فقط",
-    "noteCount": "ملاحظات: {{count}}",
+    "noteCount": "ملاحظات: {{n}}",
     "unset": "غير محدّد",
     "painNone": "بدون",
     "painValue": "{{value}} من 10",
@@ -958,8 +963,8 @@
     },
     "summary": {
       "none": "لا سجلات اليوم",
-      "counts": "سجلات اليوم: {{count}}",
-      "countsMood": "سجلات اليوم: {{count}} • المزاج: {{mood}}"
+      "counts": "سجلات اليوم: {{n}}",
+      "countsMood": "سجلات اليوم: {{n}} • المزاج: {{mood}}"
     }
   },
   "vitals": {
@@ -1232,7 +1237,12 @@
   "notifications": {
     "title": "الإشعارات",
     "openCenter": "فتح الإشعارات",
-    "openCenterWithCount": "فتح الإشعارات، {{count}} غير مقروءة",
+    "openCenterWithCount_zero": "فتح الإشعارات",
+    "openCenterWithCount_one": "فتح الإشعارات، إشعار واحد غير مقروء",
+    "openCenterWithCount_two": "فتح الإشعارات، إشعاران غير مقروءين",
+    "openCenterWithCount_few": "فتح الإشعارات، {{count}} إشعارات غير مقروءة",
+    "openCenterWithCount_many": "فتح الإشعارات، {{count}} إشعارًا غير مقروء",
+    "openCenterWithCount_other": "فتح الإشعارات، {{count}} إشعار غير مقروء",
     "markAllRead": "تحديد الكل كمقروء",
     "markRead": "تحديد كمقروء",
     "markUnread": "تحديد كغير مقروء",
@@ -1289,10 +1299,15 @@
     "missedDoseGrace": {
       "title": "مهلة الجرعة الفائتة",
       "description": "الوقت بعد موعد الجرعة قبل تنبيه المسؤول عنها.",
-      "minutes": "{{count}} دقيقة",
+      "minutes_zero": "بلا مهلة",
+      "minutes_one": "دقيقة واحدة",
+      "minutes_two": "دقيقتان",
+      "minutes_few": "{{count}} دقائق",
+      "minutes_many": "{{count}} دقيقةً",
+      "minutes_other": "{{count}} دقيقة",
       "decrease": "إنقاص المهلة",
       "increase": "زيادة المهلة",
-      "tierHint": "يُنبَّه المسؤول بعد {{tier2}} دقيقة، ويُنبَّه المديرون بعد {{tier3}} دقيقة.",
+      "tierHint": "يُنبَّه المسؤول بعد $t(notificationSettings.missedDoseGrace.minutes, {\"count\": {{tier2}} })، ويُنبَّه المديرون بعد $t(notificationSettings.missedDoseGrace.minutes, {\"count\": {{tier3}} }).",
       "saved": "تم حفظ المهلة",
       "saveError": "تعذّر حفظ المهلة. حاول مرة أخرى."
     },
@@ -1407,7 +1422,12 @@
     },
     "medications": {
       "summary": "{{given}} من {{total}} جرعات أُعطيت اليوم",
-      "activeCount": "{{count}} أدوية نشطة",
+      "activeCount_zero": "لا توجد أدوية فعّالة",
+      "activeCount_one": "دواء واحد فعّال",
+      "activeCount_two": "دواءان فعّالان",
+      "activeCount_few": "{{count}} أدوية فعّالة",
+      "activeCount_many": "{{count}} دواءً فعّالًا",
+      "activeCount_other": "{{count}} دواء فعّال",
       "tabToday": "جرعات اليوم",
       "tabAll": "كل الأدوية",
       "summaryEmpty": "لا جرعات مجدولة اليوم",
@@ -1427,7 +1447,12 @@
     "notifications": {
       "title": "الإشعارات",
       "markAllRead": "قراءة الكل",
-      "unreadBanner": "{{count}} إشعارات غير مقروءة",
+      "unreadBanner_zero": "لا توجد إشعارات غير مقروءة",
+      "unreadBanner_one": "إشعار واحد غير مقروء",
+      "unreadBanner_two": "إشعاران غير مقروءين",
+      "unreadBanner_few": "{{count}} إشعارات غير مقروءة",
+      "unreadBanner_many": "{{count}} إشعارًا غير مقروء",
+      "unreadBanner_other": "{{count}} إشعار غير مقروء",
       "emptyTitle": "لا توجد إشعارات",
       "emptySubtitle": "ستظهر هنا التذكيرات والتحديثات.",
       "loadError": "تعذّر تحميل الإشعارات",
@@ -1468,7 +1493,12 @@
     },
     "members": {
       "title": "دائرة الرعاية",
-      "summary": "دائرة رعاية {{name}} · {{count}} أعضاء",
+      "summary_zero": "دائرة رعاية {{name}} · لا يوجد أعضاء",
+      "summary_one": "دائرة رعاية {{name}} · عضو واحد",
+      "summary_two": "دائرة رعاية {{name}} · عضوان",
+      "summary_few": "دائرة رعاية {{name}} · {{count}} أعضاء",
+      "summary_many": "دائرة رعاية {{name}} · {{count}} عضوًا",
+      "summary_other": "دائرة رعاية {{name}} · {{count}} عضو",
       "rolesTitle": "الأدوار",
       "legendSeparator": ":",
       "legend": {
