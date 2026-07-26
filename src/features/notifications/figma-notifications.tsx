@@ -53,6 +53,10 @@ const TYPE_ICON: Record<NotificationType, { iconName: IconName; tone: GlyphChipT
   item_completed: { iconName: 'success', tone: 'success' },
   item_cancelled: { iconName: 'error', tone: 'primary' },
   claim_digest: { iconName: 'sparkle', tone: 'accent' },
+  // The nightly digest is informational, not actionable — the calm `primary` tint
+  // and the pulse glyph, matching the Care Pulse feed it opens. Deliberately NOT
+  // the gold `accent`, which the Dar law reserves for the claim digest.
+  daily_summary: { iconName: 'activity', tone: 'primary' },
 };
 
 /**

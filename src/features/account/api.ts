@@ -31,41 +31,20 @@ export type AccountDeletionPreflightRow = {
   otherActiveMembers: number;
 };
 
-type PreflightRpcRow = {
-  circle_id: string;
-  circle_name: string | null;
-  recipient_name: string | null;
-  outcome: string;
-  other_active_members: number;
-};
-
 export const accountDeletionKeys = {
   all: ['account-deletion'] as const,
   preflight: () => ['account-deletion', 'preflight'] as const,
 };
 
 /**
- * `account_deletion_preflight` post-dates the last `supabase gen types` run
- * (2026-07-04), so the typed client does not know it yet. Cast the call SHAPE
- * only, exactly as `src/features/pulse/api.ts` does for `list_care_activity`, and
- * keep the cast in this one file. Remove it when the types are regenerated —
- * see the Milestone 7 plan, runbook R3.
- *
- * Called as a METHOD on the client so `this` stays bound: supabase-js implements
- * `rpc()` as `return this.rest.rpc(...)`, so a detached reference throws before
- * any request is made.
+ * Reads the preflight. Fully typed against the generated client — the only
+ * narrowing is on `outcome`, which the RPC declares as `text` but can only ever
+ * return one of three values.
  */
 export async function fetchAccountDeletionPreflight(): Promise<AccountDeletionPreflightRow[]> {
-  const client = supabase as unknown as {
-    rpc: (
-      name: string,
-      params?: Record<string, unknown>,
-    ) => PromiseLike<{ data: unknown; error: unknown }>;
-  };
-  const { data, error } = await client.rpc('account_deletion_preflight');
+  const { data, error } = await supabase.rpc('account_deletion_preflight');
   if (error) throw error;
-  const rows = (data ?? []) as PreflightRpcRow[];
-  return rows.map((row) => ({
+  return (data ?? []).map((row) => ({
     circleId: row.circle_id,
     circleName: row.circle_name,
     recipientName: row.recipient_name,

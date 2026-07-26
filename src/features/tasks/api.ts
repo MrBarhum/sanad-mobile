@@ -81,14 +81,11 @@ export async function cancelTask(
   cancelledAt: string,
   cancelledBy: string | null,
 ): Promise<void> {
-  // `cancelled_by` ships in the milestone-4 migration and is intentionally not in
-  // the generated types yet (types aren't regenerated this phase), so this single
-  // update payload is cast through `unknown`. The runtime object keeps the field.
-  const patch = {
+  const patch: Database['public']['Tables']['care_tasks']['Update'] = {
     status: 'cancelled',
     cancelled_at: cancelledAt,
     cancelled_by: cancelledBy,
-  } as unknown as Database['public']['Tables']['care_tasks']['Update'];
+  };
   const { error } = await supabase.from('care_tasks').update(patch).eq('id', id);
   if (error) throw error;
 }
@@ -100,16 +97,16 @@ export async function cancelTask(
  * constraints (`*_at_consistent`, `completed_by_consistent`) stay satisfied.
  */
 export async function reopenTask(id: string): Promise<void> {
-  // Clears cancelled_by too (added by the milestone-4 migration; cast as in
-  // cancelTask above). Harmless if the column is absent pre-migration only in that
-  // the whole update would fail — apply the migration first (runbook).
-  const patch = {
+  // Clears cancelled_by too, so the status/timestamp CHECK constraints
+  // (`*_at_consistent`, `completed_by_consistent`, `cancelled_by_consistent`) all
+  // stay satisfied on the way back to `open`.
+  const patch: Database['public']['Tables']['care_tasks']['Update'] = {
     status: 'open',
     completed_at: null,
     completed_by: null,
     cancelled_at: null,
     cancelled_by: null,
-  } as unknown as Database['public']['Tables']['care_tasks']['Update'];
+  };
   const { error } = await supabase.from('care_tasks').update(patch).eq('id', id);
   if (error) throw error;
 }

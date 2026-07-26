@@ -98,6 +98,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          missed_dose_grace_minutes: number
           name: string
           owner_id: string
           timezone: string
@@ -106,6 +107,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          missed_dose_grace_minutes?: number
           name: string
           owner_id: string
           timezone?: string
@@ -114,6 +116,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          missed_dose_grace_minutes?: number
           name?: string
           owner_id?: string
           timezone?: string
@@ -186,6 +189,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           cancelled_at: string | null
+          cancelled_by: string | null
           category: Database["public"]["Enums"]["care_task_category"]
           circle_id: string
           completed_at: string | null
@@ -205,6 +209,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           cancelled_at?: string | null
+          cancelled_by?: string | null
           category?: Database["public"]["Enums"]["care_task_category"]
           circle_id: string
           completed_at?: string | null
@@ -224,6 +229,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           cancelled_at?: string | null
+          cancelled_by?: string | null
           category?: Database["public"]["Enums"]["care_task_category"]
           circle_id?: string
           completed_at?: string | null
@@ -244,6 +250,13 @@ export type Database = {
           {
             foreignKeyName: "care_tasks_assigned_to_fkey"
             columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_tasks_cancelled_by_fkey"
+            columns: ["cancelled_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -621,6 +634,7 @@ export type Database = {
           id: string
           medication_id: string
           note: string | null
+          proof_object_path: string | null
           recorded_at: string
           recorded_by: string | null
           schedule_id: string | null
@@ -635,6 +649,7 @@ export type Database = {
           id?: string
           medication_id: string
           note?: string | null
+          proof_object_path?: string | null
           recorded_at?: string
           recorded_by?: string | null
           schedule_id?: string | null
@@ -649,6 +664,7 @@ export type Database = {
           id?: string
           medication_id?: string
           note?: string | null
+          proof_object_path?: string | null
           recorded_at?: string
           recorded_by?: string | null
           schedule_id?: string | null
@@ -1230,6 +1246,16 @@ export type Database = {
           role: Database["public"]["Enums"]["circle_role"]
         }[]
       }
+      account_deletion_preflight: {
+        Args: never
+        Returns: {
+          circle_id: string
+          circle_name: string
+          other_active_members: number
+          outcome: string
+          recipient_name: string
+        }[]
+      }
       active_circle_member_role: {
         Args: { p_circle_id: string }
         Returns: Database["public"]["Enums"]["circle_role"]
@@ -1281,6 +1307,7 @@ export type Database = {
         Returns: {
           assigned_to: string | null
           cancelled_at: string | null
+          cancelled_by: string | null
           category: Database["public"]["Enums"]["care_task_category"]
           circle_id: string
           completed_at: string | null
@@ -1391,6 +1418,16 @@ export type Database = {
           expires_at: string
           invitation_id: string
           role: Database["public"]["Enums"]["circle_role"]
+        }[]
+      }
+      daily_summary_recipients: {
+        Args: { p_circle_id: string }
+        Returns: {
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string
+          quiet_hours_start: string
+          timezone: string
+          user_id: string
         }[]
       }
       deactivate_push_token: { Args: { p_token: string }; Returns: undefined }
@@ -1517,6 +1554,21 @@ export type Database = {
           status: string
           subtitle: string
           time_value: string
+          title: string
+        }[]
+      }
+      list_care_activity: {
+        Args: { p_before?: string; p_circle_id: string; p_limit?: number }
+        Returns: {
+          actor_name: string
+          actor_user_id: string
+          event_id: string
+          event_type: string
+          item_id: string
+          item_type: string
+          occurred_at: string
+          status: string
+          subtitle: string
           title: string
         }[]
       }
@@ -1703,9 +1755,17 @@ export type Database = {
         Args: { p_circle_id: string; p_timezone: string }
         Returns: string
       }
+      set_missed_dose_grace_minutes: {
+        Args: { p_circle_id: string; p_minutes: number }
+        Returns: number
+      }
       set_notification_read: {
         Args: { p_notification_id: string; p_read: boolean }
         Returns: undefined
+      }
+      storage_path_uuid: {
+        Args: { object_name: string; segment: number }
+        Returns: string
       }
       transfer_circle_ownership: {
         Args: { p_circle_id: string; p_new_owner_user_id: string }
@@ -1860,6 +1920,7 @@ export type Database = {
         | "item_completed"
         | "item_cancelled"
         | "claim_digest"
+        | "daily_summary"
       sleep_quality: "good" | "fair" | "poor" | "unknown"
       vital_reading_type:
         | "blood_pressure"
@@ -2074,6 +2135,7 @@ export const Constants = {
         "item_completed",
         "item_cancelled",
         "claim_digest",
+        "daily_summary",
       ],
       sleep_quality: ["good", "fair", "poor", "unknown"],
       vital_reading_type: [

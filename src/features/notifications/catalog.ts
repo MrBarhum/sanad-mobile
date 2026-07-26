@@ -35,6 +35,10 @@ export const NOTIFICATION_TYPE_META: Record<NotificationType, NotificationTypeMe
   item_completed: { labelKey: 'notifications.types.itemCompleted', fallbackRoute: null },
   item_cancelled: { labelKey: 'notifications.types.itemCancelled', fallbackRoute: null },
   claim_digest: { labelKey: 'notifications.types.claimDigest', fallbackRoute: '/available-to-claim' },
+  // The nightly circle digest (send-daily-summaries). It always carries an explicit
+  // deep_link of '/pulse', but the fallback names the same destination so a row
+  // whose data was trimmed still lands somewhere meaningful.
+  daily_summary: { labelKey: 'notifications.types.dailySummary', fallbackRoute: '/pulse' },
 };
 
 export function notificationMeta(type: NotificationType): NotificationTypeMeta {

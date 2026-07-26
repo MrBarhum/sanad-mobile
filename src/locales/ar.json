@@ -1276,7 +1276,8 @@
       "itemClaimed": "تم التكفّل",
       "itemCompleted": "تم الإنجاز",
       "itemCancelled": "تعذّر الإنجاز",
-      "claimDigest": "عناصر متاحة"
+      "claimDigest": "عناصر متاحة",
+      "dailySummary": "ملخّص اليوم"
     }
   },
   "notificationSettings": {

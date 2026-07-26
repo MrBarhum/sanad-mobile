@@ -1276,7 +1276,8 @@
       "itemClaimed": "Picked up",
       "itemCompleted": "Completed",
       "itemCancelled": "Not completed",
-      "claimDigest": "Available to help"
+      "claimDigest": "Available to help",
+      "dailySummary": "Daily summary"
     }
   },
   "notificationSettings": {

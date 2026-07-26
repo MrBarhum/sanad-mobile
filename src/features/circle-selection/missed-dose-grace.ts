@@ -5,9 +5,13 @@ import { supabase } from '../../../lib/supabase';
 /**
  * Per-circle missed-dose grace (minutes) — the wait after a scheduled dose time
  * before the tier-2 "not recorded" alert; the tier-3 manager escalation fires at
- * 2× this. The column + the `set_missed_dose_grace_minutes` RPC ship in the
- * milestone-4 migration and are intentionally NOT in the generated types this
- * phase, so the casts are localized to this file (like the claim flow).
+ * 2× this. Both the column and the `set_missed_dose_grace_minutes` RPC are in the
+ * generated types as of the Milestone 7 regeneration, so this file is fully typed
+ * (the casts it used to carry are gone).
+ *
+ * The bounds below mirror the DB CHECK on `care_circles.missed_dose_grace_minutes`
+ * (5..240, default 30) added by 20260715150000, and the server clamps anyway —
+ * these exist so the stepper cannot offer an out-of-range value in the first place.
  */
 
 export const DEFAULT_MISSED_DOSE_GRACE = 30;
@@ -27,24 +31,17 @@ export async function fetchMissedDoseGrace(circleId: string): Promise<number> {
     .eq('id', circleId)
     .single();
   if (error) throw error;
-  const value = (data as { missed_dose_grace_minutes?: number | null }).missed_dose_grace_minutes;
-  return value ?? DEFAULT_MISSED_DOSE_GRACE;
+  return data.missed_dose_grace_minutes ?? DEFAULT_MISSED_DOSE_GRACE;
 }
 
 /** Sets the circle's grace via the manager-only RPC; returns the clamped value. */
 export async function setMissedDoseGrace(circleId: string, minutes: number): Promise<number> {
-  const client = supabase as unknown as {
-    rpc: (
-      name: string,
-      params?: Record<string, unknown>,
-    ) => PromiseLike<{ data: unknown; error: unknown }>;
-  };
-  const { data, error } = await client.rpc('set_missed_dose_grace_minutes', {
+  const { data, error } = await supabase.rpc('set_missed_dose_grace_minutes', {
     p_circle_id: circleId,
     p_minutes: minutes,
   });
   if (error) throw error;
-  return (data as number | null) ?? minutes;
+  return data ?? minutes;
 }
 
 export function useMissedDoseGrace(circleId: string | undefined) {
