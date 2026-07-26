@@ -19,7 +19,7 @@ import { useAcceptInvitation } from './hooks';
 /**
  * Join a circle by invitation code — rebuilt to the Dar "6b" form frame: a deep-green
  * band header (back + title + subtitle), an amber trust-warning banner first, the code
- * in its own bordered card (centered monospace LTR so SANAD-XXXXX reads cleanly
+ * in its own bordered card (centered monospace LTR so XXXXX-XXXXX reads cleanly
  * regardless of app RTL), and a full-width green join CTA in the footer. On success the
  * card flips to a quiet green success moment with a Continue CTA. The accept-invitation
  * flow, deep-link prefill and preferred-circle update are unchanged — only the shell
