@@ -8,6 +8,7 @@
     "scheme": "sanadmobile",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.mrbarhum.sanadcare",
       "icon": "./assets/expo.icon"
     },
     "android": {
