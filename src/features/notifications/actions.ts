@@ -108,7 +108,6 @@ export async function completeForNotification(
             doseDate,
             scheduledTime,
             status: 'given',
-            recordedBy: userId,
           });
           return 'completed';
         } catch (error) {

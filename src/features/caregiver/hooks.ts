@@ -6,7 +6,6 @@ import { useTodayDoses } from '@/features/medications/hooks';
 import type { DoseItem } from '@/features/medications/today';
 import type { CareTask } from '@/features/tasks/api';
 import { useTasks } from '@/features/tasks/hooks';
-import { useAuth } from '@/providers';
 import { ymdFromInstant } from '@/utils/date';
 
 import {
@@ -86,7 +85,6 @@ export function useCaregiverToday(
  */
 export function useRecordDose(circleId: string, date: string) {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   return useMutation({
     mutationFn: (vars: { dose: DoseItem; status: MedicationLogStatus }) =>
@@ -97,7 +95,6 @@ export function useRecordDose(circleId: string, date: string) {
         doseDate: date,
         scheduledTime: vars.dose.scheduledTime,
         status: vars.status,
-        recordedBy: user?.id ?? null,
         existingLogId: vars.dose.logId,
       }),
     onSuccess: () => {

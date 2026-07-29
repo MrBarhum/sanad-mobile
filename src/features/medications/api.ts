@@ -26,6 +26,13 @@ export type ScheduleInput = {
   notes: string | null;
 };
 
+/**
+ * `recorded_by` / `recorded_at` are deliberately ABSENT. Since Milestone 9 B1
+ * (20260729130000) both are server-authoritative: a BEFORE trigger assigns them
+ * from `auth.uid()` / `now()` on insert and holds them immutable on update, and
+ * the INSERT policy independently pins the author. Sending them from here would
+ * be misleading — the values would be discarded.
+ */
 export type LogDoseInput = {
   circleId: string;
   medicationId: string;
@@ -33,7 +40,6 @@ export type LogDoseInput = {
   doseDate: string;
   scheduledTime: string;
   status: MedicationLogStatus;
-  recordedBy: string | null;
 };
 
 export const medicationKeys = {
@@ -200,20 +206,24 @@ export async function insertLog(input: LogDoseInput): Promise<void> {
     dose_date: input.doseDate,
     scheduled_time: input.scheduledTime,
     status: input.status,
-    recorded_by: input.recordedBy,
   });
   if (error) throw error;
 }
 
+/**
+ * Corrects a dose OUTCOME. Only the status is sent: `recorded_by` / `recorded_at`
+ * describe who first recorded the dose and when, and are immutable server-side
+ * (Milestone 9 B1). The correction's own author and time are stamped by the same
+ * trigger into `corrected_by` / `corrected_at`, so a correction adds a fact rather
+ * than overwriting the original record.
+ */
 export async function updateLogStatus(
   id: string,
   status: MedicationLogStatus,
-  recordedBy: string | null,
-  recordedAt: string,
 ): Promise<void> {
   const { error } = await supabase
     .from('medication_logs')
-    .update({ status, recorded_by: recordedBy, recorded_at: recordedAt })
+    .update({ status })
     .eq('id', id);
   if (error) throw error;
 }

@@ -32,6 +32,14 @@ export type DosePhoto = {
   mimeType: string;
 };
 
+/**
+ * `recordedBy` is deliberately ABSENT. Since Milestone 9 B1 (20260729130000) the
+ * server owns dose authorship: a BEFORE trigger assigns `recorded_by` /
+ * `recorded_at` from `auth.uid()` / `now()` on insert, holds both immutable on
+ * update, and stamps `corrected_by` / `corrected_at` when an outcome changes. The
+ * caregiver's weekly summary is graded on those columns, so they must not be
+ * something this client can state.
+ */
 export type RecordDoseInput = {
   circleId: string;
   medicationId: string;
@@ -39,7 +47,6 @@ export type RecordDoseInput = {
   doseDate: string;
   scheduledTime: string;
   status: MedicationLogStatus;
-  recordedBy: string | null;
   /** Set when the dose already has a log row (a correction, not a first record). */
   existingLogId: string | null;
 };
@@ -56,13 +63,12 @@ export type RecordDoseInput = {
  */
 export async function recordDose(input: RecordDoseInput): Promise<string> {
   if (input.existingLogId) {
+    // A correction sends the OUTCOME only. The original `recorded_by` /
+    // `recorded_at` are immutable server-side; the trigger records who corrected
+    // it, and when, in `corrected_by` / `corrected_at`.
     const { data, error } = await supabase
       .from('medication_logs')
-      .update({
-        status: input.status,
-        recorded_by: input.recordedBy,
-        recorded_at: new Date().toISOString(),
-      })
+      .update({ status: input.status })
       .eq('id', input.existingLogId)
       .select('id')
       .single();
@@ -79,7 +85,6 @@ export async function recordDose(input: RecordDoseInput): Promise<string> {
       dose_date: input.doseDate,
       scheduled_time: input.scheduledTime,
       status: input.status,
-      recorded_by: input.recordedBy,
     })
     .select('id')
     .single();

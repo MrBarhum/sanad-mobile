@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useMemo } from 'react';
 
 import { pulseKeys } from '@/features/pulse/hooks';
-import { useAuth } from '@/providers';
 import { todayYmd } from '@/utils/date';
 
 import {
@@ -198,13 +197,13 @@ export function useDeleteSchedule(circleId: string) {
  */
 export function useLogDose(circleId: string) {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (vars: { dose: DoseItem; status: MedicationLogStatus; date: string }) => {
-      const recordedBy = user?.id ?? null;
+      // Authorship is server-assigned (Milestone 9 B1), so nothing about the
+      // recorder is sent from here.
       if (vars.dose.logId) {
-        await updateLogStatus(vars.dose.logId, vars.status, recordedBy, new Date().toISOString());
+        await updateLogStatus(vars.dose.logId, vars.status);
       } else {
         await insertLog({
           circleId,
@@ -213,7 +212,6 @@ export function useLogDose(circleId: string) {
           doseDate: vars.date,
           scheduledTime: vars.dose.scheduledTime,
           status: vars.status,
-          recordedBy,
         });
       }
     },
