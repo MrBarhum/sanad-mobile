@@ -133,6 +133,37 @@ revoke all on function public.is_circle_caregiver(uuid) from public;
 grant execute on function public.is_circle_caregiver(uuid) to authenticated;
 grant execute on function public.is_circle_caregiver(uuid) to service_role;
 
+-- ── 1b. Baseline snapshot for the acceptance block at the foot of this file ──
+--
+-- MILESTONE 9 · A2. Section 7c used to assert an ABSOLUTE policy count (`= 70`,
+-- described as "61 before + 9 new"). That number is a property of ONE database's
+-- history, not of this migration, so replaying the repo from scratch — which
+-- yields 69 — aborted the migration and took the whole caregiver lockdown with
+-- it. The count also silently rots the moment any earlier migration adds or drops
+-- a policy.
+--
+-- What 7c actually means to assert is two things, both environment-independent:
+--   (a) nothing pre-existing was disturbed, and
+--   (b) this file added exactly the 9 policies it declares.
+-- Both are relative to whatever the database looked like on arrival, so snapshot
+-- that here — BEFORE the first `create policy` below — and compare at the end.
+--
+-- A temp table (not a session GUC) because we compare the SET of policies, not
+-- just how many: a migration that dropped one policy and added another would keep
+-- the count identical while destroying access, and a count-only check would pass.
+--
+-- Deliberately NOT `on commit drop`: that is only correct if this file is applied
+-- inside an explicit transaction block. Applied without one, each statement
+-- commits on its own, the table would be dropped the instant it was created, and
+-- the assertion at the foot would fail against a perfectly good database. A plain
+-- temp table is session-scoped, so it works either way; it is dropped explicitly
+-- after the assertion, and vanishes with the session regardless.
+drop table if exists m9_policy_baseline;
+create temporary table m9_policy_baseline as
+  select tablename, policyname
+  from pg_policies
+  where schemaname = 'public';
+
 -- ── 2. circle_members — she sees only her own membership row ─────────────────
 create policy "Caregivers see only their own membership"
   on public.circle_members
@@ -237,6 +268,9 @@ declare
     array['care_appointments',    'Caregivers cannot see care appointments']
   ];
   i integer;
+  -- Policy counts relative to the pre-migration snapshot (see section 1b).
+  v_base bigint;
+  v_lost text;
 begin
   perform set_config('search_path', 'pg_catalog, public', true);
 
@@ -278,17 +312,46 @@ begin
     raise exception 'M8 failed: missing or non-restrictive policy: %', missing;
   end if;
 
-  -- 7c. nothing pre-existing was disturbed. 61 policies existed in `public`
-  --     before this file; it adds 9 and removes none.
-  select count(*) into n from pg_policies where schemaname = 'public';
-  if n <> 70 then
-    raise exception
-      'M8 failed: expected 70 policies in public after this migration (61 before + 9 new), found %', n;
+  -- 7c. nothing pre-existing was disturbed, and this file added exactly its 9.
+  --
+  --     Asserted RELATIVE to the section-1b snapshot rather than against an
+  --     absolute total. The old check demanded exactly 70 policies ("61 before +
+  --     9 new"); that is a fact about one database's history, not about this
+  --     migration, so a database replayed from this repo (which arrives at 69)
+  --     aborted here and lost the entire caregiver lockdown. See section 1b.
+  --
+  --     Checked as a SET, not a count: dropping one policy while adding another
+  --     leaves the total unchanged but destroys access, and a count-only test
+  --     would wave that through.
+  select string_agg(b.tablename || '.' || b.policyname, ', ') into v_lost
+  from m9_policy_baseline b
+  where not exists (
+    select 1
+    from pg_policies p
+    where p.schemaname = 'public'
+      and p.tablename  = b.tablename
+      and p.policyname = b.policyname
+  );
+  if v_lost is not null then
+    raise exception 'M8 failed: pre-existing policy/policies disappeared: %', v_lost;
   end if;
 
-  raise notice 'M8 verified: is_circle_caregiver present, 9 restrictive policies added, 70 total';
+  select count(*) into v_base from m9_policy_baseline;
+  select count(*) into n from pg_policies where schemaname = 'public';
+  if n - v_base <> array_length(expected, 1) then
+    raise exception
+      'M8 failed: expected exactly % new policies in public, found a net change of % (% before, % after)',
+      array_length(expected, 1), n - v_base, v_base, n;
+  end if;
+
+  raise notice
+    'M8 verified: is_circle_caregiver present, % restrictive policies added, % total (was %)',
+    array_length(expected, 1), n, v_base;
 end;
 $$;
+
+-- The baseline snapshot has served its purpose (section 1b / 7c).
+drop table if exists m9_policy_baseline;
 
 -- ── Undo (documentation, not executed) ───────────────────────────────────────
 --
