@@ -25,15 +25,24 @@ import { initialFor } from '@/constants/glyphs';
 import { useDoctors } from '@/features/doctors/hooks';
 import { useRecipient } from '@/features/recipient-profile/hooks';
 import { approximateAgeYears } from '@/utils/date';
+import { toDialableNumber } from '@/utils/digits';
 
 import { useEmergencyContacts } from './hooks';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
-/** Open the dialer for a phone number, mirroring the existing ContactCard pattern. */
+/**
+ * Open the dialer for a phone number, mirroring the existing ContactCard pattern.
+ *
+ * `toDialableNumber` normalizes Arabic-Indic digits before stripping punctuation.
+ * The previous `replace(/[^\d+]/g, '')` deleted them outright — `\d` is ASCII-only
+ * — so a number typed on an Arabic keyboard produced `tel:` with nothing after it
+ * and the EMERGENCY CALL BUTTON silently did nothing.
+ */
 function callNumber(phone: string) {
-  const sanitized = phone.replace(/[^\d+]/g, '');
-  Linking.openURL(`tel:${sanitized}`).catch(() => {
+  const dialable = toDialableNumber(phone);
+  if (!dialable) return;
+  Linking.openURL(`tel:${dialable}`).catch(() => {
     // Device may not support telephony (tablet / emulator) — ignore quietly.
   });
 }

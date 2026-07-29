@@ -20,6 +20,7 @@ import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { confirmDiscard } from '@/utils/confirm';
+import { toDialableNumber } from '@/utils/digits';
 import { fieldErrors } from '@/utils/form';
 
 import type { EmergencyContact } from './api';
@@ -35,8 +36,9 @@ const nullify = (value: string) => (value.trim() === '' ? null : value.trim());
 
 /** Open the dialer for a phone number (sanitize, then tel:). */
 function callNumber(phone: string) {
-  const sanitized = phone.replace(/[^\d+]/g, '');
-  Linking.openURL(`tel:${sanitized}`).catch(() => {
+  const dialable = toDialableNumber(phone);
+  if (!dialable) return;
+  Linking.openURL(`tel:${dialable}`).catch(() => {
     // Device may not support telephony (tablet / emulator) — ignore quietly.
   });
 }

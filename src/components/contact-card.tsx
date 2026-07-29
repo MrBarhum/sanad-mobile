@@ -6,6 +6,8 @@ import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { GlyphChip } from './glyph-chip';
+import { toDialableNumber } from '@/utils/digits';
+
 import { Icon } from './icon';
 import { LtrText } from './ltr-text';
 import { Surface } from './surface';
@@ -41,8 +43,9 @@ export function ContactCard({ name, subtitle, details, phone, callLabel, notes, 
 
   function call() {
     if (!phone) return;
-    const sanitized = phone.replace(/[^\d+]/g, '');
-    Linking.openURL(`tel:${sanitized}`).catch(() => {
+    const dialable = toDialableNumber(phone);
+    if (!dialable) return;
+    Linking.openURL(`tel:${dialable}`).catch(() => {
       // Device may not support telephony (tablet / emulator) — ignore quietly.
     });
   }

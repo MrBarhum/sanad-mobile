@@ -12,6 +12,7 @@ import { isolateLtr } from '@/components/ltr-text';
 import { Surface } from '@/components/surface';
 import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { toDialableNumber } from '@/utils/digits';
 
 import type { Doctor } from './api';
 import { DoctorFormModal } from './doctor-form-modal';
@@ -149,8 +150,9 @@ function DoctorCard({
   // Existing one-tap call pattern (mirrors ContactCard): sanitize, then tel:.
   function call() {
     if (!phone) return;
-    const sanitized = phone.replace(/[^\d+]/g, '');
-    Linking.openURL(`tel:${sanitized}`).catch(() => {
+    const dialable = toDialableNumber(phone);
+    if (!dialable) return;
+    Linking.openURL(`tel:${dialable}`).catch(() => {
       // Device may not support telephony (tablet / emulator) — ignore quietly.
     });
   }
