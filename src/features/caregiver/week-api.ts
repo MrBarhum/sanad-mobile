@@ -4,7 +4,13 @@ import { useMemo } from 'react';
 import type { CircleMember } from '@/features/circle-members/api';
 import type { Medication, MedicationLog, MedicationSchedule } from '@/features/medications/api';
 import { computeDoseItems } from '@/features/medications/today';
-import { combineDateTimeToInstant, dayOfWeekFromYmd, formatHm, hmFromInstant } from '@/utils/date';
+import {
+  combineDateTimeToInstant,
+  dayOfWeekFromYmd,
+  formatHm,
+  hmFromInstant,
+  ymdFromInstant,
+} from '@/utils/date';
 
 import { supabase } from '../../../lib/supabase';
 
@@ -127,6 +133,14 @@ export type CaregiverWeekDose = {
   logId: string | null;
   /** Local 'HH:MM' the record was written, when there is a record. */
   recordedTime: string | null;
+  /**
+   * Local 'YYYY-MM-DD' the record was written. Carried SEPARATELY from `date`
+   * because they genuinely differ: a 23:30 dose recorded at 00:12 belongs to one
+   * day and was written on the next, and pairing the dose's date with the
+   * record's clock time prints a moment that never happened — on the one line a
+   * family reads to judge lateness.
+   */
+  recordedDate: string | null;
   /**
    * Signed minutes between the scheduled datetime and `recorded_at` for a 'given'
    * log (negative = recorded early). Null when it cannot be computed honestly.
@@ -324,6 +338,7 @@ function toDose(params: {
     outcome,
     logId: log?.id ?? null,
     recordedTime: log ? hmFromInstant(log.recorded_at) || null : null,
+    recordedDate: log ? ymdFromInstant(log.recorded_at) || null : null,
     minutesFromSchedule,
     note: log?.note ?? null,
     proofObjectPath: log?.proof_object_path ?? null,

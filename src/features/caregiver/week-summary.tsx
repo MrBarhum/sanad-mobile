@@ -159,7 +159,14 @@ export function CaregiverWeekSummary({ circle }: { circle: ActiveCircle }) {
           <SectionHeader title={t('caregiver.week.dosesTitle')} />
           <Surface tone="card" padded={0}>
             <CountRow label={t('caregiver.week.onTime')} value={summary.counts.onTime} />
-            <CountRow label={t('caregiver.week.late')} value={summary.counts.late} topDivider />
+            {/* When the circle's grace could not be read, `classify` declines to
+                call anything late, so this count is provably 0 — and the note
+                that DEFINES «متأخّرة» is suppressed too. A bare «متأخّرة · 0»
+                with no definition is exactly the unexplained accusation this
+                screen exists to avoid, so the row goes with the note. */}
+            {summary.graceMinutes === null ? null : (
+              <CountRow label={t('caregiver.week.late')} value={summary.counts.late} topDivider />
+            )}
             <CountRow
               label={t('caregiver.week.notRecorded')}
               value={summary.counts.notRecorded}
@@ -177,25 +184,29 @@ export function CaregiverWeekSummary({ circle }: { circle: ActiveCircle }) {
           {summary.graceMinutes === null ? null : (
             <Text style={[styles.note, { color: c.textSecondary }]}>
               {t('caregiver.week.lateNote', {
-                minutes: t('notificationSettings.missedDoseGrace.minutes', {
-                  count: summary.graceMinutes,
-                }),
+                // «30 دقيقة» is a number + unit inside an Arabic sentence — keep
+                // the run intact so the digits never reorder around the word.
+                minutes: isolateLtr(
+                  t('notificationSettings.missedDoseGrace.minutes', {
+                    count: summary.graceMinutes,
+                  }),
+                ),
               })}
             </Text>
           )}
         </View>
 
-        <View style={styles.group}>
-          {summary.days.map((day) => (
-            <DayCard
-              key={day.date}
-              date={day.date}
-              weekdayIndex={day.weekdayIndex}
-              doses={day.doses}
-              onOpenDose={setOpenDose}
-            />
-          ))}
-        </View>
+        {/* Day cards are direct children of the screen's 16dp column — they are
+            peers of the counts group, not a sub-list inside it. */}
+        {summary.days.map((day) => (
+          <DayCard
+            key={day.date}
+            date={day.date}
+            weekdayIndex={day.weekdayIndex}
+            doses={day.doses}
+            onOpenDose={setOpenDose}
+          />
+        ))}
 
         <View style={styles.group}>
           <SectionHeader title={t('caregiver.week.tasksTitle')} />
@@ -214,7 +225,7 @@ export function CaregiverWeekSummary({ circle }: { circle: ActiveCircle }) {
       {caregivers.length > 1 ? (
         <View style={styles.group}>
           <SectionHeader title={t('caregiver.week.pickCaregiver')} />
-          <View style={styles.pickerRow}>
+          <View style={styles.pickerRow} accessibilityRole="radiogroup">
             {caregivers.map((member) => {
               const active = member.userId === selected?.userId;
               const label = memberDisplayName(member, t('circleMembers.unnamed'));
@@ -242,7 +253,10 @@ export function CaregiverWeekSummary({ circle }: { circle: ActiveCircle }) {
                       },
                     ]}
                     numberOfLines={1}>
-                    {label}
+                    {/* The name can be a Latin email local-part — isolate the
+                        visible run, but feed the screen reader the plain string
+                        (accessibilityLabel above) rather than bidi marks. */}
+                    {isolateLtr(label)}
                   </Text>
                 </Pressable>
               );
@@ -413,19 +427,24 @@ function DayCard({
       </View>
 
       {/* The strip's a11y contract is ONE spoken summary, so only the first row
-          speaks it; a busy day's overflow rows are muted rather than repeating it. */}
-      {chunk(beads, BEADS_PER_ROW).map((row, index) =>
-        index === 0 ? (
-          <DoseBeadStrip key={row[0]?.key ?? index} beads={row} accessibilityLabel={spoken} />
-        ) : (
-          <View
-            key={row[0]?.key ?? index}
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants">
-            <DoseBeadStrip beads={row} accessibilityLabel={spoken} />
-          </View>
-        ),
-      )}
+          speaks it; a busy day's overflow rows are muted rather than repeating it.
+          A single-dose day draws no strip at all: one bead stacked directly over
+          the row it summarises is pure duplication, and the frame's sparse day
+          shows header + row only. From two doses up the strip earns its place. */}
+      {doses.length > 1
+        ? chunk(beads, BEADS_PER_ROW).map((row, index) =>
+            index === 0 ? (
+              <DoseBeadStrip key={row[0]?.key ?? index} beads={row} accessibilityLabel={spoken} />
+            ) : (
+              <View
+                key={row[0]?.key ?? index}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants">
+                <DoseBeadStrip beads={row} accessibilityLabel={spoken} />
+              </View>
+            ),
+          )
+        : null}
 
       <View style={styles.doseList}>
         {doses.map((dose) => (
@@ -510,10 +529,14 @@ function DoseSheet({
           label={t('caregiver.week.scheduledAt')}
           value={`${dose.date} ${formatHm(dose.scheduledTime)}`}
         />
-        {dose.recordedTime ? (
+        {/* The RECORD's own date, never the dose's: a 23:30 dose written at
+            00:12 belongs to one day and was recorded on the next, and gluing the
+            two together prints a moment that never happened — on the very line a
+            family reads to judge lateness. */}
+        {dose.recordedDate && dose.recordedTime ? (
           <SheetLine
             label={t('caregiver.week.recordedAt')}
-            value={`${dose.date} ${dose.recordedTime}`}
+            value={`${dose.recordedDate} ${dose.recordedTime}`}
           />
         ) : null}
       </View>
@@ -527,7 +550,7 @@ function DoseSheet({
           note is not repeated here. Nothing in this block mutates: the family may
           look at her record, never replace or delete it — hence no ItemActions. */}
       <View style={styles.sheetBlock}>
-        <Text style={[styles.sheetLabel, { color: c.textSecondary }]}>
+        <Text style={[styles.sheetPhotoLabel, { color: c.textSecondary }]}>
           {t('caregiver.proof.photoLabel')}
         </Text>
         <DoseProofImage objectPath={dose.proofObjectPath} />
@@ -618,7 +641,9 @@ const styles = StyleSheet.create({
 
   note: { fontSize: 16, fontFamily: FontFamily.medium, lineHeight: 26 },
 
-  dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  // Baseline, not center: the 16/800 weekday and the 14/600 date share a text
+  // baseline in the frame, so the smaller date does not float high against it.
+  dayHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
   dayName: { flexShrink: 1, fontSize: 16, fontFamily: FontFamily.bold },
   dayDate: { fontSize: 14, fontFamily: FontFamily.medium, writingDirection: 'ltr' },
 
@@ -644,6 +669,8 @@ const styles = StyleSheet.create({
   sheetMeta: { fontSize: 16, fontFamily: FontFamily.medium, lineHeight: 26 },
   sheetLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   sheetLabel: { fontSize: 16, fontFamily: FontFamily.medium },
+  // The photo caption is a short meta label, not a fact line — 14 at ≥600.
+  sheetPhotoLabel: { fontSize: 14, fontFamily: FontFamily.medium, lineHeight: 22 },
   sheetValue: { fontSize: 16, fontFamily: FontFamily.semibold, writingDirection: 'ltr' },
   sheetNote: { fontSize: 16, fontFamily: FontFamily.regular, lineHeight: 26 },
 
