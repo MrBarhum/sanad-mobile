@@ -746,7 +746,8 @@
       "managersOnly": "ملخّص مقدّم الرعاية متاح للمشرف ومقدّم الرعاية الأساسي فقط",
       "scheduledAt": "وقت الجرعة",
       "recordedAt": "وقت التسجيل",
-      "notDueYet": "لم يحن وقتها"
+      "notDueYet": "لم يحن وقتها",
+      "recordedByOther": "سجّلها عضو آخر"
     }
   },
   "tasks": {

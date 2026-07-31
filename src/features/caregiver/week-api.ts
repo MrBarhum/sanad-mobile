@@ -39,8 +39,17 @@ import { supabase } from '../../../lib/supabase';
  *   postponed / missed — their OWN facts, kept separate. They are explicitly NOT
  *                  folded into "not recorded": somebody DID record something, and
  *                  erasing that would misrepresent the worker.
+ *   recorded by
+ *   another member — the dose was hers to give, but the LOG is someone else's.
+ *                  Graded as nothing: see the attribution note on `classify`.
  * The grace is read per circle from `care_circles.missed_dose_grace_minutes` (via
  * `useMissedDoseGrace`) and is never hardcoded here — the caller passes it in.
+ *
+ * ── TWO DIFFERENT QUESTIONS ─────────────────────────────────────────────────
+ * "What was hers to give" is `medications.responsible_user_id` — it selects the
+ * rows. "Did she give it" is `medication_logs.recorded_by` — it decides whether a
+ * row says anything about her. Conflating the two let a dose a family member
+ * covered be graded, on time or late, as the caregiver's work.
  *
  * ── TIME FRAME ──────────────────────────────────────────────────────────────
  * Dates and times are resolved in the DEVICE's local calendar, matching the
@@ -116,8 +125,20 @@ export function activeCaregivers(members: CircleMember[] | undefined): CircleMem
 // Shapes
 // ---------------------------------------------------------------------------
 
-/** What happened to one scheduled dose. Five facts, no ranking between them. */
-export type DoseOutcome = 'onTime' | 'late' | 'notRecorded' | 'postponed' | 'missed' | 'notDueYet';
+/** What happened to one scheduled dose. Facts, with no ranking between them. */
+export type DoseOutcome =
+  | 'onTime'
+  | 'late'
+  | 'notRecorded'
+  | 'postponed'
+  | 'missed'
+  | 'notDueYet'
+  /**
+   * The dose was recorded — by SOMEONE ELSE. It was hers to give, so it belongs
+   * on her page; the record is not hers, so nothing about her timing is asserted
+   * from it. See the attribution note on {@link classify}.
+   */
+  | 'recordedByOther';
 
 export type CaregiverWeekDose = {
   /** Stable React key. */
@@ -273,6 +294,25 @@ export async function fetchCaregiverWeekRaw(
  * we deliberately fall back to 'onTime' with a null delta rather than 'late':
  * "late" is a statement about a person's work and must never be asserted from a
  * value we could not actually compute.
+ *
+ * ── WHOSE RECORD IS IT ──────────────────────────────────────────────────────
+ * The doses on this page are selected by `medications.responsible_user_id` —
+ * i.e. what was HERS TO GIVE. Whether SHE gave it is a different question, and
+ * the answer is `medication_logs.recorded_by`, which Milestone 9 B1 made
+ * server-authoritative (a BEFORE trigger assigns it from `auth.uid()` and holds
+ * it immutable; the client cannot send it). Before this check the two questions
+ * were conflated: a daughter who covered a dose one evening produced a log that
+ * filled the caregiver's slot and was then graded — on time, or LATE — as the
+ * caregiver's work. That is the same class of misjudgement the grace note and
+ * the neutral «متأخّرة» tone exist to prevent, and it was the one place the page
+ * could state something about her that simply was not true.
+ *
+ * A record by anyone else therefore short-circuits BEFORE any timing or status
+ * is read: nothing is asserted about her from a record she did not make.
+ *
+ * `recorded_by` is nullable, and a null means the author is unknown (rows that
+ * predate the trigger). Unknown is not "someone else": diverting those would
+ * blank out historical weeks on a guess. They keep the previous behaviour.
  */
 function classify(
   log: MedicationLog | null,
@@ -280,6 +320,7 @@ function classify(
   scheduledTime: string,
   graceMinutes: number | null,
   nowMs: number,
+  caregiverUserId: string,
 ): { outcome: DoseOutcome; minutesFromSchedule: number | null } {
   const scheduledIso = combineDateTimeToInstant(date, formatHm(scheduledTime));
   const scheduledMs = scheduledIso ? new Date(scheduledIso).getTime() : NaN;
@@ -294,6 +335,10 @@ function classify(
       return { outcome: 'notDueYet', minutesFromSchedule: null };
     }
     return { outcome: 'notRecorded', minutesFromSchedule: null };
+  }
+  // Not her record — say so, and assert nothing else about it.
+  if (log.recorded_by !== null && log.recorded_by !== caregiverUserId) {
+    return { outcome: 'recordedByOther', minutesFromSchedule: null };
   }
   if (log.status === 'postponed') return { outcome: 'postponed', minutesFromSchedule: null };
   if (log.status === 'missed') return { outcome: 'missed', minutesFromSchedule: null };
@@ -320,14 +365,17 @@ function toDose(params: {
   log: MedicationLog | null;
   graceMinutes: number | null;
   nowMs: number;
+  caregiverUserId: string;
 }): CaregiverWeekDose {
-  const { key, date, scheduledTime, medicationName, dosage, log, graceMinutes, nowMs } = params;
+  const { key, date, scheduledTime, medicationName, dosage, log, graceMinutes, nowMs, caregiverUserId } =
+    params;
   const { outcome, minutesFromSchedule } = classify(
     log,
     date,
     scheduledTime,
     graceMinutes,
     nowMs,
+    caregiverUserId,
   );
   return {
     key,
@@ -355,6 +403,7 @@ export function summarizeCaregiverWeek(
   raw: CaregiverWeekRaw,
   week: WeekBounds,
   graceMinutes: number | null,
+  caregiverUserId: string,
 ): CaregiverWeekSummary {
   const medicationById = new Map(raw.medications.map((medication) => [medication.id, medication]));
   const logById = new Map(raw.logs.map((log) => [log.id, log]));
@@ -373,6 +422,7 @@ export function summarizeCaregiverWeek(
     postponed: 0,
     missed: 0,
     notDueYet: 0,
+    recordedByOther: 0,
   };
   const days: CaregiverWeekDay[] = [];
 
@@ -403,6 +453,7 @@ export function summarizeCaregiverWeek(
         log,
         graceMinutes,
         nowMs,
+        caregiverUserId,
       });
     });
 
@@ -419,6 +470,7 @@ export function summarizeCaregiverWeek(
           log,
           graceMinutes,
           nowMs,
+          caregiverUserId,
         }),
       );
     }
@@ -468,8 +520,11 @@ export function useCaregiverWeek(params: {
   });
 
   const summary = useMemo<CaregiverWeekSummary | null>(
-    () => (query.data ? summarizeCaregiverWeek(query.data, week, graceMinutes) : null),
-    [query.data, week, graceMinutes],
+    () =>
+      query.data && caregiverUserId
+        ? summarizeCaregiverWeek(query.data, week, graceMinutes, caregiverUserId)
+        : null,
+    [query.data, week, graceMinutes, caregiverUserId],
   );
 
   return {

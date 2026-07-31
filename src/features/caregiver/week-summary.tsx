@@ -50,6 +50,10 @@ import {
  * `caregiver.week.lateNote` so it can never read as an unexplained accusation.
  * There is no shift, attendance, clock-in or location surface anywhere.
  *
+ * And a dose someone ELSE recorded is labelled «سجّلها عضو آخر» and counted apart
+ * — never as her «في وقتها» or her «متأخّرة». A page that grades a worker for a
+ * dose a daughter covered is not a record of that worker at all.
+ *
  * ── AND IT IS READ-ONLY ─────────────────────────────────────────────────────
  * Nothing here mutates. The dose sheet shows the caregiver's own photo with
  * `caregiver.proof.ownerNote` and deliberately carries NO `ItemActions`, no
@@ -149,7 +153,10 @@ export function CaregiverWeekSummary({ circle }: { circle: ActiveCircle }) {
       return <EmptyState iconName="success" title={t('caregiver.week.empty')} />;
     }
 
-    const extraCounts: DoseOutcome[] = (['postponed', 'missed'] as const).filter(
+    // Shown only when they actually happened, so a clean week is not padded with
+    // zeroes. «سجّلها عضو آخر» joins them: it is a real count that belongs on the
+    // page, and keeping it OUT of «في وقتها» / «متأخّرة» is the whole point.
+    const extraCounts: DoseOutcome[] = (['postponed', 'missed', 'recordedByOther'] as const).filter(
       (outcome) => summary.counts[outcome] > 0,
     );
 
@@ -333,6 +340,14 @@ const OUTCOME: Record<DoseOutcome, { tone: StatusTone; iconName: IconName; label
   // A dose whose time has not arrived. Neutral by construction: it is not a
   // status the caregiver earned, it is the clock.
   notDueYet: { tone: 'neutral', iconName: 'clock', labelKey: 'caregiver.week.notDueYet' },
+  // Someone else recorded it. Neutral for the same reason: it is a fact about
+  // authorship, not about her — and stating it is the point, because the page
+  // used to grade her for exactly these.
+  recordedByOther: {
+    tone: 'neutral',
+    iconName: 'member',
+    labelKey: 'caregiver.week.recordedByOther',
+  },
 };
 
 const BEAD_STATUS: Record<DoseOutcome, DoseBeadStatus> = {
@@ -342,6 +357,10 @@ const BEAD_STATUS: Record<DoseOutcome, DoseBeadStatus> = {
   postponed: 'postponed',
   missed: 'missed',
   notDueYet: null,
+  // The strip answers "did the recipient get their doses that day", so a dose
+  // someone else recorded still reads as given — the row beneath it carries the
+  // authorship, and the counts above deliberately do not.
+  recordedByOther: 'given',
 };
 
 /** DoseBeadStrip is built for ≤5 beads per row; a busy day wraps into more rows. */

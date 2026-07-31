@@ -743,7 +743,8 @@
       "managersOnly": "The caregiver summary is available to the admin and the primary caregiver only",
       "scheduledAt": "Dose time",
       "recordedAt": "Recorded at",
-      "notDueYet": "Not due yet"
+      "notDueYet": "Not due yet",
+      "recordedByOther": "Recorded by another member"
     }
   },
   "tasks": {
