@@ -1206,7 +1206,7 @@
     "codeSubmit": "Confirm code",
     "codeResent": "A new code is on its way.",
     "resendCode": "Send a new code",
-    "resendIn": "You can request a new code in {{seconds}}s",
+    "resendIn": "You can request a new code in {{seconds}} seconds",
     "resetTitle": "Set a new password",
     "resetSubtitle": "Choose a new password for your account.",
     "newPassword": "New password",

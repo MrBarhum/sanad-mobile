@@ -88,7 +88,7 @@ export function FormField({
           />
           <Pressable
             onPress={() => setReveal((v) => !v)}
-            hitSlop={8}
+            hitSlop={4}
             accessibilityRole="button"
             accessibilityLabel={reveal ? hideLabel : revealLabel}
             style={styles.eyeButton}>
@@ -148,8 +148,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   rowInput: { flex: 1, paddingVertical: 11, fontSize: 16, fontFamily: FontFamily.medium },
-  eyeButton: { paddingVertical: 4 },
-  hint: { fontSize: 14, fontFamily: FontFamily.medium },
+  // A real 44dp target (+4 hitSlop = 52 effective). It was ~34×42 — under the
+  // touch floor, inside a row that is itself only 48 tall.
+  eyeButton: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  // ≥1.5× Arabic line-height; without it RN falls back to a tighter platform box.
+  hint: { fontSize: 14, fontFamily: FontFamily.medium, lineHeight: 22 },
   errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 1 },
   errorText: { flex: 1, fontSize: 15, fontFamily: FontFamily.semibold },
 });

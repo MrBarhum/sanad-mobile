@@ -79,6 +79,11 @@ export default function ResetPasswordScreen() {
   // Code step
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState<string | null>(null);
+  // Kept SEPARATE from `codeError`: a failed resend is a failure of the send, not
+  // of the code the user typed. Routing it into the field error tinted the well
+  // red and swapped the hint for «الرمز غير صحيح…» — telling someone their code
+  // was wrong when the email simply had not gone out.
+  const [resendError, setResendError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [verifying, setVerifying] = useState(false);
@@ -153,6 +158,7 @@ export default function ResetPasswordScreen() {
 
   async function onVerifyCode() {
     setCodeError(null);
+    setResendError(null);
     setNotice(null);
     const token = normalizeOtpCode(code);
     if (token.length !== OTP_LENGTH) {
@@ -180,6 +186,7 @@ export default function ResetPasswordScreen() {
   async function onResend() {
     if (cooldown > 0 || resending) return;
     setCodeError(null);
+    setResendError(null);
     setNotice(null);
     setResending(true);
     const { error: sendError } = await supabase.auth.resetPasswordForEmail(email, {
@@ -189,7 +196,7 @@ export default function ResetPasswordScreen() {
     setCooldown(RESEND_COOLDOWN_SECONDS);
     setAttempts(0);
     if (sendError) {
-      setCodeError(t(requestCodeErrorKey(sendError)));
+      setResendError(t(requestCodeErrorKey(sendError)));
       return;
     }
     setNotice(t('auth.codeResent'));
@@ -230,7 +237,10 @@ export default function ResetPasswordScreen() {
 
       <Surface tone="card" radius={Radius.card} padded={20} gap={16}>
         {phase === 'checking' ? (
-          <View style={styles.centered}>
+          <View
+            style={styles.centered}
+            accessibilityRole="progressbar"
+            accessibilityLiveRegion="polite">
             <ActivityIndicator color={theme.primary} />
             <ThemedText themeColor="textSecondary">{t('auth.resetChecking')}</ThemedText>
           </View>
@@ -267,13 +277,17 @@ export default function ResetPasswordScreen() {
               autoCorrect={false}
               placeholder={t('auth.codePlaceholder')}
             />
-            {notice ? <InfoBanner tone="info" text={notice} /> : null}
             <FigmaFooterPrimaryButton
               label={t('auth.codeSubmit')}
               onPress={onVerifyCode}
               loading={verifying}
             />
             <ResendRow cooldown={cooldown} resending={resending} onPress={onResend} />
+            {/* Both outcomes of a resend attach to the resend control, below it —
+                never between the well and the CTA, which would shove the primary
+                down mid-interaction and break the frame's stack. */}
+            {resendError ? <AuthError message={resendError} /> : null}
+            {notice ? <InfoBanner tone="info" text={notice} /> : null}
           </>
         ) : (
           <>
