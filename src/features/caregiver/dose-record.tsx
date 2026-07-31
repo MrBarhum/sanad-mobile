@@ -44,45 +44,55 @@ export function DoseRecordSheet({
   const [shown, setShown] = useState<DoseItem | null>(dose);
   if (dose !== null && dose !== shown) setShown(dose);
 
+  if (!shown) {
+    return (
+      <FigmaBottomSheet visible={false} onClose={onClose} title={t('caregiver.today.recordTitle')}>
+        {null}
+      </FigmaBottomSheet>
+    );
+  }
+
+  // Keyed by the dose so opening a DIFFERENT dose starts from a clean slate (no
+  // photo, no stale error) without an effect. Reopening the SAME dose keeps its
+  // state on purpose: the only way back here is a failure, and her already-taken
+  // photo should still be attached.
   return (
-    <FigmaBottomSheet
+    <DoseRecordBody
+      key={shown.key}
+      circleId={circleId}
+      date={date}
+      dose={shown}
       visible={dose !== null}
       onClose={onClose}
-      title={t('caregiver.today.recordTitle')}>
-      {shown ? (
-        // Keyed by the dose so opening a DIFFERENT dose starts from a clean
-        // slate (no photo, no stale error) without an effect. Reopening the SAME
-        // dose keeps its state on purpose: the only way back here is a failure,
-        // and her already-taken photo should still be attached.
-        <DoseRecordBody
-          key={shown.key}
-          circleId={circleId}
-          date={date}
-          dose={shown}
-          onClose={onClose}
-        />
-      ) : null}
-    </FigmaBottomSheet>
+    />
   );
 }
 
 /**
- * The sheet body. The two writes are deliberately separate and ordered: the dose
- * is saved FIRST and on its own, and only then is an optional photo uploaded and
+ * The sheet. The two writes are deliberately separate and ordered: the dose is
+ * saved FIRST and on its own, and only then is an optional photo uploaded and
  * linked (the proof object path must contain the log id, and a CHECK constraint
  * enforces it). If the upload then fails, this stays open and says plainly that
  * the DOSE was saved — a worker who believes her record was lost because a photo
  * failed would give the dose again, so that copy is a safety control.
+ *
+ * It owns the `FigmaBottomSheet` rather than sitting inside one, because the
+ * discard guard has to cover EVERY way out — the «إغلاق» button, the backdrop
+ * tap and the Android back gesture all funnel through `requestClose`. Guarding
+ * only the button would leave the sheet's two primary dismissal gestures
+ * silently discarding the photo, which is the whole thing the guard is for.
  */
 function DoseRecordBody({
   circleId,
   date,
   dose,
+  visible,
   onClose,
 }: {
   circleId: string;
   date: string;
   dose: DoseItem;
+  visible: boolean;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
@@ -155,10 +165,35 @@ function DoseRecordBody({
     await uploadPhoto(savedLogId, photo);
   }
 
+  /**
+   * The ONE exit. Every dismissal — the button, the backdrop tap and the Android
+   * back gesture — comes through here, so the photo cannot be discarded by a
+   * route the guard does not cover.
+   */
+  function requestClose() {
+    if (!photoOutstanding) {
+      onClose();
+      return;
+    }
+    confirmAction(
+      {
+        title: t('caregiver.photo.discardTitle'),
+        message: t('caregiver.photo.discardMessage'),
+        confirm: t('caregiver.photo.discardConfirm'),
+        cancel: t('common.cancel'),
+      },
+      onClose,
+      { destructive: true },
+    );
+  }
+
   const detail = [dose.dosage, dose.instructions].filter(Boolean).join('  ·  ');
 
   return (
-    <>
+    <FigmaBottomSheet
+      visible={visible}
+      onClose={requestClose}
+      title={t('caregiver.today.recordTitle')}>
       <View style={[styles.summary, { borderColor: c.border, backgroundColor: c.backgroundSunken }]}>
         <Text style={[styles.name, { color: c.text }]} numberOfLines={2}>
           {dose.medicationName}
@@ -200,55 +235,34 @@ function DoseRecordBody({
         </Text>
       ) : null}
 
-      {photoOutstanding ? (
-        <View style={styles.actions}>
-          <Button
-            label={t('caregiver.photo.retry')}
-            loading={attach.isPending}
-            disabled={pending}
-            onPress={() => void onRetryUpload()}
-          />
-          {/* The dose is saved, so «إغلاق» costs only the photo — but it costs it
-              PERMANENTLY: the row is a status pill by now, so this sheet has no
-              second entry point and nothing else can attach a proof to an
-              existing log. Guarded with the sanctioned lightweight confirm (an OS
-              alert, not a nested sheet). The drawn label is unchanged. */}
-          <Button
-            label={t('common.close')}
-            variant="secondary"
-            disabled={pending}
-            onPress={() =>
-              confirmAction(
-                {
-                  title: t('caregiver.photo.discardTitle'),
-                  message: t('caregiver.photo.discardMessage'),
-                  confirm: t('caregiver.photo.discardConfirm'),
-                  cancel: t('common.cancel'),
-                },
-                onClose,
-                { destructive: true },
-              )
-            }
-          />
-        </View>
-      ) : (
-        <View style={styles.actions}>
-          <Button
-            label={t('caregiver.today.give')}
-            loading={pending}
-            disabled={pending}
-            onPress={() => void onSubmit()}
-          />
-          {/* Nothing is at stake before the dose is written — a bare close. */}
-          <Button
-            label={t('common.cancel')}
-            variant="secondary"
-            disabled={pending}
-            onPress={onClose}
-          />
-        </View>
-      )}
-    </>
+      {/*
+        The BRANCH is `photoOutstanding` — once the dose is written this sheet
+        must never present the dose write again. The LABELS are `uploadFailed`,
+        because «إعادة إرسال الصورة» ("send it again") is only true after a send
+        has actually failed: `savedLogId` and the upload start in the same tick,
+        so keying the label on the branch would say "again" on the happy path,
+        about the very first attempt.
+      */}
+      <View style={styles.actions}>
+        <Button
+          label={uploadFailed ? t('caregiver.photo.retry') : t('caregiver.today.give')}
+          loading={pending}
+          disabled={pending}
+          onPress={() => void (photoOutstanding ? onRetryUpload() : onSubmit())}
+        />
+        {/* Before the dose is written a close costs nothing. After it, «إغلاق»
+            costs the photo PERMANENTLY — the row is a status pill by then, so
+            this sheet has no second entry point and nothing else can attach a
+            proof to an existing log. `requestClose` carries that guard for every
+            exit, so this button just calls it. */}
+        <Button
+          label={photoOutstanding ? t('common.close') : t('common.cancel')}
+          variant="secondary"
+          disabled={pending}
+          onPress={requestClose}
+        />
+      </View>
+    </FigmaBottomSheet>
   );
 }
 

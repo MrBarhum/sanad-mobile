@@ -6,7 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FigmaMutedNote } from '@/components/figma/figma-form-screen';
 import { isolateLtr } from '@/components/ltr-text';
 import { OptionSelect } from '@/components/option-select';
-import { FontFamily, Spacing, Type } from '@/constants/theme';
+import { FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 
@@ -70,6 +70,28 @@ export type AssigneeOption = {
 };
 type Option = AssigneeOption;
 
+/**
+ * The two marks that say "this one is the hired caregiver": her role glyph at the
+ * RTL end of the chip, and the same fact in the spoken label — because which of
+ * these names is the worker rather than family is the single distinction this
+ * picker exists to make, and a glyph alone would carry it for sighted users only.
+ * Returns empty for everyone else, so every other chip is untouched.
+ */
+function caregiverMarks(
+  isCaregiver: boolean,
+  label: string,
+  t: (key: string, options?: Record<string, string>) => string,
+): Pick<Option, 'trailingIcon' | 'accessibilityLabel'> {
+  if (!isCaregiver) return {};
+  return {
+    trailingIcon: HandHelping,
+    accessibilityLabel: t('assignment.nameWithRole', {
+      name: label,
+      role: t('circleMembers.roles.caregiver'),
+    }),
+  };
+}
+
 function isAssignableDoer(member: CircleMember, includeCaregiver: boolean): boolean {
   const roleAllowed =
     DOER_ROLES.has(member.role) || (includeCaregiver && SCOPED_DOER_ROLES.has(member.role));
@@ -102,17 +124,10 @@ function buildOptions(
   for (const member of doers) {
     if (member.isSelf || member.userId === selfId) continue;
     const label = memberDisplayName(member, t('assignment.unknownMember'));
-    const isCaregiver = member.role === 'caregiver';
     options.push({
       value: member.userId,
       label,
-      // Which of these names is the hired worker rather than family is exactly
-      // the distinction this picker exists to make, so it is said twice: as a
-      // glyph, and — for anyone who cannot see it — in the spoken label.
-      trailingIcon: isCaregiver ? HandHelping : undefined,
-      accessibilityLabel: isCaregiver
-        ? `${label} — ${t('circleMembers.roles.caregiver')}`
-        : undefined,
+      ...caregiverMarks(member.role === 'caregiver', label, t),
     });
   }
 
@@ -137,15 +152,19 @@ function buildOptions(
         : inactive
           ? `${base} (${t('assignment.inactiveMember')})`
           : base;
+    // A still-ACTIVE caregiver holding an assignment on a surface that no longer
+    // offers her: the value survives, but it is invisible to her and cannot be
+    // reselected once the manager picks anyone else.
+    const isOrphanCaregiver = Boolean(
+      existing && existing.role === 'caregiver' && existing.status === 'active' && !includeCaregiver,
+    );
     options.push({
       value: current,
       label,
-      // A still-ACTIVE caregiver holding an assignment on a surface that no
-      // longer offers her: the value survives, but it is invisible to her and
-      // cannot be reselected once the manager picks anyone else.
-      isOrphanCaregiver: Boolean(
-        existing && existing.role === 'caregiver' && existing.status === 'active' && !includeCaregiver,
-      ),
+      isOrphanCaregiver,
+      // She keeps her glyph and her spoken role here too — this is precisely the
+      // chip the amber caution below is ABOUT, so it must be identifiable.
+      ...caregiverMarks(isOrphanCaregiver, label, t),
     });
   }
 
@@ -323,5 +342,7 @@ const styles = StyleSheet.create({
   groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   cautionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   cautionIcon: { flexShrink: 0, marginTop: 4 },
-  cautionText: { ...Type.captionStrong, flex: 1 },
+  // A running two-sentence explanation, not a meta label — so it sits at the 16
+  // body floor, matching the shell-change warning in the role sheet.
+  cautionText: { flex: 1, fontSize: 16, fontFamily: FontFamily.semibold, lineHeight: 26 },
 });

@@ -17,7 +17,7 @@ import { Surface } from '@/components/surface';
 import { type IconName } from '@/constants/icons';
 import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { DoseProofImage } from '@/features/caregiver/dose-photo';
-import { memberDisplayName } from '@/features/circle-members/display-name';
+import { memberDisplayName, memberDisplayNameParts } from '@/features/circle-members/display-name';
 import { useCircleMembers } from '@/features/circle-members/hooks';
 import { isManagerRole } from '@/features/circle-members/permissions';
 import { useMissedDoseGrace } from '@/features/circle-selection/missed-dose-grace';
@@ -228,7 +228,12 @@ export function CaregiverWeekSummary({ circle }: { circle: ActiveCircle }) {
           <View style={styles.pickerRow} accessibilityRole="radiogroup">
             {caregivers.map((member) => {
               const active = member.userId === selected?.userId;
-              const label = memberDisplayName(member, t('circleMembers.unnamed'));
+              // Isolate ONLY when the name fell back to the Latin email
+              // local-part. An LTR isolate around an Arabic name forces an LTR
+              // base direction, which throws its trailing punctuation to the
+              // wrong end — «سارة (ممرضة)» would render as «)سارة (ممرضة».
+              const parts = memberDisplayNameParts(member, t('circleMembers.unnamed'));
+              const label = parts.text;
               return (
                 <Pressable
                   key={member.memberId}
@@ -253,10 +258,7 @@ export function CaregiverWeekSummary({ circle }: { circle: ActiveCircle }) {
                       },
                     ]}
                     numberOfLines={1}>
-                    {/* The name can be a Latin email local-part — isolate the
-                        visible run, but feed the screen reader the plain string
-                        (accessibilityLabel above) rather than bidi marks. */}
-                    {isolateLtr(label)}
+                    {parts.source === 'email' ? isolateLtr(label) : label}
                   </Text>
                 </Pressable>
               );

@@ -8,7 +8,7 @@ import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from '
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FormField } from '@/components/form-field';
 import { InfoBanner } from '@/components/info-banner';
-import { LtrText, isolateLtr } from '@/components/ltr-text';
+import { LtrText } from '@/components/ltr-text';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
@@ -349,9 +349,9 @@ function ResendRow({
   const { t } = useTranslation();
   const c = useTheme();
   const waiting = cooldown > 0;
-  const label = waiting
-    ? t('auth.resendIn', { seconds: isolateLtr(String(cooldown)) })
-    : t('auth.resendCode');
+  // A plural family, so «ثانية واحدة» / «ثانيتين» / «30 ثانية» and "one second"
+  // / "30 seconds" each agree with their count — the flat form read "1 seconds".
+  const label = waiting ? t('auth.resendIn', { count: cooldown }) : t('auth.resendCode');
 
   return (
     <Pressable
