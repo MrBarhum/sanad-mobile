@@ -1,10 +1,10 @@
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Clock } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
 import { FormField } from '@/components/form-field';
 import { InfoBanner } from '@/components/info-banner';
@@ -12,7 +12,7 @@ import { LtrText, isolateLtr } from '@/components/ltr-text';
 import { Screen } from '@/components/screen';
 import { Surface } from '@/components/surface';
 import { ThemedText } from '@/components/themed-text';
-import { Fonts, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
+import { BorderWidth, FontFamily, Fonts, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
 import { AuthError, AuthHeader } from '@/features/auth/auth-chrome';
 import {
   MAX_CODE_ATTEMPTS,
@@ -273,18 +273,7 @@ export default function ResetPasswordScreen() {
               onPress={onVerifyCode}
               loading={verifying}
             />
-            <Button
-              variant="plain"
-              size="sm"
-              loading={resending}
-              disabled={cooldown > 0}
-              label={
-                cooldown > 0
-                  ? t('auth.resendIn', { seconds: isolateLtr(String(cooldown)) })
-                  : t('auth.resendCode')
-              }
-              onPress={onResend}
-            />
+            <ResendRow cooldown={cooldown} resending={resending} onPress={onResend} />
           </>
         ) : (
           <>
@@ -323,6 +312,60 @@ export default function ResetPasswordScreen() {
   );
 }
 
+/**
+ * The «إرسال رمز جديد» control (frames 11j1 / 11j2).
+ *
+ * Drawn as a full-width 48dp bordered row rather than the 32dp plain text link
+ * this screen shipped with: that link rendered at 0.45 opacity for the whole
+ * cooldown, which put a live instruction below the AA contrast floor and well
+ * under the 48dp touch target — on the one screen a locked-out user has to read.
+ * The row keeps FULL opacity throughout; while the cooldown runs it is simply
+ * inert (a clock glyph + the remaining seconds in `mut`), and when it expires the
+ * same row becomes the `acc` call to action. One control, two readable states.
+ */
+function ResendRow({
+  cooldown,
+  resending,
+  onPress,
+}: {
+  cooldown: number;
+  resending: boolean;
+  onPress: () => void;
+}) {
+  const { t } = useTranslation();
+  const c = useTheme();
+  const waiting = cooldown > 0;
+  const label = waiting
+    ? t('auth.resendIn', { seconds: isolateLtr(String(cooldown)) })
+    : t('auth.resendCode');
+
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={waiting || resending}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: waiting || resending, busy: resending }}
+      android_ripple={waiting ? undefined : { color: c.backgroundSelected }}
+      style={[styles.resendRow, { borderColor: c.border, backgroundColor: c.backgroundElement }]}>
+      {resending ? (
+        <ActivityIndicator color={c.primaryText} />
+      ) : (
+        <>
+          {waiting ? <Clock size={15} color={c.textSecondary} strokeWidth={2.2} /> : null}
+          <Text
+            style={[
+              waiting ? styles.resendWaiting : styles.resendReady,
+              { color: waiting ? c.textSecondary : c.primaryText },
+            ]}>
+            {label}
+          </Text>
+        </>
+      )}
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.four },
   // The code is numeric — render it LTR and letter-spaced so it reads as digits
@@ -335,4 +378,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     writingDirection: 'ltr',
   },
+  // Pulled up 8 so the resend row sits 8dp under the primary inside the card's
+  // 16dp rhythm — the two are one control pair, per the frame.
+  resendRow: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    paddingHorizontal: 14,
+    marginTop: -8,
+  },
+  resendWaiting: { fontSize: 15, fontFamily: FontFamily.semibold },
+  resendReady: { fontSize: 15, fontFamily: FontFamily.bold },
 });
