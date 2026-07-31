@@ -1588,13 +1588,6 @@
       "rolesTitle": "Roles",
       "legendSeparator": ":",
       "legend": {
-        "manager": "Manager",
-        "managerDesc": "Can manage everything and add members",
-        "editor": "Editor",
-        "editorDesc": "Can add and edit records",
-        "viewer": "Viewer",
-        "viewerDesc": "Can only view information",
-        "caregiver": "Caregiver",
         "caregiverDesc": "Records their assigned doses and tasks, plus their own notes and readings"
       }
     },

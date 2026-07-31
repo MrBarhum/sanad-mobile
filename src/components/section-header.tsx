@@ -12,6 +12,12 @@ type SectionHeaderProps = {
   /** Custom trailing content on the end side (overrides linkLabel) — e.g. a
    *  share icon next to the link. */
   trailing?: ReactNode;
+  /**
+   * Tint the title `mut` instead of `ink`. Opt-in, default off: the ONE header in
+   * the design corpus drawn muted is «غير نشطين» on the roster, where the whole
+   * section is a de-emphasised archive.
+   */
+  muted?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -20,13 +26,23 @@ type SectionHeaderProps = {
  * an optional underlined `acc` link (or custom `trailing`) on the end side. Group
  * label for a screen section — matches the HTML section headers exactly.
  */
-export function SectionHeader({ title, linkLabel, onLinkPress, trailing, style }: SectionHeaderProps) {
+export function SectionHeader({
+  title,
+  linkLabel,
+  onLinkPress,
+  trailing,
+  muted = false,
+  style,
+}: SectionHeaderProps) {
   const c = useTheme();
   return (
     <View style={[styles.row, style]}>
       <View style={styles.titleGroup}>
         <View style={[styles.square, { backgroundColor: c.primary }]} />
-        <Text style={[styles.title, { color: c.text }]} accessibilityRole="header" numberOfLines={1}>
+        <Text
+          style={[styles.title, { color: muted ? c.textSecondary : c.text }]}
+          accessibilityRole="header"
+          numberOfLines={1}>
           {title}
         </Text>
       </View>

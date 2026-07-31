@@ -23,7 +23,7 @@ import { isManagerRole } from './permissions';
 
 type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
-type RoleVisual = { Icon: IconCmp; fg: ThemeColor; tint: ThemeColor };
+type RoleVisual = { Icon: IconCmp; fg: ThemeColor; tint: ThemeColor; sw: number };
 
 /**
  * Per-role visual identity for the Dar roster (frame 9a): an icon + a foreground
@@ -40,36 +40,59 @@ type RoleVisual = { Icon: IconCmp; fg: ThemeColor; tint: ThemeColor };
  */
 function roleVisual(role: CircleRole): RoleVisual {
   if (role === 'admin' || role === 'primary_caregiver') {
-    return { Icon: Crown, fg: 'primaryText', tint: 'primaryBg' };
+    return { Icon: Crown, fg: 'primaryText', tint: 'primaryBg', sw: 2.2 };
   }
   if (role === 'caregiver') {
-    return { Icon: HandHelping, fg: 'primaryText', tint: 'primaryBg' };
+    return { Icon: HandHelping, fg: 'primaryText', tint: 'primaryBg', sw: 2 };
   }
   if (role === 'family_member') {
-    return { Icon: Edit3, fg: 'warningFg', tint: 'warningBg' };
+    return { Icon: Edit3, fg: 'warningFg', tint: 'warningBg', sw: 2 };
   }
-  return { Icon: Eye, fg: 'textSecondary', tint: 'backgroundSunken' };
+  return { Icon: Eye, fg: 'textSecondary', tint: 'backgroundSunken', sw: 2 };
 }
 
-type LegendRow = { fg: ThemeColor; role: string; desc: string };
+type LegendRow = { role: CircleRole; descKey: string };
 
-/** Plain-language role legend rows — tone-matched to the roster role glyphs. */
+/**
+ * The role legend — keyed on REAL `CircleRole` values (frame 11f's drawn fix).
+ *
+ * It used to invent its own vocabulary: three coloured 9×9 dots labelled «مسؤول» /
+ * «محرر» / «مشاهد», none of which was a role any row above it could ever show
+ * (rows read `circleMembers.roles.*` → «مشرف» / «فرد من العائلة» / «عضو عن بُعد»),
+ * against a second, staler copy of the role descriptions that had already drifted
+ * from the real one. And the key was colour-only — with a caregiver present, the
+ * manager dot and the caregiver dot were the same green.
+ *
+ * So the legend now derives everything from the role itself: the glyph comes from
+ * the same {@link roleVisual} the rows use, the label from `circleMembers.roles.*`
+ * and the body from `circleMembers.roleDescriptions.*`. Legend and roster cannot
+ * drift again, and the mark is a distinct shape rather than a tone.
+ *
+ * Note the coupling this creates: editing a `roleDescriptions` value now also
+ * rewrites this legend (that is the point — one source), and `roleVisual` maps
+ * `primary_caregiver` onto the same Crown as `admin`, so the «مشرف» row also
+ * explains that member. Both are as drawn.
+ */
 const LEGEND: readonly LegendRow[] = [
-  { fg: 'primaryText', role: 'manager', desc: 'managerDesc' },
-  { fg: 'warningFg', role: 'editor', desc: 'editorDesc' },
-  { fg: 'textSecondary', role: 'viewer', desc: 'viewerDesc' },
+  { role: 'admin', descKey: 'circleMembers.roleDescriptions.admin' },
+  { role: 'family_member', descKey: 'circleMembers.roleDescriptions.family_member' },
+  { role: 'remote_member', descKey: 'circleMembers.roleDescriptions.remote_member' },
 ];
 
 /**
  * The hired-caregiver legend row — appended to {@link LEGEND} ONLY when this
  * roster actually renders a `caregiver` member. The role is optional and must stay
  * completely invisible in a circle that never hired one: such a circle sees exactly
- * the three rows above, unchanged. Tone-matched to the HandHelping glyph.
+ * the three rows above, unchanged.
+ *
+ * It keeps the SHORT `figma.members.legend.caregiverDesc` rather than the long
+ * `roleDescriptions.caregiver`: that one is the three-sentence disclosure the
+ * invite card and the role-change sheet are required to show in full, and a legend
+ * line is not the place to restate it.
  */
 const CAREGIVER_LEGEND: LegendRow = {
-  fg: 'primaryText',
   role: 'caregiver',
-  desc: 'caregiverDesc',
+  descKey: 'figma.members.legend.caregiverDesc',
 };
 
 /** First grapheme of a display name, for the letter avatar. */
@@ -165,7 +188,7 @@ export function FigmaMembers({
             ) : null}
           </View>
           <View style={styles.metaRow}>
-            <visual.Icon size={12} color={c[visual.fg]} strokeWidth={2.2} />
+            <visual.Icon size={12} color={c[visual.fg]} strokeWidth={visual.sw} />
             <Text style={[styles.roleText, { color: c[visual.fg] }]}>
               {t(`circleMembers.roles.${member.role}`)}
             </Text>
@@ -194,7 +217,7 @@ export function FigmaMembers({
               on active rows, where the statement is still true.
             */}
             {member.role === 'caregiver' && !dim ? (
-              <View style={[styles.metaBadge, { borderColor: c.primaryText }]}>
+              <View style={[styles.metaBadge, styles.caregiverBadge, { borderColor: c.primaryText }]}>
                 <Text style={[styles.metaBadgeText, { color: c.primaryText }]}>
                   {t('caregiver.roster.appBadge')}
                 </Text>
@@ -279,26 +302,39 @@ export function FigmaMembers({
           {/* Removed members (managers only) — reachable so they can be reactivated. */}
           {inactive.length > 0 ? (
             <>
-              <SectionHeader title={t('circleMembers.inactiveTitle')} style={styles.inactiveHeader} />
+              <SectionHeader
+                title={t('circleMembers.inactiveTitle')}
+                muted
+                style={styles.inactiveHeader}
+              />
               <View style={styles.list}>{inactive.map(renderRow)}</View>
             </>
           ) : null}
 
-          {/* Role legend (plain-language) */}
+          {/* Role legend — the rows' own glyphs + their real role labels. */}
           <Surface tone="card" radius={Radius.card} padded={14}>
             <Text style={[styles.legendTitle, { color: c.text }]}>{t('figma.members.rolesTitle')}</Text>
-            {legend.map((r) => (
-              <View key={r.role} style={styles.legendRow}>
-                <View style={[styles.legendDot, { backgroundColor: c[r.fg] }]} />
-                <Text style={[styles.legendText, { color: c.textSecondary }]}>
-                  <Text style={[styles.legendRole, { color: c.text }]}>
-                    {t(`figma.members.legend.${r.role}`)}
-                    {t('figma.members.legendSeparator')}
-                  </Text>{' '}
-                  {t(`figma.members.legend.${r.desc}`)}
-                </Text>
-              </View>
-            ))}
+            <View style={styles.legendRows}>
+              {legend.map((r) => {
+                const visual = roleVisual(r.role);
+                return (
+                  <View key={r.role} style={styles.legendRow}>
+                    {/* The glyph is a SIBLING of the text, never nested inside it —
+                        RN mis-baselines an inline view within a <Text>. */}
+                    <View style={styles.legendGlyph}>
+                      <visual.Icon size={14} color={c[visual.fg]} strokeWidth={visual.sw} />
+                    </View>
+                    <Text style={[styles.legendText, { color: c.textSecondary }]}>
+                      <Text style={[styles.legendRole, { color: c.text }]}>
+                        {t(`circleMembers.roles.${r.role}`)}
+                        {t('figma.members.legendSeparator')}
+                      </Text>{' '}
+                      {t(r.descKey)}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
           </Surface>
         </>
       )}
@@ -377,6 +413,9 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   metaBadgeText: { fontSize: 14, fontFamily: FontFamily.bold },
+  // Only the caregiver chip: it wraps onto its own meta line, so it needs the
+  // 2dp nudge the inline «أنت» badge must not get.
+  caregiverBadge: { marginTop: 2 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   roleText: { fontSize: 14, fontFamily: FontFamily.bold },
   metaDot: { fontSize: 14, fontFamily: FontFamily.regular },
@@ -384,8 +423,12 @@ const styles = StyleSheet.create({
   email: { fontSize: 14, fontFamily: FontFamily.medium, flexShrink: 1 },
   // Role legend
   legendTitle: { fontSize: 16, fontFamily: FontFamily.bold, marginBottom: 8 },
-  legendRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 7 },
-  legendDot: { width: 9, height: 9, borderRadius: Radius.pill, marginTop: 8 },
+  // A real column gap, so no stray space is left under the last row.
+  legendRows: { gap: 7 },
+  legendRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  // A 16×24 box centres the 14px glyph optically on the first (24px) text line,
+  // however far the description wraps.
+  legendGlyph: { width: 16, height: 24, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   legendText: { flex: 1, fontSize: 15, fontFamily: FontFamily.medium, lineHeight: 24 },
-  legendRole: { fontFamily: FontFamily.bold },
+  legendRole: { fontFamily: FontFamily.semibold },
 });
