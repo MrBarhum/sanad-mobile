@@ -144,13 +144,13 @@ export function InviteForm({ circleId, actorRole }: { circleId: string; actorRol
         />
       </Surface>
 
+      {/* A failure is never colour alone: the same icon + 15/700 alert row the
+          shared FormField uses, so every error on a form reads the same way. */}
       {error ? (
-        <Text
-          style={[styles.error, { color: c.errorFg }]}
-          accessibilityRole="alert"
-          accessibilityLiveRegion="polite">
-          {error}
-        </Text>
+        <View style={styles.errorRow} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          <AlertCircle size={15} color={c.errorFg} strokeWidth={2.4} />
+          <Text style={[styles.errorText, { color: c.errorFg }]}>{error}</Text>
+        </View>
       ) : null}
 
       {/* Primary CTA — rendered directly in the body (not the footer prop, which
@@ -319,7 +319,8 @@ const styles = StyleSheet.create({
   // Create form
   group: { gap: Spacing.two },
   groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
-  error: { fontSize: 14, fontFamily: FontFamily.regular },
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  errorText: { flex: 1, fontSize: 15, fontFamily: FontFamily.semibold },
 
   // Caregiver disclosure cards — a glyph box sized to the first text line so the
   // icon sits optically centred on it however far the sentence wraps.
@@ -364,7 +365,9 @@ const styles = StyleSheet.create({
   },
   code: { fontSize: 28, lineHeight: 40, fontFamily: FontFamily.black, letterSpacing: 4, textAlign: 'center' },
   meta: { marginTop: 12, gap: 8 },
-  metaLine: { fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 22 },
+  // The frame's 16/700 at 1.6 — and the ≥1.5× Arabic line-height the old 15/22
+  // (1.47×) missed. Both reveal meta lines, every role.
+  metaLine: { fontSize: 16, fontFamily: FontFamily.semibold, lineHeight: 26 },
   /** Same meta metrics as `metaLine` but a wrap-safe ≥1.5× Arabic line-height —
    *  the caregiver code note is a sentence, not a single-line label. */
   metaNote: { fontSize: 15, fontFamily: FontFamily.semibold, lineHeight: 24 },
