@@ -6,11 +6,14 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { Button } from '@/components/button';
+import { isolateLtr } from '@/components/ltr-text';
 import { OptionSelect } from '@/components/option-select';
-import { BorderWidth, FontFamily, Radius, type ThemeColor } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, Spacing, type ThemeColor } from '@/constants/theme';
+import { CaregiverDisclosure } from '@/features/caregiver/caregiver-disclosure';
 import { useTheme } from '@/hooks/use-theme';
 
 import { memberErrorKey, type CircleMember, type CircleRole } from './api';
+import { emailLocalPart, memberDisplayName } from './display-name';
 import {
   useLeaveCircle,
   useTransferOwnership,
@@ -136,7 +139,16 @@ export function MemberActionsSheet({
     );
   }
 
-  const displayName = shown.fullName?.trim() || shown.email || t('circleMembers.unnamed');
+  // The SAME name the roster row above shows — `memberDisplayName` exists so a
+  // full email address is never rendered inline (only its local-part). This sheet
+  // used to bypass it, so the same member read as «nour» in the list and
+  // «nour@example.com» in the sheet title, and that raw address then propagated
+  // into the remove and make-owner confirm bodies.
+  const displayName = memberDisplayName(shown, t('circleMembers.unnamed'));
+  // Isolate ONLY when the name fell back to the Latin local-part. LRI…PDI sets an
+  // LTR base direction, which would reverse the word order of an Arabic name.
+  const isLocalPart = !shown.fullName?.trim() && Boolean(emailLocalPart(shown.email));
+  const titleName = isLocalPart ? isolateLtr(displayName) : displayName;
   const lastAdmin = isLastActiveAdmin(shown, all);
   const viewerIsOwner = all.some((m) => m.isSelf && m.isOwner);
   const canStatus = canChangeStatus(actorRole, shown);
@@ -155,6 +167,9 @@ export function MemberActionsSheet({
   const dirVisual = DIRECTION_VISUAL[direction];
   const DirectionIcon = dirVisual.Icon;
   const shellChanges = crossesCaregiverShell(shown.role, selectedRole);
+  // Both notes amber → one callout with an internal rule; different tones → two.
+  const mergeNotes = shellChanges && dirVisual.fg === 'warningFg';
+  const promoteToCaregiver = selectedRole === 'caregiver' && shown.role !== 'caregiver';
 
   async function run(action: () => Promise<unknown>, after?: () => void) {
     setError(null);
@@ -198,7 +213,7 @@ export function MemberActionsSheet({
           ? t('circleMembers.remove')
           : mode === 'owner'
             ? t('circleMembers.makeOwner')
-            : displayName;
+            : titleName;
 
   const errorNode = error ? (
     <Text
@@ -289,56 +304,100 @@ export function MemberActionsSheet({
               value: r,
               label: t(`circleMembers.roles.${r}`),
               description: t(`circleMembers.roleDescriptions.${r}`),
+              // The card the member is on today says so, so «حفظ» is never a
+              // guess about what is actually changing.
+              titleSuffix: r === shown.role ? t('circleMembers.currentRoleSuffix') : undefined,
             }))}
           />
-          {roleChanged ? (
-            <View
-              style={[styles.directionNote, { borderColor: c[dirVisual.fg], backgroundColor: c[dirVisual.tint] }]}
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite">
-              <DirectionIcon size={15} color={c[dirVisual.fg]} strokeWidth={2.4} />
-              <Text style={[styles.directionText, { color: c[dirVisual.fg] }]}>
-                {t(`circleMembers.direction.${direction}`)}
-              </Text>
-            </View>
-          ) : null}
+
           {/*
-            Second note, below the direction one: crossing into or out of the hired
-            caregiver role swaps which app view the person opens, and only on their
-            next launch. Amber caution tone — never gold, which belongs to claim
-            surfaces and one-time secrets. Same bordered-callout chrome as the
-            direction note, an AlertTriangle instead of an arrow so the two never
-            read as one repeated message.
+            Promoting someone INTO the caregiver role grants exactly the scope the
+            invite screen discloses in three cards — so it discloses it here too.
+            Without this, a manager could hand out the whole scope by role change
+            having read one sentence. Leaving the role needs no scope disclosure,
+            only the shell warning below.
           */}
-          {shellChanges ? (
-            <View
-              style={[styles.directionNote, { borderColor: c.warningFg, backgroundColor: c.warningBg }]}
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite">
-              <AlertTriangle size={17} color={c.warningFg} strokeWidth={2.4} style={styles.shellIcon} />
-              <Text style={[styles.shellText, { color: c.warningFg }]}>
-                {t('caregiver.roster.shellChangeWarning')}
-              </Text>
-            </View>
+          {promoteToCaregiver ? <CaregiverDisclosure /> : null}
+
+          {/*
+            The effect notes. Crossing into or out of the hired caregiver role
+            swaps which app view the person opens, and only on their next launch —
+            a consequence no privilege direction can express, since `caregiver`
+            ranks laterally with `remote_member` on purpose.
+
+            When BOTH notes are amber (the decrease case) they merge into ONE
+            callout with an internal rule: two identical amber boxes stacked read
+            as the same warning repeated, which teaches the reader to skip the
+            second. When the tones differ they stay two boxes, because then the
+            colour is carrying real information.
+          */}
+          {roleChanged ? (
+            mergeNotes ? (
+              <View
+                style={[styles.mergedNote, { borderColor: c.warningFg, backgroundColor: c.warningBg }]}
+                accessibilityRole="alert"
+                accessibilityLiveRegion="polite">
+                <View style={styles.noteRow}>
+                  <DirectionIcon size={15} color={c.warningFg} strokeWidth={2.4} />
+                  <Text style={[styles.directionText, { color: c.warningFg }]}>
+                    {t(`circleMembers.direction.${direction}`)}
+                  </Text>
+                </View>
+                <View style={[styles.noteRule, { backgroundColor: c.warningFg }]} />
+                <View style={styles.noteRowTop}>
+                  <AlertTriangle size={17} color={c.warningFg} strokeWidth={2.4} style={styles.shellIcon} />
+                  <Text style={[styles.shellText, { color: c.warningFg }]}>
+                    {t('caregiver.roster.shellChangeWarning')}
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.tightStack}>
+                <View
+                  style={[styles.directionNote, { borderColor: c[dirVisual.fg], backgroundColor: c[dirVisual.tint] }]}
+                  accessibilityRole="alert"
+                  accessibilityLiveRegion="polite">
+                  <DirectionIcon size={15} color={c[dirVisual.fg]} strokeWidth={2.4} />
+                  <Text style={[styles.directionText, { color: c[dirVisual.fg] }]}>
+                    {t(`circleMembers.direction.${direction}`)}
+                  </Text>
+                </View>
+                {shellChanges ? (
+                  <View
+                    style={[styles.directionNote, { borderColor: c.warningFg, backgroundColor: c.warningBg }]}
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="polite">
+                    <AlertTriangle size={17} color={c.warningFg} strokeWidth={2.4} style={styles.shellIcon} />
+                    <Text style={[styles.shellText, { color: c.warningFg }]}>
+                      {t('caregiver.roster.shellChangeWarning')}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            )
           ) : null}
           {errorNode}
-          <Button
-            label={t('circleMembers.saveRole')}
-            loading={busy}
-            onPress={() => {
-              if (!roleChanged) {
-                setMode('menu');
-                return;
+          <View style={styles.tightStack}>
+            {/* Save is inert until something actually changed. It used to be a
+                full-strength CTA that, on tap with no change, quietly closed the
+                pane having saved nothing — «إلغاء» is right below and is the
+                honest way out. */}
+            <Button
+              label={t('circleMembers.saveRole')}
+              loading={busy}
+              disabled={!roleChanged}
+              style={!roleChanged && styles.idlePrimary}
+              onPress={() =>
+                run(() => updateRole.mutateAsync({ memberId: shown.memberId, role: selectedRole }))
               }
-              run(() => updateRole.mutateAsync({ memberId: shown.memberId, role: selectedRole }));
-            }}
-          />
-          <Button
-            variant="secondary"
-            label={t('common.cancel')}
-            disabled={busy}
-            onPress={() => setMode('menu')}
-          />
+            />
+            <Button
+              variant="secondary"
+              label={t('common.cancel')}
+              disabled={busy}
+              onPress={() => setMode('menu')}
+            />
+          </View>
         </>
       ) : (
         <>
@@ -377,6 +436,20 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   directionText: { flex: 1, fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 22 },
+  // The merged (both-amber) callout: same chrome as directionNote, but a column
+  // holding the two rows either side of a hairline rule.
+  mergedNote: {
+    borderWidth: BorderWidth.standard,
+    borderRadius: Radius.card,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  noteRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  noteRowTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  noteRule: { height: BorderWidth.thin, opacity: 0.35, marginVertical: 9 },
+  // The sheet body gaps every child at 16; these pairs are one unit at 8.
+  tightStack: { gap: Spacing.two },
+  idlePrimary: { opacity: 0.45 },
   // The shell-change warning is a running sentence, not a meta label, so it sits at
   // the 16px body floor with a top-aligned icon (the note wraps to 2–3 lines).
   shellIcon: { alignSelf: 'flex-start', marginTop: 3 },

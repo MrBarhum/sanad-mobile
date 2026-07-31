@@ -9,6 +9,12 @@ export type SelectOption<T extends string> = {
   label: string;
   /** Optional supporting line, shown only in the `card` variant. */
   description?: string;
+  /**
+   * A short muted qualifier appended INSIDE the title, e.g. « — الدور الحالي».
+   * `card` variant only; 14/700 in `mut`, a sanctioned short meta label. It also
+   * joins the accessible label so a screen reader hears the same qualification.
+   */
+  titleSuffix?: string;
 };
 
 type OptionSelectProps<T extends string> = {
@@ -64,7 +70,9 @@ export function OptionSelect<T extends string>({
                 disabled={disabled}
                 accessibilityRole="radio"
                 accessibilityState={{ selected, disabled }}
-                accessibilityLabel={option.label}
+                accessibilityLabel={
+                  option.titleSuffix ? `${option.label} ${option.titleSuffix}` : option.label
+                }
                 android_ripple={{ color: c.backgroundSelected }}
                 style={[
                   styles.optionCard,
@@ -85,6 +93,11 @@ export function OptionSelect<T extends string>({
                   <Text
                     style={[styles.cardTitle, { color: c.text, fontFamily: selected ? FontFamily.bold : FontFamily.semibold }]}>
                     {option.label}
+                    {option.titleSuffix ? (
+                      <Text style={[styles.cardTitleSuffix, { color: c.textSecondary }]}>
+                        {` ${option.titleSuffix}`}
+                      </Text>
+                    ) : null}
                   </Text>
                   {option.description ? (
                     <Text style={[styles.cardDesc, { color: c.textSecondary }]}>{option.description}</Text>
@@ -166,6 +179,7 @@ const styles = StyleSheet.create({
   },
   optionText: { flex: 1, gap: 2 },
   cardTitle: { fontSize: 16, lineHeight: 24 },
+  cardTitleSuffix: { fontSize: 14, fontFamily: FontFamily.semibold },
   cardDesc: { fontSize: 14, fontFamily: FontFamily.medium, lineHeight: 22 },
   disabled: { opacity: 0.5 },
 });

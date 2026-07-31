@@ -1,21 +1,21 @@
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
-import { AlertCircle, Check, MessageCircle, X } from 'lucide-react-native';
-import { useState, type ReactNode } from 'react';
+import { AlertCircle, Check, MessageCircle } from 'lucide-react-native';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { FigmaFooterPrimaryButton } from '@/components/figma/figma-footer-primary-button';
-import { FigmaFormScreen, FigmaMutedNote, FigmaSectionLabel } from '@/components/figma/figma-form-screen';
+import { FigmaFormScreen } from '@/components/figma/figma-form-screen';
 import { FigmaHeader } from '@/components/figma/figma-header';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { FormField } from '@/components/form-field';
-import { Icon } from '@/components/icon';
 import { isolateLtr, LtrText } from '@/components/ltr-text';
 import { OptionSelect } from '@/components/option-select';
 import { Surface } from '@/components/surface';
 import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
+import { CaregiverDisclosure } from '@/features/caregiver/caregiver-disclosure';
 import { emailLocalPart } from '@/features/circle-members/display-name';
 import { useCircleSelection } from '@/features/circle-selection/provider';
 import { useMyProfile } from '@/features/profile/hooks';
@@ -26,20 +26,6 @@ import { ymdFromInstant } from '@/utils/date';
 import { invitableRoles, type CircleRole, type CreatedInvitation } from './api';
 import { useCreateInvitation } from './hooks';
 import { copyInviteCode, shareInviteMessage, shareViaWhatsApp } from './share';
-
-/**
- * The hired-caregiver disclosure rows, in reading order. These mirror the
- * least-privilege RLS the database actually enforces — a family must be able to
- * read exactly what this person will and will not see BEFORE the code exists.
- * Rendered ONLY when the caregiver role card is selected; every other role leaves
- * the screen exactly as it was.
- */
-const SEES_KEYS = ['doses', 'tasks', 'emergency', 'own'] as const;
-const HIDDEN_KEYS = ['members', 'pulse', 'schedule', 'others'] as const;
-/** Location is deliberately FIRST — the absence of location tracking is the
- *  deliverable of this feature, not a footnote. No shift/attendance/clock-in
- *  tracking exists anywhere in the product. */
-const NOT_RECORDED_KEYS = ['location', 'background', 'mic', 'photos'] as const;
 
 /**
  * Create an invitation — the Dar form shell (deep-green form header + gold
@@ -103,35 +89,9 @@ export function InviteForm({ circleId, actorRole }: { circleId: string; actorRol
 
       {/* Hired-caregiver disclosure — rendered ONLY for the caregiver role, so a
           circle that never hires anyone sees this screen exactly as it always was.
-          Three plain-language cards (sees / does not see / is not recorded) plus
-          the mutual-protection note: the family learns the scope before the code
-          exists, and the worker is told in the same breath what is never tracked. */}
-      {role === 'caregiver' ? (
-        <>
-          <DisclosureCard
-            title={t('caregiver.invite.disclosureTitle')}
-            glyph={<Check size={16} color={c.successFg} strokeWidth={2.2} />}
-            rows={SEES_KEYS.map((key) => ({ key, text: t(`caregiver.invite.sees.${key}`) }))}
-          />
-          <DisclosureCard
-            title={t('caregiver.invite.hiddenTitle')}
-            // A scope statement, not a warning — the muted tone, never `errorFg`.
-            glyph={<X size={16} color={c.textSecondary} strokeWidth={2.2} />}
-            rows={HIDDEN_KEYS.map((key) => ({ key, text: t(`caregiver.invite.hidden.${key}`) }))}
-          />
-          <DisclosureCard
-            title={t('caregiver.invite.notRecordedTitle')}
-            glyph={<Icon name="shield" size="sm" color="primaryText" />}
-            rows={NOT_RECORDED_KEYS.map((key) => ({
-              key,
-              text: t(`caregiver.invite.notRecorded.${key}`),
-            }))}
-          />
-          {/* The sentence that makes the feature defensible — kept directly under
-              the three cards, never buried below the form. */}
-          <FigmaMutedNote>{t('caregiver.invite.mutualNote')}</FigmaMutedNote>
-        </>
-      ) : null}
+          The same component now serves the role-change sheet, which grants the
+          identical scope by a different route. */}
+      {role === 'caregiver' ? <CaregiverDisclosure /> : null}
 
       {/* Optional reference name. */}
       <Surface tone="card" radius={Radius.card} padded={16} gap={16}>
@@ -161,41 +121,6 @@ export function InviteForm({ circleId, actorRole }: { circleId: string; actorRol
         loading={create.isPending}
       />
     </FigmaFormScreen>
-  );
-}
-
-/**
- * One card of the caregiver disclosure: a `Surface` + a `FigmaSectionLabel` and
- * four hand-composed glyph/text rows. File-private on purpose — this is NOT a new
- * shared primitive and NOT a parallel variant of anything: `FigmaListRow` and
- * `GlyphChip` both take a semantic `iconName` and neither renders a bare glyph
- * beside a wrapping paragraph, which is exactly what a disclosure line is. The
- * glyph element is supplied by the caller and reused across the four rows; the
- * fixed-size box keeps it optically centred on the first text line for both the
- * lucide (SVG) and the registry (glyph-font) icons.
- */
-function DisclosureCard({
-  title,
-  glyph,
-  rows,
-}: {
-  title: string;
-  glyph: ReactNode;
-  rows: { key: string; text: string }[];
-}) {
-  const c = useTheme();
-  return (
-    <Surface tone="card" radius={Radius.card} padded={16} gap={12}>
-      <FigmaSectionLabel>{title}</FigmaSectionLabel>
-      <View style={styles.disclosureRows}>
-        {rows.map((row) => (
-          <View key={row.key} style={styles.disclosureRow}>
-            <View style={styles.disclosureGlyph}>{glyph}</View>
-            <Text style={[styles.disclosureText, { color: c.text }]}>{row.text}</Text>
-          </View>
-        ))}
-      </View>
-    </Surface>
   );
 }
 
@@ -321,19 +246,6 @@ const styles = StyleSheet.create({
   groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
   errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   errorText: { flex: 1, fontSize: 15, fontFamily: FontFamily.semibold },
-
-  // Caregiver disclosure cards — a glyph box sized to the first text line so the
-  // icon sits optically centred on it however far the sentence wraps.
-  disclosureRows: { gap: 12 },
-  disclosureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  disclosureGlyph: {
-    width: 16,
-    height: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  disclosureText: { flex: 1, fontSize: 16, fontFamily: FontFamily.medium, lineHeight: 26 },
 
   // 9c reveal — gold shown-once warning
   goldBanner: {
