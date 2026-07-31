@@ -9,7 +9,7 @@ import { GlyphChip } from '@/components/glyph-chip';
 import { InfoBanner } from '@/components/info-banner';
 import { SectionHeader } from '@/components/section-header';
 import { Surface } from '@/components/surface';
-import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
+import { BorderWidth, FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { deactivatePushToken } from '@/features/notifications/api';
 import { getRememberedToken } from '@/features/notifications/hooks';
@@ -100,6 +100,9 @@ export function DeleteAccountScreen() {
           iconName="delete"
           disabled={!canDelete || remove.isPending}
           loading={remove.isPending}
+          // A dimmed button must say WHY it is dimmed: the warn banner states the
+          // reason visually, so the hint states it to a screen reader too.
+          accessibilityHint={blocked.length > 0 ? t('account.delete.blockedBody') : undefined}
           onPress={onDelete}
         />
       }>
@@ -152,7 +155,9 @@ export function DeleteAccountScreen() {
                 </Text>
               </Surface>
             ) : (
-              <Surface tone="card" padded={0}>
+              // Clipped to the radius so a row can never bleed past the rounded
+              // corner — the frame's list container is overflow:hidden.
+              <Surface tone="card" padded={0} style={styles.outcomeList}>
                 {rows.map((row, index) => (
                   <CircleOutcomeRow key={row.circleId} row={row} topDivider={index > 0} />
                 ))}
@@ -217,7 +222,10 @@ const styles = StyleSheet.create({
   introMuted: { fontSize: 15, fontFamily: FontFamily.medium, lineHeight: 25 },
   centered: { alignItems: 'center', paddingVertical: Spacing.four },
   section: { gap: Spacing.two },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 12, borderRadius: Radius.card },
+  outcomeList: { overflow: 'hidden' },
+  // No radius of its own: the row is a square block inside the clipped card,
+  // separated from its neighbour by the 2px divider.
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 12 },
   rowBody: { flex: 1, gap: 2 },
   rowTitle: { fontSize: 16, fontFamily: FontFamily.bold, lineHeight: 26 },
   rowOutcome: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 22 },

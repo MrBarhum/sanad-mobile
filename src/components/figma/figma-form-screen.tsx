@@ -197,7 +197,15 @@ const styles = StyleSheet.create({
   },
   headerText: { flex: 1, minWidth: 0 },
   headerTitle: { fontSize: 20, fontFamily: FontFamily.bold, lineHeight: 28 },
-  headerSubtitle: { fontSize: 14, fontFamily: FontFamily.medium, opacity: 0.85, marginTop: 1 },
+  // ≥1.5× Arabic line-height (frame: 1.65). Without it RN falls back to Cairo's
+  // default box, which can clip a descender in the fixed-height band row.
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: FontFamily.medium,
+    lineHeight: 23,
+    opacity: 0.85,
+    marginTop: 1,
+  },
   headerSpacer: { width: 44, flexShrink: 0 },
   scrollContent: { paddingHorizontal: 14, paddingTop: 14, gap: 12 },
   banner: {

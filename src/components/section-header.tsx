@@ -26,7 +26,7 @@ export function SectionHeader({ title, linkLabel, onLinkPress, trailing, style }
     <View style={[styles.row, style]}>
       <View style={styles.titleGroup}>
         <View style={[styles.square, { backgroundColor: c.primary }]} />
-        <Text style={[styles.title, { color: c.text }]} numberOfLines={1}>
+        <Text style={[styles.title, { color: c.text }]} accessibilityRole="header" numberOfLines={1}>
           {title}
         </Text>
       </View>
