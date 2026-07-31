@@ -706,6 +706,9 @@
       "uploading": "Sending the photo",
       "uploadFailed": "The dose was saved. The photo couldn't be sent. Try sending it again.",
       "retry": "Send the photo again",
+      "discardTitle": "Close without sending the photo",
+      "discardMessage": "The dose is saved. Closing now means the photo won't be sent, and it can't be attached afterwards.",
+      "discardConfirm": "Close without the photo",
       "unavailable": "Adding photos is not available in this build of the app yet.",
       "permissionDenied": "The camera couldn't open because permission isn't granted. You can allow it in your device settings.",
       "captureFailed": "Couldn't take the photo. Try again."

@@ -6,9 +6,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/button';
 import { FigmaBottomSheet } from '@/components/figma/figma-bottom-sheet';
 import { isolateLtr } from '@/components/ltr-text';
-import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
+import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
 import type { DoseItem } from '@/features/medications/today';
 import { useTheme } from '@/hooks/use-theme';
+import { confirmAction } from '@/utils/confirm';
 import { formatHm } from '@/utils/date';
 
 import type { DosePhoto } from './api';
@@ -96,6 +97,20 @@ function DoseRecordBody({
 
   const pending = record.isPending || attach.isPending;
 
+  /**
+   * The dose is written; a photo is still waiting to be sent.
+   *
+   * The branch used to key off `uploadFailed`, which `onRetryUpload` clears
+   * BEFORE the upload starts. React Query flips `isPending` back to false on
+   * rejection in an earlier microtask than the `catch` that re-sets the flag, so
+   * a render committed with `pending === false`, `uploadFailed === false` and a
+   * saved log — and in that frame the sheet fell back to the dose-write branch:
+   * an ENABLED «تسجيل الجرعة» over an already-recorded dose. Keying on the fact
+   * instead of on the error flag means that, once the dose is saved, this sheet
+   * can never present the dose write again.
+   */
+  const photoOutstanding = savedLogId !== null && photo !== null;
+
   async function uploadPhoto(logId: string, picked: DosePhoto) {
     try {
       await attach.mutateAsync({ logId, medicationId: dose.medicationId, photo: picked });
@@ -107,6 +122,16 @@ function DoseRecordBody({
   }
 
   async function onSubmit() {
+    // Belt and braces with `photoOutstanding` above: a dose is recorded ONCE.
+    // `recordDose` reads `existingLogId` from the dose PROP, which is still null
+    // after our own save, so a second call here would INSERT a duplicate
+    // `medication_logs` row rather than correcting the first — a duplicate
+    // record implying a duplicate dose, which is the one thing this sheet's copy
+    // exists to prevent.
+    if (savedLogId) {
+      await onRetryUpload();
+      return;
+    }
     setSaveError(null);
     setUploadFailed(false);
     let logId: string;
@@ -165,7 +190,7 @@ function DoseRecordBody({
         </Text>
       ) : null}
 
-      {uploadFailed ? null : (
+      {photoOutstanding ? null : (
         <DosePhotoField photo={photo} onChange={setPhoto} disabled={pending} />
       )}
 
@@ -175,36 +200,53 @@ function DoseRecordBody({
         </Text>
       ) : null}
 
-      {uploadFailed ? (
-        <>
+      {photoOutstanding ? (
+        <View style={styles.actions}>
           <Button
             label={t('caregiver.photo.retry')}
             loading={attach.isPending}
             disabled={pending}
             onPress={() => void onRetryUpload()}
           />
+          {/* The dose is saved, so «إغلاق» costs only the photo — but it costs it
+              PERMANENTLY: the row is a status pill by now, so this sheet has no
+              second entry point and nothing else can attach a proof to an
+              existing log. Guarded with the sanctioned lightweight confirm (an OS
+              alert, not a nested sheet). The drawn label is unchanged. */}
           <Button
             label={t('common.close')}
             variant="secondary"
             disabled={pending}
-            onPress={onClose}
+            onPress={() =>
+              confirmAction(
+                {
+                  title: t('caregiver.photo.discardTitle'),
+                  message: t('caregiver.photo.discardMessage'),
+                  confirm: t('caregiver.photo.discardConfirm'),
+                  cancel: t('common.cancel'),
+                },
+                onClose,
+                { destructive: true },
+              )
+            }
           />
-        </>
+        </View>
       ) : (
-        <>
+        <View style={styles.actions}>
           <Button
             label={t('caregiver.today.give')}
             loading={pending}
             disabled={pending}
             onPress={() => void onSubmit()}
           />
+          {/* Nothing is at stake before the dose is written — a bare close. */}
           <Button
             label={t('common.cancel')}
             variant="secondary"
             disabled={pending}
             onPress={onClose}
           />
-        </>
+        </View>
       )}
     </>
   );
@@ -224,4 +266,7 @@ const styles = StyleSheet.create({
   time: { fontSize: 16, fontFamily: FontFamily.bold, writingDirection: 'ltr' },
   alert: { fontSize: 14, fontFamily: FontFamily.semibold, lineHeight: 22 },
   progress: { fontSize: 14, fontFamily: FontFamily.medium },
+  // The action pair is one unit at 8, inside the sheet body's 16dp rhythm. Local
+  // on purpose — the shared sheet's uniform gap backs every other sheet.
+  actions: { gap: Spacing.two },
 });
