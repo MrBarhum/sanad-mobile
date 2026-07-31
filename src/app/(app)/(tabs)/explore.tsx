@@ -160,7 +160,10 @@ const CAREGIVER_WEEK_ITEM: ExploreItem = {
   titleKey: 'caregiver.week.entry',
   subtitleKey: 'caregiver.week.entrySubtitle',
   tone: 'success',
-  iconName: 'calendar',
+  // A CLOCK, not a calendar: `calendar` and `appointment` resolve to the same
+  // ionicon, so this row and «المواعيد» two groups up wore an identical glyph
+  // separated only by tint — and identity is never carried by colour alone.
+  iconName: 'clock',
 };
 
 export default function ExploreScreen() {
