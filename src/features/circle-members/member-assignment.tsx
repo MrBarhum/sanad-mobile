@@ -1,14 +1,17 @@
+import { AlertTriangle, HandHelping } from 'lucide-react-native';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { FigmaMutedNote } from '@/components/figma/figma-form-screen';
+import { isolateLtr } from '@/components/ltr-text';
 import { OptionSelect } from '@/components/option-select';
-import { FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily, Spacing, Type } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 
 import type { CircleMember, CircleRole } from './api';
-import { memberDisplayName } from './display-name';
+import { memberDisplayName, memberDisplayNameParts } from './display-name';
 import { useCircleMembers } from './hooks';
 
 /**
@@ -51,7 +54,20 @@ const SCOPED_DOER_ROLES: ReadonlySet<CircleRole> = new Set<CircleRole>(['caregiv
 /** A non-empty user id is "real"; '' is the no-assignment sentinel for the chips. */
 export const NO_ASSIGNEE = '';
 
-export type AssigneeOption = { value: string; label: string };
+export type AssigneeOption = {
+  value: string;
+  label: string;
+  /** The hired caregiver's chip carries her role glyph at the RTL end. */
+  trailingIcon?: typeof HandHelping;
+  /** …and says the role out loud, so the glyph is never the only carrier. */
+  accessibilityLabel?: string;
+  /**
+   * True for the ONE case where a stored caregiver assignment survives on a
+   * surface that no longer offers her (an appointment or a visit). Drives the
+   * amber caution — see {@link MemberSelect}.
+   */
+  isOrphanCaregiver?: boolean;
+};
 type Option = AssigneeOption;
 
 function isAssignableDoer(member: CircleMember, includeCaregiver: boolean): boolean {
@@ -85,24 +101,52 @@ function buildOptions(
   if (self) options.push({ value: self.userId, label: t('assignment.me') });
   for (const member of doers) {
     if (member.isSelf || member.userId === selfId) continue;
+    const label = memberDisplayName(member, t('assignment.unknownMember'));
+    const isCaregiver = member.role === 'caregiver';
     options.push({
       value: member.userId,
-      label: memberDisplayName(member, t('assignment.unknownMember')),
+      label,
+      // Which of these names is the hired worker rather than family is exactly
+      // the distinction this picker exists to make, so it is said twice: as a
+      // glyph, and — for anyone who cannot see it — in the spoken label.
+      trailingIcon: isCaregiver ? HandHelping : undefined,
+      accessibilityLabel: isCaregiver
+        ? `${label} — ${t('circleMembers.roles.caregiver')}`
+        : undefined,
     });
   }
 
   if (current !== NO_ASSIGNEE && !options.some((o) => o.value === current)) {
     const existing = members.find((m) => m.userId === current);
+    const parts = existing
+      ? memberDisplayNameParts(existing, t('assignment.unknownMember'))
+      : { text: t('assignment.unknownMember'), source: 'fallback' as const };
+    const inactive = Boolean(existing && existing.status !== 'active');
+    // A Latin local-part concatenated with an Arabic suffix reorders on device —
+    // isolate the name run, but only when it IS a Latin run (isolating an Arabic
+    // full name would reverse its words).
     const base = existing?.isSelf
       ? t('assignment.me')
-      : existing
-        ? memberDisplayName(existing, t('assignment.unknownMember'))
-        : t('assignment.unknownMember');
+      : parts.source === 'email'
+        ? isolateLtr(parts.text)
+        : parts.text;
     const label =
-      existing && existing.status !== 'active'
-        ? `${base} (${t('assignment.inactiveMember')})`
-        : base;
-    options.push({ value: current, label });
+      inactive && parts.source === 'fallback' && !existing?.isSelf
+        ? // «عضو (عضو سابق)» reads as a doubled generic — the suffix says it all.
+          t('assignment.inactiveMember')
+        : inactive
+          ? `${base} (${t('assignment.inactiveMember')})`
+          : base;
+    options.push({
+      value: current,
+      label,
+      // A still-ACTIVE caregiver holding an assignment on a surface that no
+      // longer offers her: the value survives, but it is invisible to her and
+      // cannot be reselected once the manager picks anyone else.
+      isOrphanCaregiver: Boolean(
+        existing && existing.role === 'caregiver' && existing.status === 'active' && !includeCaregiver,
+      ),
+    });
   }
 
   return options;
@@ -154,6 +198,16 @@ export function MemberSelect({
   const { t } = useTranslation();
   const theme = useTheme();
   const options = useMemberOptions(circleId, value, includeCaregiver);
+  // Shares react-query's cache with `useMemberOptions` above — same key, no
+  // second round-trip.
+  const members = useCircleMembers(circleId).data ?? [];
+
+  const orphanCaregiver = options.some((option) => option.isOrphanCaregiver);
+  // Only say "the caregiver isn't listed here" when this circle actually HAS one.
+  // A family that never hired anyone must see the picker it has always seen.
+  const hasActiveCaregiver = members.some(
+    (member) => member.role === 'caregiver' && member.status === 'active',
+  );
 
   return (
     <View style={styles.group}>
@@ -161,6 +215,31 @@ export function MemberSelect({
         {label ?? t('assignment.label')}
       </Text>
       <OptionSelect value={value} options={options} onChange={onChange} />
+
+      {/*
+        The two mutually exclusive explanations for the caregiver's absence.
+
+        The amber one wins when a legacy assignment is still selected: saying
+        «لا يظهر مقدّم الرعاية هنا» directly above her own visible chip would
+        contradict itself. It is standing disclosure, not a failure, so it is
+        deliberately NOT an accessibilityRole="alert" — and it is a bare row,
+        not the bordered callout the role sheet uses.
+      */}
+      {orphanCaregiver ? (
+        <View style={styles.cautionRow}>
+          <AlertTriangle
+            size={14}
+            color={theme.warningFg}
+            strokeWidth={2.4}
+            style={styles.cautionIcon}
+          />
+          <Text style={[styles.cautionText, { color: theme.warningFg }]}>
+            {t('assignment.caregiverLegacyAssignment')}
+          </Text>
+        </View>
+      ) : !includeCaregiver && hasActiveCaregiver ? (
+        <FigmaMutedNote>{t('assignment.caregiverNotHere')}</FigmaMutedNote>
+      ) : null}
     </View>
   );
 }
@@ -242,4 +321,7 @@ export function useResponsibleLabel(circleId: string): (userId: string | null) =
 const styles = StyleSheet.create({
   group: { gap: Spacing.two },
   groupLabel: { fontSize: 14, fontFamily: FontFamily.semibold },
+  cautionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  cautionIcon: { flexShrink: 0, marginTop: 4 },
+  cautionText: { ...Type.captionStrong, flex: 1 },
 });

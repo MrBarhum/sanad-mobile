@@ -28,5 +28,27 @@ export function memberDisplayName(
   member: { fullName: string | null | undefined; email: string | null | undefined },
   fallback: string,
 ): string {
-  return member.fullName?.trim() || emailLocalPart(member.email) || fallback;
+  return memberDisplayNameParts(member, fallback).text;
+}
+
+/**
+ * The same resolution, but reporting WHICH link in the chain answered. A caller
+ * that composes the name into a larger Arabic string needs to know: an email
+ * local-part is a Latin run and must be bidi-isolated before it is concatenated,
+ * while an Arabic full name must NOT be (an LTR isolate would reverse its word
+ * order), and the neutral fallback is already a translated word that should not
+ * be doubled up with another generic.
+ *
+ * Purely additive — `memberDisplayName` delegates here and its signature and
+ * return value are unchanged.
+ */
+export function memberDisplayNameParts(
+  member: { fullName: string | null | undefined; email: string | null | undefined },
+  fallback: string,
+): { text: string; source: 'name' | 'email' | 'fallback' } {
+  const name = member.fullName?.trim();
+  if (name) return { text: name, source: 'name' };
+  const local = emailLocalPart(member.email);
+  if (local) return { text: local, source: 'email' };
+  return { text: fallback, source: 'fallback' };
 }

@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react-native';
+import type { ComponentType } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BorderWidth, FontFamily, Radius, TouchTarget } from '@/constants/theme';
@@ -15,6 +16,15 @@ export type SelectOption<T extends string> = {
    * joins the accessible label so a screen reader hears the same qualification.
    */
   titleSuffix?: string;
+  /**
+   * A small glyph after the label, at the RTL end. `chip` variant only; tinted to
+   * match the label so it reads as part of it. Use it to mark WHAT an option is
+   * (e.g. the hired caregiver among family members) — never as the only carrier
+   * of that meaning, which is what `accessibilityLabel` below is for.
+   */
+  trailingIcon?: ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+  /** Overrides the spoken label when the visible one omits something a glyph carries. */
+  accessibilityLabel?: string;
 };
 
 type OptionSelectProps<T extends string> = {
@@ -60,7 +70,7 @@ export function OptionSelect<T extends string>({
     <View style={styles.field}>
       {label ? <Text style={[styles.groupLabel, { color: c.text }]}>{label}</Text> : null}
       {variant === 'card' ? (
-        <View style={styles.cardList}>
+        <View style={styles.cardList} accessibilityRole="radiogroup">
           {options.map((option) => {
             const selected = option.value === value;
             return (
@@ -71,7 +81,8 @@ export function OptionSelect<T extends string>({
                 accessibilityRole="radio"
                 accessibilityState={{ selected, disabled }}
                 accessibilityLabel={
-                  option.titleSuffix ? `${option.label} ${option.titleSuffix}` : option.label
+                  option.accessibilityLabel ??
+                  (option.titleSuffix ? `${option.label} ${option.titleSuffix}` : option.label)
                 }
                 android_ripple={{ color: c.backgroundSelected }}
                 style={[
@@ -108,9 +119,11 @@ export function OptionSelect<T extends string>({
           })}
         </View>
       ) : (
-        <View style={styles.options}>
+        <View style={styles.options} accessibilityRole="radiogroup">
           {options.map((option) => {
             const selected = option.value === value;
+            const TrailingIcon = option.trailingIcon;
+            const ink = selected ? c.onPrimary : c.textSecondary;
             return (
               <Pressable
                 key={option.value}
@@ -118,7 +131,7 @@ export function OptionSelect<T extends string>({
                 disabled={disabled}
                 accessibilityRole="radio"
                 accessibilityState={{ selected, disabled }}
-                accessibilityLabel={option.label}
+                accessibilityLabel={option.accessibilityLabel ?? option.label}
                 android_ripple={{ color: c.backgroundSelected }}
                 style={[
                   styles.chip,
@@ -129,10 +142,11 @@ export function OptionSelect<T extends string>({
                 <Text
                   style={[
                     styles.chipText,
-                    { color: selected ? c.onPrimary : c.textSecondary, fontFamily: selected ? FontFamily.bold : FontFamily.semibold },
+                    { color: ink, fontFamily: selected ? FontFamily.bold : FontFamily.semibold },
                   ]}>
                   {option.label}
                 </Text>
+                {TrailingIcon ? <TrailingIcon size={14} color={ink} strokeWidth={2} /> : null}
               </Pressable>
             );
           })}

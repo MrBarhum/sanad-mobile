@@ -14,12 +14,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { OptionSelect } from '@/components/option-select';
 import { SectionHeader } from '@/components/section-header';
 import { Surface } from '@/components/surface';
 import { UnsavedChangesGuard } from '@/components/unsaved-changes-guard';
 import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
-import { useMemberOptions } from '@/features/circle-members/member-assignment';
+import { MemberSelect } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { todayYmd } from '@/utils/date';
@@ -58,11 +57,6 @@ export function MedicationForm({ circleId }: { circleId: string }) {
   const [scheduleErrors, setScheduleErrors] = useState<Partial<Record<string, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-
-  // `includeCaregiver`: a hired caregiver may be made responsible for a
-  // medication — logging its doses is the core of her role. Kept in step with
-  // medication-editor.tsx so add and edit offer the SAME choices.
-  const responsibleOptions = useMemberOptions(circleId, responsibleUserId, true);
 
   const { dirty } = useUnsavedChanges({
     name,
@@ -210,13 +204,18 @@ export function MedicationForm({ circleId }: { circleId: string }) {
           </Surface>
 
           {/* Responsible person — the ONE shared selector (per the single-component
-              law); no per-screen custom chips. */}
+              law); no per-screen custom chips. This uses `MemberSelect` rather
+              than raw chips so it wears the same 14/700 field label as the
+              medication EDITOR (it used to be the only place this field wore a
+              section header) and inherits the caregiver glyph, the withheld-role
+              explanation and the legacy-assignment caution for free. */}
           <Surface tone="card" padded={14} gap={12}>
-            <SectionHeader title={t('assignment.responsible')} />
-            <OptionSelect
+            <MemberSelect
+              circleId={circleId}
               value={responsibleUserId}
-              options={responsibleOptions}
               onChange={setResponsibleUserId}
+              label={t('assignment.responsible')}
+              includeCaregiver
             />
           </Surface>
 

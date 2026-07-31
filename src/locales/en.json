@@ -621,7 +621,9 @@
     "unknownMember": "Member",
     "unassigned": "Unassigned",
     "responsibleValue": "Responsible: {{value}}",
-    "nameWithRole": "{{name}} - {{role}}"
+    "nameWithRole": "{{name}} - {{role}}",
+    "caregiverNotHere": "The caregiver is not listed here — this role does not cover appointments or family visits.",
+    "caregiverLegacyAssignment": "This assignment does not appear in the caregiver's own view. Once another member is selected, it cannot be chosen again."
   },
   "claiming": {
     "title": "Available to claim",

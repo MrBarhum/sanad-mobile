@@ -624,7 +624,9 @@
     "unknownMember": "عضو",
     "unassigned": "غير مسند",
     "responsibleValue": "المسؤول: {{value}}",
-    "nameWithRole": "{{name}} - {{role}}"
+    "nameWithRole": "{{name}} - {{role}}",
+    "caregiverNotHere": "لا يظهر مقدّم الرعاية هنا — دوره لا يشمل الاطلاع على المواعيد وزيارات العائلة.",
+    "caregiverLegacyAssignment": "هذا التعيين لا يظهر لمقدّم الرعاية في واجهته. عند اختيار عضو آخر لا يمكن إعادة اختياره."
   },
   "claiming": {
     "title": "متاح للتكفّل",
