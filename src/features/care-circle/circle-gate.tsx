@@ -13,7 +13,25 @@ import { useActiveCircle, type ActiveCircle } from './hooks';
  * only once it is available. Keeps the four care detail screens free of repeated
  * auth + summary boilerplate.
  */
-export function CircleGate({ children }: { children: (circle: ActiveCircle) => ReactNode }) {
+export function CircleGate({
+  children,
+  fallbackAction,
+}: {
+  children: (circle: ActiveCircle) => ReactNode;
+  /**
+   * A control rendered inside the error and no-circle states — the escape hatch
+   * for a screen that has no other one.
+   *
+   * These two states REPLACE the screen entirely, which is harmless where the
+   * user still has tabs and a back stack, and is a trap where they do not. The
+   * hired caregiver has exactly one route and no Account tab, so her only
+   * sign-out control lives on the very screen this gate was blanking: a failed
+   * circle query left her holding an app she could not leave. Routes that can
+   * strand a user pass their way out here; every other caller passes nothing and
+   * is unchanged.
+   */
+  fallbackAction?: ReactNode;
+}) {
   const { t } = useTranslation();
   const { circle, isLoading, isError, refetch } = useActiveCircle();
 
@@ -24,6 +42,7 @@ export function CircleGate({ children }: { children: (circle: ActiveCircle) => R
         message={t('careCircle.loadError')}
         retryLabel={t('retry')}
         onRetry={() => refetch()}
+        action={fallbackAction}
       />
     );
   }
@@ -31,6 +50,7 @@ export function CircleGate({ children }: { children: (circle: ActiveCircle) => R
     return (
       <Screen scroll={false} center>
         <EmptyState icon={Glyph.members} title={t('careCircle.noActiveCircle')} />
+        {fallbackAction}
       </Screen>
     );
   }

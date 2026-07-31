@@ -18,18 +18,14 @@ import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
 import { type IconName } from '@/constants/icons';
 import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
+import { SignOutButton } from '@/features/account/sign-out-button';
 import type { MedicationLogStatus } from '@/features/medications/api';
 import type { DoseItem } from '@/features/medications/today';
-import { deactivatePushToken } from '@/features/notifications/api';
-import { getRememberedToken } from '@/features/notifications/hooks';
 import type { CareTask } from '@/features/tasks/api';
 import { useCancelTask, useCompleteTask } from '@/features/tasks/hooks';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
-import { confirmAction } from '@/utils/confirm';
 import { formatHm, formatLongDate, formatYmdShort, todayYmd } from '@/utils/date';
-
-import { supabase } from '../../../lib/supabase';
 
 import { DoseRecordSheet } from './dose-record';
 import { useCaregiverToday } from './hooks';
@@ -90,8 +86,6 @@ export function CaregiverToday({
   const [doseToRecord, setDoseToRecord] = useState<DoseItem | null>(null);
   const [taskConfirm, setTaskConfirm] = useState<TaskConfirm | null>(null);
   const [taskError, setTaskError] = useState<string | null>(null);
-  const [signingOut, setSigningOut] = useState(false);
-  const [signOutError, setSignOutError] = useState<string | null>(null);
 
   const doses = today.doses;
   const tasks = today.tasks;
@@ -111,41 +105,6 @@ export function CaregiverToday({
     } catch {
       // Never revert silently — say what happened and what to do.
       setTaskError(t('caregiver.today.saveError'));
-    }
-  }
-
-  // Signing out ends the session and stops this device's reminders: guarded by
-  // the lightweight confirm, exactly as the family Account screen does.
-  function onSignOut() {
-    confirmAction(
-      {
-        title: t('account.confirmSignOutTitle'),
-        message: t('account.confirmSignOutMessage'),
-        confirm: t('account.signOut'),
-        cancel: t('common.cancel'),
-      },
-      () => {
-        void doSignOut();
-      },
-      { destructive: true },
-    );
-  }
-
-  async function doSignOut() {
-    setSignOutError(null);
-    setSigningOut(true);
-    const token = getRememberedToken();
-    if (token) {
-      try {
-        await deactivatePushToken(token);
-      } catch {
-        // Best-effort: a stale token is invalidated server-side on re-register.
-      }
-    }
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      setSignOutError(t('account.signOutError'));
-      setSigningOut(false);
     }
   }
 
@@ -266,24 +225,9 @@ export function CaregiverToday({
         />
       </Surface>
 
-      <View style={styles.signOutBlock}>
-        {signOutError ? (
-          <Text
-            style={[styles.alert, { color: c.errorFg }]}
-            accessibilityRole="alert"
-            accessibilityLiveRegion="polite">
-            {signOutError}
-          </Text>
-        ) : null}
-        <Button
-          variant="danger"
-          label={t('account.signOut')}
-          iconName="signOut"
-          loading={signingOut}
-          disabled={signingOut}
-          onPress={onSignOut}
-        />
-      </View>
+      {/* Her only way out of the app. The same control the gate mounts when a
+          failed circle query replaces this screen. */}
+      <SignOutButton style={styles.signOutBlock} />
 
       <DoseRecordSheet
         circleId={circleId}

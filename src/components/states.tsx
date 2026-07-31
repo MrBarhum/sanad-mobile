@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { type IconName } from '@/constants/icons';
@@ -30,10 +31,18 @@ export function ErrorState({
   message,
   retryLabel,
   onRetry,
+  action,
 }: {
   message: string;
   retryLabel: string;
   onRetry: () => void;
+  /**
+   * An extra control below the retry, for a screen where this state REPLACES the
+   * whole UI and the user would otherwise have no way forward at all (see
+   * `CircleGate`'s `fallbackAction`). Optional — every existing caller is
+   * unchanged.
+   */
+  action?: ReactNode;
 }) {
   const c = useTheme();
   return (
@@ -43,6 +52,7 @@ export function ErrorState({
         {message}
       </Text>
       <Button label={retryLabel} onPress={onRetry} variant="secondary" />
+      {action}
     </ThemedView>
   );
 }
