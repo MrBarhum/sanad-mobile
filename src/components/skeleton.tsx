@@ -66,10 +66,14 @@ export function Skeleton({ width = '100%', height = 16, radius = Radius.sm, styl
  * lists' rhythm (a leading chip + two text lines). Drop it in place of a spinner
  * in a list screen's loading branch. Announces "loading" once for screen readers.
  */
-export function SkeletonList({ count = 4 }: { count?: number }) {
+export function SkeletonList({ count = 4, label }: { count?: number; label?: string }) {
   const c = useTheme();
   return (
-    <View accessibilityRole="progressbar" accessibilityState={{ busy: true }} style={styles.list}>
+    <View
+      accessibilityRole="progressbar"
+      accessibilityLabel={label}
+      accessibilityState={{ busy: true }}
+      style={styles.list}>
       {Array.from({ length: count }).map((_, i) => (
         <View key={i} style={[styles.card, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
           <Skeleton width={44} height={44} radius={Radius.pill} />

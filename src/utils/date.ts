@@ -63,6 +63,27 @@ export function formatLongDate(language: string | undefined): string {
 }
 
 /**
+ * A stored 'YYYY-MM-DD' as a short, human-readable day in the given UI language
+ * (e.g. «28 يوليو» / "28 July"). Same contract as {@link formatLongDate}: Arabic
+ * is forced to Western (Latin) digits, and an `Intl` failure or a malformed input
+ * falls back to the raw string rather than blanking the line.
+ *
+ * Exists so a date never reaches a reader as a bare ISO string.
+ */
+export function formatYmdShort(ymd: string, language: string | undefined): string {
+  if (!isValidYmd(ymd)) return ymd;
+  try {
+    const locale = language && language.startsWith('ar') ? 'ar-u-nu-latn' : language || 'en';
+    const [year, month, day] = ymd.split('-').map(Number);
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(
+      new Date(year, month - 1, day),
+    );
+  } catch {
+    return ymd;
+  }
+}
+
+/**
  * Local day-of-week for a 'YYYY-MM-DD' date: 0 = Sunday .. 6 = Saturday, matching
  * the `days_of_week` convention stored on medication schedules. Returns null for
  * malformed input.

@@ -16,6 +16,7 @@ import { SkeletonList } from '@/components/skeleton';
 import { EmptyState } from '@/components/states';
 import { StatusBadge, type StatusTone } from '@/components/status-badge';
 import { Surface } from '@/components/surface';
+import { type IconName } from '@/constants/icons';
 import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import type { MedicationLogStatus } from '@/features/medications/api';
 import type { DoseItem } from '@/features/medications/today';
@@ -26,7 +27,7 @@ import { useCancelTask, useCompleteTask } from '@/features/tasks/hooks';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/providers';
 import { confirmAction } from '@/utils/confirm';
-import { formatHm, formatLongDate, todayYmd } from '@/utils/date';
+import { formatHm, formatLongDate, formatYmdShort, todayYmd } from '@/utils/date';
 
 import { supabase } from '../../../lib/supabase';
 
@@ -39,6 +40,16 @@ const DOSE_TONE: Record<MedicationLogStatus, StatusTone> = {
   given: 'success',
   postponed: 'warning',
   missed: 'error',
+};
+
+/**
+ * Glyph overrides where the tone's default mark would carry the wrong MEANING.
+ * «مؤجَّلة» is a statement about time, not danger, so it takes a clock — the
+ * amber tone's default is an alarm triangle. Only this one status is overridden;
+ * `StatusBadge`'s app-wide tone→icon map is left alone.
+ */
+const DOSE_PILL_ICON: Partial<Record<MedicationLogStatus, IconName>> = {
+  postponed: 'clock',
 };
 
 type TaskAction = 'complete' | 'cancel';
@@ -175,7 +186,7 @@ export function CaregiverToday({
           <Button label={t('retry')} variant="secondary" onPress={() => today.refetch()} />
         </Surface>
       ) : today.isLoading ? (
-        <SkeletonList count={3} />
+        <SkeletonList count={3} label={t('loading')} />
       ) : (
         <>
           {!hasWork ? (
@@ -225,6 +236,7 @@ export function CaregiverToday({
                   <TaskRow
                     key={task.id}
                     task={task}
+                    today={date}
                     first={index === 0}
                     onComplete={() => setTaskConfirm({ task, kind: 'complete' })}
                     onCannotDo={() => setTaskConfirm({ task, kind: 'cancel' })}
@@ -333,6 +345,7 @@ function DoseRow({
       {dose.status ? (
         <StatusBadge
           tone={DOSE_TONE[dose.status]}
+          iconName={DOSE_PILL_ICON[dose.status]}
           label={t(`medications.status.${dose.status}`)}
           style={styles.rowBadge}
         />
@@ -352,22 +365,45 @@ function DoseRow({
  *  and an end-aligned «تعذّر الإنجاز» square. Both actions confirm in a sheet. */
 function TaskRow({
   task,
+  today,
   first,
   onComplete,
   onCannotDo,
 }: {
   task: CareTask;
+  /** Today's 'YYYY-MM-DD', so an overdue task can say which day it is from. */
+  today: string;
   first: boolean;
   onComplete: () => void;
   onCannotDo: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const c = useTheme();
 
   const isDone = task.status === 'completed';
   const isCancelled = task.status === 'cancelled';
   const isOpen = task.status === 'open';
-  const due = task.due_time ? formatHm(task.due_time) : task.due_date;
+
+  // The meta line is a WHEN, never a raw ISO string. An untimed task shows its
+  // day («28 يوليو»); a timed one shows its time («12:00»).
+  //
+  // The list deliberately carries work from earlier days too (`due_date <= today`
+  // in useCaregiverToday), and a task due three days ago rendered as a bare
+  // «12:00» is indistinguishable from one due at noon today. So an overdue task
+  // leads with its day, joined by the same «·» separator the dose rows use. The
+  // frame only ever draws a task due today; this is the same meta line carrying
+  // an honest value for the case it does not draw.
+  //
+  // Only the TIME is LTR-isolated. The day is a mixed Arabic run («28 يوليو») and
+  // an isolate around it would force an LTR base direction onto the month name.
+  const overdueDay = task.due_date && task.due_date !== today ? task.due_date : null;
+  const dayPart = overdueDay ?? (task.due_time ? null : task.due_date);
+  const due = [
+    dayPart ? formatYmdShort(dayPart, i18n.language) : null,
+    task.due_time ? isolateLtr(formatHm(task.due_time)) : null,
+  ]
+    .filter(Boolean)
+    .join('  ·  ');
 
   const circleStyle = [
     styles.checkCircle,
@@ -413,7 +449,7 @@ function TaskRow({
         </Text>
         {isOpen ? (
           due ? (
-            <Text style={[styles.rowMeta, { color: c.textSecondary }]}>{isolateLtr(due)}</Text>
+            <Text style={[styles.rowMeta, { color: c.textSecondary }]}>{due}</Text>
           ) : null
         ) : (
           <StatusBadge
