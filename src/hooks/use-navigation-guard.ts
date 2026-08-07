@@ -1,6 +1,7 @@
 import { useNavigation } from 'expo-router';
 import { useEffect } from 'react';
-import { Alert, Platform } from 'react-native';
+
+import { useConfirm } from '@/providers';
 
 type GuardCopy = { title: string; message: string; confirm: string; cancel: string };
 
@@ -17,13 +18,23 @@ type RemovableNavigation = {
 /**
  * Confirms before a screen is popped while `enabled` is true — used to protect
  * forms that have unsaved changes. It intercepts the navigator's `beforeRemove`
- * event (hardware/gesture/header back), so the user can choose to stay. On web it
- * falls back to `window.confirm`; on native it uses `Alert`. A no-op when
- * `enabled` is false, so normal back navigation is untouched on clean forms.
+ * event (hardware/gesture/header back), so the user can choose to stay. A no-op
+ * when `enabled` is false, so normal back navigation is untouched on clean forms.
+ *
+ * This used to hand-roll its own `Alert.alert` / `window.confirm` pair — a second,
+ * independent copy of the prompt that `confirmDiscard` was already showing, with the
+ * identical `common.unsavedTitle` / `common.unsavedMessage` copy. On a dirty form the
+ * close button and the back gesture therefore showed two different-looking dialogs
+ * one tap apart. Both now go through the one confirmation sheet.
+ *
+ * `preventDefault()` still runs synchronously, before the sheet opens, so the pop is
+ * already blocked and deferring the dispatch into the callback is safe. The only
+ * behavioural change: navigation resumes a frame later, once the sheet has closed.
  */
 export function useNavigationGuard(enabled: boolean, copy: GuardCopy): void {
   const navigation = useNavigation();
-  const { title, message, confirm, cancel } = copy;
+  const confirm = useConfirm();
+  const { title, message, confirm: confirmLabel, cancel } = copy;
 
   useEffect(() => {
     if (!enabled) return;
@@ -31,16 +42,11 @@ export function useNavigationGuard(enabled: boolean, copy: GuardCopy): void {
 
     return nav.addListener('beforeRemove', (event) => {
       event.preventDefault();
-      const proceed = () => nav.dispatch(event.data.action);
-
-      if (Platform.OS === 'web') {
-        if (typeof window !== 'undefined' && window.confirm(`${title}\n\n${message}`)) proceed();
-        return;
-      }
-      Alert.alert(title, message, [
-        { text: cancel, style: 'cancel' },
-        { text: confirm, style: 'destructive', onPress: proceed },
-      ]);
+      confirm(
+        { title, message, confirm: confirmLabel, cancel },
+        () => nav.dispatch(event.data.action),
+        { destructive: true },
+      );
     });
-  }, [enabled, navigation, title, message, confirm, cancel]);
+  }, [enabled, navigation, confirm, title, message, confirmLabel, cancel]);
 }
