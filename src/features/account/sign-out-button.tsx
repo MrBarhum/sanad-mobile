@@ -7,7 +7,7 @@ import { FontFamily } from '@/constants/theme';
 import { deactivatePushToken } from '@/features/notifications/api';
 import { getRememberedToken } from '@/features/notifications/hooks';
 import { useTheme } from '@/hooks/use-theme';
-import { confirmAction } from '@/utils/confirm';
+import { useConfirm } from '@/providers';
 
 import { supabase } from '../../../lib/supabase';
 
@@ -31,11 +31,12 @@ import { supabase } from '../../../lib/supabase';
 export function SignOutButton({ style }: { style?: StyleProp<ViewStyle> }) {
   const { t } = useTranslation();
   const c = useTheme();
+  const confirm = useConfirm();
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function onSignOut() {
-    confirmAction(
+    confirm(
       {
         title: t('account.confirmSignOutTitle'),
         message: t('account.confirmSignOutMessage'),

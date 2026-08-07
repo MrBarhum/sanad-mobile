@@ -25,7 +25,7 @@ import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
 import { MemberSelect, useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
-import { confirmAction } from '@/utils/confirm';
+import { useConfirm } from '@/providers';
 import { formatHm } from '@/utils/date';
 import { fieldErrors } from '@/utils/form';
 
@@ -386,6 +386,7 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
   const { t } = useTranslation();
   const theme = useTheme();
   const setActive = useSetMedicationActive(circleId);
+  const confirm = useConfirm();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const willDeactivate = medication.is_active;
@@ -393,7 +394,7 @@ function ActivationRow({ circleId, medication }: { circleId: string; medication:
   // Deactivating stops this medication's reminders — confirm before the one tap,
   // and surface a failure instead of leaving the toggle looking unchanged (A4).
   function onToggle() {
-    confirmAction(
+    confirm(
       {
         title: willDeactivate
           ? t('medications.confirmDeactivateTitle')
@@ -533,6 +534,7 @@ function SchedulesManager({
   const { t } = useTranslation();
   const theme = useTheme();
   const setActive = useSetScheduleActive(circleId);
+  const confirm = useConfirm();
   const del = useDeleteSchedule(circleId);
 
   const [adding, setAdding] = useState(false);
@@ -562,7 +564,7 @@ function SchedulesManager({
   // Deactivating a schedule stops its reminders — confirm before the tap (A4).
   function toggleActive(schedule: MedicationSchedule) {
     const willDeactivate = schedule.is_active;
-    confirmAction(
+    confirm(
       {
         title: willDeactivate
           ? t('medications.confirmScheduleDeactivateTitle')

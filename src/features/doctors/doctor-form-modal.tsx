@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FormField } from '@/components/form-field';
 import { FormModal } from '@/components/form-modal';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
-import { confirmDiscard } from '@/utils/confirm';
+import { useConfirmDiscard } from '@/providers';
 import { fieldErrors } from '@/utils/form';
 
 import type { Doctor } from './api';
@@ -40,6 +40,7 @@ export function DoctorFormModal({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { dirty } = useUnsavedChanges({ name, specialty, phone, clinicName, notes });
+  const confirmDiscard = useConfirmDiscard();
   const submitting = create.isPending || update.isPending;
 
   function requestClose() {

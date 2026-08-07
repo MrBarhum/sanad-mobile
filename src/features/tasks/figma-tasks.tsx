@@ -13,8 +13,7 @@ import { BorderWidth, FontFamily, MaxFormWidth, Radius, TouchTarget } from '@/co
 import { useClaimTask } from '@/features/claiming/hooks';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
-import { useAuth } from '@/providers';
-import { confirmAction } from '@/utils/confirm';
+import { useAuth, useConfirm } from '@/providers';
 import { formatHm, todayYmd } from '@/utils/date';
 
 import type { CareTask } from './api';
@@ -117,6 +116,7 @@ export function FigmaTasks({
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const lookup = useMemberLookup(circleId);
+  const askConfirm = useConfirm();
 
   const tasksQuery = useTasks(circleId);
   const complete = useCompleteTask(circleId);
@@ -183,7 +183,9 @@ export function FigmaTasks({
 
   function onClaim(task: CareTask) {
     if (claimingId) return;
-    confirmAction(
+    // `askConfirm`, not `confirm` — this component already has a `confirm` state
+    // holding the row's own quick-action sheet.
+    askConfirm(
       {
         title: t('claiming.confirmTitle'),
         message: t('claiming.confirmMessage', { title: task.title }),

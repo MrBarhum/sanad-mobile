@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { FormModal } from '@/components/form-modal';
-import { confirmDiscard } from '@/utils/confirm';
+import { useConfirmDiscard } from '@/providers';
 import { formatHm } from '@/utils/date';
 
 import type { MedicationSchedule } from './api';
@@ -43,6 +43,7 @@ export function ScheduleModalHost({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const submitting = create.isPending || update.isPending;
+  const confirmDiscard = useConfirmDiscard();
   const baseline = JSON.stringify(initial ? scheduleToDraft(initial) : defaultScheduleDraft());
   const dirty = JSON.stringify(draft) !== baseline;
 

@@ -9,7 +9,7 @@ import { isolateLtr } from '@/components/ltr-text';
 import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
 import type { DoseItem } from '@/features/medications/today';
 import { useTheme } from '@/hooks/use-theme';
-import { confirmAction } from '@/utils/confirm';
+import { useConfirm } from '@/providers';
 import { formatHm } from '@/utils/date';
 
 import type { DosePhoto } from './api';
@@ -99,6 +99,7 @@ function DoseRecordBody({
   const c = useTheme();
   const record = useRecordDose(circleId, date);
   const attach = useAttachDoseProof(circleId, date);
+  const confirm = useConfirm();
 
   const [photo, setPhoto] = useState<DosePhoto | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -175,7 +176,7 @@ function DoseRecordBody({
       onClose();
       return;
     }
-    confirmAction(
+    confirm(
       {
         title: t('caregiver.photo.discardTitle'),
         message: t('caregiver.photo.discardMessage'),

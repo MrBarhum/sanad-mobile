@@ -19,7 +19,7 @@ import { initialFor } from '@/constants/glyphs';
 import { BorderWidth, FontFamily, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
-import { confirmDiscard } from '@/utils/confirm';
+import { useConfirmDiscard } from '@/providers';
 import { toDialableNumber } from '@/utils/digits';
 import { fieldErrors } from '@/utils/form';
 
@@ -247,6 +247,7 @@ function ContactFormModal({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { dirty } = useUnsavedChanges({ name, relationship, phone, isPrimary, notes });
+  const confirmDiscard = useConfirmDiscard();
   const submitting = create.isPending || update.isPending;
 
   function requestClose() {

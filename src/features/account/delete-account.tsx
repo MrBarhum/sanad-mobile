@@ -13,7 +13,7 @@ import { BorderWidth, FontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { deactivatePushToken } from '@/features/notifications/api';
 import { getRememberedToken } from '@/features/notifications/hooks';
-import { confirmAction } from '@/utils/confirm';
+import { useConfirm } from '@/providers';
 
 import { supabase } from '../../../lib/supabase';
 
@@ -41,6 +41,7 @@ export function DeleteAccountScreen() {
   const router = useRouter();
   const preflight = useAccountDeletionPreflight();
   const remove = useDeleteAccount();
+  const confirm = useConfirm();
   const [error, setError] = useState<string | null>(null);
 
   const rows = preflight.data ?? [];
@@ -48,7 +49,7 @@ export function DeleteAccountScreen() {
   const canDelete = !preflight.isLoading && !preflight.isError && blocked.length === 0;
 
   function onDelete() {
-    confirmAction(
+    confirm(
       {
         title: t('account.delete.confirmTitle'),
         message: t('account.delete.confirmMessage'),

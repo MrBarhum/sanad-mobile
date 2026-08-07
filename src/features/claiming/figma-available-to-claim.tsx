@@ -15,7 +15,7 @@ import { isolateLtr } from '@/components/ltr-text';
 import { type IconName } from '@/constants/icons';
 import { BorderWidth, FontFamily, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { confirmAction } from '@/utils/confirm';
+import { useConfirm } from '@/providers';
 import { formatHm, hmFromInstant, ymdFromInstant } from '@/utils/date';
 
 import { useAvailableToClaim, useClaimItem } from './hooks';
@@ -56,6 +56,7 @@ export function FigmaAvailableToClaim({
 
   const feed = useAvailableToClaim(canClaim ? circleId : undefined);
   const claim = useClaimItem();
+  const confirm = useConfirm();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
 
@@ -85,7 +86,7 @@ export function FigmaAvailableToClaim({
   function onClaim(item: AvailableClaimItem) {
     if (pendingId) return;
     // Claiming assigns the item to me immediately — confirm the commitment first (A4).
-    confirmAction(
+    confirm(
       {
         title: t('claiming.confirmTitle'),
         message: t('claiming.confirmMessage', { title: item.title }),

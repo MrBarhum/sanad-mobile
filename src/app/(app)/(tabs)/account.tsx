@@ -22,9 +22,8 @@ import { deactivatePushToken } from '@/features/notifications/api';
 import { getRememberedToken } from '@/features/notifications/hooks';
 import { useMyProfile, useUpdateMyName } from '@/features/profile/hooks';
 import { useTheme } from '@/hooks/use-theme';
-import { useAuth, useThemePreference } from '@/providers';
+import { useAuth, useConfirm, useThemePreference } from '@/providers';
 import { type ThemePreference } from '@/providers/theme-provider';
-import { confirmAction } from '@/utils/confirm';
 
 import { supabase } from '../../../../lib/supabase';
 
@@ -45,6 +44,7 @@ export default function AccountScreen() {
   const c = useTheme();
   const { activeCircle } = useCircleSelection();
   const { preference, setPreference } = useThemePreference();
+  const confirm = useConfirm();
   const profile = useMyProfile(user?.id);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export default function AccountScreen() {
   // Signing out ends the session (and stops this device's reminders) — a stray
   // tap must not do it silently, so confirm first (A4).
   function onSignOut() {
-    confirmAction(
+    confirm(
       {
         title: t('account.confirmSignOutTitle'),
         message: t('account.confirmSignOutMessage'),
