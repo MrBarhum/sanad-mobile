@@ -64,6 +64,7 @@
     "lint": "expo lint",
     "check:mojibake": "node ./scripts/check-mojibake.js",
     "check:i18n": "node ./scripts/check-i18n-parity.js",
+    "check:confirms": "node ./scripts/check-confirms.js",
     "check:grants": "node ./scripts/check-execute-grants.js",
     "check:doses": "node ./scripts/check-dose-matching.js",
     "check:grants:offline": "node ./scripts/check-execute-grants.js --offline"
