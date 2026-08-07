@@ -60,10 +60,21 @@ on conflict (id) do update
 
 -- SELECT — mirrors "Members can view medication logs"
 -- (20260626161000_backfill_phase_2d_responsibility_rls.sql:150-161) EXACTLY.
--- Deliberately NOT the broader is_circle_member(circle_id): reads on
--- medication_logs are responsibility-scoped, so a plain-membership check here
--- would let a family_member who cannot see the ROW still fetch a signed URL for
--- its PHOTO.
+-- Deliberately NOT the broader is_circle_member(circle_id): a plain-membership
+-- check here would decouple the photo from its row, letting someone who cannot see
+-- the ROW still fetch a signed URL for its PHOTO.
+--
+-- UPDATED 2026-08-07 (Milestone 9 · D1). The original wording named
+-- "a family_member who cannot see the ROW" as the case being excluded. That is no
+-- longer the example: D1 added `family_member` to can_view_all_operational
+-- (20260807120000_widen_can_view_all_operational_to_family_member.sql), so a
+-- family_member now DOES see the row — and, through the first disjunct below, the
+-- photo with it. That is the mirror invariant working as designed, not a leak: this
+-- policy is written to move WITH the row policy, and freezing it narrow would leave
+-- the photo less visible than the row that points at it, so the UI would render a
+-- photo slot whose signed-URL request 400s. The role still excluded here is the
+-- hired `caregiver`, who reaches only her own medications' photos via the second
+-- disjunct. Do NOT "fix" this back to narrow — see docs/deployment/milestone-9-d1-runbook.md.
 drop policy if exists "Circle members can read dose proof" on storage.objects;
 create policy "Circle members can read dose proof"
 on storage.objects
