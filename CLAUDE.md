@@ -19,7 +19,14 @@ History: first isolated 2026-06-19 (`docs/claude-reports/2026-06-19-fix-figma-fo
 These are settled product/engineering conventions for Sanad. Follow them by default; call out any deliberate departure in your session report.
 
 ## Visibility posture — transparent circle (A1)
-Every **active** member may **see** all of a circle's operational data (tasks, doses, appointments, visits, logs, vitals) — this mirrors the server `can_view_all_operational` posture. The UI never hides other members' work from a non-manager. Instead, lists offer an explicit **«مهامي / كل المهام»** (mine / all) scope toggle, defaulting collaborators to "mine" and managers to "all". Unassigned open work shows an inline **«أنا متكفّل»** claim for any claim-capable member. Who can *mutate* is still gated by role + RLS (unchanged); only *visibility* is transparent.
+Every **active** member may **see** all of a circle's operational data (tasks, doses, appointments, visits, logs, vitals). The UI never hides other members' work from a non-manager. Instead, lists offer an explicit **«مهامي / كل المهام»** (mine / all) scope toggle, defaulting collaborators to "mine" and managers to "all". Unassigned open work shows an inline **«أنا متكفّل»** claim for any claim-capable member. Who can *mutate* is still gated by role + RLS (unchanged); only *visibility* is transparent.
+
+> **Correction (2026-08-07) — A1 did NOT mirror the server, and the gap is being closed.**
+> This paragraph used to claim the posture "mirrors the server `can_view_all_operational` posture". It does not — it inverts it. `can_view_all_operational` is `admin | primary_caregiver | remote_member` only (`20260626161000_backfill_phase_2d_responsibility_rls.sql:24-32`), so a `family_member` or `caregiver` is narrowed by RLS to their own rows on **five** read surfaces: `care_tasks`, `care_appointments`, `medication_logs`, `family_visits`, and the `dose-proof` storage bucket. The result was incoherent — a read-only `remote_member` saw MORE than an active `family_member` — and it made the «كل المهام» pill a no-op and the Tasks-screen «أنا متكفّل» claim unreachable for exactly the roles it was built for.
+>
+> **Decision D1: widen, don't retreat.** `family_member` is being added to `can_view_all_operational`; A1 stands as written above. `caregiver` is deliberately **excluded** and must stay excluded — `care_tasks` and `medication_logs` have no restrictive M8 backstop, so this function is the only thing holding them narrow for a hired caregiver.
+>
+> Until that migration is hand-applied, treat A1 as **true for managers and remote members, aspirational for `family_member`**. Do not write client code that assumes a collaborator can see another member's work. Full analysis: `docs/claude-reports/2026-08-07-qa-verification.md` (F1).
 
 ## Canonical feature order (A7)
 Order features the same way everywhere (Home quick-actions, Explore, in-list grouping):

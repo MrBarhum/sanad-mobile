@@ -31,7 +31,23 @@ export const taskKeys = {
   detail: (id: string | undefined) => ['tasks', 'detail', id] as const,
 };
 
-/** All tasks for a circle, newest first (RLS: active members). */
+/**
+ * All tasks for a circle, newest first.
+ *
+ * The query is unscoped; RLS decides what comes back, and it does NOT return the
+ * whole circle to every active member. `"Members can view care tasks"`
+ * (`20260626161000_backfill_phase_2d_responsibility_rls.sql:55-68`) is
+ * `can_view_all_operational(circle_id) OR (is_circle_member(circle_id) AND
+ * (assigned_to = auth.uid() OR completed_by = auth.uid()))`, and
+ * `can_view_all_operational` is `admin | primary_caregiver | remote_member` only
+ * (same file, `:24-32`). So a `family_member` or `caregiver` receives ONLY the
+ * tasks assigned to them or completed by them — unassigned tasks included nowhere.
+ *
+ * That is narrower than standing decision A1 describes; widening it is the
+ * pending D1 migration (see `docs/claude-reports/2026-08-07-qa-verification.md`
+ * F1). Until that is hand-applied, do not write code here that assumes a
+ * collaborator can see another member's work.
+ */
 export async function fetchTasks(circleId: string): Promise<CareTask[]> {
   const { data, error } = await supabase
     .from('care_tasks')
