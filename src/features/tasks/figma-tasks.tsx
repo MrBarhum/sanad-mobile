@@ -62,6 +62,21 @@ function dueSortKey(task: CareTask): string {
 const PRIORITY_WEIGHT: Record<string, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
 
 /**
+ * The empty copy for a (tab, scope) pair.
+ *
+ * One string used to cover all three tabs, which made «اليوم» claim
+ * «كل شيء على ما يُرام» while overdue work sat unhandled, and made «مكتملة» say the
+ * same thing when nothing had been completed at all. In a care app an empty screen
+ * must say WHICH emptiness it means: nothing due, nothing open, or nothing finished.
+ */
+function emptyKeyFor(tab: TaskTab, scope: TaskScope): string {
+  const mine = scope === 'mine';
+  if (tab === 'today') return mine ? 'figma.tasks.emptyTodayMine' : 'figma.tasks.emptyToday';
+  if (tab === 'done') return mine ? 'figma.tasks.emptyDoneMine' : 'figma.tasks.emptyDone';
+  return mine ? 'figma.tasks.emptyMine' : 'figma.tasks.empty';
+}
+
+/**
  * Open-task ordering (A7): overdue first, then by priority (urgent → low), then
  * chronological by due date/time.
  */
@@ -144,7 +159,14 @@ export function FigmaTasks({
           .filter((task) => task.status !== 'open')
           .sort((a, b) => dueSortKey(a).localeCompare(dueSortKey(b)))
       : (tab === 'today'
-          ? openTasks.filter((task) => task.due_date === today)
+          ? // «اليوم» means "needs attention today", not "dated today". Anything
+            // already overdue is still today's problem — filtering on `=== today`
+            // dropped a seven-week-old task off the default tab and left the screen
+            // asserting an all-clear. This matches caregiver/hooks.ts:57, which had
+            // the rule right. Undated work stays on «مفتوحة»; it has no due date, so
+            // it is not yet due. compareOpenTasks then surfaces overdue first (A7) —
+            // a branch that was unreachable here while the filter was an equality.
+            openTasks.filter((task) => task.due_date !== null && task.due_date <= today)
           : openTasks
         ).sort((a, b) => compareOpenTasks(a, b, today));
 
@@ -310,7 +332,7 @@ export function FigmaTasks({
                 </Pressable>
               </View>
             ) : filtered.length === 0 ? (
-              <TasksEmpty title={t(effectiveScope === 'mine' ? 'figma.tasks.emptyMine' : 'figma.tasks.empty')} />
+              <TasksEmpty title={t(emptyKeyFor(tab, effectiveScope))} />
             ) : (
               <View style={[styles.groupCard, { backgroundColor: c.backgroundElement, borderColor: c.border }]}>
                 {filtered.map((task, i) => (

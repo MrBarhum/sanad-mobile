@@ -1563,8 +1563,12 @@
         "open": "Open",
         "done": "Done"
       },
-      "empty": "No tasks right now — everything's in order",
+      "empty": "No open tasks right now — everything's in order",
       "emptyMine": "No tasks assigned to you right now",
+      "emptyToday": "Nothing due today",
+      "emptyTodayMine": "Nothing due for you today",
+      "emptyDone": "No tasks completed yet",
+      "emptyDoneMine": "None of your tasks are completed yet",
       "scope": {
         "mine": "My tasks",
         "all": "All tasks"
