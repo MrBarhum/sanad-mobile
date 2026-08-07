@@ -149,7 +149,15 @@ export function FigmaMedications({
         <View style={styles.summaryText}>
           <Text style={[styles.summaryTitle, { color: c.text }]} numberOfLines={1}>
             {total > 0
-              ? t('figma.medications.summary', { given: String(given), total: String(total) })
+              ? // `total` counts only the doses this member can act on when scoped,
+                // but the «أدوية فعّالة» line directly below is the WHOLE circle's
+                // medication count — so an unlabelled «0 من 7» above «10 أدوية فعّالة»
+                // read as a household figure and was wrong by 14. Naming the scope is
+                // the honest minimum; it does not pretend the number is the circle's.
+                t(scopeToMine ? 'figma.medications.summaryMine' : 'figma.medications.summary', {
+                  given: String(given),
+                  total: String(total),
+                })
               : t('figma.medications.summaryEmpty')}
           </Text>
           <Text style={[styles.summarySub, { color: c.textSecondary }]} numberOfLines={1}>

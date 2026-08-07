@@ -1537,6 +1537,7 @@
     },
     "medications": {
       "summary": "{{given}} من {{total}} جرعات أُعطيت اليوم",
+      "summaryMine": "جرعاتك اليوم: {{given}} من {{total}}",
       "activeCount_zero": "لا توجد أدوية فعّالة",
       "activeCount_one": "دواء واحد فعّال",
       "activeCount_two": "دواءان فعّالان",

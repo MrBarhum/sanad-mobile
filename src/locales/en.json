@@ -1525,6 +1525,7 @@
     },
     "medications": {
       "summary": "{{given}} of {{total}} doses given today",
+      "summaryMine": "Your doses today: {{given}} of {{total}}",
       "activeCount_zero": "No active medications",
       "activeCount_one": "One active medication",
       "activeCount_other": "{{count}} active medications",
