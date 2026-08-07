@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BorderWidth, FontFamily, Gutter, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { ConfirmOutlet } from '@/providers/confirm-host';
 
 import { FigmaFooterPrimaryButton } from './figma/figma-footer-primary-button';
 import { Button } from './button';
@@ -106,6 +107,9 @@ export function FormModal({
               />
             </View>
           </ScrollView>
+          {/* Lets the discard-changes confirmation render above this form rather
+              than underneath it (web) or not at all (iOS). */}
+          <ConfirmOutlet />
         </ThemedView>
       </KeyboardAvoidingView>
     </Modal>

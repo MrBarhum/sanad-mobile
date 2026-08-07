@@ -7,12 +7,21 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BorderWidth, Gutter, MaxFormWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { ConfirmOutlet } from '@/providers/confirm-host';
 
 type FigmaBottomSheetProps = {
   visible: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
+  /**
+   * What the backdrop announces to a screen reader. Defaults to «إغلاق». A confirm
+   * passes its cancel string, because there the backdrop IS the cancel action and
+   * announcing it as "close" understates what tapping it does.
+   */
+  dismissLabel?: string;
+  /** Title alignment. Confirmations centre it; action sheets keep the start edge. */
+  titleAlign?: 'start' | 'center';
 };
 
 /**
@@ -26,7 +35,14 @@ type FigmaBottomSheetProps = {
  * differ only in their behavior contract (dismissal / footer / keyboard), never in
  * their chrome.
  */
-export function FigmaBottomSheet({ visible, onClose, title, children }: FigmaBottomSheetProps) {
+export function FigmaBottomSheet({
+  visible,
+  onClose,
+  title,
+  children,
+  dismissLabel,
+  titleAlign = 'start',
+}: FigmaBottomSheetProps) {
   const c = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -35,20 +51,37 @@ export function FigmaBottomSheet({ visible, onClose, title, children }: FigmaBot
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable
         style={[styles.backdrop, { backgroundColor: c.overlay }]}
-        accessibilityLabel={t('common.close')}
+        accessibilityRole="button"
+        accessibilityLabel={dismissLabel ?? t('common.close')}
         onPress={onClose}>
-        {/* Swallow taps inside the sheet so they don't reach the backdrop. */}
-        <Pressable style={styles.sheetWrap} onPress={() => {}}>
+        {/*
+          Swallow taps inside the sheet so they don't reach the backdrop.
+          `accessible={false}` is required, not cosmetic: Pressable defaults to
+          accessible={true}, and on Android an accessible View collapses its whole
+          subtree into ONE TalkBack node — the title, body and every button would be
+          announced as a single control that does nothing.
+        */}
+        <Pressable
+          style={styles.sheetWrap}
+          onPress={() => {}}
+          accessible={false}
+          importantForAccessibility="no">
           <ThemedView
             type="backgroundElement"
+            accessibilityViewIsModal
             style={[styles.sheet, { borderColor: c.border, paddingBottom: insets.bottom + Spacing.four }]}>
             <View style={[styles.grabber, { backgroundColor: c.backgroundSelected }]} />
-            <ThemedText type="sectionTitle" accessibilityRole="header" style={styles.title}>
+            <ThemedText
+              type="sectionTitle"
+              accessibilityRole="header"
+              style={[styles.title, titleAlign === 'center' && styles.titleCentered]}>
               {title}
             </ThemedText>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
               {children}
             </ScrollView>
+            {/* Lets a confirmation fired from inside this sheet render above it. */}
+            <ConfirmOutlet />
           </ThemedView>
         </Pressable>
       </Pressable>
@@ -71,5 +104,6 @@ const styles = StyleSheet.create({
   // Visual bottom-sheet affordance (dismissal is the backdrop tap).
   grabber: { alignSelf: 'center', width: 48, height: 8, borderRadius: Radius.pill, marginBottom: Spacing.three },
   title: { marginBottom: Spacing.three },
+  titleCentered: { textAlign: 'center' },
   body: { gap: Spacing.three, paddingBottom: Spacing.two },
 });
