@@ -69,21 +69,41 @@ type LegendRow = { role: CircleRole; descKey: string };
  * drift again, and the mark is a distinct shape rather than a tone.
  *
  * Note the coupling this creates: editing a `roleDescriptions` value now also
- * rewrites this legend (that is the point — one source), and `roleVisual` maps
- * `primary_caregiver` onto the same Crown as `admin`, so the «مشرف» row also
- * explains that member. Both are as drawn.
+ * rewrites this legend (that is the point — one source).
+ *
+ * CORRECTION (2026-08-07): frame 11f left `primary_caregiver` out on the reasoning
+ * that it shares a Crown with `admin`, so the «مشرف» row would explain it too. It
+ * does not — it misexplains it. A row reading «مقدّم الرعاية الأساسي» appeared with
+ * no matching line, and the only Crown line says «صلاحية كاملة — يدير الدائرة
+ * والأعضاء وكل بيانات الرعاية», which is false for a primary caregiver: she may not
+ * grant a manager role and may not modify a manager peer (permissions.ts:30-32). On
+ * a surface whose entire job is explaining permissions, that is a wrong answer
+ * rather than a gap, so the role now gets its own line.
+ *
+ * The two Crown rows are distinguished by their labels, not their glyph, which
+ * still satisfies the never-mark-alone rule (the label is text). Giving
+ * `primary_caregiver` a glyph of its own would also restyle every such member ROW,
+ * since {@link roleVisual} is shared — a visual-identity change, deliberately not
+ * made here.
  */
-const LEGEND: readonly LegendRow[] = [
+const BASE_LEGEND: readonly LegendRow[] = [
   { role: 'admin', descKey: 'circleMembers.roleDescriptions.admin' },
+  { role: 'primary_caregiver', descKey: 'circleMembers.roleDescriptions.primary_caregiver' },
   { role: 'family_member', descKey: 'circleMembers.roleDescriptions.family_member' },
   { role: 'remote_member', descKey: 'circleMembers.roleDescriptions.remote_member' },
 ];
 
 /**
- * The hired-caregiver legend row — appended to {@link LEGEND} ONLY when this
- * roster actually renders a `caregiver` member. The role is optional and must stay
- * completely invisible in a circle that never hired one: such a circle sees exactly
- * the three rows above, unchanged.
+ * Roles explained ONLY when the roster actually shows one, so a circle that never
+ * appointed a primary caregiver or hired a caregiver keeps exactly the three rows it
+ * has always had. Every other role is always explained.
+ */
+const PRESENCE_GATED_ROLES: readonly CircleRole[] = ['primary_caregiver', 'caregiver'];
+
+/**
+ * The hired-caregiver legend row — shown ONLY when this roster actually renders a
+ * `caregiver` member (see {@link PRESENCE_GATED_ROLES}). The role is optional and
+ * must stay completely invisible in a circle that never hired one.
  *
  * It keeps the SHORT `figma.members.legend.caregiverDesc` rather than the long
  * `roleDescriptions.caregiver`: that one is the three-sentence disclosure the
@@ -94,6 +114,21 @@ const CAREGIVER_LEGEND: LegendRow = {
   role: 'caregiver',
   descKey: 'figma.members.legend.caregiverDesc',
 };
+
+/** Every legend row the screen can show, in privilege order. */
+const LEGEND_ORDER: readonly LegendRow[] = [...BASE_LEGEND, CAREGIVER_LEGEND];
+
+/**
+ * The legend for this roster: every row except the presence-gated ones, plus those
+ * whose role is actually on screen (active or, for a manager, the inactive list).
+ * Derived from the roster already loaded — never an extra query.
+ */
+function legendFor(members: readonly CircleMember[]): LegendRow[] {
+  const present = new Set(members.map((m) => m.role));
+  return LEGEND_ORDER.filter(
+    (row) => !PRESENCE_GATED_ROLES.includes(row.role) || present.has(row.role),
+  );
+}
 
 /** First grapheme of a display name, for the letter avatar. */
 function initialOf(name: string): string {
@@ -147,14 +182,9 @@ export function FigmaMembers({
   const summaryName = recipientName?.trim() || circleName;
   const summary = t('figma.members.summary', { name: summaryName, count: active.length });
 
-  // The hired-caregiver role is optional and stays invisible until a circle uses
-  // it. Gate the fourth legend row on the rows this screen actually renders
-  // (active, plus the manager-only inactive list) so the legend explains every
-  // glyph on screen and a circle that never hired one keeps exactly the three rows
-  // it has today. Derived from the roster already loaded — never an extra query.
-  const hasCaregiver =
-    active.some((m) => m.role === 'caregiver') || inactive.some((m) => m.role === 'caregiver');
-  const legend = hasCaregiver ? [...LEGEND, CAREGIVER_LEGEND] : LEGEND;
+  // Every role on screen gets a line — `active` plus the manager-only `inactive`
+  // list, which is exactly the set of rows this screen renders.
+  const legend = legendFor([...active, ...inactive]);
 
   function renderRow(member: CircleMember) {
     const displayName = memberDisplayName(member, t('circleMembers.unnamed'));
