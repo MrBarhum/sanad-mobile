@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FigmaScreen } from '@/components/figma/figma-screen';
 import { isolateLtr } from '@/components/ltr-text';
 import { SkeletonList } from '@/components/skeleton';
-import { BorderWidth, FontFamily, MaxFormWidth, Radius } from '@/constants/theme';
+import { BorderWidth, FontFamily, MaxFormWidth, Radius, TouchTarget } from '@/constants/theme';
 import { useClaimTask } from '@/features/claiming/hooks';
 import { useMemberLookup } from '@/features/circle-members/member-assignment';
 import { useTheme } from '@/hooks/use-theme';
@@ -31,6 +31,27 @@ type ClaimNote = { tone: 'warning' | 'error'; title: string; body: string | null
 
 const R8 = Radius.card;
 const R6 = Radius.control;
+
+/**
+ * Row-control touch targets.
+ *
+ * Dar draws these controls small on purpose — a 28px checkbox, a 34px square — but
+ * each one sits INSIDE the row's own Pressable. That makes a near-miss worse than a
+ * no-op: the row wins the touch and navigates to the task detail, so an imprecise tap
+ * aimed at «تعذّر الإنجاز» silently changes the screen instead of doing nothing.
+ *
+ * `hitSlop` lifts each control to the `TouchTarget.min` floor without moving a pixel
+ * of the design — the sibling `caregiver/today.tsx` reaches the same 48 with a
+ * transparent wrapper View, which is not available here because the Dar row aligns to
+ * `flex-start` and a 48px wrapper would drop the checkbox ~10px down the row.
+ */
+const CHECKBOX_SIZE = 28;
+const SQUARE_SIZE = 34;
+const CLAIM_MIN_HEIGHT = 34;
+const slopToMinTarget = (size: number) => Math.max(0, Math.round((TouchTarget.min - size) / 2));
+const CHECK_SLOP = slopToMinTarget(CHECKBOX_SIZE);
+const SQUARE_SLOP = slopToMinTarget(SQUARE_SIZE);
+const PILL_SLOP = slopToMinTarget(CLAIM_MIN_HEIGHT);
 
 /** Sort key mirroring the center: due date, then due time, missing last. */
 function dueSortKey(task: CareTask): string {
@@ -540,6 +561,7 @@ function TaskRow({
       onPress={onOpen}
       accessibilityRole="button"
       accessibilityHint={t('common.details')}
+      android_ripple={{ color: c.backgroundSelected }}
       style={[styles.row, !first && { borderTopWidth: BorderWidth.standard, borderTopColor: c.border }, isCancelled && styles.rowDim]}>
       {canAct ? (
         <Pressable
@@ -547,6 +569,8 @@ function TaskRow({
           accessibilityRole="button"
           accessibilityLabel={t('tasks.complete')}
           accessibilityHint={t('tasks.confirmCompleteTitle')}
+          android_ripple={{ color: c.backgroundSelected, borderless: true }}
+          hitSlop={CHECK_SLOP}
           style={checkboxStyle}>
           {CheckIcon ? <CheckIcon size={14} color={checkColor} strokeWidth={2.8} /> : null}
         </Pressable>
@@ -585,10 +609,12 @@ function TaskRow({
         {showClaim ? (
           <Pressable
             onPress={onClaim}
-            disabled={claiming}
             accessibilityRole="button"
             accessibilityLabel={t('claiming.cta')}
             accessibilityHint={t('claiming.ctaHint')}
+            accessibilityState={{ busy: claiming }}
+            android_ripple={{ color: c.primaryPressed }}
+            hitSlop={PILL_SLOP}
             style={[styles.claimBtn, { backgroundColor: c.primary }]}>
             {claiming ? (
               <ActivityIndicator size="small" color={c.onPrimary} />
@@ -608,6 +634,8 @@ function TaskRow({
           accessibilityRole="button"
           accessibilityLabel={t('tasks.markUnable')}
           accessibilityHint={t('tasks.confirmUnableTitle')}
+          android_ripple={{ color: c.backgroundSelected }}
+          hitSlop={SQUARE_SLOP}
           style={[styles.cancelSquare, { borderColor: c.border, backgroundColor: c.backgroundElement }]}>
           <X size={14} color={c.errorFg} strokeWidth={2.6} />
         </Pressable>
@@ -672,8 +700,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 14, paddingVertical: 12 },
   rowDim: { opacity: 0.6 },
   checkbox: {
-    width: 28,
-    height: 28,
+    width: CHECKBOX_SIZE,
+    height: CHECKBOX_SIZE,
     borderRadius: Radius.pill,
     borderWidth: BorderWidth.standard,
     alignItems: 'center',
@@ -706,14 +734,14 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     gap: 7,
     marginTop: 8,
-    minHeight: 34,
+    minHeight: CLAIM_MIN_HEIGHT,
     paddingHorizontal: 16,
     borderRadius: R6,
   },
   claimText: { fontSize: 15, fontFamily: FontFamily.bold },
   cancelSquare: {
-    width: 34,
-    height: 34,
+    width: SQUARE_SIZE,
+    height: SQUARE_SIZE,
     borderWidth: BorderWidth.standard,
     borderRadius: R6,
     alignItems: 'center',
