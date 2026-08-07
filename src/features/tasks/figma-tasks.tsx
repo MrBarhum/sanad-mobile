@@ -140,8 +140,13 @@ export function FigmaTasks({
   // only for managers until the D1 widening migration is hand-applied
   // (docs/claude-reports/2026-08-07-qa-verification.md, F1). Pure followers
   // (neither manage nor collaborate) are forced to «كل المهام» and get no pills.
+  //
+  // Default per A1: managers open on «كل المهام», collaborators on «مهامي». A
+  // manager is the oversight role — landing them on their own assignments hid the
+  // circle's work behind a pill and made a freshly created task look unsaved. This
+  // is the posture appointments and visits already ship (`!canManage && canCollaborate`).
   const canBeAssigned = canManage || canCollaborate;
-  const [scope, setScope] = useState<TaskScope>('mine');
+  const [scope, setScope] = useState<TaskScope>(canManage ? 'all' : 'mine');
   const effectiveScope: TaskScope = canBeAssigned ? scope : 'all';
 
   /** A task is "mine" when it's assigned to me, or I completed it (history). */
