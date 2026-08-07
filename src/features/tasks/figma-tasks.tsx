@@ -66,10 +66,13 @@ export function FigmaTasks({
   circleId,
   canManage,
   canCollaborate,
+  canClaim,
 }: {
   circleId: string;
   canManage: boolean;
   canCollaborate: boolean;
+  /** The claim RPCs' own allow-list — narrower than `canCollaborate`, which admits `caregiver`. */
+  canClaim: boolean;
 }) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -102,7 +105,6 @@ export function FigmaTasks({
   // (docs/claude-reports/2026-08-07-qa-verification.md, F1). Pure followers
   // (neither manage nor collaborate) are forced to «كل المهام» and get no pills.
   const canBeAssigned = canManage || canCollaborate;
-  const canClaim = canManage || canCollaborate;
   const [scope, setScope] = useState<TaskScope>('mine');
   const effectiveScope: TaskScope = canBeAssigned ? scope : 'all';
 

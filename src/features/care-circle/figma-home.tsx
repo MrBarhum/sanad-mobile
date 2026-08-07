@@ -495,8 +495,11 @@ export function FigmaHome({ circle }: { circle: ActiveCircle }) {
           })}
         </View>
 
-        {/* Available to claim — claim-capable members only (never remote/elder) */}
-        {circle.canManage || circle.canLogDoses ? (
+        {/* Available to claim — the claim RPCs' allow-list, never `canLogDoses`.
+            A hired caregiver can record doses but every claim function refuses her
+            (20260726160100_caregiver_rpc_scope.sql:341), so gating on canLogDoses
+            showed her this card and then threw 42501 when she tapped it. */}
+        {circle.canClaim ? (
           <Pressable
             onPress={() => router.push('/available-to-claim')}
             accessibilityRole="button"

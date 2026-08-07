@@ -10,6 +10,7 @@ export default function TasksScreen() {
           circleId={circle.circleId}
           canManage={circle.canManage}
           canCollaborate={circle.canLogDoses}
+          canClaim={circle.canClaim}
         />
       )}
     </CircleGate>
