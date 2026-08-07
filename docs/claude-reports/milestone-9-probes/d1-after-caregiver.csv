@@ -1,0 +1,41 @@
+kind,probe,expected,actual,verdict
+VERDICT,39 probes,39 pass,0 fail,OVERALL PASS
+positive,INSERT daily_care_log (own),succeeds,1/ok,PASS
+positive,INSERT medication_log for her responsible med,succeeds,1/ok,PASS
+positive,INSERT vital_reading (own),succeeds,1/ok,PASS
+positive,read back her own daily logs,"1 (hers only, not the family's 3)",1/ok,PASS
+positive,read back her own vitals,1 (hers only),1/ok,PASS
+positive,read care_circles,1 (her circle),1/ok,PASS
+positive,read care_recipients (basic profile),1,1/ok,PASS
+positive,read care_tasks,2 (hers only) of 36 in the circle,2/ok,PASS
+positive,read doctors (emergency card),>=1,1/ok,PASS
+positive,read emergency_contacts (emergency card),>=1,1/ok,PASS
+positive,read medication_logs,only her responsible med's,5/ok,PASS
+positive,read medication_schedules,only her medication's,1/ok,PASS
+positive,read medications,exactly 1 (only hers),1/ok,PASS
+positive,UPDATE care_task assigned to her (complete),1 row,1 rows/ok,PASS
+negative,DELETE a medication,0 rows,0 rows/ok,PASS
+negative,INSERT care_task,refused 42501,-1/42501,PASS
+negative,INSERT family_visit (own),refused 42501,-1/42501,PASS
+negative,INSERT medication,refused 42501,-1/42501,PASS
+negative,INSERT medication_log for a med she is NOT responsible for,refused 42501,-1/42501,PASS
+negative,read care_appointments,0,0/ok,PASS
+negative,read circle_invitations,0,0/ok,PASS
+negative,read circle_members (roster),"exactly 1 = her own row, not 6",1/ok,PASS
+negative,read family_visits,0,0/ok,PASS
+negative,RPC claim_care_task,refused 42501,-1/42501,PASS
+negative,RPC claim_medication_responsibility,refused 42501,-1/42501,PASS
+negative,RPC create_circle_invitation,refused 42501,-1/42501,PASS
+negative,RPC list_available_to_claim,refused 42501,-1/42501,PASS
+negative,RPC list_care_activity (Pulse),0 rows (admin sees 45),0/ok,PASS
+negative,RPC list_circle_invitations,refused 42501,-1/42501,PASS
+negative,RPC list_circle_members,refused 42501,-1/42501,PASS
+negative,RPC set_assigned_appointment_outcome,refused,-1/42501,PASS
+negative,RPC set_circle_timezone,refused 42501,-1/42501,PASS
+negative,RPC set_missed_dose_grace_minutes,refused 42501,-1/42501,PASS
+negative,RPC update_circle_member_role,refused 42501,-1/42501,PASS
+negative,self-promote via circle_members UPDATE,0 rows / refused,0 rows/ok,PASS
+negative,UPDATE a task NOT assigned to her,0 rows,0 rows/ok,PASS
+negative,UPDATE care_recipient,0 rows (read-only),0 rows/ok,PASS
+negative,UPDATE emergency_contacts,0 rows (read-only),0 rows/ok,PASS
+negative,UPDATE her own responsible medication,0 rows (read-only to her),0 rows/ok,PASS
