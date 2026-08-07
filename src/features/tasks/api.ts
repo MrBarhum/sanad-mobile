@@ -66,10 +66,23 @@ export async function fetchTask(id: string): Promise<CareTask | null> {
   return data;
 }
 
-/** Creates a task. RLS restricts this to admin / primary_caregiver. */
-export async function createTask(circleId: string, input: CreateTaskInput): Promise<void> {
-  const { error } = await supabase.from('care_tasks').insert({ circle_id: circleId, ...input });
+/**
+ * Creates a task and returns its id, so the caller can land the user on the row it
+ * just made instead of on a filtered list that may not contain it.
+ *
+ * The `.select()` read-back is safe: RLS restricts this INSERT to admin /
+ * primary_caregiver, and both are inside `can_view_all_operational`, so the creator
+ * can always read the row they just wrote — regardless of whether it ended up
+ * assigned to them.
+ */
+export async function createTask(circleId: string, input: CreateTaskInput): Promise<string> {
+  const { data, error } = await supabase
+    .from('care_tasks')
+    .insert({ circle_id: circleId, ...input })
+    .select('id')
+    .single();
   if (error) throw error;
+  return data.id;
 }
 
 /** Updates a task's editable fields (not its status). */

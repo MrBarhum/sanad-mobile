@@ -53,7 +53,8 @@ export function TaskForm({ circleId }: { circleId: string }) {
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  /** Set to the new task's id on a successful save; also disarms the unsaved guard. */
+  const [createdId, setCreatedId] = useState<string | null>(null);
 
   const { dirty } = useUnsavedChanges({
     title,
@@ -67,9 +68,16 @@ export function TaskForm({ circleId }: { circleId: string }) {
   });
   const submitting = create.isPending;
 
+  // Land on the task that was just created, not back on a filtered list.
+  //
+  // `router.back()` returned the user to «اليوم», where a task saved with the form's
+  // own defaults (no due date, no assignee) matches no filter — so the screen looked
+  // exactly as it did before the save and the only reasonable reading was that it had
+  // failed. The detail screen is unambiguous proof, and `replace` keeps the back arrow
+  // pointing at the list rather than back at a spent form.
   useEffect(() => {
-    if (submitted) router.back();
-  }, [submitted, router]);
+    if (createdId) router.replace(`/tasks/${createdId}`);
+  }, [createdId, router]);
 
   const categoryOptions = TASK_CATEGORIES.map((value) => ({
     value,
@@ -112,7 +120,7 @@ export function TaskForm({ circleId }: { circleId: string }) {
 
     setSubmitError(null);
     try {
-      await create.mutateAsync({
+      const id = await create.mutateAsync({
         title: parsed.data.title,
         description: nullify(parsed.data.description),
         category,
@@ -122,7 +130,7 @@ export function TaskForm({ circleId }: { circleId: string }) {
         assigned_to: assignedTo === '' ? null : assignedTo,
         notes: nullify(parsed.data.notes),
       });
-      setSubmitted(true);
+      setCreatedId(id);
     } catch {
       setSubmitError(t('tasks.saveFailed'));
     }
@@ -130,7 +138,7 @@ export function TaskForm({ circleId }: { circleId: string }) {
 
   return (
     <FigmaFormScreen title={t('tasks.addTitle')} onBack={() => router.back()}>
-      <UnsavedChangesGuard when={dirty && !submitted} />
+      <UnsavedChangesGuard when={dirty && createdId === null} />
       <FigmaMutedNote>{t('tasks.disclaimer')}</FigmaMutedNote>
 
       {/* Main info */}

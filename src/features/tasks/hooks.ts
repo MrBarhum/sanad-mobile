@@ -85,6 +85,7 @@ export function useTodayTaskSummary(circleId: string | undefined, scopeToUserId?
 // Mutations
 // ---------------------------------------------------------------------------
 
+/** Creates a task; `mutateAsync` resolves to the new task's id. */
 export function useCreateTask(circleId: string) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
