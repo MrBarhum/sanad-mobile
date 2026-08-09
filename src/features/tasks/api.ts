@@ -31,7 +31,21 @@ export const taskKeys = {
   detail: (id: string | undefined) => ['tasks', 'detail', id] as const,
 };
 
-/** All tasks for a circle, newest first (RLS: active members). */
+/**
+ * All tasks for a circle, newest first.
+ *
+ * The query is unscoped; RLS decides what comes back. Since D1 (applied 2026-08-07,
+ * `20260807120000_widen_can_view_all_operational_to_family_member.sql`) that means the
+ * WHOLE circle for admin, primary_caregiver, family_member and remote_member — the
+ * "Members can view care tasks" policy is `can_view_all_operational(circle_id) OR
+ * (is_circle_member(circle_id) AND (assigned_to = auth.uid() OR completed_by = auth.uid()))`
+ * and family_member is now inside that function.
+ *
+ * The ONE role still narrowed to its own rows is the hired `caregiver`, which is
+ * deliberate and must stay that way: `care_tasks` has no restrictive Milestone-8
+ * backstop, so that function is the only thing holding it narrow for her. "Active
+ * member" is therefore not the right mental model — the role matters.
+ */
 export async function fetchTasks(circleId: string): Promise<CareTask[]> {
   const { data, error } = await supabase
     .from('care_tasks')

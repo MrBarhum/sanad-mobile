@@ -92,10 +92,19 @@ export function FigmaTasks({
   const tasks = tasksQuery.data ?? [];
   const today = todayYmd();
 
-  // Transparent-circle visibility: everyone SEES the whole circle's tasks; an
-  // explicit مهامي/كل المهام scope replaces role-hiding. Assignable members (managers
-  // included) default to «مهامي» so the screen opens on the caller's own work; pure
-  // followers only ever see «كل المهام». The scope pill toggles to all at any time.
+  // Transparent-circle visibility (A1). Since D1 (applied 2026-08-07) this is true on
+  // the server as well as in the UI: admin, primary_caregiver, family_member and
+  // remote_member all SEE the whole circle's tasks, so «كل المهام» genuinely returns
+  // more rows than «مهامي». Before D1 it did not — RLS had already narrowed a
+  // family_member to her own rows, which made the toggle a silent no-op.
+  //
+  // The one role still narrowed server-side is the hired `caregiver`: for her both
+  // pills show the same list, and the «أنا متكفّل» pill below cannot render because an
+  // unassigned task is not visible to her. That is deliberate, not a gap.
+  //
+  // Assignable members (managers included) default to «مهامي» so the screen opens on
+  // the caller's own work; pure followers only ever see «كل المهام». The scope pill
+  // toggles to all at any time.
   const canBeAssigned = canManage || canCollaborate;
   const canClaim = canManage || canCollaborate;
   const [scope, setScope] = useState<TaskScope>('mine');

@@ -19,7 +19,19 @@ History: first isolated 2026-06-19 (`docs/claude-reports/2026-06-19-fix-figma-fo
 These are settled product/engineering conventions for Sanad. Follow them by default; call out any deliberate departure in your session report.
 
 ## Visibility posture — transparent circle (A1)
-Every **active** member may **see** all of a circle's operational data (tasks, doses, appointments, visits, logs, vitals) — this mirrors the server `can_view_all_operational` posture. The UI never hides other members' work from a non-manager. Instead, lists offer an explicit **«مهامي / كل المهام»** (mine / all) scope toggle, defaulting collaborators to "mine" and managers to "all". Unassigned open work shows an inline **«أنا متكفّل»** claim for any claim-capable member. Who can *mutate* is still gated by role + RLS (unchanged); only *visibility* is transparent.
+Every **active** member except the hired `caregiver` may **see** all of a circle's operational data (tasks, doses, appointments, visits, logs, vitals). The UI never hides other members' work from a non-manager. Instead, lists offer an explicit **«مهامي / كل المهام»** (mine / all) scope toggle, defaulting collaborators to "mine" and managers to "all". Unassigned open work shows an inline **«أنا متكفّل»** claim for any claim-capable member. Who can *mutate* is still gated by role + RLS (unchanged); only *visibility* is transparent.
+
+> ### A1 status — D1 applied 2026-08-07
+>
+> A1 used to claim it "mirrors the server `can_view_all_operational` posture". It did not — it inverted it: the function was `admin | primary_caregiver | remote_member`, so a **read-only remote member saw more of the circle than an active family member doing the care**, «كل المهام» returned a list byte-identical to «مهامي», and the «أنا متكفّل» pill could never render for the roles it was built for.
+>
+> **Migration D1 (`20260807120000_widen_can_view_all_operational_to_family_member.sql`) was applied to Sanad-dev (`qccgshanmoeybagxwvcs`) on 2026-08-07.** `can_view_all_operational` is now **`admin | primary_caregiver | family_member | remote_member`**. The hired **`caregiver` is deliberately excluded and must stay excluded** — `care_tasks` and `medication_logs` have no restrictive Milestone-8 backstop, so this function is the only thing holding them narrow for her. Adding her would hand a paid worker the family's full task list and dose history. The migration asserts she is absent and fails if she appears.
+>
+> **Blast radius is FIVE read surfaces, not one**, because every gated policy *calls* the function rather than inlining the array: `care_tasks`, `care_appointments`, `medication_logs`, `family_visits` — **and the `dose-proof` storage bucket**, whose policy lives in `docs/deployment/dose-proof-storage.sql`, **outside `supabase/migrations/`**. A migrations-only diff finds four call sites; there are five. Any future change to this function moves the bucket too, silently. Evidence: `docs/claude-reports/milestone-9-probes/d1-{before,after}-*.csv`.
+>
+> **The dose-proof widening is verified at PREDICATE level only.** The bucket held **zero objects** at apply time, so the probe evaluates the policy predicate per role per medication rather than counting rows. It has **never been exercised against a real object**. Re-verify once photo capture ships (it is gated on the pending EAS rebuild).
+>
+> **A DB-level RLS widening is not proven until it is observed in the UI.** `family_visits` passed every server probe — 3→7 rows, equal to admin — and the screen still rendered **2 of 7**, because a pre-existing client-side `visitor_user_id === userId` filter became the binding constraint the moment the server stopped being one. Server acceptance is necessary and not sufficient; always re-check the rendered surface. Audit: `docs/claude-reports/milestone-9-d1-client-audit.md`.
 
 ## Canonical feature order (A7)
 Order features the same way everywhere (Home quick-actions, Explore, in-list grouping):
