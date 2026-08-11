@@ -138,3 +138,36 @@ The gold tokens (`goldFill`/`goldInk`) appear ONLY on: (1) the **«متاح لل
 
 ## Scope: visual identity only
 Milestone 6 changes **look**, never behavior. No routing, data, query, permission, or feature changes. Every user-facing string stays in i18next in BOTH locales at parity — never hardcode Arabic in a component even though the HTML shows it inline. Where the HTML's Arabic improves on a current string, update the i18n VALUE (ar + en), never inline it. Two design corrections apply over the mockups: (1) render the **neutral** responsible-person form (person icon + name, never a gendered «المسؤول/المسؤولة» word — the app stores no gender); (2) use the bare example as a ghost placeholder («ميتفورمين»), not a «مثال: …» prefix. Zero new native dependencies except the Cairo font package (fonts are assets).
+
+
+§4-REVISED / TEMPORAL LIFECYCLE DECISION (2026-08-11, Ibrahim):
+
+PROBLEM (Ibrahim's find): nothing time-bound in the app has a unified
+lifecycle. Doses have missed-dose escalation; tasks stay «مفتوحة» forever
+past due; appointments past their time vanish from both tabs (audit
+constraint B); visits stay «planned» forever. The supervisor has no single
+place to see "what went unanswered" and act on it.
+
+TARGET MODEL (design-first, to be spec'd properly before any code):
+Four states for every time-bound item type (visits, appointments, tasks
+with due dates, doses):
+  1. upcoming  2. due (grace window, awaiting response)
+  3. responded: done | couldn't (reason REQUIRED for couldn't)
+  4. lapsed — no response after grace. SYSTEM-generated, not user-generated.
+Supervisor (admin/primary_caregiver): one «يحتاج انتباه» surface listing
+all lapsed items across types — the decision/phone-call place.
+Assignee: sees own lapsed items, CAN still respond late (labelled
+«سُجّلت متأخراً») — blocking late logging pushes families back to WhatsApp.
+TONE LAW: lapsed is coordination info, not blame. No red, no shame copy.
+«دفء عائلي هادئ» applies doubly here. care-is-not-a-game.
+MEDICAL LINE: for doses, lapsed = "check in with family" framing ONLY.
+Nothing that nudges a dosing decision — non-diagnostic by design (SFDA).
+
+SUPERSEDES the §4 pill decision: the «زياراتي | كل الزيارات» pill remains
+correct but becomes part of this larger design, not a standalone fix.
+
+PREREQUISITE: the 5-minute due-dose push test (priority 4). The entire
+"due" state depends on notifications provably sending. Design doc may be
+written before that; NO implementation before it.
+
+STATUS: captured, not scheduled. Next step = design doc, not code.
