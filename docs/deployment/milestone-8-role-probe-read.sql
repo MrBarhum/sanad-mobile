@@ -11,12 +11,18 @@
 --
 -- ── WHY IT LOOKS LIKE THIS ───────────────────────────────────────────────────
 --
---  * A TABLE-ONLY matrix would miss the real regression surface. This app's
---    "transparent circle" posture is delivered through SECURITY DEFINER RPCs
---    that bypass RLS entirely — `list_care_activity` returns every row to a
---    `family_member` whose `can_view_all_operational` is FALSE. A migration
---    could change what the four existing roles see with ZERO change to any
---    table policy, so the RPC read paths are probed too.
+--  * A TABLE-ONLY matrix would miss the real regression surface. Part of this app's
+--    "transparent circle" posture is delivered through SECURITY DEFINER RPCs that
+--    bypass RLS entirely — `list_care_activity` returns every row regardless of the
+--    caller's `can_view_all_operational`. A migration could change what the existing
+--    roles see with ZERO change to any table policy, so the RPC read paths are
+--    probed too.
+--
+--    (Historical note: this paragraph used to cite "a `family_member` whose
+--    `can_view_all_operational` is FALSE" as the example. Since D1, applied
+--    2026-08-07, family_member is INSIDE that function; the roles it excludes are
+--    now `caregiver` and `elder`. The reasoning is unchanged — only the example
+--    role was.)
 --
 --  * It records SQLSTATE alongside every count. A missing GRANT (42501) and an
 --    RLS filter (0 rows) both produce a small number, but only one of them is a

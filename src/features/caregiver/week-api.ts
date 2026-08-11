@@ -223,7 +223,15 @@ export const caregiverWeekKeys = {
  *
  * Reads only. RLS remains authoritative — a viewer without
  * `can_view_all_operational` sees only the log rows they are themselves
- * responsible for, which is why the screen is manager-gated before it gets here.
+ * responsible for.
+ *
+ * Since D1 (2026-08-07) that set is just the hired `caregiver`: admin,
+ * primary_caregiver, family_member and remote_member are all inside the function now.
+ * So the REASON for the manager gate changed even though the gate itself did not — it
+ * is no longer "otherwise a family_member would render a half-empty week from rows she
+ * cannot read", it is the Milestone-8 product decision that the weekly caregiver
+ * summary is the family's oversight view and belongs to managers. Keep the gate at
+ * `week-summary.tsx`; do not re-derive it from RLS reachability.
  */
 export async function fetchCaregiverWeekRaw(
   circleId: string,

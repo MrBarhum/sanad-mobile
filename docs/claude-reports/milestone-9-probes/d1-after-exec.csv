@@ -1,0 +1,68 @@
+function_name,args,security,anon_execute,authenticated_execute,service_role_execute
+accept_circle_invitation,p_code text,definer,false,true,true
+account_deletion_preflight,,definer,false,true,true
+active_circle_member_role,p_circle_id uuid,definer,false,false,true
+can_view_all_operational,p_circle_id uuid,definer,false,true,true
+circle_notification_recipients,"p_circle_id uuid, p_type notification_type",definer,false,false,true
+claim_care_appointment,p_appointment_id uuid,definer,false,true,true
+claim_care_task,p_task_id uuid,definer,false,true,true
+claim_family_visit,p_visit_id uuid,definer,false,true,true
+claim_medication_responsibility,p_medication_id uuid,definer,false,true,true
+claim_push_deliveries,"p_limit integer, p_lock_timeout_seconds integer, p_max_attempts integer",definer,false,false,true
+create_care_circle,"circle_name text, recipient_full_name text, recipient_birth_date date",definer,false,true,true
+create_circle_invitation,"p_circle_id uuid, p_role circle_role, p_invited_name text, p_invited_email text",definer,false,true,true
+daily_summary_recipients,p_circle_id uuid,definer,false,false,true
+deactivate_push_token,p_token text,definer,false,true,true
+deactivate_push_token_by_id,p_id uuid,definer,false,false,true
+deactivate_push_token_value,p_token text,definer,false,false,true
+effective_notification_prefs,"p_user_id uuid, p_circle_id uuid",definer,false,false,true
+enforce_care_task_collaborator_scope,,definer,false,false,true
+enforce_family_visit_collaborator_scope,,definer,false,false,true
+enforce_medication_log_authorship,,invoker,false,false,true
+enqueue_notification,"p_user_id uuid, p_type notification_type, p_title text, p_body text, p_circle_id uuid, p_data jsonb, p_deep_link text, p_dedupe_key text, p_expires_at timestamp with time zone, p_timezone text, p_quiet_hours_enabled boolean, p_quiet_hours_start time without time zone, p_quiet_hours_end time without time zone",definer,false,false,true
+fanout_due_notifications,"p_limit integer, p_max_attempts integer",definer,false,false,true
+generate_invitation_code,,invoker,false,false,true
+handle_new_user,,definer,false,false,true
+has_circle_role,"target_circle_id uuid, allowed_roles circle_role[]",definer,false,true,true
+hash_invitation_code,p_code text,invoker,false,false,true
+is_active_user_circle_member,"p_circle_id uuid, p_user_id uuid",definer,false,true,true
+is_circle_caregiver,p_circle_id uuid,definer,false,true,true
+is_circle_doctor,"p_circle_id uuid, p_doctor_id uuid",definer,false,true,true
+is_circle_medication,"p_circle_id uuid, p_medication_id uuid",definer,false,true,true
+is_circle_medication_schedule,"p_circle_id uuid, p_schedule_id uuid",definer,false,false,true
+is_circle_medication_schedule_for_medication,"p_circle_id uuid, p_schedule_id uuid, p_medication_id uuid",definer,false,true,true
+is_circle_member,target_circle_id uuid,definer,false,true,true
+is_responsible_for_medication,"p_circle_id uuid, p_medication_id uuid, p_user_id uuid",definer,false,true,true
+is_user_circle_member,"p_circle_id uuid, p_user_id uuid",definer,false,true,true
+is_valid_timezone,p_tz text,definer,false,false,true
+leave_care_circle,p_circle_id uuid,definer,false,true,true
+list_available_to_claim,p_circle_id uuid,definer,false,true,true
+list_care_activity,"p_circle_id uuid, p_limit integer, p_before timestamp with time zone",definer,false,true,true
+list_circle_invitations,p_circle_id uuid,definer,false,true,true
+list_circle_members,p_circle_id uuid,definer,false,true,true
+mark_all_notifications_read,p_circle_id uuid,definer,false,true,true
+mark_delivery_failed,"p_delivery_id uuid, p_claim_token uuid, p_error text, p_retry_at timestamp with time zone",definer,false,false,true
+mark_delivery_sent,"p_delivery_id uuid, p_claim_token uuid, p_ticket_id text",definer,false,false,true
+mark_delivery_skipped,"p_delivery_id uuid, p_claim_token uuid, p_reason text",definer,false,false,true
+mark_stale_receipts_unchecked,"p_cutoff timestamp with time zone, p_limit integer",definer,false,false,true
+normalize_invitation_code,p_code text,invoker,false,false,true
+notification_defer_until,"p_now timestamp with time zone, p_timezone text, p_quiet_hours_enabled boolean, p_quiet_hours_start time without time zone, p_quiet_hours_end time without time zone, p_is_emergency boolean",definer,false,false,true
+notification_item_managers,p_circle_id uuid,definer,false,false,true
+notification_item_owner,"p_entity text, p_item_id uuid",definer,false,false,true
+notification_recipient_current,p_notification_id uuid,definer,false,false,true
+notification_recipient_eligible,"p_user_id uuid, p_circle_id uuid, p_type notification_type",definer,false,false,true
+notification_recipients_for_item_event,"p_circle_id uuid, p_type notification_type, p_entity text, p_item_id uuid",definer,false,false,true
+notification_source_validity,p_notification_id uuid,definer,false,false,true
+record_delivery_receipt,"p_delivery_id uuid, p_expected_ticket text, p_receipt_id text, p_status text, p_error_code text, p_details text",definer,false,false,true
+register_push_token,"p_token text, p_platform text, p_device_id text, p_app_version text",definer,false,true,true
+revoke_circle_invitation,p_invitation_id uuid,definer,false,true,true
+set_assigned_appointment_outcome,"p_appointment_id uuid, p_status care_appointment_status",definer,false,true,true
+set_circle_timezone,"p_circle_id uuid, p_timezone text",definer,false,true,true
+set_missed_dose_grace_minutes,"p_circle_id uuid, p_minutes integer",definer,false,true,true
+set_notification_read,"p_notification_id uuid, p_read boolean",definer,false,true,true
+set_updated_at,,invoker,false,false,true
+storage_path_uuid,"object_name text, segment integer",invoker,false,true,true
+transfer_circle_ownership,"p_circle_id uuid, p_new_owner_user_id uuid",definer,false,true,true
+update_circle_member_role,"p_member_id uuid, p_role circle_role",definer,false,true,true
+update_circle_member_status,"p_member_id uuid, p_status member_status",definer,false,true,true
+upsert_notification_preferences,"p_circle_id uuid, p_medication_reminders boolean, p_missed_dose_alerts boolean, p_task_reminders boolean, p_appointment_reminders boolean, p_visit_updates boolean, p_care_updates boolean, p_emergency_alerts boolean, p_remote_summary boolean, p_quiet_hours_enabled boolean, p_quiet_hours_start time without time zone, p_quiet_hours_end time without time zone, p_timezone text, p_assignment_alerts boolean, p_activity_updates boolean, p_available_to_claim_digest boolean, p_visit_reminders boolean",definer,false,true,true

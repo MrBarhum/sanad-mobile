@@ -34,19 +34,17 @@ export const taskKeys = {
 /**
  * All tasks for a circle, newest first.
  *
- * The query is unscoped; RLS decides what comes back, and it does NOT return the
- * whole circle to every active member. `"Members can view care tasks"`
- * (`20260626161000_backfill_phase_2d_responsibility_rls.sql:55-68`) is
- * `can_view_all_operational(circle_id) OR (is_circle_member(circle_id) AND
- * (assigned_to = auth.uid() OR completed_by = auth.uid()))`, and
- * `can_view_all_operational` is `admin | primary_caregiver | remote_member` only
- * (same file, `:24-32`). So a `family_member` or `caregiver` receives ONLY the
- * tasks assigned to them or completed by them — unassigned tasks included nowhere.
+ * The query is unscoped; RLS decides what comes back. Since D1 (applied 2026-08-07,
+ * `20260807120000_widen_can_view_all_operational_to_family_member.sql`) that means the
+ * WHOLE circle for admin, primary_caregiver, family_member and remote_member — the
+ * "Members can view care tasks" policy is `can_view_all_operational(circle_id) OR
+ * (is_circle_member(circle_id) AND (assigned_to = auth.uid() OR completed_by = auth.uid()))`
+ * and family_member is now inside that function.
  *
- * That is narrower than standing decision A1 describes; widening it is the
- * pending D1 migration (see `docs/claude-reports/2026-08-07-qa-verification.md`
- * F1). Until that is hand-applied, do not write code here that assumes a
- * collaborator can see another member's work.
+ * The ONE role still narrowed to its own rows is the hired `caregiver`, which is
+ * deliberate and must stay that way: `care_tasks` has no restrictive Milestone-8
+ * backstop, so that function is the only thing holding it narrow for her. "Active
+ * member" is therefore not the right mental model — the role matters.
  */
 export async function fetchTasks(circleId: string): Promise<CareTask[]> {
   const { data, error } = await supabase

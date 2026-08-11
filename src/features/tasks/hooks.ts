@@ -62,14 +62,13 @@ export function useTask(id: string | undefined) {
  * tasks list (only their assigned tasks; unassigned and others' tasks excluded).
  * Managers pass `null`/`undefined` to count the whole circle. Completed and
  * cancelled tasks are already excluded from the open/due counts by
- * `summarizeTodayTasks`.
+ * `summarizeTodayTasks`. Frontend scoping only — the underlying query is unchanged.
  *
- * The underlying query is unchanged, but note that it is NOT true that "RLS still
- * returns the full circle set" — it does so only for the roles inside
- * `can_view_all_operational` (admin / primary_caregiver / remote_member). For a
- * `family_member` or `caregiver` the server has already narrowed the rows to their
- * own, so `scopeToUserId` is a no-op for them rather than the load-bearing filter
- * it is for a manager. See `fetchTasks` in ./api.ts for the policy text.
+ * Since D1 (2026-08-07) RLS really does return the full circle set to a
+ * family_member, so this filter is now load-bearing for them rather than a no-op
+ * layered on an already-narrowed list. The exception is the hired `caregiver`, who is
+ * still scoped server-side to her own rows — for her the count is narrow whatever is
+ * passed here. See `fetchTasks` in ./api.ts for the policy.
  */
 export function useTodayTaskSummary(circleId: string | undefined, scopeToUserId?: string | null) {
   const tasks = useTasks(circleId);

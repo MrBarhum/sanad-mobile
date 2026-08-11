@@ -131,15 +131,19 @@ export function FigmaTasks({
   const tasks = tasksQuery.data ?? [];
   const today = todayYmd();
 
-  // Scope pills — «مهامي / كل المهام». NOTE what this does NOT do today: it does
-  // not reveal the whole circle. RLS has already narrowed `tasks` to the caller's
-  // own rows for every role outside `can_view_all_operational` (admin /
-  // primary_caregiver / remote_member) — see `fetchTasks` in ./api.ts — so for a
-  // family_member or caregiver `isMine` below is the same predicate the server
-  // already applied and «كل المهام» returns an identical list. The pills are honest
-  // only for managers until the D1 widening migration is hand-applied
-  // (docs/claude-reports/2026-08-07-qa-verification.md, F1). Pure followers
-  // (neither manage nor collaborate) are forced to «كل المهام» and get no pills.
+  // Transparent-circle visibility (A1). Since D1 (applied 2026-08-07) this is true on
+  // the server as well as in the UI: admin, primary_caregiver, family_member and
+  // remote_member all SEE the whole circle's tasks, so «كل المهام» genuinely returns
+  // more rows than «مهامي». Before D1 it did not — RLS had already narrowed a
+  // family_member to her own rows, which made the toggle a silent no-op.
+  //
+  // The one role still narrowed server-side is the hired `caregiver`: for her both
+  // pills show the same list. The «أنا متكفّل» pill below cannot render for her
+  // either, but the binding reason is now the `canClaim` prop, not visibility —
+  // Milestone 8 narrowed the claim RPCs to admin / primary_caregiver / family_member,
+  // so she is refused before an unassigned task's visibility is ever asked. Both are
+  // deliberate, not a gap. Pure followers (neither manage nor collaborate) are forced
+  // to «كل المهام» and get no pills.
   //
   // Default per A1: managers open on «كل المهام», collaborators on «مهامي». A
   // manager is the oversight role — landing them on their own assignments hid the
